@@ -17,7 +17,6 @@
  *    2020-11-30  thebearmay	 Original
  * 
  */
-//import java.time.Duration
 
 metadata {
     definition (
@@ -50,11 +49,11 @@ def updateValues() {
        5:"Thursday",
        6:"Friday",
        7:"Saturday"]
-	dateNow = new Date()
-    calWk = dateNow.getAt(Calendar.WEEK_OF_YEAR)
-	sendEvent(name: "calWk", value: calWk)
+    dateNow = new Date()
+    calWk = dateNow.getAt(Calendar.WEEK_OF_YEAR)	
+    sendEvent(name: "calWk", value: calWk)
     dayOfWeek = dateNow.getAt(Calendar.DAY_OF_WEEK)
-	sendEvent(name: "dayOfWeek", value: dayOfWeek)
+    sendEvent(name: "dayOfWeek", value: dayOfWeek)
     dayOfWeekStr = dayMap[dayOfWeek]
     sendEvent(name: "dayOfWeekStr", value: dayOfWeekStr)
     
@@ -63,7 +62,7 @@ def updateValues() {
     secondsToMidnight = Math.round((midnight.getTime() - new Date().getTime())/1000)+1
     
     if(debugEnable) log.debug "values updated..."
-	runIn(secondsToMidnight,updateValues)
+    runIn(secondsToMidnight,updateValues)
 }
 
 def configure() {

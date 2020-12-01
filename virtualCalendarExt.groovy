@@ -14,9 +14,12 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- *    2020-11-30  thebearmay	 Original
+ *    2020-11-30  thebearmay	 Original version 1.0.0
+ *    2020-12-01  thebearmay	 Version 1.1.0 add dayOfYear and holiday logic
  * 
  */
+
+static String version()	{  return '1.1.0'  }
 
 metadata {
     definition (
@@ -30,6 +33,8 @@ metadata {
 		attribute "calWk", "string"
 		attribute "dayOfWeekStr", "string"
 		attribute "dayOfWeek", "string"
+		attribute "dayOfYear", "string"
+		attribute "holidayArr", "string []"
  
 		command "configure", []
     }   
@@ -56,6 +61,8 @@ def updateValues() {
     sendEvent(name: "dayOfWeek", value: dayOfWeek)
     dayOfWeekStr = dayMap[dayOfWeek]
     sendEvent(name: "dayOfWeekStr", value: dayOfWeekStr)
+	dayOfYear = dateNow[Calendar.DAY_OF_YEAR]
+	sendEvent(name: "dayOfYear", value: dayOfYear)
     
     midnight=dateNow+1
     midnight.clearTime()

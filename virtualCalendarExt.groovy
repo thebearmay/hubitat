@@ -38,7 +38,7 @@ metadata {
 		attribute "isHoliday", "bool"
  
 		command "configure", []
-		command "storeHoliday" ["string"]["string"]
+		command "storeHoliday", ["string", "string"]
     }   
 }
 
@@ -63,10 +63,10 @@ def updateValues() {
     sendEvent(name: "dayOfWeek", value: dayOfWeek)
     dayOfWeekStr = dayMap[dayOfWeek]
     sendEvent(name: "dayOfWeekStr", value: dayOfWeekStr)
-    dayOfYear = dateNow[Calendar.DAY_OF_YEAR]
-    sendEvent(name: "dayOfYear", value: dayOfYear)
+	dayOfYear = dateNow[Calendar.DAY_OF_YEAR]
+	sendEvent(name: "dayOfYear", value: dayOfYear)
 	
-    checkHoliday()
+	checkHoliday()
     
     midnight=dateNow+1
     midnight.clearTime()
@@ -77,12 +77,12 @@ def updateValues() {
 }
 
 def storeHoliday(inxStr, holiDateStr) {
-    inx = inxStr as int
-    holidayArr[inx] = holiDateStr
+	inx = inxStr as int
+	holidayArr[inx] = holiDateStr
     sendEvent(name:"holidayArr", value:holidayArr)	
 }
 
-def checkHoliday()
+def checkHoliday(){
 	isHoliday = false
 	for (holiday in holidayArr) {
 		if (new Date(holiday) == new Date()){
@@ -90,6 +90,7 @@ def checkHoliday()
 			break
 		}
 	}
+}
 
 def configure() {
 	updateValues()

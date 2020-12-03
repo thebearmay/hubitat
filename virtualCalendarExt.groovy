@@ -1,4 +1,4 @@
-/*
+ /*
  * Virtual Calendar
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -34,18 +34,29 @@ metadata {
 		attribute "dayOfWeekStr", "string"
 		attribute "dayOfWeek", "string"
 		attribute "dayOfYear", "string"
-		attribute "holidayArr", "string []"
+        attribute "Date1", "string"
+        attribute "Date2", "string"
+        attribute "Date3", "string"
+        attribute "Date4", "string"
+        attribute "Date5", "string"
+        attribute "Date6", "string"
+        attribute "Date7", "string"
+        attribute "Date8", "string"
+        attribute "Date9", "string"
+        attribute "Date10", "string"
+        attribute "Date11", "string"
+        attribute "Date12", "string"
 		attribute "isHoliday", "bool"
- 
+        
 		command "configure", []
-		command "storeHoliday", ["string", "string"]
+		command "storeHoliday", ["number", "string"]
+            
     }   
 }
 
 preferences {
 	input("debugEnable", "bool", title: "Enable debug logging?")
 }
-
 
 def updateValues() {
    dayMap=[
@@ -63,42 +74,57 @@ def updateValues() {
     sendEvent(name: "dayOfWeek", value: dayOfWeek)
     dayOfWeekStr = dayMap[dayOfWeek]
     sendEvent(name: "dayOfWeekStr", value: dayOfWeekStr)
-	dayOfYear = dateNow[Calendar.DAY_OF_YEAR]
-	sendEvent(name: "dayOfYear", value: dayOfYear)
+    dayOfYear = dateNow[Calendar.DAY_OF_YEAR]
+    sendEvent(name: "dayOfYear", value: dayOfYear)
 	
-	checkHoliday()
+    checkHoliday()
     
     midnight=dateNow+1
     midnight.clearTime()
     secondsToMidnight = Math.round((midnight.getTime() - new Date().getTime())/1000)+1
     
-    if(debugEnable) log.debug "values updated..."
+    if(debugEnable) log.debug "values updated...next update in $secondsToMidnight seconds"
     runIn(secondsToMidnight,updateValues)
 }
 
-def storeHoliday(inxStr, holiDateStr) {
-	inx = inxStr as int
-	holidayArr[inx] = holiDateStr
-    sendEvent(name:"holidayArr", value:holidayArr)	
+def storeHoliday(inx, holiDateStr) {
+  //  inx = Integer.parseInt(inx)
+    if(inx > 0 && inx < 13)
+        sendEvent(name:"Date"+inx, value: (holiDateStr))
+    else
+        log.warn "index out of bounds (1-12):$inx"
 }
 
 def checkHoliday(){
 	isHoliday = false
-	for (holiday in holidayArr) {
-		if (new Date(holiday) == new Date()){
-			isHoliday = true
-			break
-		}
+    if(debugEnable) log.debug "checkHoliday()"
+    for (i=1; i<13; i++) {
+        holiday = device.currentValue("Date"+i)
+        if(debugEnable) log.debug "checkHoliday $holiday"
+	    if (holiday != null){
+		    date1 = Date.parse("yyyy-MM-dd",holiday)
+            date2 = new Date()
+            date2 = date2.clearTime()
+            if (date1 == date2){
+                isHoliday = true
+                break
+            }
+            if (debugEnable) log.debug "date1: $date1|date2: $date2"
+	    }
 	}
+    sendEvent(name:"isHoliday", value:isHoliday)
 }
 
-def configure() {
-	updateValues()
-}
 
 def installed() {
 	log.trace "installed()"
-	updateValues()
+
+//    updateValues()
+}
+
+def configure() {
+    if(debugEnable) log.debug "configure()"
+    updateValues()   
 }
 
 def updated(){
@@ -106,7 +132,6 @@ def updated(){
 	if(debugEnable) runIn(1800,logsOff)
 }
 
-void logsOff() {
-	log.debug "debug logging disabled..."
-	device.updateSetting("debugEnable",[value:"false",type:"bool"])
+void logsOff(){
+     device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }

@@ -88,11 +88,17 @@ def updateValues() {
 }
 
 def storeHoliday(inx, holiDateStr) {
-  //  inx = Integer.parseInt(inx)
-    if(inx > 0 && inx < 13)
-        sendEvent(name:"Date"+inx, value: (holiDateStr))
-    else
-        log.warn "index out of bounds (1-12):$inx"
+    try {
+        date1 = Date.parse("yyyy-MM-dd",holiDateStr)
+        
+        if(inx > 0 && inx < 13)
+            sendEvent(name:"Date"+inx, value: (holiDateStr))
+        else
+            log.warn "index out of bounds (1-12):$inx"
+    } catch (Exception e) {
+        log.warn "Invalid date string use format yyyy-MM-dd"
+    }
+    checkHoliday()
 }
 
 def checkHoliday(){
@@ -118,8 +124,6 @@ def checkHoliday(){
 
 def installed() {
 	log.trace "installed()"
-
-//    updateValues()
 }
 
 def configure() {

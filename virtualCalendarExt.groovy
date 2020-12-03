@@ -34,18 +34,18 @@ metadata {
 		attribute "dayOfWeekStr", "string"
 		attribute "dayOfWeek", "string"
 		attribute "dayOfYear", "string"
-        attribute "Date1", "string"
-        attribute "Date2", "string"
-        attribute "Date3", "string"
-        attribute "Date4", "string"
-        attribute "Date5", "string"
-        attribute "Date6", "string"
-        attribute "Date7", "string"
-        attribute "Date8", "string"
-        attribute "Date9", "string"
-        attribute "Date10", "string"
-        attribute "Date11", "string"
-        attribute "Date12", "string"
+        	attribute "Date1", "string"
+      	  	attribute "Date2", "string"
+        	attribute "Date3", "string"
+        	attribute "Date4", "string"
+        	attribute "Date5", "string"
+        	attribute "Date6", "string"
+        	attribute "Date7", "string"
+        	attribute "Date8", "string"
+        	attribute "Date9", "string"
+        	attribute "Date10", "string"
+        	attribute "Date11", "string"
+        	attribute "Date12", "string"
 		attribute "isHoliday", "bool"
         
 		command "configure", []
@@ -102,13 +102,13 @@ def storeHoliday(inx, holiDateStr) {
 }
 
 def checkHoliday(){
-	isHoliday = false
+    isHoliday = false
     if(debugEnable) log.debug "checkHoliday()"
     for (i=1; i<13; i++) {
         holiday = device.currentValue("Date"+i)
         if(debugEnable) log.debug "checkHoliday $holiday"
-	    if (holiday != null){
-		    date1 = Date.parse("yyyy-MM-dd",holiday)
+	if (holiday != null){
+            date1 = Date.parse("yyyy-MM-dd",holiday)
             date2 = new Date()
             date2 = date2.clearTime()
             if (date1 == date2){
@@ -116,8 +116,8 @@ def checkHoliday(){
                 break
             }
             if (debugEnable) log.debug "date1: $date1|date2: $date2"
-	    }
 	}
+    }
     sendEvent(name:"isHoliday", value:isHoliday)
 }
 

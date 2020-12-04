@@ -1,4 +1,3 @@
-# hubitat
 This repository contains files related to my work in creating drivers, apps for the Hubitat(tm) platform.
 All work contained in this repository is released using the Licensed Virtual the Apache License, Version 2.0.
 

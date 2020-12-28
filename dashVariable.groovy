@@ -14,7 +14,7 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- *    2020-12-28  thebearmay	 Original version 0.1.0
+ *    2020-12-28  thebearmay	 Original version 0.1.0, reversed engineered from the RM Hubitat driver
  * 
  */
 

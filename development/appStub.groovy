@@ -70,7 +70,10 @@ def mainPage(){
                 input "linkStyle", "enum", title: "Link Style", required: true, submitOnChange: true, options: ["embedded":"Same Window", "external":"New Window"], image: ""
 		    	href "nameNextPage", title: "page navigation", required: false
 			    paragraph "some text to display"
-			
+                input "sendPushMessage", "capability.notification", title: "Notification Devices: Hubitat PhoneApp", multiple: true, required: false
+                notify("Test Message")
+
+                
 		    }
 	    } else {
 		    section("") {
@@ -87,4 +90,10 @@ def nameNextPage() {
             href "mainPage", title:"go back", required:false
         }
     }
+}
+
+def notify(message){
+    if(!sendPushMessage) return
+    if(message == null) message = "Test notification, parameter fail"
+    sendPushMessage.deviceNotification(message)   
 }

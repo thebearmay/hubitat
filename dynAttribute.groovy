@@ -15,10 +15,11 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    2021-01-04  thebearmay	 Original version 0.1.0
+ *    2021-01-05  thebearmay     v0.5.0 add JSON format, getValue, and getEntryValue
  * 
  */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.5.0'  }
 
 metadata {
     definition (
@@ -29,10 +30,13 @@ metadata {
 	) {
         	capability "Actuator"
 		
-    attribute "attrRet", "HashMap"
+    attribute "attrRet", "JSON"
+    attribute "semaphor", "STRING"
   
-    command "setAttribute", [[name:"attrName*", type:"STRING", description:"Attribute Name"],[name:"attrValue*", type:"STRING", description:"Attribute Value"]]   
+    command "setAttribute", [[name:"attrName*", type:"STRING", description:"Attribute Name/Key"],[name:"attrValue*", type:"STRING", description:"Attribute Value, \\0 to remove key"]]   
     command "clearStateVariables"
+    command "getValue", [[name:"lookupKey*", type:"STRING", description:"Key to retrieve value for"]]
+    command "getEntryValue", [[name:"lookupKey*", type:"STRING", description:"Key to retrieve the Key:Value pair for"]]
     }   
 }
 
@@ -51,12 +55,39 @@ def updated(){
 
 def setAttribute(attrName,attrValue) {
     if(debugEnable) log.debug "setAttribute($attrName, $attrValue)"
+    if (attrValue == "\\0")
+        state.remove(attrName)
+    else
+        state[attrName]=attrValue
+    attrRet = formatMap(state)
     
-    state[attrName]=attrValue
-    attrRet = new HashMap(state)
     if(debugEnable) log.debug attrRet
     sendEvent(name:"attrRet", value:attrRet)
+}
 
+def formatMap(mapIn){
+    formatJSON = "{"
+    for (entry in mapIn) {
+        formatJSON += "\""+entry.key+"\":\""+entry.value+"\","
+    }
+    if(formatJSON > "{")
+        formatJSON = formatJSON[0..-2]+"}"
+    else
+        formatJSON += " }"
+
+    return formatJSON
+}
+
+def getValue(key) {
+    if(debugEnable) log.debug "getValue($key)"
+    semaphor=state.get(key)
+    sendEvent(name:"semaphor",value:semaphor)
+}
+
+def getEntryValue(key) {
+    if(debugEnable) log.debug "getEntryValue($key)"
+    semaphor=state.get(key)
+    sendEvent(name:"semaphor",value:"$key:\"$semaphor\"")
 }
 
 def clearStateVariables(){

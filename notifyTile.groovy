@@ -20,7 +20,7 @@
  * 
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '0.5.0'  }
+static String version()	{  return '0.7.0'  }
 
 metadata {
     definition (
@@ -32,27 +32,27 @@ metadata {
 	) {
        		capability "Notification"
 			
-			attribute "last5", "STRING"
-            attribute "notify1", "STRING"
-            attribute "notify2", "STRING"
-            attribute "notify3", "STRING"
-            attribute "notify4", "STRING"
-            attribute "notify5", "STRING"
-			attribute "notificationText", "STRING"
+		attribute "last5", "STRING"
+            	attribute "notify1", "STRING"
+            	attribute "notify2", "STRING"
+            	attribute "notify3", "STRING"
+            	attribute "notify4", "STRING"
+            	attribute "notify5", "STRING"
+		attribute "notificationText", "STRING"
 
-			command "configure"//, [[name:"notification*", type:"STRING", description:"Notification Text"]]   
+		command "configure"//, [[name:"notification*", type:"STRING", description:"Notification Text"]]   
             
     }   
 }
 
 preferences {
 	input("debugEnable", "bool", title: "Enable debug logging?")
-    input("dfEU", "bool", title: "Use Date Format dd/MM/yyyy", defaultValue:false)
+    	input("dfEU", "bool", title: "Use Date Format dd/MM/yyyy", defaultValue:false)
 }
 
 def installed() {
 	log.trace "installed()"
-    configure()
+    	configure()
 }
 
 def updated(){

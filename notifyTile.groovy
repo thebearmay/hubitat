@@ -17,10 +17,11 @@
  *    2021-01-06  thebearmay	 Original version 0.1.0
  *    2021-01-07  thebearmay     Fix condition causing a loss notifications if they come in rapidly
  *    2021-01-07  thebearmay     Add alternative date format
+ *    2021-01-07  thebearmay     Add last5H for horizontal display
  * 
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '0.7.0'  }
+static String version()	{  return '0.8.0'  }
 
 metadata {
     definition (
@@ -28,11 +29,12 @@ metadata {
 		namespace: "thebearmay", 
 		description: "Simple driver to act as a destination for notifications, and provide an attribute to display the last 5 on a tile.",
 		author: "Jean P. May, Jr.",
-	    importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/notifyTile.groovy"
+	    	importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/notifyTile.groovy"
 	) {
        		capability "Notification"
 			
-		attribute "last5", "STRING"
+	    	attribute "last5", "STRING"
+            	attribute "last5H", "STRING"
             	attribute "notify1", "STRING"
             	attribute "notify2", "STRING"
             	attribute "notify3", "STRING"
@@ -47,12 +49,12 @@ metadata {
 
 preferences {
 	input("debugEnable", "bool", title: "Enable debug logging?")
-    	input("dfEU", "bool", title: "Use Date Format dd/MM/yyyy", defaultValue:false)
+    input("dfEU", "bool", title: "Use Date Format dd/MM/yyyy", defaultValue:false)
 }
 
 def installed() {
 	log.trace "installed()"
-    	configure()
+    configure()
 }
 
 def updated(){
@@ -73,17 +75,20 @@ def updateLast5(notification){
         sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
     notification += " " + sdf.format(dateNow)
     last5 = notification+"<br />"+device.currentValue("notify1")+"<br />"+device.currentValue("notify2")+"<br />"+device.currentValue("notify3")+"<br />"+device.currentValue("notify4")
+    last5H = "| |"+last5.replaceAll("<br />","| |")+"| |"
     sendEvent(name:"notify5", value:device.currentValue("notify4"))
     sendEvent(name:"notify4", value:device.currentValue("notify3"))
     sendEvent(name:"notify3", value:device.currentValue("notify2"))
     sendEvent(name:"notify2", value:device.currentValue("notify1"))
     sendEvent(name:"last5", value:last5)
+    sendEvent(name:"last5H", value:last5H)                                
     sendEvent(name:"notify1",value:notification)
 
 }    
 
 def configure() {
-    sendEvent(name:"notificationText", value:' ')
+    sendEvent(name:"notificationText", value:" ")
+    sendEvent(name:"last5H", value:" ")
     sendEvent(name:"last5", value:" ")
     sendEvent(name:"notify1", value:" ")
     sendEvent(name:"notify2", value:" ")

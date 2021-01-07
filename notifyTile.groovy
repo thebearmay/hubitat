@@ -16,6 +16,7 @@
  *    ----        ---            ----
  *    2021-01-06  thebearmay	 Original version 0.1.0
  *    2021-01-07  thebearmay     Fix condition causing a loss notifications if they come in rapidly
+ *    2021-01-07  thebearmay     Add alternative date format
  * 
  */
 import java.text.SimpleDateFormat
@@ -46,11 +47,12 @@ metadata {
 
 preferences {
 	input("debugEnable", "bool", title: "Enable debug logging?")
+    input("dfEU", "bool", title: "Use Date Format dd/MM/yyyy", defaultValue:false)
 }
 
 def installed() {
 	log.trace "installed()"
-  configure()
+    configure()
 }
 
 def updated(){
@@ -65,7 +67,10 @@ def deviceNotification(notification){
 
 def updateLast5(notification){
     dateNow = new Date()
-    sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
+    if (dfEU)
+        sdf= new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+    else
+        sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
     notification += " " + sdf.format(dateNow)
     last5 = notification+"<br />"+device.currentValue("notify1")+"<br />"+device.currentValue("notify2")+"<br />"+device.currentValue("notify3")+"<br />"+device.currentValue("notify4")
     sendEvent(name:"notify5", value:device.currentValue("notify4"))

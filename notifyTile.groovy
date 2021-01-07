@@ -18,10 +18,11 @@
  *    2021-01-07  thebearmay     Fix condition causing a loss notifications if they come in rapidly
  *    2021-01-07  thebearmay     Add alternative date format
  *    2021-01-07  thebearmay     Add last5H for horizontal display
+ *    2021-01-07  thebearmay     Add leading date option
  * 
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '0.8.0'  }
+static String version()	{  return '1.0.0'  }
 
 metadata {
     definition (
@@ -49,7 +50,8 @@ metadata {
 
 preferences {
 	input("debugEnable", "bool", title: "Enable debug logging?")
-    input("dfEU", "bool", title: "Use Date Format dd/MM/yyyy", defaultValue:false)
+    input("dfEU", "bool", title: "Use Date Format dd/MM/yyyy")
+    input("leadingDate", "bool", title:"Use leading date instead of trailing")
 }
 
 def installed() {
@@ -73,9 +75,12 @@ def updateLast5(notification){
         sdf= new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
     else
         sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
-    notification += " " + sdf.format(dateNow)
+    if (leadingDate)
+        notification = sdf.format(dateNow) + " " + notification
+    else
+        notification += " " + sdf.format(dateNow)
     last5 = notification+"<br />"+device.currentValue("notify1")+"<br />"+device.currentValue("notify2")+"<br />"+device.currentValue("notify3")+"<br />"+device.currentValue("notify4")
-    last5H = "| |"+last5.replaceAll("<br />","| |")+"| |"
+    last5H = " ** "+last5.replaceAll("<br />"," ** ")+" ** "
     sendEvent(name:"notify5", value:device.currentValue("notify4"))
     sendEvent(name:"notify4", value:device.currentValue("notify3"))
     sendEvent(name:"notify3", value:device.currentValue("notify2"))

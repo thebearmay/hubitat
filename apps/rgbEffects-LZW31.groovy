@@ -28,7 +28,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Creates special effects for RGB devices that don't natively support them",
 	category: 		"My Apps",
-	importURL:		"https://raw.githubusercontent.com/thebearmay/hubitat/apps/rgbEffects-LZW31.groovy",
+	importURL:		"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/rgbEffects-LZW31.groovy",
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""

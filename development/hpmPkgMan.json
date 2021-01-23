@@ -1,0 +1,35 @@
+{
+	"packageName": "My Package",
+	"minimumHEVersion": "2.1.9",
+	"author": "Dominick Meglio",
+	"version": "1.0",
+	"dateReleased": "2020-04-07",
+	"licenseFile": "",
+	"releaseNotes": "",
+	"apps" : [
+		{
+			"id" : "67d9cc01-a5cb-453c-832a-e78c5a6b978b",
+			"name": "The App",
+			"namespace": "abc.theapp",
+			"location": "https://raw.githubusercontent.com/app.groovy",
+			"required": true,
+			"oauth": false
+		}
+	],
+	"drivers" : [
+		{
+			"id": "22597029-98db-490b-b8b9-c23b972ee5f2",
+			"name": "Required Driver",
+			"namespace": "abc.reqdriver",
+			"location": "https://raw.githubusercontent.com/driver1.groovy",
+			"required": true
+		},
+		{
+			"id": "e012ffff-7959-466b-a2ae-3181a33010f9",
+			"name": "Optional Driver",
+			"namespace": "abc.optdriver",
+			"location": "https://raw.githubusercontent.com/driver2.groovy",
+			"required": false
+		}
+	]
+}

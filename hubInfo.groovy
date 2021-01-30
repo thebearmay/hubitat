@@ -71,10 +71,9 @@ def configure() {
         updateAttr(hubProp[i], myHub["${hubProp[i]}"])
     }
     updateAttr("lastUpdated", now())
-    subscribe(location, "systemStart", restartDetected)
 }
 
-def restartDetected(evt){
+def restartDetected(){
     updateAttr("lastHubRestart", now())
     configure()
 }
@@ -85,6 +84,7 @@ def updateAttr(aKey, aValue){
 
 def initialize(){
     if(debugEnable) log.debug "initialize()"
+    restartDetected()	
     configure()    
 }
 

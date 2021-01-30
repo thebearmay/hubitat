@@ -18,7 +18,7 @@
  *    2021-01-30  thebearmay     Add full hub object properties
  */
 
-static String version()	{  return '0.5.0'  }
+static String version()	{  return '0.7.0'  }
 
 metadata {
     definition (
@@ -28,6 +28,7 @@ metadata {
 	        importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
 	) {
         	capability "Actuator"
+	    	capability "Initialize"
 		
 		attribute "latitude", "string"
 		attribute "longitude", "string"
@@ -70,7 +71,7 @@ def configure() {
         updateAttr(hubProp[i], myHub["${hubProp[i]}"])
     }
     updateAttr("lastUpdated", now())
-//    subscribe("location", "systemStart", restartDetected)
+    subscribe(location, "systemStart", restartDetected)
 }
 
 def restartDetected(evt){

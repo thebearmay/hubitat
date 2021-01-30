@@ -70,7 +70,7 @@ def configure() {
         updateAttr(hubProp[i], myHub["${hubProp[i]}"])
     }
     updateAttr("lastUpdated", now())
-    subscribe("location", "systemStart", restartDetected)
+//    subscribe("location", "systemStart", restartDetected)
 }
 
 def restartDetected(evt){

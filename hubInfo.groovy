@@ -15,10 +15,10 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    2020-12-07  thebearmay	 Original version 0.1.0
- * 
+ *    2021-01-30  thebearmay     Add full hub object properties
  */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.5.0'  }
 
 metadata {
     definition (
@@ -31,8 +31,20 @@ metadata {
 		
 		attribute "latitude", "string"
 		attribute "longitude", "string"
-        
-		command "configure", []
+        attribute "hubVersion", "string"
+        attribute "id", "string"
+        attribute "name", "string"
+        attribute "data", "string"
+        attribute "zigbeeId", "string"
+        attribute "zigbeeEui", "string"
+        attribute "hardwareID", "string"
+        attribute "type", "string"
+        attribute "localIP", "string"
+        attribute "localSrvPortTCP", "string"
+        attribute "uptime", "string"
+        attribute "lastUpdated", "string"
+        attribute "lastHubRestart", "string"
+		command "configure"
             
     }   
 }
@@ -51,7 +63,30 @@ def configure() {
     if(debugEnable) log.debug "configure()"
     sendEvent(name:"latitude", value:location.getLatitude())
 	sendEvent(name:"longitude", value:location.getLongitude())
+    sendEvent(name:"hubVersion", value:location.hub.firmwareVersionString)
+    def myHub = location.hub
+    hubProp = ["id","name","data","zigbeeId","zigbeeEui","hardwareID","type","localIP","localSrvPortTCP","firmwareVersionString","uptime"]
+    for(i=0;i<hubProp.size();i++){
+        updateAttr(hubProp[i], myHub["${hubProp[i]}"])
+    }
+    updateAttr("lastUpdated", now())
+    subscribe("location", "systemStart", restartDetected)
 }
+
+def restartDetected(evt){
+    updateAttr("lastHubRestart", now())
+    configure()
+}
+
+def updateAttr(aKey, aValue){
+    sendEvent(name:aKey, value:aValue)
+}
+
+def initialize(){
+    if(debugEnable) log.debug "initialize()"
+    configure()    
+}
+
 
 def updated(){
 	log.trace "updated()"

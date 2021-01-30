@@ -45,6 +45,7 @@ metadata {
         attribute "uptime", "string"
         attribute "lastUpdated", "string"
         attribute "lastHubRestart", "string"
+	    attribute "firmwareVersionString", "string"
 		command "configure"
             
     }   

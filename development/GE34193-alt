@@ -8,7 +8,7 @@
  *
  *  Version 1.0.0 (11/17/17)- Original release by Jeremy Williams . Great Work!
  *  Version 1.0.1 (9/29/18)- Updated by Michael Struck-Streamlined interface, added additional logging
- *
+ *  HE Original Version: Lewis Heidrick    
  *  Uses code from SmartThings
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -20,15 +20,22 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  	Date		Who			Comments
+ *	----------	-----------------	-------------------------------------------------------------------
+ *      2021-01-31 	thebearmay		Refining the HE version, version 1.0.1 HE
  */
+ 
+ static String version()	{  return '1.0.1 HE'  }
+ 
 metadata {
-	definition (name: "GE Portable Smart Motion Sensor 34193", namespace: "heidrickla", author: "Lewis Heidrick", ocfDeviceType: "x.com.st.d.sensor.motion") {
+	definition (name: "GE Portable Smart Motion Sensor 34193", namespace: "thebearmay", author: "", ocfDeviceType: "x.com.st.d.sensor.motion") {
 		capability "Motion Sensor"
 		capability "Sensor"
 		capability "Battery"
 		capability "Health Check"
- 
-		fingerprint mfr: "0063", prod: "4953", model: "3133", deviceJoinName: "GE Portable Smart Motion Sensor"
+		
+		
+		fingerprint mfr: "0063", prod: "4953", model: "3133", inClusters:"0x5E,0x86,0x72,0x59,0x85,0x73,0x71,0x84,0x80,0x30,0x70,0x7A,0x5A",deviceJoinName: "GE Portable Smart Motion Sensor"
 	}
 	simulator {
 		status "inactive": "command: 3003, payload: 00"
@@ -37,7 +44,7 @@ metadata {
 	preferences {
         input "parameterThirteen", "enum", title: "Motion Sensitivity (Default: 'High')", options: [1:"Low", 2:"Medium", 3:"High"],  defaultValue: 3, required: false
         input "parameterEighteen", "number", title: "Motion Timeout Duration (1 to 60 minutes or 0 for 5 second test mode) Test mode will default to 4 minutes after 10 minutes.  Default: 1 minute",  defaultValue: 1, required: false, range: "0..60"
-	    input "parameterTwenty", "enum", title: "Motion Sensitivity (Default: 'Basic Report')", options: [1:"Notification Report", 2:"Basic Set", 3:"Basic Report"],  defaultValue: 3, required: false
+	input "parameterTwenty", "enum", title: "Motion Sensitivity (Default: 'Basic Report')", options: [1:"Notification Report", 2:"Basic Set", 3:"Basic Report"],  defaultValue: 3, required: false
         input "parameterTwentyFour", "number", title: "Temperature and Light Sensor Frequency Setting (5 to 60 minutes) Default: 60 minutes",  defaultValue: 60, required: false, range: "5..60"
         input "parameterTwentyEight", "bool", title: "Enable LED Flash Indicator", defaultValue: true
         input "enableDebug", "bool", title: "Enable Debug", defaultValue: false
@@ -118,10 +125,11 @@ def parse(String description) {
 def sensorValueEvent(value) {
  //   def currEvent = [val:value, evtTime:now()]
     if (enableDebug) log.debug "sensorValueEvent $value"
-    if ((lastEvent == null && value == null) || lastEvent == value) {
+/*    if ((lastEvent == null && value == null) || lastEvent == value) {
         if(enableDebug) logdebug "double event - exiting"
         return //eliminate double reporting
     }
+*/
 	if (value) {
 		createEvent(name: "motion", value: "active", descriptionText: "$device.displayName detected motion")
 	} else {
@@ -227,7 +235,7 @@ def zwaveEvent(hubitat.zwave.commands.sensormultilevelv5.SensorMultilevelReport 
 }
 def zwaveEvent(hubitat.zwave.commands.securityv1.SecurityMessageEncapsulation cmd) {
 	def encapsulatedCommand = cmd.encapsulatedCommand(commandClassVersions)
-	// log.debug "encapsulated: $encapsulatedCommand"
+	//if (enableDebug) log.debug "encapsulated: $encapsulatedCommand"
 	if (encapsulatedCommand) {
 		state.sec = 1
 		zwaveEvent(encapsulatedCommand)
@@ -281,9 +289,9 @@ def configure() {
     	param18 = 255
     }
     def timing = param18==1 ? "Minute" : "Minutes"
-        if (param24 <5 || param24 > 60) {
+    if (param24 < 4 || param24 > 60) {
         param24 = 60
-        log.warn "Invalid Motion Timeout Duration. Valid ranges are from 5 to 60 minutes. Defaluting to 60."
+        log.warn "Invalid Motion Timeout Duration. Valid ranges are from 4 to 60 minutes. Defaulting to 60."
     }
     log.info "Sending parameter 18, Motion Timeout: ${param18==255 ? " 5 Seconds" : param18 + " ${timing}"}"
     log.info "Sending parameter 20, PIR Timeout Duration Setting: " + param20 + "${param20}"

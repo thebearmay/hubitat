@@ -16,9 +16,10 @@
  *    ----        ---            ----
  *    2020-12-07  thebearmay	 Original version 0.1.0
  *    2021-01-30  thebearmay     Add full hub object properties
+ *    2021-01-31  thebearmay     Code cleanup, release ready
  */
 
-static String version()	{  return '0.7.0'  }
+static String version()	{  return '1.0.0'  }
 
 metadata {
     definition (
@@ -46,6 +47,11 @@ metadata {
         attribute "lastUpdated", "string"
         attribute "lastHubRestart", "string"
 	    attribute "firmwareVersionString", "string"
+        attribute "timeZone", "string"
+        attribute "temperatureScale", "string"
+        attribute "zipCode", "string"
+        attribute "locationName", "string"
+        attribute "locationId", "string"
 		command "configure"
             
     }   
@@ -63,20 +69,19 @@ def installed() {
 
 def configure() {
     if(debugEnable) log.debug "configure()"
-    sendEvent(name:"latitude", value:location.getLatitude())
-	sendEvent(name:"longitude", value:location.getLongitude())
-    sendEvent(name:"hubVersion", value:location.hub.firmwareVersionString)
+    locProp = ["latitude", "longitude", "timeZone", "zipCode", "temperatureScale"]
     def myHub = location.hub
     hubProp = ["id","name","data","zigbeeId","zigbeeEui","hardwareID","type","localIP","localSrvPortTCP","firmwareVersionString","uptime"]
     for(i=0;i<hubProp.size();i++){
         updateAttr(hubProp[i], myHub["${hubProp[i]}"])
     }
+    for(i=0;i<locProp.size();i++){
+        updateAttr(locProp[i], location["${locProp[i]}"])
+    }
+    updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
+    updateAttr("locationName", location.name)
+    updateAttr("locationId", location.id)
     updateAttr("lastUpdated", now())
-}
-
-def restartDetected(){
-    updateAttr("lastHubRestart", now())
-    configure()
 }
 
 def updateAttr(aKey, aValue){
@@ -85,7 +90,8 @@ def updateAttr(aKey, aValue){
 
 def initialize(){
     if(debugEnable) log.debug "initialize()"
-    restartDetected()	
+// psuedo restart time - can also be set at the device creation or by a manual initialize
+    updateAttr("lastHubRestart", now())	
     configure()    
 }
 

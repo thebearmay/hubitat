@@ -17,9 +17,10 @@
  *    2020-12-07  thebearmay	 Original version 0.1.0
  *    2021-01-30  thebearmay     Add full hub object properties
  *    2021-01-31  thebearmay     Code cleanup, release ready
+ *    2021-01-31  thebearmay     Putting a config delay in at initialize to make sure version data is accurate
  */
 
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.0.1'  }
 
 metadata {
     definition (
@@ -89,10 +90,10 @@ def updateAttr(aKey, aValue){
 }
 
 def initialize(){
-    if(debugEnable) log.debug "initialize()"
+    log.trace "Hub Information initialize()"
 // psuedo restart time - can also be set at the device creation or by a manual initialize
     updateAttr("lastHubRestart", now())	
-    configure()    
+    runIn(30,configure)    
 }
 
 

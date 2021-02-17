@@ -18,9 +18,10 @@
  *    2021-01-30  thebearmay     Add full hub object properties
  *    2021-01-31  thebearmay     Code cleanup, release ready
  *    2021-01-31  thebearmay     Putting a config delay in at initialize to make sure version data is accurate
+ *    2021-02-16  thebearmay     Add text date for restart
  */
-
-static String version()	{  return '1.0.1'  }
+import java.text.SimpleDateFormat
+static String version()	{  return '1.1.1'  }
 
 metadata {
     definition (
@@ -53,6 +54,7 @@ metadata {
         attribute "zipCode", "string"
         attribute "locationName", "string"
         attribute "locationId", "string"
+        attribute "lastHubRestartFormatted", "string"
 		command "configure"
             
     }   
@@ -92,7 +94,10 @@ def updateAttr(aKey, aValue){
 def initialize(){
     log.trace "Hub Information initialize()"
 // psuedo restart time - can also be set at the device creation or by a manual initialize
-    updateAttr("lastHubRestart", now())	
+    restartVal = now()
+    updateAttr("lastHubRestart", restartVal)	
+    sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
     runIn(30,configure)    
 }
 

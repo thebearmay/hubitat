@@ -145,7 +145,7 @@ def getTemp(){
             updateAttr("freeMemory",memWork)
     })
 	
-    updateArr("uptime", location.hub.uptime)
+    updateAttr("uptime", location.hub.uptime)
 	
     if(tempPollRate == null)  device.updateSetting("tempPollRate",[value:300,type:"number"])
     if (debugEnable) log.debug tempPollRate

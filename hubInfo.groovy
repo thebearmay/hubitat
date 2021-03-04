@@ -21,7 +21,7 @@
  *    2021-02-16  thebearmay     Add text date for restart
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.2.1'  }
+static String version()	{  return '1.3.2'  }
 
 metadata {
     definition (

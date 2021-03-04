@@ -19,6 +19,7 @@
  *    2021-01-31  thebearmay     Code cleanup, release ready
  *    2021-01-31  thebearmay     Putting a config delay in at initialize to make sure version data is accurate
  *    2021-02-16  thebearmay     Add text date for restart
+ *    2021-03-05  thebearmay     Added CPU and Temperature polling
  */
 import java.text.SimpleDateFormat
 static String version()	{  return '1.3.2'  }

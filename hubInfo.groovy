@@ -21,7 +21,7 @@
  *    2021-02-16  thebearmay     Add text date for restart
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.1.1'  }
+static String version()	{  return '1.2.1'  }
 
 metadata {
     definition (
@@ -30,9 +30,10 @@ metadata {
 		author: "Jean P. May, Jr.",
 	        importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
 	) {
-        	capability "Actuator"
-	    	capability "Initialize"
-		
+        capability "Actuator"
+	    capability "Initialize"
+		capability "TemperatureMeasurement"
+        
 		attribute "latitude", "string"
 		attribute "longitude", "string"
         attribute "hubVersion", "string"
@@ -62,9 +63,9 @@ metadata {
 
 preferences {
 	input("debugEnable", "bool", title: "Enable debug logging?")
+    input("tempPollEnable", "bool", title: "Enable Temperature Polling")
+    input("tempPollRate", "number", title: "Temperature Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
 }
-
-
 
 def installed() {
 	log.trace "installed()"
@@ -85,6 +86,7 @@ def configure() {
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
     updateAttr("lastUpdated", now())
+    if (tempPollEnable) getTemp()
 }
 
 def updateAttr(aKey, aValue){
@@ -98,7 +100,31 @@ def initialize(){
     updateAttr("lastHubRestart", restartVal)	
     sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
-    runIn(30,configure)    
+    runIn(30,configure)
+}
+
+def getTemp(){
+    params = [
+        uri: "http://${location.hub.localIP}:8080",
+        path:"/hub/advanced/internalTempCelsius"
+    ]
+    if(debugEnable)log.debug params
+    httpGet(params, {response -> 
+        if(debugEnable) {
+            response.headers.each {
+                log.debug "${it.name} : ${it.value}"
+            }
+            log.debug response.data
+        }
+        tempWork = new Double(response.data.toString())
+        if(debugEnable) log.debug tempWork
+        if (location.temperatureScale == "F")
+            updateAttr("temperature",celsiusToFahrenheit(tempWork))
+        else
+            updateAttr("temperature",tempWork)
+    })
+    log.debug tempPollRate
+    runIn(tempPollRate,getTemp)
 }
 
 

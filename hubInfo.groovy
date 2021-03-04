@@ -22,7 +22,7 @@
  *    2021-03-05  thebearmay     Added CPU and Temperature polling
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.3.2'  }
+static String version()	{  return '1.3.3'  }
 
 metadata {
     definition (
@@ -144,6 +144,9 @@ def getTemp(){
         
             updateAttr("freeMemory",memWork)
     })
+	
+    updateArr("uptime", location.hub.uptime)
+	
     if(tempPollRate == null)  device.updateSetting("tempPollRate",[value:300,type:"number"])
     if (debugEnable) log.debug tempPollRate
     if (tempPollEnable) runIn(tempPollRate,getTemp)

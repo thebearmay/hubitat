@@ -123,8 +123,8 @@ def getTemp(){
         else
             updateAttr("temperature",tempWork)
     })
-    log.debug tempPollRate
-    runIn(tempPollRate,getTemp)
+    if (debugEnable) log.debug tempPollRate
+    if (tempPollEnable) runIn(tempPollRate,getTemp)
 }
 
 

@@ -56,6 +56,7 @@ metadata {
         attribute "locationName", "string"
         attribute "locationId", "string"
         attribute "lastHubRestartFormatted", "string"
+        attribute "freeMemory", "string"
 		command "configure"
             
     }   
@@ -123,6 +124,26 @@ def getTemp(){
         else
             updateAttr("temperature",tempWork)
     })
+    
+    // get Free Memory
+    params = [
+        uri: "http://${location.hub.localIP}:8080",
+        path:"/hub/advanced/freeOSMemory"
+    ]
+    if(debugEnable)log.debug params
+    httpGet(params, {response -> 
+        if(debugEnable) {
+            response.headers.each {
+                log.debug "${it.name} : ${it.value}"
+            }
+            log.debug response.data
+        }
+        memWork = new Double(response.data.toString())
+        if(debugEnable) log.debug memWork
+        
+            updateAttr("freeMemory",memWork)
+    })
+    if(tempPollRate == null)  device.updateSetting("tempPollRate",[value:300,type:"number"])
     if (debugEnable) log.debug tempPollRate
     if (tempPollEnable) runIn(tempPollRate,getTemp)
 }

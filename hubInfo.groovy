@@ -53,7 +53,7 @@ metadata {
         attribute "uptime", "string"
         attribute "lastUpdated", "string"
         attribute "lastHubRestart", "string"
-	attribute "firmwareVersionString", "string"
+	    attribute "firmwareVersionString", "string"
         attribute "timeZone", "string"
         attribute "temperatureScale", "string"
         attribute "zipCode", "string"
@@ -61,7 +61,7 @@ metadata {
         attribute "locationId", "string"
         attribute "lastHubRestartFormatted", "string"
         attribute "freeMemory", "string"
-	attribute "temperatureF", "string"
+	    attribute "temperatureF", "string"
         attribute "temperatureC", "string"
         attribute "formattedUptime", "string"
         attribute "html", "string";                              
@@ -73,7 +73,7 @@ metadata {
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
-    input("tempPollEnable", "bool", title: "Enable Temperature/Memory Polling")
+    input("tempPollEnable", "bool", title: "Enable Temperature/Memory/html Polling")
     input("tempPollRate", "number", title: "Temperature/Memory Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("attribEnable", "bool", title: "Enable Info attribute?", default: false, required: false, submitOnChange: true)
 }
@@ -83,7 +83,8 @@ def installed() {
 }
 
 def configure() {
-    if(debugEnable) log.debug "configure()"
+    //if(debugEnable) 
+    log.debug "configure()"
     locProp = ["latitude", "longitude", "timeZone", "zipCode", "temperatureScale"]
     def myHub = location.hub
     hubProp = ["id","name","data","zigbeeId","zigbeeEui","hardwareID","type","localIP","localSrvPortTCP","firmwareVersionString","uptime"]
@@ -140,27 +141,17 @@ def formatAttrib(){
    def result4 = addToAttr("Free Memory","freeMemory","int")
    def result5 = addToAttr("Last Restart","lastHubRestartFormatted")
    def result6 = addToAttr("Uptime","formattedUptime")
-   def result7 = addTempToAttr("Temperature","temperature","temperatureScale")
+   def tempAttrib = "temperatureC"
+ 
+   if (location.temperatureScale == "F") 
+      tempAttrib = "temperatureF"
+   
+    result7 = addToAttr("Temperature",tempAttrib)
     
     state.attrString = currentState + result1 + result2 + result3 + result4 + result5 + result6 + result7 + "</table>"
    
     if (enableDebug) log.debug "after calls attr string = $state.attrString"
     sendEvent(name: "html", value: state.attrString, isChanged: true)
-}
-
-def addTempToAttr(String name, String key, String scaleKey)
-{
-   // log.debug "adding $name, $key"
-    String retResult
-    retResult = '<Tr><td align="left">'
-    retResult = retResult + name + '</td><td space="5"> </td><td align="left">'
-    String attrval = device.currentValue(key)
-    String scale = device.currentValue(scaleKey)
-    
-    retResult = retResult + attrval + " °" + scale
-    retResult = retResult + '</td></tr>'
-  
-    retResult  
 }
 
 def addToAttr(String name, String key, String convert = "none")
@@ -228,10 +219,12 @@ def getTemp(){
     })
 	
     updateAttr("uptime", location.hub.uptime)
-	
+	formatUptime()
+    
     if(tempPollRate == null)  device.updateSetting("tempPollRate",[value:300,type:"number"])
-    if (debugEnable) log.debug tempPollRate
+      
     if (attribEnable) formatAttrib()
+    if (debugEnable) log.debug tempPollRate
     if (tempPollEnable) runIn(tempPollRate,getTemp)
 }
 

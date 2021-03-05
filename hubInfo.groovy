@@ -124,11 +124,11 @@ def getTemp(){
         tempWork = new Double(response.data.toString())
         if(debugEnable) log.debug tempWork
         if (location.temperatureScale == "F")
-            updateAttr("temperature",celsiusToFahrenheit(tempWork))
+            sendEvent(name:"temperature",value:celsiusToFahrenheit(tempWork),unit:"°${location.temperatureScale}")
         else
-            updateAttr("temperature",tempWork)
-        updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
-        updateAttr("temperatureC",tempWork+ " °C")
+            sendEvent(name:"temperature",value:tempWork,unit:"°${location.temperatureScale}")
+        updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ "<span class='small'> °F</span>")
+        updateAttr("temperatureC",tempWork+ "<span class='small'> °C</span>")
     })
     
     // get Free Memory

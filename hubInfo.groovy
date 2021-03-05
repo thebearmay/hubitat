@@ -19,11 +19,13 @@
  *    2021-01-31  thebearmay     Code cleanup, release ready
  *    2021-01-31  thebearmay     Putting a config delay in at initialize to make sure version data is accurate
  *    2021-02-16  thebearmay     Add text date for restart
- *    2021-03-04  thebearmay     Added CPU and Temperature polling
+ *    2021-03-04  thebearmay     Added CPU and Temperature polling 
  *    2021-03-05  thebearmay     Add the degree symbol and scale to the temperature attribute 
+ *    2021-03-05  thebearmay	 Merged addtions from LGKhan: Added new formatted uptime attr, also added an html attr that stores a bunch of the useful 
+ *					                info in table format so you can use on any dashboard
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.3.4'  }
+static String version()	{  return '1.4.4'  }
 
 metadata {
     definition (
@@ -33,11 +35,11 @@ metadata {
 	        importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
 	) {
         capability "Actuator"
-	    capability "Initialize"
-		capability "TemperatureMeasurement"
+	capability "Initialize"
+	capability "TemperatureMeasurement"
         
-		attribute "latitude", "string"
-		attribute "longitude", "string"
+	attribute "latitude", "string"
+	attribute "longitude", "string"
         attribute "hubVersion", "string"
         attribute "id", "string"
         attribute "name", "string"
@@ -51,7 +53,7 @@ metadata {
         attribute "uptime", "string"
         attribute "lastUpdated", "string"
         attribute "lastHubRestart", "string"
-	    attribute "firmwareVersionString", "string"
+	attribute "firmwareVersionString", "string"
         attribute "timeZone", "string"
         attribute "temperatureScale", "string"
         attribute "zipCode", "string"
@@ -59,17 +61,21 @@ metadata {
         attribute "locationId", "string"
         attribute "lastHubRestartFormatted", "string"
         attribute "freeMemory", "string"
-        attribute "temperatureF", "string"
+	attribute "temperatureF", "string"
         attribute "temperatureC", "string"
-		command "configure"
+        attribute "formattedUptime", "string"
+        attribute "html", "string";                              
+   
+	command "configure"
             
     }   
 }
 
 preferences {
-	input("debugEnable", "bool", title: "Enable debug logging?")
-    input("tempPollEnable", "bool", title: "Enable Temperature Polling")
-    input("tempPollRate", "number", title: "Temperature Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
+    input("debugEnable", "bool", title: "Enable debug logging?")
+    input("tempPollEnable", "bool", title: "Enable Temperature/Memory Polling")
+    input("tempPollRate", "number", title: "Temperature/Memory Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
+    input("attribEnable", "bool", title: "Enable Info attribute?", default: false, required: false, submitOnChange: true)
 }
 
 def installed() {
@@ -87,11 +93,13 @@ def configure() {
     for(i=0;i<locProp.size();i++){
         updateAttr(locProp[i], location["${locProp[i]}"])
     }
+    formatUptime()
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
     updateAttr("lastUpdated", now())
     if (tempPollEnable) getTemp()
+    if (attribEnable) formatAttrib()
 }
 
 def updateAttr(aKey, aValue){
@@ -108,6 +116,75 @@ def initialize(){
     runIn(30,configure)
 }
 
+def formatUptime(){
+  String attrval 
+
+    Integer ut = device.currentValue("uptime").toDouble()
+    Integer days = (ut/(3600*24))
+    Integer hrs = (ut - (days * (3600*24))) /3600
+    Integer min =  (ut -  ((days * (3600*24)) + (hrs * 3600))) /60
+    Integer sec = ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))
+    
+    attrval = days.toString() + " days, " + hrs.toString() + " hours, " + min.toString() + " minutes and " + sec.toString() + " seconds."
+    sendEvent(name: "formattedUptime", value: attrval, isChanged: true) 
+}
+
+def formatAttrib(){ 
+    if(debubEnable) log.debug "formatAttrib"
+   state.attrString = "<table>"
+
+   def currentState = state.attrString
+   def result1 = addToAttr("Name","name")
+   def result2 = addToAttr("Version","hubVersion")
+   def result3 = addToAttr("Address","localIP")
+   def result4 = addToAttr("Free Memory","freeMemory","int")
+   def result5 = addToAttr("Last Restart","lastHubRestartFormatted")
+   def result6 = addToAttr("Uptime","formattedUptime")
+   def result7 = addTempToAttr("Temperature","temperature","temperatureScale")
+    
+    state.attrString = currentState + result1 + result2 + result3 + result4 + result5 + result6 + result7 + "</table>"
+   
+    if (enableDebug) log.debug "after calls attr string = $state.attrString"
+    sendEvent(name: "html", value: state.attrString, isChanged: true)
+}
+
+def addTempToAttr(String name, String key, String scaleKey)
+{
+   // log.debug "adding $name, $key"
+    String retResult
+    retResult = '<Tr><td align="left">'
+    retResult = retResult + name + '</td><td space="5"> </td><td align="left">'
+    String attrval = device.currentValue(key)
+    String scale = device.currentValue(scaleKey)
+    
+    retResult = retResult + attrval + " °" + scale
+    retResult = retResult + '</td></tr>'
+  
+    retResult  
+}
+
+def addToAttr(String name, String key, String convert = "none")
+{
+   // log.debug "adding $name, $key"
+    String retResult
+    retResult = '<Tr><td align="left">'
+    retResult = retResult + name + '</td><td space="5"> </td><td align="left">'
+    String attrval 
+    
+    if (convert == "int")
+    {      
+    Integer temp = device.currentValue(key).toDouble()
+    attrval = temp.toString()
+    }
+    
+   else attrval = device.currentValue(key)
+    
+    retResult = retResult + attrval
+    retResult = retResult + '</td></tr>'
+  
+    retResult
+}
+    
 def getTemp(){
     params = [
         uri: "http://${location.hub.localIP}:8080",

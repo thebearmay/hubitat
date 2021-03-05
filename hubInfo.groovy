@@ -124,9 +124,9 @@ def getTemp(){
         tempWork = new Double(response.data.toString())
         if(debugEnable) log.debug tempWork
         if (location.temperatureScale == "F")
-            updateAttr("temperature",celsiusToFahrenheit(tempWork)+ " °F")
+            updateAttr("temperature",celsiusToFahrenheit(tempWork))
         else
-            updateAttr("temperature",tempWork+ " °C")
+            updateAttr("temperature",tempWork)
         updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
         updateAttr("temperatureC",tempWork+ " °C")
     })

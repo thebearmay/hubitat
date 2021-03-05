@@ -19,10 +19,11 @@
  *    2021-01-31  thebearmay     Code cleanup, release ready
  *    2021-01-31  thebearmay     Putting a config delay in at initialize to make sure version data is accurate
  *    2021-02-16  thebearmay     Add text date for restart
- *    2021-03-05  thebearmay     Added CPU and Temperature polling
+ *    2021-03-04  thebearmay     Added CPU and Temperature polling
+ *    2021-03-05  thebearmay     Add the degree symbol and scale to the temperature attribute 
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.3.3'  }
+static String version()	{  return '1.3.4'  }
 
 metadata {
     definition (
@@ -58,6 +59,8 @@ metadata {
         attribute "locationId", "string"
         attribute "lastHubRestartFormatted", "string"
         attribute "freeMemory", "string"
+        attribute "temperatureF", "string"
+        attribute "temperatureC", "string"
 		command "configure"
             
     }   
@@ -121,9 +124,11 @@ def getTemp(){
         tempWork = new Double(response.data.toString())
         if(debugEnable) log.debug tempWork
         if (location.temperatureScale == "F")
-            updateAttr("temperature",celsiusToFahrenheit(tempWork))
+            updateAttr("temperature",celsiusToFahrenheit(tempWork)+ " °F")
         else
-            updateAttr("temperature",tempWork)
+            updateAttr("temperature",tempWork+ " °C")
+        updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
+        updateAttr("temperatureC",tempWork+ " °C")
     })
     
     // get Free Memory

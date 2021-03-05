@@ -231,6 +231,7 @@ def getTemp(){
 	
     if(tempPollRate == null)  device.updateSetting("tempPollRate",[value:300,type:"number"])
     if (debugEnable) log.debug tempPollRate
+    if (attribEnable) formatAttrib()
     if (tempPollEnable) runIn(tempPollRate,getTemp)
 }
 

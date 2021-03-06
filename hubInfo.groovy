@@ -25,7 +25,7 @@
  *					                info in table format so you can use on any dashboard
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.4.4'  }
+static String version()	{  return '1.4.5'  }
 
 metadata {
     definition (
@@ -83,8 +83,7 @@ def installed() {
 }
 
 def configure() {
-    //if(debugEnable) 
-    log.debug "configure()"
+    if(debugEnable) log.debug "configure()"
     locProp = ["latitude", "longitude", "timeZone", "zipCode", "temperatureScale"]
     def myHub = location.hub
     hubProp = ["id","name","data","zigbeeId","zigbeeEui","hardwareID","type","localIP","localSrvPortTCP","firmwareVersionString","uptime"]
@@ -131,7 +130,7 @@ def formatUptime(){
 }
 
 def formatAttrib(){ 
-    if(debubEnable) log.debug "formatAttrib"
+    if(debugEnable) log.debug "formatAttrib"
    state.attrString = "<table>"
 
    def currentState = state.attrString
@@ -150,32 +149,22 @@ def formatAttrib(){
     
     state.attrString = currentState + result1 + result2 + result3 + result4 + result5 + result6 + result7 + "</table>"
    
-    if (enableDebug) log.debug "after calls attr string = $state.attrString"
+    if (debugEnable) log.debug "after calls attr string = $state.attrString"
     sendEvent(name: "html", value: state.attrString, isChanged: true)
 }
 
 def addToAttr(String name, String key, String convert = "none")
 {
    // log.debug "adding $name, $key"
-    String retResult
-    retResult = '<Tr><td align="left">'
-    retResult = retResult + name + '</td><td space="5"> </td><td align="left">'
-    String attrval 
+    String retResult = '<Tr><td align="left">'
+    retResult += name + '</td><td space="5"> </td><td align="left">'
+   
+    if (convert == "int") retResult += device.currentValue(key).toDouble().toString()
+     else retResult += device.currentValue(key)
     
-    if (convert == "int")
-    {      
-    Integer temp = device.currentValue(key).toDouble()
-    attrval = temp.toString()
-    }
-    
-   else attrval = device.currentValue(key)
-    
-    retResult = retResult + attrval
-    retResult = retResult + '</td></tr>'
-  
-    retResult
+    retResult += '</td></tr>'
 }
-    
+
 def getTemp(){
     params = [
         uri: "http://${location.hub.localIP}:8080",
@@ -232,6 +221,11 @@ def getTemp(){
 def updated(){
 	log.trace "updated()"
 	if(debugEnable) runIn(1800,logsOff)
+    if (attribEnable) formatAttrib() 
+    else { 
+        state.remove("attrString"); 
+        sendEvent(name: "html", value: "<table></table>", isChanged: true); 
+    }
 }
 
 void logsOff(){

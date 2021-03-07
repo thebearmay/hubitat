@@ -20,12 +20,13 @@
  *    2021-01-31  thebearmay     Putting a config delay in at initialize to make sure version data is accurate
  *    2021-02-16  thebearmay     Add text date for restart
  *    2021-03-04  thebearmay     Added CPU and Temperature polling 
- *    2021-03-05  thebearmay     Merged CSteele Add the degree symbol and scale to the temperature attribute 
+ *    2021-03-05  thebearmay     Merged CSteele additions and added the degree symbol and scale to the temperature attribute 
  *    2021-03-05  thebearmay	 Merged addtions from LGKhan: Added new formatted uptime attr, also added an html attr that stores a bunch of the useful 
  *					                info in table format so you can use on any dashboard
+ *    2021-03-06  thebearmay     Merged security login from BPTWorld
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.4.5'  }
+static String version()	{  return '1.5.0'  }
 
 metadata {
     definition (

@@ -75,6 +75,9 @@ preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
     input("tempPollEnable", "bool", title: "Enable Temperature/Memory/html Polling")
     input("tempPollRate", "number", title: "Temperature/Memory Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
+    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
+    input("username", "string", title: "Hub Security Username", required: false)
+    input("password", "password", title: "Hub Security Password", required: false)
     input("attribEnable", "bool", title: "Enable Info attribute?", default: false, required: false, submitOnChange: true)
 }
 
@@ -166,9 +169,27 @@ def addToAttr(String name, String key, String convert = "none")
 }
 
 def getTemp(){
+    // start - Modified from dman2306 Rebooter app
+    if(security) {
+        httpPost(
+            [
+                uri: "http://127.0.0.1:8080",
+                path: "/login",
+                query: [ loginRedirect: "/" ],
+                body: [
+                    username: username,
+                    password: password,
+                    submit: "Login"
+                ]
+            ]
+        ) { resp -> cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0) }
+    }
+    // End - Modified from dman2306 Rebooter app
+    
     params = [
         uri: "http://${location.hub.localIP}:8080",
-        path:"/hub/advanced/internalTempCelsius"
+        path:"/hub/advanced/internalTempCelsius",
+        headers: [ "Cookie": cookie ]
     ]
     if(debugEnable)log.debug params
     httpGet(params, {response -> 
@@ -191,7 +212,8 @@ def getTemp(){
     // get Free Memory
     params = [
         uri: "http://${location.hub.localIP}:8080",
-        path:"/hub/advanced/freeOSMemory"
+        path:"/hub/advanced/freeOSMemory",
+        headers: [ "Cookie": cookie ]
     ]
     if(debugEnable)log.debug params
     httpGet(params, {response -> 

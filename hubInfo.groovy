@@ -32,7 +32,7 @@ metadata {
 		name: "Hub Information", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
-	        importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
+	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
 	) {
         capability "Actuator"
 	capability "Initialize"

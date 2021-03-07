@@ -3,7 +3,7 @@
   "author": "Jean P. May, Jr.",
   "version": "1.5.1",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-03-05",
+  "dateReleased": "2021-03-06",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

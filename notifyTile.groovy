@@ -30,7 +30,7 @@ metadata {
 		namespace: "thebearmay", 
 		description: "Simple driver to act as a destination for notifications, and provide an attribute to display the last 5 on a tile.",
 		author: "Jean P. May, Jr.",
-	    	importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/notifyTile.groovy"
+	    	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/notifyTile.groovy"
 	) {
        		capability "Notification"
 			

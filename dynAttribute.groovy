@@ -26,7 +26,7 @@ metadata {
 		name: "Dynamic Attribute Device", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
-	        importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/dynAttribute.groovy"
+	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/dynAttribute.groovy"
 	) {
         	capability "Actuator"
 		

@@ -23,10 +23,11 @@
  *    2021-03-05  thebearmay     Merged CSteele additions and added the degree symbol and scale to the temperature attribute 
  *    2021-03-05  thebearmay	 Merged addtions from LGKhan: Added new formatted uptime attr, also added an html attr that stores a bunch of the useful 
  *					                info in table format so you can use on any dashboard
- *    2021-03-06  thebearmay     Merged security login from BPTWorld
+ *    2021-03-06  thebearmay     Merged security login from BPTWorld (from dman2306 rebooter app)
+ *    2021-03-06  thebearmay     change numeric attributes to type number
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.5.0'  }
+static String version()	{  return '1.5.1'  }
 
 metadata {
     definition (
@@ -51,7 +52,7 @@ metadata {
         attribute "type", "string"
         attribute "localIP", "string"
         attribute "localSrvPortTCP", "string"
-        attribute "uptime", "string"
+        attribute "uptime", "number"
         attribute "lastUpdated", "string"
         attribute "lastHubRestart", "string"
 	    attribute "firmwareVersionString", "string"
@@ -61,7 +62,7 @@ metadata {
         attribute "locationName", "string"
         attribute "locationId", "string"
         attribute "lastHubRestartFormatted", "string"
-        attribute "freeMemory", "string"
+        attribute "freeMemory", "number"
 	    attribute "temperatureF", "string"
         attribute "temperatureC", "string"
         attribute "formattedUptime", "string"

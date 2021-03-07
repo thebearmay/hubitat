@@ -26,7 +26,7 @@ metadata {
 		name: "Virtual Calendar Extension Device", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
-	    	importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/virtualCalendarExt.groovy"
+	    	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/virtualCalendarExt.groovy"
 	) {
         	capability "Actuator"
 		

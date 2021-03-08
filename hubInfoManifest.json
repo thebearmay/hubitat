@@ -1,9 +1,9 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-03-06",
+  "dateReleased": "2021-03-07",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

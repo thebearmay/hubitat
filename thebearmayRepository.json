@@ -21,6 +21,16 @@
       "tags": [
         "Misc. Devices"
       ]
+    },
+    {
+      "id": "92d8e87a-595e-479c-8dca-59a9d0925eb6",
+      "name": "Dashboard Variable Device",
+      "category": "Integrations",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/dashVariableManifest.json",
+      "description": "This is a psuedo Global Variable Connector that works with RM or webCoRE to provide a bi-directional interface to the Variable Tile.  Was written primarily to give webCoRE users a method of working with the variable tile without requiring the creation of an RM global variable and connector.",
+	  "tags": [
+        "Misc. Devices"
+      ]
     }
   ]
 }

@@ -24,10 +24,11 @@
  *    2021-03-05  thebearmay	 Merged addtions from LGKhan: Added new formatted uptime attr, also added an html attr that stores a bunch of the useful 
  *					                info in table format so you can use on any dashboard
  *    2021-03-06  thebearmay     Merged security login from BPTWorld (from dman2306 rebooter app)
- *    2021-03-06  thebearmay     change numeric attributes to type number
+ *    2021-03-06  thebearmay     Change numeric attributes to type number
+ *    2021-03-07  thebearmay     Incorporate CSteele async changes along with some code cleanup and adding tags to the html to allow CSS overrides
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.5.1'  }
+static String version()	{  return '1.6.0'  }
 
 metadata {
     definition (
@@ -75,11 +76,13 @@ metadata {
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
-    input("tempPollEnable", "bool", title: "Enable Temperature/Memory/html Polling")
-    input("tempPollRate", "number", title: "Temperature/Memory Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
+    input("tempPollEnable", "bool", title: "Enable Temperature/Memory/HTML Polling")
+    if (tempPollEnable) input("tempPollRate", "number", title: "Temperature/Memory Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
-    input("username", "string", title: "Hub Security Username", required: false)
-    input("password", "password", title: "Hub Security Password", required: false)
+    if (security) { 
+        input("username", "string", title: "Hub Security Username", required: false)
+        input("password", "password", title: "Hub Security Password", required: false)
+    }
     input("attribEnable", "bool", title: "Enable Info attribute?", default: false, required: false, submitOnChange: true)
 }
 
@@ -122,7 +125,7 @@ def initialize(){
 }
 
 def formatUptime(){
-  String attrval 
+    String attrval 
 
     Integer ut = device.currentValue("uptime").toDouble()
     Integer days = (ut/(3600*24))
@@ -135,8 +138,8 @@ def formatUptime(){
 }
 
 def formatAttrib(){ 
-    if(debugEnable) log.debug "formatAttrib"
-   state.attrString = "<table>"
+   if(debugEnable) log.debug "formatAttrib"
+   state.attrString = "<table id='hubInfoTable'>"
 
    def currentState = state.attrString
    def result1 = addToAttr("Name","name")
@@ -160,16 +163,21 @@ def formatAttrib(){
 
 def addToAttr(String name, String key, String convert = "none")
 {
-   // log.debug "adding $name, $key"
-    String retResult = '<Tr><td align="left">'
+    if(enableDebug) log.debug "adding $name, $key"
+    String retResult = '<tr><td align="left">'
     retResult += name + '</td><td space="5"> </td><td align="left">'
    
-    if (convert == "int") retResult += device.currentValue(key).toDouble().toString()
-     else retResult += device.currentValue(key)
+    if (convert == "int"){
+        retResult += device.currentValue(key).toInteger().toString()
+    } else if (name=="Temperature"){
+        // span uses integer value to allow CSS override 
+        retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + device.currentValue(key) + "</span>"
+    } else retResult += device.currentValue(key)
     
     retResult += '</td></tr>'
 }
 
+//start CSteele changes 210307
 def getTemp(){
     // start - Modified from dman2306 Rebooter app
     if(security) {
@@ -194,22 +202,7 @@ def getTemp(){
         headers: [ "Cookie": cookie ]
     ]
     if(debugEnable)log.debug params
-    httpGet(params, {response -> 
-        if(debugEnable) {
-            response.headers.each {
-                log.debug "${it.name} : ${it.value}"
-            }
-            log.debug response.data
-        }
-        tempWork = new Double(response.data.toString())
-        if(debugEnable) log.debug tempWork
-        if (location.temperatureScale == "F")
-            sendEvent(name:"temperature",value:celsiusToFahrenheit(tempWork),unit:"°${location.temperatureScale}")
-        else
-            sendEvent(name:"temperature",value:tempWork,unit:"°${location.temperatureScale}")
-        updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ "<span class='small'> °F</span>")
-        updateAttr("temperatureC",tempWork+ "<span class='small'> °C</span>")
-    })
+    asynchttpGet("getTempHandler", params)
     
     // get Free Memory
     params = [
@@ -218,29 +211,42 @@ def getTemp(){
         headers: [ "Cookie": cookie ]
     ]
     if(debugEnable)log.debug params
-    httpGet(params, {response -> 
-        if(debugEnable) {
-            response.headers.each {
-                log.debug "${it.name} : ${it.value}"
-            }
-            log.debug response.data
-        }
-        memWork = new Double(response.data.toString())
-        if(debugEnable) log.debug memWork
-        
-            updateAttr("freeMemory",memWork)
-    })
+    asynchttpGet("getFreeMemHandler", params)
 	
     updateAttr("uptime", location.hub.uptime)
 	formatUptime()
     
     if(tempPollRate == null)  device.updateSetting("tempPollRate",[value:300,type:"number"])
       
-    if (attribEnable) formatAttrib()
-    if (debugEnable) log.debug tempPollRate
+//    if (attribEnable) formatAttrib()
+    if (debugEnable) log.debug "tempPollRate: $tempPollRate"
     if (tempPollEnable) runIn(tempPollRate,getTemp)
 }
 
+
+def getTempHandler(resp, data) {
+	if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+		tempWork = new Double(resp.data.toString())
+		if(debugEnable) log.debug tempWork
+		if (location.temperatureScale == "F")
+		    sendEvent(name:"temperature",value:celsiusToFahrenheit(tempWork),unit:"°${location.temperatureScale}")
+		else
+		    sendEvent(name:"temperature",value:tempWork,unit:"°${location.temperatureScale}")
+
+		updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ "<span class='small'> °F</span>")
+		updateAttr("temperatureC",tempWork+ "<span class='small'> °C</span>")
+	}
+}
+
+def getFreeMemHandler(resp, data) {
+	if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+		memWork = new Integer(resp.data.toString())
+		if(debugEnable) log.debug memWork
+        updateAttr("freeMemory",memWork)
+	}
+    if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210307
+}
+// end CSteele changes 210307
 
 def updated(){
 	log.trace "updated()"

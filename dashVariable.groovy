@@ -31,9 +31,9 @@ metadata {
 		
 		attribute "variable", "string"
 
-     //This one works with the dashboard
+     //This one works with the dashboard, will work with webCoRE but generates a UI error message 
 		command "setVariable", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]
-		//This one works in webCore
+		//This one works in webCoRE without UI error message
     command "setVariableAlt", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]   
             
     }   

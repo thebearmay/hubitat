@@ -4,7 +4,7 @@
   "packages": [
     {
       "id": "95a9ea0a-ce4a-42a1-bd56-2860c6766367",
-      "name": "Hub Information Device",
+      "name": "Hubitat Hub Information Device",
       "category": "Convenience",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoManifest.json",
       "description": "Device driver that provides access to the basic hub and location information about the hub.  Has an option to allow polling to report hub temperature and memory.",

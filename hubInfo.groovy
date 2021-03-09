@@ -25,10 +25,11 @@
  *					                info in table format so you can use on any dashboard
  *    2021-03-06  thebearmay     Merged security login from BPTWorld (from dman2306 rebooter app)
  *    2021-03-06  thebearmay     Change numeric attributes to type number
- *    2021-03-07  thebearmay     Incorporate CSteele async changes along with some code cleanup and adding tags to the html to allow CSS overrides
+ *    2021-03-08  thebearmay     Incorporate CSteele async changes along with some code cleanup and adding tags to the html to allow CSS overrides
+ *    2021-03-09  thebearmay     Code tightening as suggested by CSteele, remove state variables, etc.
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.6.0'  }
+static String version()	{  return '1.6.1'  }
 
 metadata {
     definition (
@@ -56,7 +57,7 @@ metadata {
         attribute "uptime", "number"
         attribute "lastUpdated", "string"
         attribute "lastHubRestart", "string"
-	    attribute "firmwareVersionString", "string"
+	attribute "firmwareVersionString", "string"
         attribute "timeZone", "string"
         attribute "temperatureScale", "string"
         attribute "zipCode", "string"
@@ -64,7 +65,7 @@ metadata {
         attribute "locationId", "string"
         attribute "lastHubRestartFormatted", "string"
         attribute "freeMemory", "number"
-	    attribute "temperatureF", "string"
+	attribute "temperatureF", "string"
         attribute "temperatureC", "string"
         attribute "formattedUptime", "string"
         attribute "html", "string";                              
@@ -138,27 +139,21 @@ def formatUptime(){
 }
 
 def formatAttrib(){ 
-   if(debugEnable) log.debug "formatAttrib"
-   state.attrString = "<table id='hubInfoTable'>"
+	if(debugEnable) log.debug "formatAttrib"
+	def attrStr = "<table id='hubInfoTable'>"
+	
+	attrStr += addToAttr("Name","name")
+	attrStr += addToAttr("Version","hubVersion")
+	attrStr += addToAttr("Address","localIP")
+	attrStr += addToAttr("Free Memory","freeMemory","int")
+	attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
+	attrStr += addToAttr("Uptime","formattedUptime")
+	def tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
+	attrStr += addToAttr("Temperature",tempAttrib)
+	attrStr += "</table>"
 
-   def currentState = state.attrString
-   def result1 = addToAttr("Name","name")
-   def result2 = addToAttr("Version","hubVersion")
-   def result3 = addToAttr("Address","localIP")
-   def result4 = addToAttr("Free Memory","freeMemory","int")
-   def result5 = addToAttr("Last Restart","lastHubRestartFormatted")
-   def result6 = addToAttr("Uptime","formattedUptime")
-   def tempAttrib = "temperatureC"
- 
-   if (location.temperatureScale == "F") 
-      tempAttrib = "temperatureF"
-   
-    result7 = addToAttr("Temperature",tempAttrib)
-    
-    state.attrString = currentState + result1 + result2 + result3 + result4 + result5 + result6 + result7 + "</table>"
-   
-    if (debugEnable) log.debug "after calls attr string = $state.attrString"
-    sendEvent(name: "html", value: state.attrString, isChanged: true)
+	if (debugEnable) log.debug "after calls attr string = $attrStr"
+	sendEvent(name: "html", value: attrStr, isChanged: true)
 }
 
 def addToAttr(String name, String key, String convert = "none")
@@ -218,7 +213,6 @@ def getTemp(){
     
     if(tempPollRate == null)  device.updateSetting("tempPollRate",[value:300,type:"number"])
       
-//    if (attribEnable) formatAttrib()
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
     if (tempPollEnable) runIn(tempPollRate,getTemp)
 }
@@ -244,18 +238,17 @@ def getFreeMemHandler(resp, data) {
 		if(debugEnable) log.debug memWork
         updateAttr("freeMemory",memWork)
 	}
-    if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210307
+    if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
 }
 // end CSteele changes 210307
 
 def updated(){
 	log.trace "updated()"
 	if(debugEnable) runIn(1800,logsOff)
-    if (attribEnable) formatAttrib() 
-    else { 
-        state.remove("attrString"); 
+    if (attribEnable) 
+        formatAttrib() 
+    else 
         sendEvent(name: "html", value: "<table></table>", isChanged: true); 
-    }
 }
 
 void logsOff(){

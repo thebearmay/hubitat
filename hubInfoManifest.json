@@ -4,6 +4,7 @@
   "version": "1.6.1",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-03-09",
+  "releaseNotes": "Code tightening suggested by CSteele, remove state variables, etc.",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

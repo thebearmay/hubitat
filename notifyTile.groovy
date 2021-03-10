@@ -19,10 +19,11 @@
  *    2021-01-07  thebearmay     Add alternative date format
  *    2021-01-07  thebearmay     Add last5H for horizontal display
  *    2021-01-07  thebearmay     Add leading date option
+ *    2011-03-10  thebearmay     Lost span tag with class=last5
  * 
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.0.1'  }
 
 metadata {
     definition (
@@ -79,7 +80,7 @@ def updateLast5(notification){
         notification = sdf.format(dateNow) + " " + notification
     else
         notification += " " + sdf.format(dateNow)
-    last5 = notification+"<br />"+device.currentValue("notify1")+"<br />"+device.currentValue("notify2")+"<br />"+device.currentValue("notify3")+"<br />"+device.currentValue("notify4")
+    last5 = "<span class=\"last5\">"+ notification+"<br />"+device.currentValue("notify1")+"<br />"+device.currentValue("notify2")+"<br />"+device.currentValue("notify3")+"<br />"+device.currentValue("notify4")+"</span>"
     last5H = " ** "+last5.replaceAll("<br />"," ** ")+" ** "
     sendEvent(name:"notify5", value:device.currentValue("notify4"))
     sendEvent(name:"notify4", value:device.currentValue("notify3"))

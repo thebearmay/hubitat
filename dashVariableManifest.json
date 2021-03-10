@@ -1,9 +1,9 @@
 {
   "packageName": "Dashboard Variable Device",
   "author": "Jean P. May, Jr.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2020-12-28",
+  "dateReleased": "2020-03-10",
   "drivers": [
     {
       "id": "cbc27b28-e58c-4390-ba97-a645db1db26b",

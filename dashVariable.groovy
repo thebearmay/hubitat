@@ -15,10 +15,11 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    2020-12-28  thebearmay	 Original version 0.1.0, reversed engineered from the RM Hubitat driver
+ *    2021-03-10  thebearmay	 Use Capability.Variable
  * 
  */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.2.0'  }
 
 metadata {
     definition (
@@ -28,12 +29,10 @@ metadata {
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/dashVariable.groovy"
 	) {
         	capability "Actuator"
+	        capability "Variable"
 		
-		attribute "variable", "string"
 
-     //This one works with the dashboard, will work with webCoRE but generates a UI error message 
-		command "setVariable", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]
-		//This one works in webCoRE without UI error message
+//This one works in webCoRE without UI error message
     command "setVariableAlt", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]   
             
     }   

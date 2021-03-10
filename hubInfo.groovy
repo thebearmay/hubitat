@@ -39,6 +39,7 @@ metadata {
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
 	) {
         capability "Actuator"
+	capability "Configuration"
 	capability "Initialize"
 	capability "TemperatureMeasurement"
         
@@ -69,9 +70,7 @@ metadata {
         attribute "temperatureC", "string"
         attribute "formattedUptime", "string"
         attribute "html", "string";                              
-   
-	command "configure"
-            
+
     }   
 }
 

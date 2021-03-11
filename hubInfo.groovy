@@ -27,9 +27,10 @@
  *    2021-03-06  thebearmay     Change numeric attributes to type number
  *    2021-03-08  thebearmay     Incorporate CSteele async changes along with some code cleanup and adding tags to the html to allow CSS overrides
  *    2021-03-09  thebearmay     Code tightening as suggested by CSteele, remove state variables, etc.
+ *    2021-03-11  thebearmay     Add Sensor capability for Node-Red/MakerAPI 
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.6.1'  }
+static String version()	{  return '1.6.2'  }
 
 metadata {
     definition (
@@ -39,8 +40,9 @@ metadata {
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
 	) {
         capability "Actuator"
-	capability "Configuration"
 	capability "Initialize"
+	capabiloty "Configuration"
+        capability "Sensor"
 	capability "TemperatureMeasurement"
         
 	attribute "latitude", "string"
@@ -69,8 +71,8 @@ metadata {
 	attribute "temperatureF", "string"
         attribute "temperatureC", "string"
         attribute "formattedUptime", "string"
-        attribute "html", "string";                              
-
+        attribute "html", "string"
+            
     }   
 }
 

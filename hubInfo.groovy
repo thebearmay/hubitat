@@ -247,7 +247,7 @@ def getTempHandler(resp, data) {
 	    }
     } catch(Exception ex) { 
         respStatus = resp.getStatus()
-        log.warn "getTemp httpResp = $respStatus but returned \"${resp.data}\""
+        log.warn "getTemp httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
 
@@ -261,7 +261,7 @@ def getFreeMemHandler(resp, data) {
         if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
     } catch(Exception ex) { 
         respStatus = resp.getStatus()
-        log.warn "getFreeMem httpResp = $respStatus but returned \"${resp.data}\""    
+        log.warn "getFreeMem httpResp = $respStatus but returned  invalid data, will retry next cycle"    
     }
 }
 // end CSteele changes 210307

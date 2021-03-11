@@ -28,9 +28,10 @@
  *    2021-03-08  thebearmay     Incorporate CSteele async changes along with some code cleanup and adding tags to the html to allow CSS overrides
  *    2021-03-09  thebearmay     Code tightening as suggested by CSteele, remove state variables, etc.
  *    2021-03-11  thebearmay     Add Sensor capability for Node-Red/MakerAPI 
+ *    2021-03-11  thebearmay     Security not set right at initialize, remove state.attrString if it exists (now a local variable)
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.6.2'  }
+static String version()	{  return '1.6.3'  }
 
 metadata {
     definition (
@@ -124,20 +125,23 @@ def initialize(){
     updateAttr("lastHubRestart", restartVal)	
     sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
+    if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
+    if(state.attrString) state.remove("attrString")
     runIn(30,configure)
 }
 
 def formatUptime(){
     String attrval 
-
-    Integer ut = device.currentValue("uptime").toDouble()
-    Integer days = (ut/(3600*24))
-    Integer hrs = (ut - (days * (3600*24))) /3600
-    Integer min =  (ut -  ((days * (3600*24)) + (hrs * 3600))) /60
-    Integer sec = ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))
+    try {
+        Integer ut = device.currentValue("uptime").toDouble()
+        Integer days = (ut/(3600*24))
+        Integer hrs = (ut - (days * (3600*24))) /3600
+        Integer min =  (ut -  ((days * (3600*24)) + (hrs * 3600))) /60
+        Integer sec = ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))
     
-    attrval = days.toString() + " days, " + hrs.toString() + " hours, " + min.toString() + " minutes and " + sec.toString() + " seconds."
-    sendEvent(name: "formattedUptime", value: attrval, isChanged: true) 
+        attrval = days.toString() + " days, " + hrs.toString() + " hours, " + min.toString() + " minutes and " + sec.toString() + " seconds."
+        sendEvent(name: "formattedUptime", value: attrval, isChanged: true) 
+    } catch(Exception ex) { }
 }
 
 def formatAttrib(){ 
@@ -213,10 +217,16 @@ def getTemp(){
     updateAttr("uptime", location.hub.uptime)
 	formatUptime()
     
-    if(tempPollRate == null)  device.updateSetting("tempPollRate",[value:300,type:"number"])
-      
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
-    if (tempPollEnable) runIn(tempPollRate,getTemp)
+    
+    if (tempPollEnable) {
+        if(tempPollRate == null){
+            device.updateSetting("tempPollRate",[value:300,type:"number"])
+            runIn(300,getTemp)
+        }else {
+            runIn(tempPollRate,getTemp)
+        }
+    }
 }
 
 

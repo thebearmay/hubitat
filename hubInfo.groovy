@@ -40,13 +40,13 @@ metadata {
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
 	) {
         capability "Actuator"
-	capability "Initialize"
-	capabiloty "Configuration"
+        capability "Configuration"
+	    capability "Initialize"
         capability "Sensor"
-	capability "TemperatureMeasurement"
+	    capability "TemperatureMeasurement"
         
-	attribute "latitude", "string"
-	attribute "longitude", "string"
+	    attribute "latitude", "string"
+	    attribute "longitude", "string"
         attribute "hubVersion", "string"
         attribute "id", "string"
         attribute "name", "string"
@@ -60,7 +60,7 @@ metadata {
         attribute "uptime", "number"
         attribute "lastUpdated", "string"
         attribute "lastHubRestart", "string"
-	attribute "firmwareVersionString", "string"
+	    attribute "firmwareVersionString", "string"
         attribute "timeZone", "string"
         attribute "temperatureScale", "string"
         attribute "zipCode", "string"
@@ -68,10 +68,11 @@ metadata {
         attribute "locationId", "string"
         attribute "lastHubRestartFormatted", "string"
         attribute "freeMemory", "number"
-	attribute "temperatureF", "string"
+	    attribute "temperatureF", "string"
         attribute "temperatureC", "string"
         attribute "formattedUptime", "string"
         attribute "html", "string"
+
             
     }   
 }

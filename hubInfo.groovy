@@ -231,26 +231,36 @@ def getTemp(){
 
 
 def getTempHandler(resp, data) {
-	if(resp.getStatus() == 200 || resp.getStatus() == 207) {
-		tempWork = new Double(resp.data.toString())
-		if(debugEnable) log.debug tempWork
-		if (location.temperatureScale == "F")
-		    sendEvent(name:"temperature",value:celsiusToFahrenheit(tempWork),unit:"°${location.temperatureScale}")
-		else
-		    sendEvent(name:"temperature",value:tempWork,unit:"°${location.temperatureScale}")
+    try {
+	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+		    tempWork = new Double(resp.data.toString())
+    		if(debugEnable) log.debug tempWork
+	    	if (location.temperatureScale == "F")
+		        sendEvent(name:"temperature",value:celsiusToFahrenheit(tempWork),unit:"°${location.temperatureScale}")
+		    else
+		        sendEvent(name:"temperature",value:tempWork,unit:"°${location.temperatureScale}")
 
-		updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ "<span class='small'> °F</span>")
-		updateAttr("temperatureC",tempWork+ "<span class='small'> °C</span>")
-	}
+		    updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ "<span class='small'> °F</span>")
+    		updateAttr("temperatureC",tempWork+ "<span class='small'> °C</span>")
+	    }
+    } catch(Exception ex) { 
+        respStatus = resp.getStatus()
+        log.warn "getTemp httpResp = $respStatus but returned \"${resp.data}\""
+    } 
 }
 
 def getFreeMemHandler(resp, data) {
-	if(resp.getStatus() == 200 || resp.getStatus() == 207) {
-		memWork = new Integer(resp.data.toString())
-		if(debugEnable) log.debug memWork
-        updateAttr("freeMemory",memWork)
-	}
-    if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
+    try {
+	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+		    memWork = new Integer(resp.data.toString())
+		    if(debugEnable) log.debug memWork
+            updateAttr("freeMemory",memWork)
+	    }
+        if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
+    } catch(Exception ex) { 
+        respStatus = resp.getStatus()
+        log.warn "getFreeMem httpResp = $respStatus but returned \"${resp.data}\""    
+    }
 }
 // end CSteele changes 210307
 

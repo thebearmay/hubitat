@@ -28,9 +28,16 @@
       "category": "Integrations",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/dashVariableManifest.json",
       "description": "This is a psuedo Global Variable Connector that works with RM or webCoRE to provide a bi-directional interface to the Variable Tile.  Was written primarily to give webCoRE users a method of working with the variable tile without requiring the creation of an RM global variable and connector.",
-	  "tags": [
+      "tags": [
         "Misc. Devices"
       ]
+    },
+    {
+      "id": "10e2afdc-0dee-429a-b5fd-24d884d5b917",
+      "name": "HubConnect Hub Information Driver",
+      "category": "Integrations",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo-HubConnectManifest.json",
+      "description": "Hub Information Driver stub for HubConnect v2"
     }
   ]
 }

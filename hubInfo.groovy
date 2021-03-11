@@ -141,7 +141,9 @@ def formatUptime(){
     
         attrval = days.toString() + " days, " + hrs.toString() + " hours, " + min.toString() + " minutes and " + sec.toString() + " seconds."
         sendEvent(name: "formattedUptime", value: attrval, isChanged: true) 
-    } catch(Exception ex) { }
+    } catch(Exception ex) { 
+        sendEvent(name: "formattedUptime", value: "", isChanged: true)
+    }
 }
 
 def formatAttrib(){ 

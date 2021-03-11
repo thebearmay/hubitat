@@ -1,5 +1,5 @@
  /*
- * Dashboard Variable Virtual Device
+ * Dashboard Variable
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -14,26 +14,27 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- *    2020-12-28  thebearmay	 Original version 0.1.0, reversed engineered from the RM Hubitat driver
- *    2021-03-10  thebearmay	 Use Capability.Variable
+ *    2020-12-28  thebearmay	 Original version 0.1.0
  * 
  */
 
-static String version()	{  return '0.2.0'  }
+static String version()	{  return '0.1.0'  }
 
 metadata {
     definition (
 		name: "Dashboard Variable Device", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
-	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/dashVariable.groovy"
+	        importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/dashVariable.groovy"
 	) {
         	capability "Actuator"
-	        capability "Variable"
 		
+		attribute "variable", "string"
 
-//This one works in webCoRE without UI error message
-    command "setVariableAlt", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]   
+         //This one works with the dashboard
+		command "setVariable", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]
+		//This one works in webCore
+        command "setVariableAlt", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]   
             
     }   
 }

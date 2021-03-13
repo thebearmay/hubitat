@@ -1,5 +1,5 @@
  /*
- * Hub Ping
+ * Hubitat Ping
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -16,12 +16,12 @@
  *    ----        ---            ----
  *    2021-03-12  thebearmay	 Original version 0.1.0
  */
-import java.text.SimpleDateFormat
-static String version()	{  return '0.1.0'  }
+
+static String version()	{  return '0.5.0'  }
 
 metadata {
     definition (
-		name: "Hub Ping", 
+		name: "Hubitat Ping", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubPing.groovy"
@@ -36,7 +36,7 @@ metadata {
         attribute "min", "number"
         attribute "mdev", "number"
         attribute "pingStats", "string"
-	attribute "responseReady", "bool"
+	    attribute "responseReady", "bool"
         
         
         command "sendPing", [[name:"ipAddress*", type:"STRING", description:"IP Address (IPv4) for the hub to ping"]]   
@@ -86,6 +86,7 @@ def initialize(){
 
 def sendPing(ipAddress){
     // start - Modified from dman2306 Rebooter app
+    configure()
     if(security) {
         httpPost(
             [

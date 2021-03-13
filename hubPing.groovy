@@ -1,4 +1,4 @@
- /*
+/*
  * Hubitat Ping
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -16,9 +16,10 @@
  *    ----        ---            ----
  *    2021-03-12  thebearmay	 Original version 0.1.0
  *                               add responseReady, additional minor fixes v0.5.0
+ *                               add PresenceSensor capability
  */
 
-static String version()	{  return '0.5.0'  }
+static String version()	{  return '0.6.0'  }
 
 metadata {
     definition (
@@ -29,6 +30,7 @@ metadata {
 	) {
         capability "Actuator"
         capability "Configuration"
+        capability "PresenceSensor"
        
         attribute "pingReturn", "string"
         attribute "percentLoss", "number"
@@ -128,6 +130,7 @@ def sendPingHandler(resp, data) {
         errFlag = 1
         respStatus = resp.getStatus()
         sendEvent(name:"pingReturn", value: "httpResp = $respStatus but returned invalid data")
+        updateAttr("presence","not present")
         log.warn "sendPing httpResp = $respStatus but returned invalid data"
         
     } 
@@ -161,6 +164,8 @@ def extractValues(strWork) {
         updateAttr("max",pingStats[2]," ms")
         updateAttr("mdev",pingStats[3], " ms")
     }
+    if (percentLoss < 100 ) updateAttr("presence","present")
+    else updateAttr("presence","not present")
     updateAttr("responseReady", true)
 }
 

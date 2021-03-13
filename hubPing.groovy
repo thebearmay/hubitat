@@ -36,6 +36,7 @@ metadata {
         attribute "min", "number"
         attribute "mdev", "number"
         attribute "pingStats", "string"
+	attribute "responseReady", "bool"
         
         
         command "sendPing", [[name:"ipAddress*", type:"STRING", description:"IP Address (IPv4) for the hub to ping"]]   
@@ -66,6 +67,7 @@ def configure() {
     updateAttr("max"," ")
     updateAttr("mdev"," ")
     updateAttr("pingReturn"," ")
+    updateAttr("responseReady",false)
 
 }
 
@@ -107,6 +109,7 @@ def sendPing(ipAddress){
     ]
     if(debugEnable)log.debug params
     asynchttpGet("sendPingHandler", params)
+    updateAttr("responseReady",false)
     updateAttr("pingReturn","Pinging $ipAddress")  
     
 }
@@ -156,6 +159,7 @@ def extractValues(strWork) {
         updateAttr("max",pingStats[2]," ms")
         updateAttr("mdev",pingStats[3], " ms")
     }
+    updateAttr("responseReady", true)
 }
 
 def updated(){

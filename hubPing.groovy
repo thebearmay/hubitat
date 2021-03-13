@@ -59,13 +59,13 @@ def installed() {
 
 def configure() {
     if(debugEnable) log.debug "configure()"
-    updateAttr("percentLoss",null)
-    updateAttr("pingStats",null) 
-    updateAttr("min",null)
-    updateAttr("avg",null)
-    updateAttr("max",null)
-    updateAttr("mdev",null)
-    updateAttr("pingReturn",null)
+    updateAttr("percentLoss"," ")
+    updateAttr("pingStats"," ") 
+    updateAttr("min"," ")
+    updateAttr("avg"," ")
+    updateAttr("max"," ")
+    updateAttr("mdev"," ")
+    updateAttr("pingReturn"," ")
 
 }
 
@@ -134,11 +134,11 @@ def extractValues(strWork) {
     if(debubEnable)log.debug startInx
     if (startInx == -1){
         updateAttr("percentLoss",100,"%")
-        updateAttr("pingStats",null) 
-        updateAttr("min",null)
-        updateAttr("avg",null)
-        updateAttr("max",null)
-        updateAttr("mdev",null)        
+        updateAttr("pingStats"," ") 
+        updateAttr("min"," ")
+        updateAttr("avg"," ")
+        updateAttr("max"," ")
+        updateAttr("mdev"," ")        
     } else {
         startInx -=3
         strWork=strWork.substring(startInx)

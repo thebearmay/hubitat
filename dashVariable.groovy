@@ -25,7 +25,7 @@ metadata {
 		name: "Dashboard Variable Device", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
-	        importURL:"https://raw.githubusercontent.com/thebearmay/hubitat/main/dashVariable.groovy"
+	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/dashVariable.groovy"
 	) {
         	capability "Actuator"
 		

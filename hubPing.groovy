@@ -15,6 +15,7 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    2021-03-12  thebearmay	 Original version 0.1.0
+ *                               add responseReady, additional minor fixes v0.5.0
  */
 
 static String version()	{  return '0.5.0'  }

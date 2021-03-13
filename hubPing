@@ -1,4 +1,4 @@
-/*
+ /*
  * Hub Ping
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -28,9 +28,16 @@ metadata {
 	) {
         capability "Actuator"
         capability "Configuration"
-	    capability "Initialize"
-        
+       
         attribute "pingReturn", "string"
+        attribute "percentLoss", "number"
+        attribute "max", "number"
+        attribute "avg", "number"
+        attribute "min", "number"
+        attribute "mdev", "number"
+        attribute "pingStats", "string"
+        
+        
         command "sendPing", [[name:"ipAddress*", type:"STRING", description:"IP Address (IPv4) for the hub to ping"]]   
             
             
@@ -52,14 +59,26 @@ def installed() {
 
 def configure() {
     if(debugEnable) log.debug "configure()"
+    updateAttr("percentLoss",null)
+    updateAttr("pingStats",null) 
+    updateAttr("min",null)
+    updateAttr("avg",null)
+    updateAttr("max",null)
+    updateAttr("mdev",null)
+    updateAttr("pingReturn",null)
+
 }
 
 def updateAttr(aKey, aValue){
     sendEvent(name:aKey, value:aValue)
 }
 
+def updateAttr(aKey, aValue, aUnit){
+    sendEvent(name:aKey, value:aValue, units:aUnit)
+}
+
 def initialize(){
-    log.trace "Hub Information initialize()"
+
 }
 
 
@@ -88,25 +107,56 @@ def sendPing(ipAddress){
     ]
     if(debugEnable)log.debug params
     asynchttpGet("sendPingHandler", params)
-    
+    updateAttr("pingReturn","Pinging $ipAddress")  
     
 }
 
-
 def sendPingHandler(resp, data) {
+    def errFlag = 0
     try {
 	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
 		    strWork = resp.data.toString()
-    		if(debugEnable) log.debug tempWork
+    		if(debugEnable) log.debug strWork
 	        sendEvent(name:"pingReturn",value:strWork)
-	    }
+  	    }
     } catch(Exception ex) { 
+        errFlag = 1
         respStatus = resp.getStatus()
         sendEvent(name:"pingReturn", value: "httpResp = $respStatus but returned invalid data")
         log.warn "sendPing httpResp = $respStatus but returned invalid data"
+        
     } 
+    if (!errFlag) extractValues(strWork)
 }
 
+def extractValues(strWork) {
+    startInx = strWork.indexOf("%")
+    if(debubEnable)log.debug startInx
+    if (startInx == -1){
+        updateAttr("percentLoss",null)
+        updateAttr("pingStats",null) 
+        updateAttr("min",null)
+        updateAttr("avg",null)
+        updateAttr("max",null)
+        updateAttr("mdev",null)        
+    } else {
+        startInx -=3
+        strWork=strWork.substring(startInx)
+        if(strWork.substring(0,1)==","){
+            percentLoss = strWork.substring(1,3).toInteger()
+        } else
+            percentLoss = strWork.substring(0,3).toInteger()
+        updateAttr("percentLoss",percentLoss,"%")
+        
+        startInx = strWork.indexOf("=")
+        pingStats= strWork.substring(startInx+2,strWork.length()-4).tokenize("/")
+        updateAttr("pingStats",pingStats) 
+        updateAttr("min",pingStats[0]," ms")
+        updateAttr("avg",pingStats[1]," ms")
+        updateAttr("max",pingStats[2]," ms")
+        updateAttr("mdev",pingStats[3], " ms")
+    }
+}
 
 def updated(){
 	log.trace "updated()"

@@ -133,7 +133,7 @@ def extractValues(strWork) {
     startInx = strWork.indexOf("%")
     if(debubEnable)log.debug startInx
     if (startInx == -1){
-        updateAttr("percentLoss",null)
+        updateAttr("percentLoss",100,"%")
         updateAttr("pingStats",null) 
         updateAttr("min",null)
         updateAttr("avg",null)

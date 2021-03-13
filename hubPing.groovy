@@ -71,6 +71,7 @@ def configure() {
     updateAttr("mdev"," ")
     updateAttr("pingReturn"," ")
     updateAttr("responseReady",false)
+    updateAttr("presence","not present")
 
 }
 

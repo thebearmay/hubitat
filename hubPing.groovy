@@ -80,7 +80,7 @@ def updateAttr(aKey, aValue){
 }
 
 def updateAttr(aKey, aValue, aUnit){
-    sendEvent(name:aKey, value:aValue, units:aUnit)
+    sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
 def initialize(){

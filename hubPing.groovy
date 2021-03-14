@@ -145,7 +145,7 @@ def sendPingHandler(resp, data) {
 
 def extractValues(strWork) {
     startInx = strWork.indexOf("%")
-    if(debubEnable)log.debug startInx
+    if(debugEnable)log.debug startInx
     if (startInx == -1){
         updateAttr("percentLoss",100,"%")
         updateAttr("pingStats"," ") 

@@ -14,12 +14,14 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- *    2021-03-12  thebearmay	 Original version 0.1.0
+ *    2021-03-13  thebearmay	 Original version 0.1.0
  *                               add responseReady, additional minor fixes v0.5.0
  *                               add PresenceSensor capability v0.6.0
+ *    2021-03-14  thebearmay     Add repeat value, tighten to release v1.0.0
+ *
  */
 
-static String version()	{  return '0.6.0'  }
+static String version()	{  return '1.0.0'  }
 
 metadata {
     definition (
@@ -50,6 +52,7 @@ metadata {
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
+    input("pingPeriod", "number", title: "Ping Repeat in Seconds\n Zero to disable", defaultValue: 0, required:true, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -89,6 +92,7 @@ def initialize(){
 
 
 def sendPing(ipAddress){
+    if(ipAddress == null) ipAddress = data.ip
     // start - Modified from dman2306 Rebooter app
     configure()
     if(security) {
@@ -116,6 +120,7 @@ def sendPing(ipAddress){
     asynchttpGet("sendPingHandler", params)
     updateAttr("responseReady",false)
     updateAttr("pingReturn","Pinging $ipAddress")  
+    if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
     
 }
 

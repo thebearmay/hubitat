@@ -18,10 +18,11 @@
  *                               add responseReady, additional minor fixes v0.5.0
  *                               add PresenceSensor capability v0.6.0
  *    2021-03-14  thebearmay     Add repeat value, tighten to release v1.0.0
+ *    2021-03-15  thebearmay     Add lastIpAddress, leave presence at last value when starting new ing
  *
  */
 
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.1.0'  }
 
 metadata {
     definition (
@@ -42,6 +43,7 @@ metadata {
         attribute "mdev", "number"
         attribute "pingStats", "string"
 	    attribute "responseReady", "bool"
+        attribute "lastIpAddress", "string"
         
         
         command "sendPing", [[name:"ipAddress*", type:"STRING", description:"IP Address (IPv4) for the hub to ping"]]   
@@ -74,7 +76,7 @@ def configure() {
     updateAttr("mdev"," ")
     updateAttr("pingReturn"," ")
     updateAttr("responseReady",false)
-    updateAttr("presence","not present")
+    if (device.currentValue("presence") == null) updateAttr("presence","not present")
 
 }
 
@@ -93,8 +95,11 @@ def initialize(){
 
 def sendPing(ipAddress){
     if(ipAddress == null) ipAddress = data.ip
-    // start - Modified from dman2306 Rebooter app
     configure()
+    updateAttr("lastIpAddress", ipAddress)
+    
+    // start - Modified from dman2306 Rebooter app
+
     if(security) {
         httpPost(
             [
@@ -117,9 +122,11 @@ def sendPing(ipAddress){
         headers: [ "Cookie": cookie ]
     ]
     if(debugEnable)log.debug params
-    asynchttpGet("sendPingHandler", params)
     updateAttr("responseReady",false)
     updateAttr("pingReturn","Pinging $ipAddress")  
+	
+    asynchttpGet("sendPingHandler", params)
+
     if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
     
 }
@@ -145,7 +152,7 @@ def sendPingHandler(resp, data) {
 
 def extractValues(strWork) {
     startInx = strWork.indexOf("%")
-    if(debugEnable)log.debug startInx
+    if(debubEnable)log.debug startInx
     if (startInx == -1){
         updateAttr("percentLoss",100,"%")
         updateAttr("pingStats"," ") 

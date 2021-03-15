@@ -1,5 +1,5 @@
- /*
- * Device Characteristics 
+/*
+ * Device Details Display
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -15,17 +15,17 @@
  *    Date        Who           What
  *    ----        ---           ----
  *    2021-03-11  thebearmay	Original version 0.1.0
- * 
+ *    2021-03-15  thebearmay    Release Candidate version 1.0.0
  */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '1.0.0'  }
 
 
 definition (
-	name: 			"Device Characteristics", 
+	name: 			"Device Details Display", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Display the capabilities and attributes for devices selected.",
+	description: 	"Display the capabilities, attributes, commands and device data for devices selected.",
 	category: 		"Utility",
 	importUrl:		"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/deviceCharacteristics.groovy",
 	oauth: 			false,
@@ -51,7 +51,6 @@ def updated(){
 }
 
 def initialize(){
-    atomicState.runEffect = false
 }
 
 void logsOff(){
@@ -77,7 +76,7 @@ def mainPage(){
 def deviceCharacteristics(){
     dynamicPage (name: "deviceCharacteristics", title: "", install: false, uninstall: false) {
 	  section("Device Characteristics"){
-          
+          def strWork = ""
           for(i=0;i<qryDevice.size();i++){
             if (qryDevice[i].label) qryName= qryDevice[i].label
             else qryName = qryDevice[i].name
@@ -86,14 +85,38 @@ def deviceCharacteristics(){
             qryDevice[i].supportedAttributes.each {
                 if (nl) qryDeviceState += "\n"
                 def tempValue = qryDevice[i].currentValue("$it")
-    	        qryDeviceState += "<span style='font-weight:bold'>$it:</span> $tempValue"
+                qryDeviceState += "<span style='font-weight:bold'>$it </span>(${it.dataType}): $tempValue"
                 nl = true
             }
             def devAttr = qryDevice[i].supportedAttributes
             def devCap = qryDevice[i].capabilities
             def devCmd = qryDevice[i].supportedCommands
-            paragraph "<h2>$qryName</h2><span style='font-weight:bold'>Attributes:</span>$devAttr\n\n<span style='font-weight:bold'>Current Values:</span>\n$qryDeviceState\n\n<span style='font-weight:bold'>Capabilities:</span> $devCap\n\n<span style='font-weight:bold'>Commands:</span> $devCmd"    
-            href "mainPage", title: "Return", required: false
+            def devData = qryDevice[i].getData()
+            def devId = qryDevice[i].getId()
+ 
+            pStr1 = "<h2 style='border-top: 3px blue solid'>$qryName</h2><span style='font-weight:bold'>ID:</span> $devId\n\n"
+            pStr1 += "<span style='font-weight:bold'>Capabilities:</span> $devCap\n\n"
+            pStr1 += "<span style='font-weight:bold'>Attributes:</span>$devAttr"
+            pStr2 = "<span style='font-weight:bold'>Device Data:</span> $devData"
+            section ("") {
+                paragraph pStr1
+            }
+            section ("Attribute Details", hideable: true, hidden: true) {  
+                paragraph   "<span style='font-weight:bold;'>Current Values:</span>\n$qryDeviceState"
+            }
+            section {
+                for (n=0;n<devCmd.size; n++){
+                    strWork += "\n<span style='font-weight:bold'>"+devCmd.name[n] + "</span>(" +  devCmd.parameters[n] + ")"
+                }
+                paragraph "<span style='font-weight:bold'>Commands:</span>$devCmd"
+            }   
+            section ("Command Details", hideable: true, hidden: true) {  
+                paragraph  "<span> $strWork </span>"
+            }
+            section (""){    
+                paragraph pStr2    
+                href "mainPage", title: "Return", required: false
+            }
           }
        }
     }

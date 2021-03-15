@@ -126,8 +126,6 @@ def sendPing(ipAddress){
     updateAttr("pingReturn","Pinging $ipAddress")  
 	
     asynchttpGet("sendPingHandler", params)
-
-    if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
     
 }
 
@@ -148,6 +146,9 @@ def sendPingHandler(resp, data) {
         
     } 
     if (!errFlag) extractValues(strWork)
+
+    if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
+
 }
 
 def extractValues(strWork) {

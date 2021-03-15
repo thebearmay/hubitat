@@ -15,10 +15,11 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    2020-12-28  thebearmay	 Original version 0.1.0
+ *    2021-03-15  thebearmay     Add capability Sensor to more closely match the RM global connector
  * 
  */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.2.0'  }
 
 metadata {
     definition (
@@ -28,13 +29,14 @@ metadata {
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/dashVariable.groovy"
 	) {
         	capability "Actuator"
+	    	capability "Sensor"
 		
 		attribute "variable", "string"
 
-         //This one works with the dashboard
+     		//This one works with the dashboard
 		command "setVariable", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]
-		//This one works in webCore
-        command "setVariableAlt", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]   
+		//This one works in webCore without generating a warning message
+        	command "setVariableAlt", [[name:"variable", type:"STRING", description:"Both commands store the same variable.  Dashboard tile type applies constraints at the dashboard."]]   
             
     }   
 }
@@ -45,12 +47,12 @@ preferences {
 
 def installed() {
 	log.trace "installed()"
-    setVariable("installed")
+    	setVariable("installed")
 }
 
 def updated(){
-	log.trace "updated()"
-	if(debugEnable) runIn(1800,logsOff)
+    log.trace "updated()"
+    if(debugEnable) runIn(1800,logsOff)
 }
 
 def setVariable(varStr) {

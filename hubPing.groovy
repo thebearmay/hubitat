@@ -159,7 +159,8 @@ def extractValues(strWork) {
         updateAttr("min"," ")
         updateAttr("avg"," ")
         updateAttr("max"," ")
-        updateAttr("mdev"," ")        
+        updateAttr("mdev"," ")
+        percentLoss = 100
     } else {
         startInx -=3
         strWork=strWork.substring(startInx)

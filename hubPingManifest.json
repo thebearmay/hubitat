@@ -1,0 +1,16 @@
+{
+  "packageName": "Hubitat Ping Device",
+  "author": "Jean P. May, Jr.",
+  "version": "1.1.0",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2021-03-14",
+  "drivers": [
+    {
+      "id": "33dc6ffb-8d25-4cf0-821d-45ecbac5bfb2",
+      "name": "Hubitat Ping",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubPing.groovy",
+      "required": true
+    }
+  ]
+}

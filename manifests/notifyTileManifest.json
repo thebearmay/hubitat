@@ -1,0 +1,16 @@
+{
+  "packageName": "Notification Tile Device",
+  "author": "Jean P. May, Jr.",
+  "version": "1.0.1",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2021-03-10",
+  "drivers": [
+    {
+      "id": "5af8354f-afef-4d6b-be80-f802a4ac2962",
+      "name": "Notify Tile Device",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/notifyTile.groovy",
+      "required": true
+    }
+  ]
+}

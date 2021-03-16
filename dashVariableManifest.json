@@ -3,7 +3,7 @@
   "author": "Jean P. May, Jr.",
   "version": "0.2.0",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2020-03-115",
+  "dateReleased": "2020-03-15",
   "releaseNotes": "added capability Sensor to more closely align with the RM globabl connector device",
   "drivers": [
     {

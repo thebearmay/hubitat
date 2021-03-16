@@ -6,7 +6,7 @@
       "id": "95a9ea0a-ce4a-42a1-bd56-2860c6766367",
       "name": "Hubitat Hub Information Device",
       "category": "Convenience",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoManifest.json",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubInfoManifest.json",
       "description": "Device driver that provides access to the basic hub and location information about the hub.  Has an option to allow polling to report hub temperature and memory.",
       "tags": [
         "Misc. Devices"
@@ -16,7 +16,7 @@
       "id": "812cb3c9-3b67-47f4-aac2-05dc85e0e505",
       "name": "Notification Tile Device",
       "category": "Convenience",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/notifyTileManifest.json",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/notifyTileManifest.json",
       "description": "Device driver that can serve as a destination for notifications. Formats the notifications for display on an attribute tile.",
       "tags": [
         "Misc. Devices"
@@ -26,7 +26,7 @@
       "id": "92d8e87a-595e-479c-8dca-59a9d0925eb6",
       "name": "Dashboard Variable Device",
       "category": "Integrations",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/dashVariableManifest.json",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/dashVariableManifest.json",
       "description": "This is a psuedo Global Variable Connector that works with RM or webCoRE to provide a bi-directional interface to the Variable Tile.  Was written primarily to give webCoRE users a method of working with the variable tile without requiring the creation of an RM global variable and connector.",
       "tags": [
         "Misc. Devices"
@@ -36,15 +36,22 @@
       "id": "10e2afdc-0dee-429a-b5fd-24d884d5b917",
       "name": "HubConnect Hub Information Driver",
       "category": "Integrations",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo-HubConnectManifest.json",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubInfo-HubConnectManifest.json",
       "description": "Hub Information Driver stub for HubConnect v2"
     },
     {
       "id": "dc44dda5-e732-4c3d-9eea-f4efec8f7d3f",
       "name": "Hubitat Ping Device",
       "category": "Integrations",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubPingManifest.json",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubPingManifest.json",
       "description": "Device driver that provides a wrapper for the Hubitat Ping endpoint.  sendPing command accepts an IPv4 sring and will send it to the hub, which will do 5 ICMP requests.  Optionally, can be set through the preferences to repeat the ping command on a specified interval.  Returns: percentLoss, avg, min, max, mdev, pingReturn, and presence.  Implements capabilities Acutator, Configuration, and Presence."
+    },
+    {
+      "id": "70b5f419-c511-4614-811d-f90b302a3d8a",
+      "name": "Device Details Display",
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/devCharManifest.json",
+      "description": "Simple application that displays the capabilities, attributes (summary and detail, commands (summary and detail) and device data for devices selected.  Allows for the quick comparison of multiple devices."
     }
   ]
 }

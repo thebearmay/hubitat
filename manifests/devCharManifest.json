@@ -1,0 +1,18 @@
+{
+  "packageName": "Device Details Display",
+  "author": "Jean P. May, Jr.",
+  "version": "1.0.0",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2021-03-16",
+  "apps": [
+    {
+      "id": "329e0ca6-319c-411d-90cc-18deb1d18515",
+      "name": "Device Details Display",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/deviceCharacteristics.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ]
+}

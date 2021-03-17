@@ -53,7 +53,7 @@ def configure() {
 
 def getPhase(){
     def Long referenceDate = 1611861360000                    //UTC for 19:16 01Jan21
-    def Long phaseTime = 254880000                            //# seconds in moon phase
+    def Long phaseTime = 254880000                            //# milliseconds in moon phase
 
 	cDate = new Date().getTime()
 	phaseWork = (cDate.toLong() - referenceDate)/phaseTime

@@ -59,7 +59,7 @@ def getPhase(){
 	phaseWork = (cDate.toLong() - referenceDate)/phaseTime
 	phaseWork = phaseWork - phaseWork.toInteger()
 	updateAttr("moonPhaseNum", phaseWork)
-    updateAttr("lastQryDate",now())
+    updateAttr("lastQryDate",new Date().toString())
     
     if (phaseWork == 0){
 		updateAttr("moonPhase", "New Moon")

@@ -17,6 +17,7 @@
  *    2021-03-17  thebearmay	 Original version 0.1.0
  */
 
+import java.text.SimpleDateFormat
 static String version()	{  return '0.1.0'  }
 
 metadata {
@@ -27,14 +28,14 @@ metadata {
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/moonPhase.groovy"
 	) {
         capability "Actuator"
-        capability "Configuration"
+        
         attribute "moonPhase", "string"
 		attribute "moonPhaseNum", "number"
 		attribute "lastQryDate", "string"
         
         
         command "getPhase"
-            
+        command "calcPhase", [[name:"dateStr", type:"STRING", description:"Date (yyyy-MM-dd) to calculate the moon phase for."]]              
             
     }   
 }
@@ -51,17 +52,31 @@ def configure() {
     if(debugEnable) log.debug "configure()"
 }
 
-def getPhase(){
-    def Long referenceDate = 1611861360000                    //UTC for 19:16 01Jan21
-    def Long phaseTime = 254880000                            //# milliseconds in moon phase
+def calcPhase (dateStr){
+    cDate = dateCheck(dateStr)
+    if (cDate !=0) getPhase(cDate)
 
-	cDate = new Date().getTime()
-	phaseWork = (cDate.toLong() - referenceDate)/phaseTime
-	phaseWork = phaseWork - phaseWork.toInteger()
-	   
-	phaseWork = phaseWork.toDouble().round(2)
+}
+
+def dateCheck(dateStr) {
+    try {
+        cDate = Date.parse("yyyy-MM-dd",dateStr)
+        return cDate.getTime()
+    } catch (Exception e) {
+        updateAttr("error", "Invalid date string use format yyyy-MM-dd")
+        return 0
+    }
+}
+
+def getPhase(cDate = now()) {
+//    ((#DNOW#/8.64e7-6.8583)%29.5306)
+    sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    phaseWork = (cDate/86400000)-6.8583
+    phaseWork = phaseWork.toDouble()%29.5306
+    phaseWork = phaseWork/100
+    phaseWork = phaseWork.round(2)
 	updateAttr("moonPhaseNum", phaseWork)
-    updateAttr("lastQryDate",new Date().toString())
+    updateAttr("lastQryDate",sdf.format(cDate))
     
     if (phaseWork == 0){
 		updateAttr("moonPhase", "New Moon")

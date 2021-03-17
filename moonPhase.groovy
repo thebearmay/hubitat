@@ -17,7 +17,7 @@
  *    2021-03-17  thebearmay	 Original version 0.1.0
  */
 
-static String version()	{  return '1.1.0'  }
+static String version()	{  return '0.1.0'  }
 
 metadata {
     definition (

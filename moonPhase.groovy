@@ -56,7 +56,6 @@ def getPhase(){
     def Long phaseTime = 254880000                            //# seconds in moon phase
 
 	cDate = new Date().getTime()
-    updateAttr("debug", cDate)
 	phaseWork = (cDate.toLong() - referenceDate)/phaseTime
 	phaseWork = phaseWork - phaseWork.toInteger()
 	updateAttr("moonPhaseNum", phaseWork)

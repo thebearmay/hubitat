@@ -43,7 +43,7 @@
       "id": "dc44dda5-e732-4c3d-9eea-f4efec8f7d3f",
       "name": "Hubitat Ping Device",
       "category": "Integrations",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/mainfests/hubPingManifest.json",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubPingManifest.json",
       "description": "Device driver that provides a wrapper for the Hubitat Ping endpoint.  sendPing command accepts an IPv4 sring and will send it to the hub, which will do 5 ICMP requests.  Optionally, can be set through the preferences to repeat the ping command on a specified interval.  Returns: percentLoss, avg, min, max, mdev, pingReturn, and presence.  Implements capabilities Acutator, Configuration, and Presence."
     },
     {

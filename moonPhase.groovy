@@ -17,10 +17,11 @@
  *    2021-03-17  thebearmay	 Original version 0.1.0
  *                               Calc corrections, add alternate input stream
  *    2021-03-18  thebearmay     Add an tile attribute, and icon path override
+ *                               add scheduled update at midnight + 1 second
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.3.0'  }
+static String version()	{  return '0.4.0'  }
 
 metadata {
     definition (
@@ -45,6 +46,7 @@ metadata {
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
+    input("autoUpdate", "bool", title: "Enable automatic update at midnight")
     input("iconPathOvr", "string", title: "Alternate path to moon phase icons \n(must contain file names moon-phase-icon-0 through moon-phase-icon-7)")
 }
 
@@ -143,6 +145,8 @@ def initialize(){
 
 def updated(){
 	log.trace "updated()"
+    if(autoUpdate) schedule("1 0 0 ? * * *", getPhase)
+    else unschedule(getpPhase)
 	if(debugEnable) runIn(1800,logsOff)
 }
 

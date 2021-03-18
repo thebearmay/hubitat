@@ -52,6 +52,13 @@
       "category": "Convenience",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/devCharManifest.json",
       "description": "Simple application that displays the capabilities, attributes (summary and detail, commands (summary and detail) and device data for devices selected.  Allows for the quick comparison of multiple devices."
+    },
+    {
+      "id": "6c2681e0-747f-45fc-8c14-1ccb86111f93",
+      "name": "Moon Phase Device",
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/moonPhaseManifest.json",
+      "description": "Device driver to calculate the moon phase for a given or current date/time.  Attributes include a moon phase text string, the a moon phase number (percentage, in decimal format, that the given time/date is through the lunar cycle, and a generated tile string.  Driver optionally will automatically update the attributes at 1 second past midnight to keep the phase current, and allows for an path to an alternate set of tile icons."
     }
   ]
 }

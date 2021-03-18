@@ -15,10 +15,12 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    2021-03-17  thebearmay	 Original version 0.1.0
+ *                               Calc corrections, add alternate input stream
+ *    2021-03-18  thebearmay     Add an tile attribute, and icon path override
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.2.0'  }
+static String version()	{  return '0.3.0'  }
 
 metadata {
     definition (
@@ -32,16 +34,18 @@ metadata {
         attribute "moonPhase", "string"
 		attribute "moonPhaseNum", "number"
 		attribute "lastQryDate", "string"
+        attribute "moonPhaseTile", "string"
         
         
         command "getPhase"
-        command "calcPhase", [[name:"dateStr", type:"STRING", description:"Date (yyyy-MM-dd) to calculate the moon phase for."]]              
+        command "calcPhase", [[name:"dateStr", type:"STRING", description:"Date (yyyy-MM-dd HH:mm:ss) to calculate the moon phase for."]]              
             
     }   
 }
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
+    input("iconPathOvr", "string", title: "Alternate path to moon phase icons \n(must contain file names moon-phase-icon-0 through moon-phase-icon-7)")
 }
 
 def installed() {
@@ -60,42 +64,69 @@ def calcPhase (dateStr){
 
 def dateCheck(dateStr) {
     try {
-        cDate = Date.parse("yyyy-MM-dd",dateStr)
+        cDate = Date.parse("yyyy-MM-dd HH:mm:ss",dateStr)
         return cDate.getTime()
     } catch (Exception e) {
-        updateAttr("error", "Invalid date string use format yyyy-MM-dd")
+        updateAttr("error", "Invalid date string use format yyyy-MM-dd HH:mm:ss")
         return 0
     }
 }
 
 def getPhase(cDate = now()) {
-//    ((#DNOW#/8.64e7-6.8583)%29.5306)
+    refDate = Date.parse("yyyy-MM-dd HH:mm:ss","2000-01-06 18:14:00") //First New Moon of 2000
+    refDate = refDate.getTime()
+
+    lunarDays = 29.53058770576
+    lunarSecs = lunarDays*8640000
+
     sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    phaseWork = (cDate/86400000)-6.8583
-    phaseWork = phaseWork.toDouble()%29.5306
-    phaseWork = phaseWork/100
+    
+    Double phaseWork = cDate - refDate //subtract out first new moon of 2000 to get elapsed seconds
+    phaseWork = phaseWork/lunarSecs/10 //calculate lunar cycles
+    
+    phaseWork = phaseWork - phaseWork.toInteger() //remove whole cycles
     phaseWork = phaseWork.round(2)
+    
+    if(phaseWork== 1.0) phaseWork = 0.0
+    
 	updateAttr("moonPhaseNum", phaseWork)
     updateAttr("lastQryDate",sdf.format(cDate))
     
+    iconPath = "https://raw.githubusercontent.com/thebearmay/hubitat/main/moonPhaseRes/"
+    if(iconPathOvr > " ") iconPath = iconPathOvr
+    
     if (phaseWork == 0){
-		updateAttr("moonPhase", "New Moon")
+        imgNum = 0
+		phaseText = "New Moon"
     }else if (phaseWork < 0.25){
-		updateAttr("moonPhase", "Waxing Crescent") 
+        imgNum = 1
+		phaseText = "Waxing Crescent" 
     }else if (phaseWork == 0.25){
-        updateAttr("moonPhase", "First Quarter")
+        imgNum = 2
+        phaseText = "First Quarter"
     }else if (phaseWork < 0.5){
-		updateAttr("moonPhase", "Waxing Gibbous") 		
+        imgNum = 3
+		phaseText =  "Waxing Gibbous"	
     }else if (phaseWork == 0.5){
-		updateAttr("moonPhase", "Full Moon") 	
+        imgNum = 4
+		phaseText =  "Full Moon" 	
     }else if (phaseWork < 0.75){
-		updateAttr("moonPhase", "Waning Gibbous") 	
+        imgNum = 5
+		phaseText = "Waning Gibbous"	
     }else if (phaseWork == 0.75){
-		updateAttr("moonPhase", "Last Quarter") 
+        imgNum = 6
+		phaseText = "Last Quarter" 
     }else if (phaseWork < 1){
-		updateAttr("moonPhase", "Waning Crescent")
-    }else updateAttr("moonPhase", "Error - Out of Range")
-
+        imgNum = 7
+		phaseText = "Waning Crescent"
+    }else {
+        phaseText = "Error - Out of Range"
+        imgNum = ""
+    }
+    
+    updateAttr("moonPhase", phaseText)
+    phaseIcon = "<div id='moonTile'><img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png'><p class='small' style='text-align:center'>$phaseText</p></img></div>"
+    updateAttr("moonPhaseTile",phaseIcon)
 }
 
 def updateAttr(aKey, aValue){

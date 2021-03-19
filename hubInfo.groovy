@@ -265,8 +265,8 @@ def getTempHandler(resp, data) {
 		    else
 		        updateAttr("temperature",tempWork,"°${location.temperatureScale}")
 
-		    updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ "<span class='small'> °F</span>")
-    		updateAttr("temperatureC",tempWork+ "<span class='small'> °C</span>")
+		    updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ "<span class='unit'> °F</span>")
+    		updateAttr("temperatureC",tempWork+ "<span class='unit'> °C</span>")
 	    }
     } catch(Exception ex) { 
         respStatus = resp.getStatus()

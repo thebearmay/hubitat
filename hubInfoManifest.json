@@ -1,17 +1,15 @@
 {
-  "packageName": "Hub Information Device",
-  "author": "Jean P. May, Jr.",
-  "version": "1.6.3",
-  "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-03-11",
-  "releaseNotes": " 1.7.0 - Add attributes for JVM Total, JVM Free, and Free %",
-   "drivers": [
-    {
-      "id": "acccd477-2d55-4ed0-8fca-7b290117440e",
-      "name": "Hub Information",
-      "namespace": "thebearmay",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy",
-      "required": true
-    }
-  ]
+	"packageName": "Hub Information Device",
+	"author": "Jean P. May, Jr.",
+	"version": "1.7.0",
+	"minimumHEVersion": "2.2.5.131",
+	"dateReleased": "2021-03-11",
+	"releaseNotes": " 1.7.0 - Add attributes for JVM Total, JVM Free, and Free %",
+	"drivers": [{
+		"id": "acccd477-2d55-4ed0-8fca-7b290117440e",
+		"name": "Hub Information",
+		"namespace": "thebearmay",
+		"location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy",
+		"required": true
+	}]
 }

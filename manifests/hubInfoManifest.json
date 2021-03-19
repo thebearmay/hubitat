@@ -4,8 +4,7 @@
   "version": "1.6.3",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-03-11",
-  "releaseNotes": " 1.6.3 Fix a condition where security not set right at initialize, remove state.attrString if it exists (now a local variable)\n1.6.2 Added Sensor capability to signal MakerAPI to monitor for change events to temperature and freeMemory",
-  "drivers": [
+  "releaseNotes": " 1.7.0 - Add attributes for JVM Total, JVM Free, and Free %": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",
       "name": "Hub Information",

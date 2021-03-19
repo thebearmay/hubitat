@@ -31,9 +31,10 @@
  *    2021-03-11  thebearmay     Security not set right at initialize, remove state.attrString if it exists (now a local variable)
  *    2021-03-19  thebearmay     Add attributes for JVM Total, Free, and Free %
  *                               Add JVM info to HTML
+ *                               Fix for exceeded 1024 attr limit
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.7.1'  }
+static String version()	{  return '1.7.2'  }
 
 metadata {
     definition (
@@ -265,8 +266,8 @@ def getTempHandler(resp, data) {
 		    else
 		        updateAttr("temperature",tempWork,"°${location.temperatureScale}")
 
-		    updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ "<span class='unit'> °F</span>")
-    		updateAttr("temperatureC",tempWork+ "<span class='unit'> °C</span>")
+		    updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
+    		updateAttr("temperatureC",tempWork+ " °C")
 	    }
     } catch(Exception ex) { 
         respStatus = resp.getStatus()

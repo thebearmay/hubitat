@@ -32,11 +32,11 @@
  *    2021-03-19  thebearmay     Add attributes for JVM Total, Free, and Free %
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.7.3'  }
+static String version()	{  return '1.7.0'  }
 
 metadata {
     definition (
-		name: "Hub Information JVM", 
+		name: "Hub Information", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"

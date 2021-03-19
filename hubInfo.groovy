@@ -149,7 +149,7 @@ def formatUptime(){
         Integer min =  (ut -  ((days * (3600*24)) + (hrs * 3600))) /60
         Integer sec = ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))
     
-        attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec"
+        attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec."
         sendEvent(name: "formattedUptime", value: attrval, isChanged: true) 
     } catch(Exception ex) { 
         sendEvent(name: "formattedUptime", value: "", isChanged: true)
@@ -181,7 +181,7 @@ def addToAttr(String name, String key, String convert = "none")
 {
     if(enableDebug) log.debug "adding $name, $key"
     String retResult = '<tr><td align="left">'
-    retResult += name + '</td><td space="5"> </td><td align="left">'
+    retResult += name + '</td><td align="left">' //<td space="5"> </td>
    
     if (convert == "int"){
         retResult += device.currentValue(key).toInteger().toString()

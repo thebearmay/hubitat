@@ -4,7 +4,7 @@
   "version": "1.7.0",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-03-19",
-  "releaseNotes": " 1.7.0 - Add attributes for JVM Total, JVM Free, and Free %",
+  "releaseNotes": " 1.7.1 - Add JVM attributes to HTML \n 1.7.0 - Add attributes for JVM Total, JVM Free, and Free %",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

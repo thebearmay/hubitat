@@ -76,7 +76,7 @@ metadata {
         attribute "html", "string"
         attribute "jvmTotal", "number"
         attribute "jvmFree", "number"
-        attribute "jvmPctFree", "number"
+        attribute "jvmFreePct", "number"
 
             
     }   

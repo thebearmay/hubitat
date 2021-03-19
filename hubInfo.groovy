@@ -306,7 +306,7 @@ def getJvmHandler(resp, data) {
     }
     jvmTotal = jvmArr[2].toInteger()
     jvmFree = jvmArr[3].toInteger()
-    Double jvmFreePct = jvmFree/jvmTotal
+    Double jvmFreePct = (jvmFree/jvmTotal)*100
     updateAttr("jvmTotal",jvmTotal)
     updateAttr("jvmFree",jvmFree)
     updateAttr("jvmFreePct",jvmFreePct.round(3),"%")

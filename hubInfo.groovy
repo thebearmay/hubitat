@@ -149,7 +149,7 @@ def formatUptime(){
         Integer min =  (ut -  ((days * (3600*24)) + (hrs * 3600))) /60
         Integer sec = ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))
     
-        attrval = days.toString() + " days, " + hrs.toString() + " hours, " + min.toString() + " minutes and " + sec.toString() + " seconds."
+        attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec"
         sendEvent(name: "formattedUptime", value: attrval, isChanged: true) 
     } catch(Exception ex) { 
         sendEvent(name: "formattedUptime", value: "", isChanged: true)

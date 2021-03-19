@@ -29,13 +29,14 @@
  *    2021-03-09  thebearmay     Code tightening as suggested by CSteele, remove state variables, etc.
  *    2021-03-11  thebearmay     Add Sensor capability for Node-Red/MakerAPI 
  *    2021-03-11  thebearmay     Security not set right at initialize, remove state.attrString if it exists (now a local variable)
+ *    2021-03-19  thebearmay     Add attributes for JVM Total, Free, and Free %
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.6.3'  }
+static String version()	{  return '1.7.3'  }
 
 metadata {
     definition (
-		name: "Hub Information", 
+		name: "Hub Information JVM", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
@@ -73,6 +74,9 @@ metadata {
         attribute "temperatureC", "string"
         attribute "formattedUptime", "string"
         attribute "html", "string"
+        attribute "jvmTotal", "number"
+        attribute "jvmFree", "number"
+        attribute "jvmPctFree", "number"
 
             
     }   
@@ -116,6 +120,10 @@ def configure() {
 
 def updateAttr(aKey, aValue){
     sendEvent(name:aKey, value:aValue)
+}
+
+def updateAttr(aKey, aValue, aUnit){
+    sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
 def initialize(){
@@ -215,6 +223,17 @@ def getTemp(){
     ]
     if(debugEnable)log.debug params
     asynchttpGet("getFreeMemHandler", params)
+    
+    // get Free JVM
+    params = [
+        uri: "http://${location.hub.localIP}:8080",
+        path:"/hub/advanced/freeOSMemoryHistory",
+        headers: [ "Cookie": cookie ]
+    ]
+    if(debugEnable)log.debug params
+    asynchttpGet("getJvmHandler", params)
+    
+    
 	
     updateAttr("uptime", location.hub.uptime)
 	formatUptime()
@@ -238,9 +257,9 @@ def getTempHandler(resp, data) {
 		    tempWork = new Double(resp.data.toString())
     		if(debugEnable) log.debug tempWork
 	    	if (location.temperatureScale == "F")
-		        sendEvent(name:"temperature",value:celsiusToFahrenheit(tempWork),unit:"°${location.temperatureScale}")
+		        updateAttr("temperature",celsiusToFahrenheit(tempWork),"°${location.temperatureScale}")
 		    else
-		        sendEvent(name:"temperature",value:tempWork,unit:"°${location.temperatureScale}")
+		        updateAttr("temperature",tempWork,"°${location.temperatureScale}")
 
 		    updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ "<span class='small'> °F</span>")
     		updateAttr("temperatureC",tempWork+ "<span class='small'> °C</span>")
@@ -258,13 +277,40 @@ def getFreeMemHandler(resp, data) {
 		    if(debugEnable) log.debug memWork
             updateAttr("freeMemory",memWork)
 	    }
-        if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
     } catch(Exception ex) { 
         respStatus = resp.getStatus()
         log.warn "getFreeMem httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
 }
 // end CSteele changes 210307
+
+def getJvmHandler(resp, data) {
+    try {
+	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+            jvmWork = resp.data.toString()
+        }
+        if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
+    } catch(Exception ex) { 
+        respStatus = resp.getStatus()
+        log.warn "getJvm httpResp = $respStatus but returned invalid data, will retry next cycle"    
+    }
+    lineCount = 0
+    jvmWork.eachLine{
+        lineCount++
+    }
+    lineCount2 = 0
+    jvmWork.eachLine{
+        lineCount2++
+        if(lineCount==lineCount2)
+            jvmArr = it.split(",")
+    }
+    jvmTotal = jvmArr[2].toInteger()
+    jvmFree = jvmArr[3].toInteger()
+    Double jvmFreePct = jvmFree/jvmTotal
+    updateAttr("jvmTotal",jvmTotal)
+    updateAttr("jvmFree",jvmFree)
+    updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
+}
 
 def updated(){
 	log.trace "updated()"

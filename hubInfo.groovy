@@ -30,9 +30,10 @@
  *    2021-03-11  thebearmay     Add Sensor capability for Node-Red/MakerAPI 
  *    2021-03-11  thebearmay     Security not set right at initialize, remove state.attrString if it exists (now a local variable)
  *    2021-03-19  thebearmay     Add attributes for JVM Total, Free, and Free %
+ *                               Add JVM info to HTML
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.7.0'  }
+static String version()	{  return '1.7.1'  }
 
 metadata {
     definition (
@@ -162,6 +163,9 @@ def formatAttrib(){
 	attrStr += addToAttr("Version","hubVersion")
 	attrStr += addToAttr("Address","localIP")
 	attrStr += addToAttr("Free Memory","freeMemory","int")
+    attrStr += addToAttr("JVM Total Memory", "jvmTotal", "int")    
+    attrStr += addToAttr("JVM Free Memory", "jvmFree", "int")
+    attrStr += addToAttr("JVM Free %", "jvmFreePct")
 	attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
 	attrStr += addToAttr("Uptime","formattedUptime")
 	def tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"

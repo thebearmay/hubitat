@@ -54,6 +54,11 @@ metadata
 
 		attribute "version", "string"
 
+		attribute "jvmTotal", "number"
+        	attribute "jvmFree", "number"
+        	attribute "jvmFreePct", "number"
+        	attribute "cpu5Min", "number"
+		
 		command "sync"
 	}
 }

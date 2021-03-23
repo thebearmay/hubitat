@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-03-23",
-  "releaseNotes": "1.8.1 - Added Database Size\n1.8.0 - Add CPU 5 Min Avg % for firmware 2.2.6+",
+  "releaseNotes": "1.8.2 - round CPU to max 2 decimal places\n1.8.1 - Added Database Size\n1.8.0 - Add CPU 5 Min Avg % for firmware 2.2.6+",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

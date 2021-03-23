@@ -58,6 +58,7 @@ metadata
         	attribute "jvmFree", "number"
         	attribute "jvmFreePct", "number"
         	attribute "cpu5Min", "number"
+		attribute "dbSize", "number"
 		
 		command "sync"
 	}

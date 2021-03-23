@@ -32,10 +32,11 @@
  *    2021-03-19  thebearmay     Add attributes for JVM Total, Free, and Free %
  *                               Add JVM info to HTML
  *                               Fix for exceeded 1024 attr limit
- *    2021-03-20  thebearmay     Firmware 2.2.6.xxx support
+ *    2021-03-20  thebearmay     Firmware 2.2.6.xxx support, CPU 5min %
+ *                               DB Size
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.8.0'  }
+static String version()	{  return '1.8.1'  }
 
 metadata {
     definition (
@@ -81,6 +82,7 @@ metadata {
         attribute "jvmFree", "number"
         attribute "jvmFreePct", "number"
         attribute "cpu5Min", "number"
+        attribute "dbSize", "number"
 
             
     }   
@@ -170,6 +172,7 @@ def formatAttrib(){
     attrStr += addToAttr("JVM Total Memory", "jvmTotal", "int")    
     attrStr += addToAttr("JVM Free Memory", "jvmFree", "int")
     attrStr += addToAttr("JVM Free %", "jvmFreePct")
+    if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size (MB)","dbSize")
 	attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
 	attrStr += addToAttr("Uptime","formattedUptime")
 	def tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
@@ -232,7 +235,7 @@ def getTemp(){
     if(debugEnable)log.debug params
     asynchttpGet("getFreeMemHandler", params)
     
-    // get Free JVM
+    // get Free JVM & CPU Avg
 
     if (location.hub.firmwareVersionString <= "2.2.5.131") {
         params = [
@@ -250,8 +253,16 @@ def getTemp(){
     if(debugEnable)log.debug params
     asynchttpGet("getJvmHandler", params)
     
-    
+    //Get DB size
+        params = [
+            uri: "http://${location.hub.localIP}:8080",
+            path:"/hub/advanced/databaseSize",
+            headers: [ "Cookie": cookie ]
+        ]
 	
+    if(debugEnable)log.debug params
+    asynchttpGet("getDbHandler", params)
+    
     updateAttr("uptime", location.hub.uptime)
 	formatUptime()
     
@@ -330,6 +341,19 @@ def getJvmHandler(resp, data) {
     if(jvmArr.length > 4) {
         updateAttr("cpu5Min",jvmArr[4].toDouble()*100,"%")
     }
+}
+
+def getDbHandler(resp, data) {
+    try {
+	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+		    dbWork = new Integer(resp.data.toString())
+    		if(debugEnable) log.debug dbWork
+    		updateAttr("dbSize",dbWork,"MB")
+	    }
+    } catch(Exception ex) { 
+        respStatus = resp.getStatus()
+        log.warn "getDb httpResp = $respStatus but returned invalid data, will retry next cycle"
+    } 
 }
 
 def updated(){

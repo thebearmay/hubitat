@@ -168,7 +168,7 @@ def formatAttrib(){
 	attrStr += addToAttr("Version","hubVersion")
 	attrStr += addToAttr("Address","localIP")
 	attrStr += addToAttr("Free Memory","freeMemory","int")
-    if(device.currentValue("cpu5Min")) attrStr +=addToAttr("CPU 5min %","cpu5Min")
+    if(device.currentValue("cpu5Min")) attrStr +=addToAttr("CPU 5min Load Avg (0-4)","cpu5Min")
     attrStr += addToAttr("JVM Total Memory", "jvmTotal", "int")    
     attrStr += addToAttr("JVM Free Memory", "jvmFree", "int")
     attrStr += addToAttr("JVM Free %", "jvmFreePct")
@@ -339,7 +339,7 @@ def getJvmHandler(resp, data) {
     updateAttr("jvmFree",jvmFree)
     updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
     if(jvmArr.length > 4) {
-        cpuWork=jvmArr[4].toDouble()*100
+        cpuWork=jvmArr[4].toDouble()
         updateAttr("cpu5Min",cpuWork.round(2),"%")
     }
 }

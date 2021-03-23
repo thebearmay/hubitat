@@ -32,9 +32,10 @@
  *    2021-03-19  thebearmay     Add attributes for JVM Total, Free, and Free %
  *                               Add JVM info to HTML
  *                               Fix for exceeded 1024 attr limit
+ *    2021-03-20  thebearmay     Firmware 2.2.6.xxx support
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.7.2'  }
+static String version()	{  return '1.8.0'  }
 
 metadata {
     definition (
@@ -79,6 +80,7 @@ metadata {
         attribute "jvmTotal", "number"
         attribute "jvmFree", "number"
         attribute "jvmFreePct", "number"
+        attribute "cpu5Min", "number"
 
             
     }   
@@ -164,6 +166,7 @@ def formatAttrib(){
 	attrStr += addToAttr("Version","hubVersion")
 	attrStr += addToAttr("Address","localIP")
 	attrStr += addToAttr("Free Memory","freeMemory","int")
+    if(device.currentValue("cpu5Min")) attrStr +=addToAttr("CPU 5min %","cpu5Min")
     attrStr += addToAttr("JVM Total Memory", "jvmTotal", "int")    
     attrStr += addToAttr("JVM Free Memory", "jvmFree", "int")
     attrStr += addToAttr("JVM Free %", "jvmFreePct")
@@ -181,7 +184,7 @@ def addToAttr(String name, String key, String convert = "none")
 {
     if(enableDebug) log.debug "adding $name, $key"
     String retResult = '<tr><td align="left">'
-    retResult += name + '</td><td align="left">' //<td space="5"> </td>
+    retResult += name + '</td><td align="left">'
    
     if (convert == "int"){
         retResult += device.currentValue(key).toInteger().toString()
@@ -230,11 +233,20 @@ def getTemp(){
     asynchttpGet("getFreeMemHandler", params)
     
     // get Free JVM
-    params = [
-        uri: "http://${location.hub.localIP}:8080",
-        path:"/hub/advanced/freeOSMemoryHistory",
-        headers: [ "Cookie": cookie ]
-    ]
+
+    if (location.hub.firmwareVersionString <= "2.2.5.131") {
+        params = [
+            uri: "http://${location.hub.localIP}:8080",
+            path:"/hub/advanced/freeOSMemoryHistory",
+            headers: [ "Cookie": cookie ]
+        ]
+    } else {
+        params = [
+            uri: "http://${location.hub.localIP}:8080",
+            path:"/hub/advanced/freeOSMemoryLast",
+            headers: [ "Cookie": cookie ]
+        ]
+    }
     if(debugEnable)log.debug params
     asynchttpGet("getJvmHandler", params)
     
@@ -315,6 +327,9 @@ def getJvmHandler(resp, data) {
     updateAttr("jvmTotal",jvmTotal)
     updateAttr("jvmFree",jvmFree)
     updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
+    if(jvmArr.length > 4) {
+        updateAttr("cpu5Min",jvmArr[4].toDouble()*100,"%")
+    }
 }
 
 def updated(){

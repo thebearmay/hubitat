@@ -36,7 +36,7 @@
  *                               DB Size
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.8.1'  }
+static String version()	{  return '1.8.2'  }
 
 metadata {
     definition (

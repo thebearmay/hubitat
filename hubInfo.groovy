@@ -339,7 +339,8 @@ def getJvmHandler(resp, data) {
     updateAttr("jvmFree",jvmFree)
     updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
     if(jvmArr.length > 4) {
-        updateAttr("cpu5Min",jvmArr[4].toDouble().round(2)*100,"%")
+        cpuWork=jvmArr[4].toDouble()*100
+        updateAttr("cpu5Min",cpuWork.round(2),"%")
     }
 }
 

@@ -1,7 +1,7 @@
 {
   "packageName": "Hubconnect Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-03-11",
   "drivers": [

@@ -172,7 +172,7 @@ def formatAttrib(){
 	attrStr += addToAttr("Free Memory","freeMemory","int")
     if(device.currentValue("cpu5Min")){
         attrStr +=addToAttr("CPU 5min Load (0-4)","cpu5Min")
-        attrStr +=addToAttr("CPU %","cpuPct")
+        attrStr +=addToAttr("Load/Core %","cpuPct")
     }
     attrStr += addToAttr("JVM Total Memory", "jvmTotal", "int")    
     attrStr += addToAttr("JVM Free Memory", "jvmFree", "int")

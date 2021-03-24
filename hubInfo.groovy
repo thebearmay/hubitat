@@ -32,11 +32,12 @@
  *    2021-03-19  thebearmay     Add attributes for JVM Total, Free, and Free %
  *                               Add JVM info to HTML
  *                               Fix for exceeded 1024 attr limit
- *    2021-03-20  thebearmay     Firmware 2.2.6.xxx support, CPU 5min %
- *                               DB Size
+ *    2021-03-20  thebearmay     Firmware 2.2.6.xxx support, CPU 5min Load
+ *    2021-03-23  thebearmay     Add DB Size
+ *    2021-03-24  thebearmay     Calculate CPU % from load 
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.8.2'  }
+static String version()	{  return '1.8.3'  }
 
 metadata {
     definition (
@@ -82,6 +83,7 @@ metadata {
         attribute "jvmFree", "number"
         attribute "jvmFreePct", "number"
         attribute "cpu5Min", "number"
+        attribute "cpuPct", "number"
         attribute "dbSize", "number"
 
             
@@ -168,7 +170,10 @@ def formatAttrib(){
 	attrStr += addToAttr("Version","hubVersion")
 	attrStr += addToAttr("Address","localIP")
 	attrStr += addToAttr("Free Memory","freeMemory","int")
-    if(device.currentValue("cpu5Min")) attrStr +=addToAttr("CPU 5min Load Avg (0-4)","cpu5Min")
+    if(device.currentValue("cpu5Min")){
+        attrStr +=addToAttr("CPU 5min Load (0-4)","cpu5Min")
+        attrStr +=addToAttr("CPU %","cpuPct")
+    }
     attrStr += addToAttr("JVM Total Memory", "jvmTotal", "int")    
     attrStr += addToAttr("JVM Free Memory", "jvmFree", "int")
     attrStr += addToAttr("JVM Free %", "jvmFreePct")
@@ -340,7 +345,9 @@ def getJvmHandler(resp, data) {
     updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
     if(jvmArr.length > 4) {
         cpuWork=jvmArr[4].toDouble()
-        updateAttr("cpu5Min",cpuWork.round(2),"%")
+        updateAttr("cpu5Min",cpuWork.round(2))
+        cpuWork = (cpuWork/4)*100  //Load / #Cores - if cores change will need adjusted to reflect
+        updateAttr("cpuPct",cpuWork.round(2),"%")
     }
 }
 

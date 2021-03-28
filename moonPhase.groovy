@@ -18,10 +18,11 @@
  *                               Calc corrections, add alternate input stream
  *    2021-03-18  thebearmay     Add an tile attribute, and icon path override
  *                               add scheduled update at midnight + 1 second
+ *    2021-03-28  thebearmay     Add option to widen the quarterly checkpoints by 1%
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.4.0'  }
+static String version()	{  return '0.5.0'  }
 
 metadata {
     definition (
@@ -47,6 +48,7 @@ metadata {
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
     input("autoUpdate", "bool", title: "Enable automatic update at midnight")
+    input("widenRange","bool",title:"Widen the Qtrly Checkpoints by 1%")
     input("iconPathOvr", "string", title: "Alternate path to moon phase icons \n(must contain file names moon-phase-icon-0 through moon-phase-icon-7)")
 }
 
@@ -97,35 +99,67 @@ def getPhase(cDate = now()) {
     iconPath = "https://raw.githubusercontent.com/thebearmay/hubitat/main/moonPhaseRes/"
     if(iconPathOvr > " ") iconPath = iconPathOvr
     
-    if (phaseWork == 0){
-        imgNum = 0
-		phaseText = "New Moon"
-    }else if (phaseWork < 0.25){
-        imgNum = 1
-		phaseText = "Waxing Crescent" 
-    }else if (phaseWork == 0.25){
-        imgNum = 2
-        phaseText = "First Quarter"
-    }else if (phaseWork < 0.5){
-        imgNum = 3
-		phaseText =  "Waxing Gibbous"	
-    }else if (phaseWork == 0.5){
-        imgNum = 4
-		phaseText =  "Full Moon" 	
-    }else if (phaseWork < 0.75){
-        imgNum = 5
-		phaseText = "Waning Gibbous"	
-    }else if (phaseWork == 0.75){
-        imgNum = 6
-		phaseText = "Last Quarter" 
-    }else if (phaseWork < 1){
-        imgNum = 7
-		phaseText = "Waning Crescent"
+    if(!widenRange){
+        if (phaseWork == 0){
+            imgNum = 0
+		    phaseText = "New Moon"
+        }else if (phaseWork < 0.25){
+            imgNum = 1
+		    phaseText = "Waxing Crescent" 
+        }else if (phaseWork == 0.25){
+            imgNum = 2
+            phaseText = "First Quarter"
+        }else if (phaseWork < 0.5){
+            imgNum = 3
+		    phaseText =  "Waxing Gibbous"	
+        }else if (phaseWork == 0.5){
+            imgNum = 4
+		    phaseText =  "Full Moon" 	
+        }else if (phaseWork < 0.75){
+            imgNum = 5
+		    phaseText = "Waning Gibbous"	
+        }else if (phaseWork == 0.75){
+            imgNum = 6
+		    phaseText = "Last Quarter" 
+        }else if (phaseWork < 1){
+            imgNum = 7
+		    phaseText = "Waning Crescent"
+        }else {
+            phaseText = "Error - Out of Range"
+            imgNum = ""
+        }
     }else {
-        phaseText = "Error - Out of Range"
-        imgNum = ""
+        if (phaseWork <= 0.01){
+            imgNum = 0
+		    phaseText = "New Moon"
+        }else if (phaseWork < 0.24){
+            imgNum = 1
+		    phaseText = "Waxing Crescent" 
+        }else if (phaseWork <= 0.26){
+            imgNum = 2
+            phaseText = "First Quarter"
+        }else if (phaseWork < 0.49){
+            imgNum = 3
+		    phaseText =  "Waxing Gibbous"	
+        }else if (phaseWork <= 0.51){
+            imgNum = 4
+		    phaseText =  "Full Moon" 	
+        }else if (phaseWork < 0.74){
+            imgNum = 5
+		    phaseText = "Waning Gibbous"	
+        }else if (phaseWork <= 0.76){
+            imgNum = 6
+		    phaseText = "Last Quarter" 
+        }else if (phaseWork < 1){
+            imgNum = 7
+		    phaseText = "Waning Crescent"
+        }else {
+            phaseText = "Error - Out of Range"
+            imgNum = ""
+        }
     }
-    
+        
+        
     updateAttr("moonPhase", phaseText)
     phaseIcon = "<div id='moonTile'><img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png'><p class='small' style='text-align:center'>$phaseText</p></img></div>"
     updateAttr("moonPhaseTile",phaseIcon)

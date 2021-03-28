@@ -1,9 +1,10 @@
 {
   "packageName": "Moon Phase Device",
   "author": "Jean P. May, Jr.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-03-18",
+  "dateReleased": "2021-03-28",
+  "releaseNotes":"Add option to widen the quarterly checkpoints by 1%",
   "drivers": [
     {
       "id": "405716f8-46a9-49c0-8746-c757653a6d25",

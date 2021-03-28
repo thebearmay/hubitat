@@ -35,9 +35,10 @@
  *    2021-03-20  thebearmay     Firmware 2.2.6.xxx support, CPU 5min Load
  *    2021-03-23  thebearmay     Add DB Size
  *    2021-03-24  thebearmay     Calculate CPU % from load 
+ *    2021-03-28  thebearmay     jvmWork.eachline error on reboot 
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.8.3'  }
+static String version()	{  return '1.8.4'  }
 
 metadata {
     definition (
@@ -327,27 +328,29 @@ def getJvmHandler(resp, data) {
         respStatus = resp.getStatus()
         log.warn "getJvm httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
-    lineCount = 0
-    jvmWork.eachLine{
-        lineCount++
-    }
-    lineCount2 = 0
-    jvmWork.eachLine{
-        lineCount2++
-        if(lineCount==lineCount2)
-            jvmArr = it.split(",")
-    }
-    jvmTotal = jvmArr[2].toInteger()
-    jvmFree = jvmArr[3].toInteger()
-    Double jvmFreePct = (jvmFree/jvmTotal)*100
-    updateAttr("jvmTotal",jvmTotal)
-    updateAttr("jvmFree",jvmFree)
-    updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
-    if(jvmArr.length > 4) {
-        cpuWork=jvmArr[4].toDouble()
-        updateAttr("cpu5Min",cpuWork.round(2))
-        cpuWork = (cpuWork/4)*100  //Load / #Cores - if cores change will need adjusted to reflect
-        updateAttr("cpuPct",cpuWork.round(2),"%")
+    if (jvmWork) {
+        lineCount = 0
+        jvmWork.eachLine{
+            lineCount++
+        }
+        lineCount2 = 0
+        jvmWork.eachLine{
+            lineCount2++
+            if(lineCount==lineCount2)
+                jvmArr = it.split(",")
+        }
+        jvmTotal = jvmArr[2].toInteger()
+        jvmFree = jvmArr[3].toInteger()
+        Double jvmFreePct = (jvmFree/jvmTotal)*100
+        updateAttr("jvmTotal",jvmTotal)
+        updateAttr("jvmFree",jvmFree)
+        updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
+        if(jvmArr.length > 4) {
+            cpuWork=jvmArr[4].toDouble()
+            updateAttr("cpu5Min",cpuWork.round(2))
+            cpuWork = (cpuWork/4)*100  //Load / #Cores - if cores change will need adjusted to reflect
+            updateAttr("cpuPct",cpuWork.round(2),"%")
+        }
     }
 }
 

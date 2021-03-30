@@ -36,9 +36,10 @@
  *    2021-03-23  thebearmay     Add DB Size
  *    2021-03-24  thebearmay     Calculate CPU % from load 
  *    2021-03-28  thebearmay     jvmWork.eachline error on reboot 
+ *    2021-03-30  thebearmay     Index out of bounds on reboot
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.8.4'  }
+static String version()	{  return '1.8.5'  }
 
 metadata {
     definition (
@@ -339,17 +340,19 @@ def getJvmHandler(resp, data) {
             if(lineCount==lineCount2)
                 jvmArr = it.split(",")
         }
-        jvmTotal = jvmArr[2].toInteger()
-        jvmFree = jvmArr[3].toInteger()
-        Double jvmFreePct = (jvmFree/jvmTotal)*100
-        updateAttr("jvmTotal",jvmTotal)
-        updateAttr("jvmFree",jvmFree)
-        updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
-        if(jvmArr.length > 4) {
-            cpuWork=jvmArr[4].toDouble()
-            updateAttr("cpu5Min",cpuWork.round(2))
-            cpuWork = (cpuWork/4)*100  //Load / #Cores - if cores change will need adjusted to reflect
-            updateAttr("cpuPct",cpuWork.round(2),"%")
+        if(jvmArr.length > 1){
+            jvmTotal = jvmArr[2].toInteger()
+            jvmFree = jvmArr[3].toInteger()
+            Double jvmFreePct = (jvmFree/jvmTotal)*100
+            updateAttr("jvmTotal",jvmTotal)
+            updateAttr("jvmFree",jvmFree)
+            updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
+            if(jvmArr.length > 4) {
+                cpuWork=jvmArr[4].toDouble()
+                updateAttr("cpu5Min",cpuWork.round(2))
+                cpuWork = (cpuWork/4)*100  //Load / #Cores - if cores change will need adjusted to reflect
+                updateAttr("cpuPct",cpuWork.round(2),"%")
+            }
         }
     }
 }

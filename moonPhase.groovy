@@ -19,10 +19,11 @@
  *    2021-03-18  thebearmay     Add an tile attribute, and icon path override
  *                               add scheduled update at midnight + 1 second
  *    2021-03-28  thebearmay     Add option to widen the quarterly checkpoints by 1%
+ *    2021-03-29  thebearmay     Image path as an attribute
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.5.0'  }
+static String version()	{  return '0.6.0'  }
 
 metadata {
     definition (
@@ -37,7 +38,7 @@ metadata {
 		attribute "moonPhaseNum", "number"
 		attribute "lastQryDate", "string"
         attribute "moonPhaseTile", "string"
-        
+        attribute "moonPhaseImg", "string"
         
         command "getPhase"
         command "calcPhase", [[name:"dateStr", type:"STRING", description:"Date (yyyy-MM-dd HH:mm:ss) to calculate the moon phase for."]]              
@@ -159,7 +160,7 @@ def getPhase(cDate = now()) {
         }
     }
         
-        
+    updateAttr("moonPhaseImg", "${iconPath}moon-phase-icon-${imgNum}.png")    
     updateAttr("moonPhase", phaseText)
     phaseIcon = "<div id='moonTile'><img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png'><p class='small' style='text-align:center'>$phaseText</p></img></div>"
     updateAttr("moonPhaseTile",phaseIcon)

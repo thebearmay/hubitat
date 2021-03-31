@@ -24,7 +24,7 @@
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.6.0'  }
+static String version()	{  return '0.7.0'  }
 
 metadata {
     definition (

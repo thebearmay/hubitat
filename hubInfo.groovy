@@ -37,9 +37,10 @@
  *    2021-03-24  thebearmay     Calculate CPU % from load 
  *    2021-03-28  thebearmay     jvmWork.eachline error on reboot 
  *    2021-03-30  thebearmay     Index out of bounds on reboot
+ *    2021-03-31  thebearmay 	 jvm to HTML null error (first run)
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.8.5'  }
+static String version()	{  return '1.8.6'  }
 
 metadata {
     definition (
@@ -196,13 +197,14 @@ def addToAttr(String name, String key, String convert = "none")
     String retResult = '<tr><td align="left">'
     retResult += name + '</td><td align="left">'
    
-    if (convert == "int"){
-        retResult += device.currentValue(key).toInteger().toString()
-    } else if (name=="Temperature"){
-        // span uses integer value to allow CSS override 
-        retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + device.currentValue(key) + "</span>"
-    } else retResult += device.currentValue(key)
-    
+    if(device.currentValue(key)){
+        if (convert == "int"){
+            retResult += device.currentValue(key).toInteger().toString()
+        } else if (name=="Temperature"){
+            // span uses integer value to allow CSS override 
+            retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + device.currentValue(key) + "</span>"
+        } else retResult += device.currentValue(key)
+    }
     retResult += '</td></tr>'
 }
 

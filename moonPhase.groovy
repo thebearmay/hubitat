@@ -20,6 +20,7 @@
  *                               add scheduled update at midnight + 1 second
  *    2021-03-28  thebearmay     Add option to widen the quarterly checkpoints by 1%
  *    2021-03-29  thebearmay     Image path as an attribute
+ *    2021-03-30  thebearmay     Image Only tile instead of path
  */
 
 import java.text.SimpleDateFormat
@@ -160,7 +161,7 @@ def getPhase(cDate = now()) {
         }
     }
         
-    updateAttr("moonPhaseImg", "${iconPath}moon-phase-icon-${imgNum}.png")    
+    updateAttr("moonPhaseImg", "<img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png' />")    
     updateAttr("moonPhase", phaseText)
     phaseIcon = "<div id='moonTile'><img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png'><p class='small' style='text-align:center'>$phaseText</p></img></div>"
     updateAttr("moonPhaseTile",phaseIcon)

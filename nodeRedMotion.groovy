@@ -1,4 +1,4 @@
- /*
+/*
  *  Node Red Motion
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -18,25 +18,28 @@
  * 
  */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.3.0'  }
 
 metadata {
     definition (
 		name: "Node Red Motion", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
-	  importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/nodeRedMotion.groovy"
+	    importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/nodeRedMotion.groovy"
 	) 
     {
         	capability "Actuator"
         	capability "Switch"
         	capability "MotionSensor"
-          capability "Sensor"
+            capability "Sensor"
+            capability "Initialize"
+            capability "Configuration"
         
-          attribute "battery", "number"
-          attribute "nodeName", "string"
+            attribute "battery", "number"
+            attribute "nodeName", "string"
         	attribute "lastUpdate", "number"
-		      command "updateStatus", [[name:"statusString*", type:"STRING", description:"JSON string containing nodeName, motion, battery and switch attributes"]]   
+            attribute "syncPending", "bool"
+		    command "updateStatus", [[name:"statusString*", type:"STRING", description:"JSON string containing nodeName, motion, battery and switch attributes"]]  
 
     }   
 }
@@ -50,6 +53,19 @@ def installed() {
     on()
 }
 
+def configure() {
+    syncNR()
+}
+
+def initialize(){
+    runIn(30,syncNR)
+}
+
+def syncNR(){
+    updateAttr("syncPending", true)
+    // Requires a check on the NR side for a change in lastSyncReq to inject 
+}
+
 def updated(){
 	log.trace "updated()"
 	if(debugEnable) runIn(1800,logsOff)
@@ -58,6 +74,7 @@ def updated(){
 def updateStatus(sStr) {
     if(debugEnable) log.debug "updateStatus $sStr"
     updateAttr("lastUpdate", new Date())
+    updateAttr("syncPending", false)
     sStr = sStr.replaceAll("\"","")
     sStr = sStr.replace("{","")
     sStr = sStr.replace("}","")
@@ -70,6 +87,7 @@ def updateStatus(sStr) {
         else    
             updateAttr(nodeArr[0],nodeArr[1])
     }
+    if(device.currentValue("motion") == "active") runIn(300,checkSync)
 }
 
 def updateAttr(aKey, aValue){
@@ -88,6 +106,13 @@ def on() {
 def off() {
     if(debugEnable) log.debug "switch off"
     updateAttr("switch","off")
+}
+
+def checkSync() {
+    if(device.currentValue("motion") == "active") {
+        syncNR()
+        runIn(300,checkSync)
+    }
 }
     
 void logsOff(){

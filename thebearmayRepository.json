@@ -9,7 +9,7 @@
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubInfoManifest.json",
       "description": "Device driver that provides access to the basic hub and location information about the hub.  Has an option to allow polling to report hub temperature and memory.",
       "tags": [
-        "Misc. Devices"
+        "Misc. Devices, Monitoring"
       ]
     },
     {

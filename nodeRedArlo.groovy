@@ -15,7 +15,7 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    2021-03-31  thebearmay	 Original version 0.1.0
- * 
+ *    2021-04-03  thebearmay     Release version 1.0.0
  */
 
 static String version()	{  return '0.3.0'  }
@@ -68,7 +68,7 @@ def initialize(){
 
 def syncNR(){
     updateAttr("syncPending", true)
-    // Requires a check on the NR side for a change in lastSyncReq to inject 
+    // Requires a check on the NR side for a change in syncPending to inject 
 }
 
 def updated(){
@@ -123,7 +123,7 @@ def off() {
 
 
 def capture(start = now(), capture = now(), end = now()){
-    if(captureLength==null) device.updateSetting("captureLength",[value:60,type:"number"])
+    if(!captureLength) device.updateSetting("captureLength",[value:60,type:"number"])
     updateAttr("captureTS", capture+(captureLength*1000))
 }
 
@@ -131,6 +131,7 @@ def checkSync() {
     if(device.currentValue("motion") == "active") {
         syncNR()
         runIn(300,checkSync)
+        log.warn "Sync lost with ${device.currentValue('nodeName')}, retrying..."
     }
 }
     

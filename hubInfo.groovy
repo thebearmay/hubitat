@@ -38,9 +38,10 @@
  *    2021-03-28  thebearmay     jvmWork.eachline error on reboot 
  *    2021-03-30  thebearmay     Index out of bounds on reboot
  *    2021-03-31  thebearmay 	 jvm to HTML null error (first run)
+ *    2021-04-13  thebearmay     pull in suggested additions from lgkhan - external IP and combining some HTML table elements
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.8.6'  }
+static String version()	{  return '1.9.0'  }
 
 metadata {
     definition (
@@ -88,6 +89,7 @@ metadata {
         attribute "cpu5Min", "number"
         attribute "cpuPct", "number"
         attribute "dbSize", "number"
+        attribute "publicIP", "string"
 
             
     }   
@@ -97,6 +99,7 @@ preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
     input("tempPollEnable", "bool", title: "Enable Temperature/Memory/HTML Polling")
     if (tempPollEnable) input("tempPollRate", "number", title: "Temperature/Memory Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
+    input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", default: false, required: true, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -125,15 +128,11 @@ def configure() {
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
     updateAttr("lastUpdated", now())
-    if (tempPollEnable) getTemp()
+    if (tempPollEnable) getPollValues()
     if (attribEnable) formatAttrib()
 }
 
-def updateAttr(aKey, aValue){
-    sendEvent(name:aKey, value:aValue)
-}
-
-def updateAttr(aKey, aValue, aUnit){
+def updateAttr(aKey, aValue, aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
@@ -159,9 +158,9 @@ def formatUptime(){
         Integer sec = ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))
     
         attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec."
-        sendEvent(name: "formattedUptime", value: attrval, isChanged: true) 
+        updateAttr("formattedUptime", attrval) 
     } catch(Exception ex) { 
-        sendEvent(name: "formattedUptime", value: "", isChanged: true)
+        updateAttr("formattedUptime", "")
     }
 }
 
@@ -171,15 +170,20 @@ def formatAttrib(){
 	
 	attrStr += addToAttr("Name","name")
 	attrStr += addToAttr("Version","hubVersion")
-	attrStr += addToAttr("Address","localIP")
+    if(publicIPEnable) {
+        def combine = ["localIP", "publicIP"]        
+        attrStr += combineAttr("IP Local/Public", (String[])combine)        
+    } else
+	    attrStr += addToAttr("Address","localIP")
 	attrStr += addToAttr("Free Memory","freeMemory","int")
     if(device.currentValue("cpu5Min")){
-        attrStr +=addToAttr("CPU 5min Load (0-4)","cpu5Min")
-        attrStr +=addToAttr("Load/Core %","cpuPct")
+        def combine = ["cpu5Min", "cpuPct"]        
+        attrStr += combineAttr("CPU Load/Load%", (String[])combine)
     }
-    attrStr += addToAttr("JVM Total Memory", "jvmTotal", "int")    
-    attrStr += addToAttr("JVM Free Memory", "jvmFree", "int")
-    attrStr += addToAttr("JVM Free %", "jvmFreePct")
+
+    def combine = ["jvmTotal", "jvmFree", "jvmFreePct"]
+    attrStr += combineAttr("JVM Total/Free/%", (String[])combine)
+    
     if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size (MB)","dbSize")
 	attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
 	attrStr += addToAttr("Uptime","formattedUptime")
@@ -188,13 +192,28 @@ def formatAttrib(){
 	attrStr += "</table>"
 
 	if (debugEnable) log.debug "after calls attr string = $attrStr"
-	sendEvent(name: "html", value: attrStr, isChanged: true)
+	updateAttr("html", attrStr)
 }
 
-def addToAttr(String name, String key, String convert = "none")
+def combineAttr(name, String[] keys){
+    if(enableDebug) log.debug "adding $name, $keys.length"
+
+    retResult = '<tr><td align="left">'
+    retResult += name + '</td><td align="left">'
+    
+    keyResult = ""
+    for (i = 0;i < keys.length; i++) {
+        keyResult+= device.currentValue(keys[i]) 
+        if (i < keys.length - 1) keyResult+= " / "
+    }
+            
+    retResult += keyResult+'</td></tr>'
+}
+
+def addToAttr(name, key, convert = "none")
 {
     if(enableDebug) log.debug "adding $name, $key"
-    String retResult = '<tr><td align="left">'
+    retResult = '<tr><td align="left">'
     retResult += name + '</td><td align="left">'
    
     if(device.currentValue(key)){
@@ -208,8 +227,7 @@ def addToAttr(String name, String key, String convert = "none")
     retResult += '</td></tr>'
 }
 
-//start CSteele changes 210307
-def getTemp(){
+def getPollValues(){
     // start - Modified from dman2306 Rebooter app
     if(security) {
         httpPost(
@@ -227,6 +245,7 @@ def getTemp(){
     }
     // End - Modified from dman2306 Rebooter app
     
+    // get Temperature
     params = [
         uri: "http://${location.hub.localIP}:8080",
         path:"/hub/advanced/internalTempCelsius",
@@ -244,8 +263,7 @@ def getTemp(){
     if(debugEnable)log.debug params
     asynchttpGet("getFreeMemHandler", params)
     
-    // get Free JVM & CPU Avg
-
+    // get Free JVM & CPU
     if (location.hub.firmwareVersionString <= "2.2.5.131") {
         params = [
             uri: "http://${location.hub.localIP}:8080",
@@ -272,6 +290,23 @@ def getTemp(){
     if(debugEnable)log.debug params
     asynchttpGet("getDbHandler", params)
     
+    //get Public IP 
+    if(publicIPEnable) {
+        params =
+	    [
+		    uri:  "https://ifconfig.co/",
+            headers: [ 
+                   Host: "ifconfig.co",
+                   Accept: "application/json"
+            ]
+	    ]
+    
+        if(debugEnable)log.debug params
+        asynchttpGet("getIfHandler", params)
+    }
+    
+    //End Pollable Gets
+    
     updateAttr("uptime", location.hub.uptime)
 	formatUptime()
     
@@ -280,9 +315,9 @@ def getTemp(){
     if (tempPollEnable) {
         if(tempPollRate == null){
             device.updateSetting("tempPollRate",[value:300,type:"number"])
-            runIn(300,getTemp)
+            runIn(300,getPollValues)
         }else {
-            runIn(tempPollRate,getTemp)
+            runIn(tempPollRate,getPollValues)
         }
     }
 }
@@ -294,9 +329,9 @@ def getTempHandler(resp, data) {
 		    tempWork = new Double(resp.data.toString())
     		if(debugEnable) log.debug tempWork
 	    	if (location.temperatureScale == "F")
-		        updateAttr("temperature",celsiusToFahrenheit(tempWork),"°${location.temperatureScale}")
+		        updateAttr("temperature",celsiusToFahrenheit(tempWork),"°F")
 		    else
-		        updateAttr("temperature",tempWork,"°${location.temperatureScale}")
+		        updateAttr("temperature",tempWork,"°C")
 
 		    updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
     		updateAttr("temperatureC",tempWork+ " °C")
@@ -348,7 +383,7 @@ def getJvmHandler(resp, data) {
             Double jvmFreePct = (jvmFree/jvmTotal)*100
             updateAttr("jvmTotal",jvmTotal)
             updateAttr("jvmFree",jvmFree)
-            updateAttr("jvmFreePct",jvmFreePct.round(3),"%")
+            updateAttr("jvmFreePct",jvmFreePct.round(1),"%")
             if(jvmArr.length > 4) {
                 cpuWork=jvmArr[4].toDouble()
                 updateAttr("cpu5Min",cpuWork.round(2))
@@ -372,6 +407,22 @@ def getDbHandler(resp, data) {
     } 
 }
 
+def getIfHandler(resp, data){
+
+    try{
+        if (resp.getStatus() == 200){
+            if (debugEnable) log.info resp.data
+            ipData = parseJson(resp.data)
+			updateAttr("publicIP",ipData.ip)
+		} else {
+			log.warn "Status ${resp.getStatus()} while fetching Public IP"
+		} 
+    } catch (Exception ex){
+        log.info ex
+    }
+}   
+
+
 def updated(){
 	log.trace "updated()"
 	if(debugEnable) runIn(1800,logsOff)
@@ -380,6 +431,159 @@ def updated(){
     else 
         sendEvent(name: "html", value: "<table></table>", isChanged: true); 
 }
+
+def getNearestEnd(String json, int start, String head, String tail) {
+    def end = start
+    def count = 1
+    while (count > 0) {
+        end++
+        def c = json.charAt(end)
+        if (c == head) {
+            count++
+        } else if (c == tail) {
+            count--
+        }
+    }
+    return end;
+}
+//  Begin JSON Parser
+
+//  Parse JSON Object
+def parseObject(String json) {
+    def map = [:]
+    def length = json.length()
+    def index = 1
+    def state = 'none' // none, string-value, other-value
+    def key = ''
+    while (index < length -1) {
+        def c = json.charAt(index)
+        switch(c) {
+            case '"':
+                if (state == 'none') {
+                    def keyStart = index + 1;
+                    def keyEnd = keyStart;
+                    while (json.charAt(keyEnd) != '"') {
+                        keyEnd++
+                    }
+                    index = keyEnd
+                    def keyValue = json[keyStart .. keyEnd - 1]
+                    key = keyValue
+                } else if (state == 'value') {
+                    def stringStart = index + 1;
+                    def stringEnd = stringStart;
+                    while (json.charAt(stringEnd) != '"') {
+                        stringEnd++
+                    }
+                    index = stringEnd
+                    def stringValue = json[stringStart .. stringEnd - 1]
+                    map.put(key, stringValue)
+                }
+                break
+
+            case '{':
+                def objectStart = index
+                def objectEnd = getNearestEnd json, index, '{', '}'
+                def objectValue = json[objectStart .. objectEnd]
+                map.put(key, parseObject(objectValue))
+                index = objectEnd
+                break
+
+            case '[':
+                def arrayStart = index
+                def arrayEnd = getNearestEnd(json, index, '[', ']')
+                def arrayValue = json[arrayStart .. arrayEnd]
+                map.put(key, parseArray(arrayValue))
+                index = arrayEnd
+                break
+
+            case ':':
+                state = 'value'
+                break
+
+            case ',':
+                state = 'none'
+                key = ''
+                break;
+
+            case ["\n", "\t", "\r", " "]:
+                break
+
+            default:
+                break
+        }
+        index++
+    }
+
+    return map
+}
+
+// Parse JSON Array
+def parseArray(String json) {
+    def list = []
+    def length = json.length()
+    def index = 1
+    def state = 'none' // none, string-value, other-value
+    while (index < length -1) {
+        def c = json.charAt(index)
+        switch(c) {
+            case '"':
+                def stringStart = index + 1;
+                def stringEnd = stringStart;
+                while (json.charAt(stringEnd) != '"') {
+                    stringEnd++
+                }
+                def stringValue = json[stringStart .. stringEnd - 1]
+                list.add(stringValue)
+                index = stringEnd
+                break
+
+            case '{':
+                def objectStart = index
+                def objectEnd = getNearestEnd(json, index, '{', '}')
+                def objectValue = json[objectStart .. objectEnd]
+                list.add(parseObject(objectValue))
+                index = objectEnd
+                break
+
+            case '[':
+                def arrayStart = index
+                def arrayEnd = getNearestEnd(json, index, '[', ']')
+                def arrayValue = json[arrayStart .. arrayEnd]
+                list.add(parseArray(arrayValue))
+                index = arrayEnd
+                break
+
+            case ["\n", "\t", "\r", " "]:
+                break
+
+            case ',':
+                state = 'none'
+                key = ''
+                break;
+
+            default:
+                break
+        }
+        index++
+    }
+
+    return list
+}
+
+//  Parse the JSON - can be Object or Array
+def parseJson(String json) {
+    def start = json[0]
+    if (start == '[') {
+        return parseArray(json)
+    } else if (start == '{') {
+        return parseObject(json)
+    } else {
+        return null
+    }
+}
+
+//End JSON Parser
+
 
 void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])

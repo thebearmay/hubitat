@@ -60,6 +60,7 @@ metadata
         	attribute "cpu5Min", "number"
 		attribute "cpuPct", "number"
 		attribute "dbSize", "number"
+		attribute "publicIP", "string"
 		
 		command "sync"
 	}

@@ -1,11 +1,10 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "1.8.6",
+  "version": "1.9.0",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-03-28",
-  "releaseNotes": "1.8.6 - minor bug fixes\n1.8.5 - Index out of bounds on reboot\n1.8.4 - jvmWork.eachline error on reboot\n1.8.3 - Add calculated Load/Core % (CPU Load / # Cores)\n1.8.2 - round CPU to max 2 decimal places\n1.8.1 - Added Database Size\n1.8.0 - Add CPU 5 Min Load for firmware 2.2.6+",
-  "drivers": [
+  "releaseNotes": "1.9.0 - Add option to fetch public IP, combine some HTML elements"
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",
       "name": "Hub Information",

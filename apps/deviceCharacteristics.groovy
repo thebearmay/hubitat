@@ -94,6 +94,7 @@ def deviceCharacteristics(){
                 tempDisp = tempDisp.substring(start, end)
                 stateParts = tempDisp.split(',')
                 tempDisp = "\n\t\t<b>Activity Timestamp: </b>${stateParts[0]}\n\t\t<b>Event Desc: </b>${stateParts[1]}\n\t\t<b>Unit:</b>${stateParts[3]}"
+		    // [2] - value, [4] - data type
                 
                 qryDeviceState += "<span style='font-weight:bold'>$it </span>(${it.dataType}): $tempValue  \n<span style='font-weight:bold'>\tLast State Change</span> $tempDisp"
                 nl = true

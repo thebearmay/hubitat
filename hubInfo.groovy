@@ -39,9 +39,10 @@
  *    2021-03-30  thebearmay     Index out of bounds on reboot
  *    2021-03-31  thebearmay 	 jvm to HTML null error (first run)
  *    2021-04-13  thebearmay     pull in suggested additions from lgkhan - external IP and combining some HTML table elements
+ *    2021-04-14  thebearmay     add units to the HTML
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.9.0'  }
+static String version()	{  return '1.9.1'  }
 
 metadata {
     definition (
@@ -157,7 +158,7 @@ def formatUptime(){
         Integer min =  (ut -  ((days * (3600*24)) + (hrs * 3600))) /60
         Integer sec = ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))
     
-        attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec."
+        attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec"
         updateAttr("formattedUptime", attrval) 
     } catch(Exception ex) { 
         updateAttr("formattedUptime", "")
@@ -184,7 +185,7 @@ def formatAttrib(){
     def combine = ["jvmTotal", "jvmFree", "jvmFreePct"]
     attrStr += combineAttr("JVM Total/Free/%", (String[])combine)
     
-    if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size (MB)","dbSize")
+    if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
 	attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
 	attrStr += addToAttr("Uptime","formattedUptime")
 	def tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
@@ -203,7 +204,9 @@ def combineAttr(name, String[] keys){
     
     keyResult = ""
     for (i = 0;i < keys.length; i++) {
-        keyResult+= device.currentValue(keys[i]) 
+        keyResult+= device.currentValue(keys[i])
+        attrUnit = getUnitFromState(keys[i])
+        if (attrUnit != "null") keyResult+=attrUnit
         if (i < keys.length - 1) keyResult+= " / "
     }
             
@@ -215,14 +218,17 @@ def addToAttr(name, key, convert = "none")
     if(enableDebug) log.debug "adding $name, $key"
     retResult = '<tr><td align="left">'
     retResult += name + '</td><td align="left">'
-   
+
+    attrUnit = getUnitFromState(key)
+    if (attrUnit == "null") attrUnit =""
+    
     if(device.currentValue(key)){
         if (convert == "int"){
-            retResult += device.currentValue(key).toInteger().toString()
+            retResult += device.currentValue(key).toInteger().toString()+attrUnit
         } else if (name=="Temperature"){
             // span uses integer value to allow CSS override 
-            retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + device.currentValue(key) + "</span>"
-        } else retResult += device.currentValue(key)
+            retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + device.currentValue(key)+attrUnit + "</span>"
+        } else retResult += device.currentValue(key)+attrUnit
     }
     retResult += '</td></tr>'
 }
@@ -296,7 +302,7 @@ def getPollValues(){
 	    [
 		    uri:  "https://ifconfig.co/",
             headers: [ 
-                   Host: "ifconfig.co",
+                   Host: "ifconfig.co",               
                    Accept: "application/json"
             ]
 	    ]
@@ -432,6 +438,17 @@ def updated(){
         sendEvent(name: "html", value: "<table></table>", isChanged: true); 
 }
 
+def getUnitFromState(attrName){
+    def wrkStr = device.currentState(attrName).toString()
+    start = wrkStr.indexOf('(')+1
+    end = wrkStr.length() - 1
+    wrkStr = wrkStr.substring(start,end)
+    stateParts = wrkStr.split(',')
+    return stateParts[3].trim()
+}
+
+// Begin JSON Parser
+
 def getNearestEnd(String json, int start, String head, String tail) {
     def end = start
     def count = 1
@@ -446,7 +463,6 @@ def getNearestEnd(String json, int start, String head, String tail) {
     }
     return end;
 }
-//  Begin JSON Parser
 
 //  Parse JSON Object
 def parseObject(String json) {

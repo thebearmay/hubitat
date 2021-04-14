@@ -16,9 +16,10 @@
  *    ----        ---           ----
  *    2021-03-11  thebearmay	Original version 0.1.0
  *    2021-03-15  thebearmay    Release Candidate version 1.0.0
+ *    2021-04-14  thebearmay    pull in last attribute state change
  */
 
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.1.0'  }
 
 
 definition (
@@ -85,7 +86,16 @@ def deviceCharacteristics(){
             qryDevice[i].supportedAttributes.each {
                 if (nl) qryDeviceState += "\n"
                 def tempValue = qryDevice[i].currentValue("$it")
-                qryDeviceState += "<span style='font-weight:bold'>$it </span>(${it.dataType}): $tempValue"
+               
+             
+                def tempDisp = qryDevice[i].currentState("$it").toString()
+                start = tempDisp.indexOf('(')+1
+                end = tempDisp.length() - 1
+                tempDisp = tempDisp.substring(start, end)
+                stateParts = tempDisp.split(',')
+                tempDisp = "\n\t\t<b>Activity Timestamp: </b>${stateParts[0]}\n\t\t<b>Event Desc: </b>${stateParts[1]}\n\t\t<b>Unit:</b>${stateParts[3]}"
+                
+                qryDeviceState += "<span style='font-weight:bold'>$it </span>(${it.dataType}): $tempValue  \n<span style='font-weight:bold'>\tLast State Change</span> $tempDisp"
                 nl = true
             }
             def devAttr = qryDevice[i].supportedAttributes
@@ -97,7 +107,7 @@ def deviceCharacteristics(){
             pStr1 = "<h2 style='border-top: 3px blue solid'>$qryName</h2><span style='font-weight:bold'>ID:</span> $devId\n\n"
             pStr1 += "<span style='font-weight:bold'>Capabilities:</span> $devCap\n\n"
             pStr1 += "<span style='font-weight:bold'>Attributes:</span>$devAttr"
-            pStr2 = "<span style='font-weight:bold'>Device Data:</span> $devData"
+              pStr2 = "<span style='font-weight:bold'>Device Data:</span> $devData"
             section ("") {
                 paragraph pStr1
             }

@@ -78,13 +78,13 @@ def motionTiming(){
     dynamicPage (name: "motionTiming", title: "", install: false, uninstall: false) {
 	  section("Motion Stats"){
             dispTable = 
-                "<style type='text/css'>table {border:1px black solid;}th {border:1px black solid; width:33%;} td {border:1px black solid;}</style><table><tr>"
+                "<style type='text/css'>div{overflow:auto;} .mtable {border:1px black solid;padding:0px;width:100%;}.mth {border:1px black solid; min-width:16em;} .mtd {border:1px black solid;}</style><div class='.mdiv'><table class='mtable'><tr>"
             evtList = {}
             evtArr = []
             for(i=0;i<qryDevice.size();i++){
                 dName = qryDevice[i].label ?: qryDevice[i].name 
-                dispTable+="<th> $dName </th>"
-                evtList=qryDevice[i].statesSince("motion",Date.parse("yyyy-MM-dd hh:mm", motionDate))
+                dispTable+="<th class='mth'> $dName </th>"
+                evtList=qryDevice[i].statesSince("motion",Date.parse("yyyy-MM-dd hh:mm", motionDate),[max:100])
                 evtArr[i] = evtList
             }
             dispTable += "</tr><tr>"
@@ -94,9 +94,9 @@ def motionTiming(){
                     stateParts = parseState(it.toString())
                     tempStr+="${stateParts[0]} ${stateParts[4]}\n"
                 }                   
-                dispTable += "<td>$tempStr</td>"
+                dispTable += "<td class='mtd'>$tempStr</td>"
             }
-            dispTable += "</tr></table>"
+            dispTable += "</tr></table></div>"
           
           
             section ("Motion Details", hideable: true, hidden: false) {  

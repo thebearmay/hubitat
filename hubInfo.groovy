@@ -40,9 +40,10 @@
  *    2021-03-31  thebearmay 	 jvm to HTML null error (first run)
  *    2021-04-13  thebearmay     pull in suggested additions from lgkhan - external IP and combining some HTML table elements
  *    2021-04-14  thebearmay     add units to the HTML
+ *    2021-04-20  thebearmay     provide a smooth transition from 1.8.x to 1.9.x
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.9.1'  }
+static String version()	{  return '1.9.2'  }
 
 metadata {
     definition (
@@ -329,6 +330,13 @@ def getPollValues(){
 }
 
 
+def getTemp(){  // this is to handle the upgrade path from >= 1.8.x
+    log.info "Upgrading polling from HubInfo from 1.8.x"
+    unschedule(getTemp)
+    getPollValues()
+}
+
+
 def getTempHandler(resp, data) {
     try {
 	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
@@ -360,7 +368,7 @@ def getFreeMemHandler(resp, data) {
         log.warn "getFreeMem httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
 }
-// end CSteele changes 210307
+
 
 def getJvmHandler(resp, data) {
     try {

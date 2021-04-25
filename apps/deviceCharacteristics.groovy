@@ -17,9 +17,10 @@
  *    2021-03-11  thebearmay	Original version 0.1.0
  *    2021-03-15  thebearmay    Release Candidate version 1.0.0
  *    2021-04-14  thebearmay    pull in last attribute state change
+ *    2021-04-25  thebearmay    error when attribute has never been set
  */
 
-static String version()	{  return '1.1.0'  }
+static String version()	{  return '1.1.1'  }
 
 
 definition (
@@ -28,7 +29,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Display the capabilities, attributes, commands and device data for devices selected.",
 	category: 		"Utility",
-	importUrl:		"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/deviceCharacteristics.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/deviceCharacteristics.groovy",
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""
@@ -93,9 +94,10 @@ def deviceCharacteristics(){
                 end = tempDisp.length() - 1
                 tempDisp = tempDisp.substring(start, end)
                 stateParts = tempDisp.split(',')
-                tempDisp = "\n\t\t<b>Activity Timestamp: </b>${stateParts[0]}\n\t\t<b>Event Desc: </b>${stateParts[1]}\n\t\t<b>Unit:</b>${stateParts[3]}"
-		    // [2] - value, [4] - data type
-                
+                if(stateParts.size() > 1){
+                    tempDisp = "\n\t\t<b>Activity Timestamp: </b>${stateParts[0]}\n\t\t<b>Event Desc: </b>${stateParts[1]}\n\t\t<b>Unit:</b>${stateParts[3]}"
+		            // [2] - value, [4] - data type
+                } else tempDisp = "N/A"
                 qryDeviceState += "<span style='font-weight:bold'>$it </span>(${it.dataType}): $tempValue  \n<span style='font-weight:bold'>\tLast State Change</span> $tempDisp"
                 nl = true
             }

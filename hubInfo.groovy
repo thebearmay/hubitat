@@ -41,9 +41,10 @@
  *    2021-04-13  thebearmay     pull in suggested additions from lgkhan - external IP and combining some HTML table elements
  *    2021-04-14  thebearmay     add units to the HTML
  *    2021-04-20  thebearmay     provide a smooth transition from 1.8.x to 1.9.x
+ *    2021-04-26  thebearmay     break out polls as separate preference options
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.9.2'  }
+static String version()	{  return '2.0.0'  }
 
 metadata {
     definition (
@@ -99,19 +100,51 @@ metadata {
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
-    input("tempPollEnable", "bool", title: "Enable Temperature/Memory/HTML Polling")
-    if (tempPollEnable) input("tempPollRate", "number", title: "Temperature/Memory Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
+    input("tempPollEnable", "bool", title: "Enable Temperature Polling")
+    input("freeMemPollEnabled", "bool", title: "Enable Free Memory Polling")
+    input("cpuPollEnabled", "bool", title: "Enable CPU & JVM Polling")
+    input("dbPollEnabled","bool", title: "Enable DB Size Polling")
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable) 
+        input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", default: false, required: true, submitOnChange: true)
+    input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
         input("password", "password", title: "Hub Security Password", required: false)
     }
-    input("attribEnable", "bool", title: "Enable Info attribute?", default: false, required: false, submitOnChange: true)
+
 }
 
 def installed() {
 	log.trace "installed()"
+    initialize()
+}
+
+def initialize(){
+    log.trace "Hub Information initialize()"
+// psuedo restart time - can also be set at the device creation or by a manual initialize
+    restartVal = now()
+    updateAttr("lastHubRestart", restartVal)	
+    sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
+    if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
+
+    runIn(30,configure)
+}
+
+def updated(){
+	log.trace "updated()"
+	if(debugEnable) runIn(1800,logsOff)
+    if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable){
+        unschedule()
+        getPollValues()
+    }
+    
+    if (attribEnable) 
+        formatAttrib() 
+    else 
+        sendEvent(name: "html", value: "<table></table>", isChanged: true); 
 }
 
 def configure() {
@@ -130,24 +163,12 @@ def configure() {
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
     updateAttr("lastUpdated", now())
-    if (tempPollEnable) getPollValues()
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable) getPollValues()
     if (attribEnable) formatAttrib()
 }
 
 def updateAttr(aKey, aValue, aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
-}
-
-def initialize(){
-    log.trace "Hub Information initialize()"
-// psuedo restart time - can also be set at the device creation or by a manual initialize
-    restartVal = now()
-    updateAttr("lastHubRestart", restartVal)	
-    sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
-    if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
-    if(state.attrString) state.remove("attrString")
-    runIn(30,configure)
 }
 
 def formatUptime(){
@@ -177,20 +198,26 @@ def formatAttrib(){
         attrStr += combineAttr("IP Local/Public", (String[])combine)        
     } else
 	    attrStr += addToAttr("Address","localIP")
-	attrStr += addToAttr("Free Memory","freeMemory","int")
-    if(device.currentValue("cpu5Min")){
-        def combine = ["cpu5Min", "cpuPct"]        
-        attrStr += combineAttr("CPU Load/Load%", (String[])combine)
-    }
+    if(cpuPollEnabled) {
+    	attrStr += addToAttr("Free Memory","freeMemory","int")
+        if(device.currentValue("cpu5Min")){
+            def combine = ["cpu5Min", "cpuPct"]        
+            attrStr += combineAttr("CPU Load/Load%", (String[])combine)
+        }
 
-    def combine = ["jvmTotal", "jvmFree", "jvmFreePct"]
-    attrStr += combineAttr("JVM Total/Free/%", (String[])combine)
+        def combine = ["jvmTotal", "jvmFree", "jvmFreePct"]
+        attrStr += combineAttr("JVM Total/Free/%", (String[])combine)
+    }
     
     if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
+    
 	attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
 	attrStr += addToAttr("Uptime","formattedUptime")
-	def tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
-	attrStr += addToAttr("Temperature",tempAttrib)
+    
+    if(tempPollEnable) {
+    	def tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
+	    attrStr += addToAttr("Temperature",tempAttrib)
+    }
 	attrStr += "</table>"
 
 	if (debugEnable) log.debug "after calls attr string = $attrStr"
@@ -253,49 +280,57 @@ def getPollValues(){
     // End - Modified from dman2306 Rebooter app
     
     // get Temperature
-    params = [
-        uri: "http://${location.hub.localIP}:8080",
-        path:"/hub/advanced/internalTempCelsius",
-        headers: [ "Cookie": cookie ]
-    ]
-    if(debugEnable)log.debug params
-    asynchttpGet("getTempHandler", params)
+    if(tempPollEnable) {
+        params = [
+            uri: "http://${location.hub.localIP}:8080",
+            path:"/hub/advanced/internalTempCelsius",
+            headers: [ "Cookie": cookie ]
+        ]
+        if(debugEnable)log.debug params
+        asynchttpGet("getTempHandler", params)
+    }
     
     // get Free Memory
-    params = [
-        uri: "http://${location.hub.localIP}:8080",
-        path:"/hub/advanced/freeOSMemory",
-        headers: [ "Cookie": cookie ]
-    ]
-    if(debugEnable)log.debug params
-    asynchttpGet("getFreeMemHandler", params)
+    if(freeMemPollEnabled) {
+        params = [
+            uri: "http://${location.hub.localIP}:8080",
+            path:"/hub/advanced/freeOSMemory",
+            headers: [ "Cookie": cookie ]
+        ]
+        if(debugEnable)log.debug params
+        asynchttpGet("getFreeMemHandler", params)
+    }
     
     // get Free JVM & CPU
-    if (location.hub.firmwareVersionString <= "2.2.5.131") {
-        params = [
-            uri: "http://${location.hub.localIP}:8080",
-            path:"/hub/advanced/freeOSMemoryHistory",
-            headers: [ "Cookie": cookie ]
-        ]
-    } else {
-        params = [
-            uri: "http://${location.hub.localIP}:8080",
-            path:"/hub/advanced/freeOSMemoryLast",
-            headers: [ "Cookie": cookie ]
-        ]
+    if(cpuPollEnabled) {
+        if (location.hub.firmwareVersionString <= "2.2.5.131") {
+            params = [
+                uri: "http://${location.hub.localIP}:8080",
+                path:"/hub/advanced/freeOSMemoryHistory",
+                headers: [ "Cookie": cookie ]
+            ]
+        } else {
+            params = [
+                uri: "http://${location.hub.localIP}:8080",
+                path:"/hub/advanced/freeOSMemoryLast",
+                headers: [ "Cookie": cookie ]
+            ]
+        }
+        if(debugEnable)log.debug params
+        asynchttpGet("getJvmHandler", params)
     }
-    if(debugEnable)log.debug params
-    asynchttpGet("getJvmHandler", params)
     
     //Get DB size
+    if(dbPollEnabled){
         params = [
             uri: "http://${location.hub.localIP}:8080",
             path:"/hub/advanced/databaseSize",
             headers: [ "Cookie": cookie ]
         ]
 	
-    if(debugEnable)log.debug params
-    asynchttpGet("getDbHandler", params)
+        if(debugEnable)log.debug params
+        asynchttpGet("getDbHandler", params)
+    }
     
     //get Public IP 
     if(publicIPEnable) {
@@ -319,7 +354,7 @@ def getPollValues(){
     
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
     
-    if (tempPollEnable) {
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable) {
         if(tempPollRate == null){
             device.updateSetting("tempPollRate",[value:300,type:"number"])
             runIn(300,getPollValues)
@@ -331,7 +366,7 @@ def getPollValues(){
 
 
 def getTemp(){  // this is to handle the upgrade path from >= 1.8.x
-    log.info "Upgrading polling from HubInfo from 1.8.x"
+    log.info "Upgrading HubInfo polling from 1.8.x"
     unschedule(getTemp)
     getPollValues()
 }
@@ -422,7 +457,6 @@ def getDbHandler(resp, data) {
 }
 
 def getIfHandler(resp, data){
-
     try{
         if (resp.getStatus() == 200){
             if (debugEnable) log.info resp.data
@@ -436,23 +470,17 @@ def getIfHandler(resp, data){
     }
 }   
 
-
-def updated(){
-	log.trace "updated()"
-	if(debugEnable) runIn(1800,logsOff)
-    if (attribEnable) 
-        formatAttrib() 
-    else 
-        sendEvent(name: "html", value: "<table></table>", isChanged: true); 
-}
-
 def getUnitFromState(attrName){
+    updateAttr("debug", attrName)
     def wrkStr = device.currentState(attrName).toString()
     start = wrkStr.indexOf('(')+1
     end = wrkStr.length() - 1
     wrkStr = wrkStr.substring(start,end)
     stateParts = wrkStr.split(',')
-    return stateParts[3].trim()
+    if(stateParts.size()>=4)
+        return stateParts[3].trim()
+    else 
+        return
 }
 
 // Begin JSON Parser

@@ -42,9 +42,11 @@
  *    2021-04-14  thebearmay     add units to the HTML
  *    2021-04-20  thebearmay     provide a smooth transition from 1.8.x to 1.9.x
  *    2021-04-26  thebearmay     break out polls as separate preference options
+ *    2021-04-27  thebearmay     replace the homegrown JSON parser, with groovy's JsonSluper
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '2.0.0'  }
+import groovy.json.JsonSlurper
+static String version()	{  return '2.0.1'  }
 
 metadata {
     definition (
@@ -460,8 +462,9 @@ def getIfHandler(resp, data){
     try{
         if (resp.getStatus() == 200){
             if (debugEnable) log.info resp.data
-            ipData = parseJson(resp.data)
-			updateAttr("publicIP",ipData.ip)
+            def jSlurp = new JsonSlurper()
+            ipData = jSlurp.parseText (resp.data)
+			updateAttr("publicIP",ipData.ip)//ipData.ip)
 		} else {
 			log.warn "Status ${resp.getStatus()} while fetching Public IP"
 		} 
@@ -471,7 +474,6 @@ def getIfHandler(resp, data){
 }   
 
 def getUnitFromState(attrName){
-    updateAttr("debug", attrName)
     def wrkStr = device.currentState(attrName).toString()
     start = wrkStr.indexOf('(')+1
     end = wrkStr.length() - 1
@@ -482,160 +484,6 @@ def getUnitFromState(attrName){
     else 
         return
 }
-
-// Begin JSON Parser
-
-def getNearestEnd(String json, int start, String head, String tail) {
-    def end = start
-    def count = 1
-    while (count > 0) {
-        end++
-        def c = json.charAt(end)
-        if (c == head) {
-            count++
-        } else if (c == tail) {
-            count--
-        }
-    }
-    return end;
-}
-
-//  Parse JSON Object
-def parseObject(String json) {
-    def map = [:]
-    def length = json.length()
-    def index = 1
-    def state = 'none' // none, string-value, other-value
-    def key = ''
-    while (index < length -1) {
-        def c = json.charAt(index)
-        switch(c) {
-            case '"':
-                if (state == 'none') {
-                    def keyStart = index + 1;
-                    def keyEnd = keyStart;
-                    while (json.charAt(keyEnd) != '"') {
-                        keyEnd++
-                    }
-                    index = keyEnd
-                    def keyValue = json[keyStart .. keyEnd - 1]
-                    key = keyValue
-                } else if (state == 'value') {
-                    def stringStart = index + 1;
-                    def stringEnd = stringStart;
-                    while (json.charAt(stringEnd) != '"') {
-                        stringEnd++
-                    }
-                    index = stringEnd
-                    def stringValue = json[stringStart .. stringEnd - 1]
-                    map.put(key, stringValue)
-                }
-                break
-
-            case '{':
-                def objectStart = index
-                def objectEnd = getNearestEnd json, index, '{', '}'
-                def objectValue = json[objectStart .. objectEnd]
-                map.put(key, parseObject(objectValue))
-                index = objectEnd
-                break
-
-            case '[':
-                def arrayStart = index
-                def arrayEnd = getNearestEnd(json, index, '[', ']')
-                def arrayValue = json[arrayStart .. arrayEnd]
-                map.put(key, parseArray(arrayValue))
-                index = arrayEnd
-                break
-
-            case ':':
-                state = 'value'
-                break
-
-            case ',':
-                state = 'none'
-                key = ''
-                break;
-
-            case ["\n", "\t", "\r", " "]:
-                break
-
-            default:
-                break
-        }
-        index++
-    }
-
-    return map
-}
-
-// Parse JSON Array
-def parseArray(String json) {
-    def list = []
-    def length = json.length()
-    def index = 1
-    def state = 'none' // none, string-value, other-value
-    while (index < length -1) {
-        def c = json.charAt(index)
-        switch(c) {
-            case '"':
-                def stringStart = index + 1;
-                def stringEnd = stringStart;
-                while (json.charAt(stringEnd) != '"') {
-                    stringEnd++
-                }
-                def stringValue = json[stringStart .. stringEnd - 1]
-                list.add(stringValue)
-                index = stringEnd
-                break
-
-            case '{':
-                def objectStart = index
-                def objectEnd = getNearestEnd(json, index, '{', '}')
-                def objectValue = json[objectStart .. objectEnd]
-                list.add(parseObject(objectValue))
-                index = objectEnd
-                break
-
-            case '[':
-                def arrayStart = index
-                def arrayEnd = getNearestEnd(json, index, '[', ']')
-                def arrayValue = json[arrayStart .. arrayEnd]
-                list.add(parseArray(arrayValue))
-                index = arrayEnd
-                break
-
-            case ["\n", "\t", "\r", " "]:
-                break
-
-            case ',':
-                state = 'none'
-                key = ''
-                break;
-
-            default:
-                break
-        }
-        index++
-    }
-
-    return list
-}
-
-//  Parse the JSON - can be Object or Array
-def parseJson(String json) {
-    def start = json[0]
-    if (start == '[') {
-        return parseArray(json)
-    } else if (start == '{') {
-        return parseObject(json)
-    } else {
-        return null
-    }
-}
-
-//End JSON Parser
-
 
 void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])

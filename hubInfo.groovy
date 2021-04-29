@@ -47,7 +47,7 @@
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
-static String version()	{  return '2.1.1'  }
+static String version()	{  return '2.1.0  }
 
 metadata {
     definition (

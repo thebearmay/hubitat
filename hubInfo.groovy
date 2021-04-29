@@ -106,7 +106,7 @@ preferences {
     input("freeMemPollEnabled", "bool", title: "Enable Free Memory Polling")
     input("cpuPollEnabled", "bool", title: "Enable CPU & JVM Polling")
     input("dbPollEnabled","bool", title: "Enable DB Size Polling")
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable) 
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable)
         input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", default: false, required: false, submitOnChange: true)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
@@ -115,11 +115,10 @@ preferences {
         input("username", "string", title: "Hub Security Username", required: false)
         input("password", "password", title: "Hub Security Password", required: false)
     }
-
 }
 
 def installed() {
-	log.trace "installed()"
+    log.trace "installed()"
     initialize()
 }
 
@@ -127,7 +126,7 @@ def initialize(){
     log.trace "Hub Information initialize()"
 // psuedo restart time - can also be set at the device creation or by a manual initialize
     restartVal = now()
-    updateAttr("lastHubRestart", restartVal)	
+    updateAttr("lastHubRestart", restartVal)
     sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
@@ -136,24 +135,24 @@ def initialize(){
 }
 
 def updated(){
-	log.trace "updated()"
-	if(debugEnable) runIn(1800,logsOff)
+    log.trace "updated()"
+    if(debugEnable) runIn(1800,logsOff)
     if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable){
         unschedule()
         getPollValues()
     }
-    
-    if (attribEnable) 
-        formatAttrib() 
-    else 
-        sendEvent(name: "html", value: "<table></table>", isChanged: true); 
+
+    if (attribEnable)
+        formatAttrib()
+    else
+        sendEvent(name: "html", value: "<table></table>", isChanged: true)
 }
 
 def configure() {
     if(debugEnable) log.debug "configure()"
-    locProp = ["latitude", "longitude", "timeZone", "zipCode", "temperatureScale"]
+    List locProp = ["latitude", "longitude", "timeZone", "zipCode", "temperatureScale"]
     def myHub = location.hub
-    hubProp = ["id","name","data","zigbeeId","zigbeeEui","hardwareID","type","localIP","localSrvPortTCP","firmwareVersionString","uptime"]
+    List hubProp = ["id","name","data","zigbeeId","zigbeeEui","hardwareID","type","localIP","localSrvPortTCP","firmwareVersionString","uptime"]
     for(i=0;i<hubProp.size();i++){
         updateAttr(hubProp[i], myHub["${hubProp[i]}"])
     }
@@ -169,56 +168,55 @@ def configure() {
     if (attribEnable) formatAttrib()
 }
 
-def updateAttr(aKey, aValue, aUnit = ""){
+void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
-def formatUptime(){
-    String attrval 
+void formatUptime(){
     try {
-        Integer ut = device.currentValue("uptime").toDouble()
-        Integer days = (ut/(3600*24))
-        Integer hrs = (ut - (days * (3600*24))) /3600
-        Integer min =  (ut -  ((days * (3600*24)) + (hrs * 3600))) /60
-        Integer sec = ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))
+        Long ut = device.currentValue("uptime").toLong()
+        Integer days = Math.floor(ut/(3600*24)).toInteger()
+        Integer hrs = Math.floor((ut - (days * (3600*24))) /3600).toInteger()
+        Integer min = Math.floor( (ut -  ((days * (3600*24)) + (hrs * 3600))) /60).toInteger()
+        Integer sec = Math.floor(ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))).toInteger()
     
-        attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec"
+        String attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec"
         updateAttr("formattedUptime", attrval) 
-    } catch(Exception ex) { 
+    } catch(ignore) {
         updateAttr("formattedUptime", "")
     }
 }
 
-def formatAttrib(){ 
+void formatAttrib(){
 	if(debugEnable) log.debug "formatAttrib"
-	def attrStr = "<table id='hubInfoTable'>"
+	String attrStr = "<table id='hubInfoTable'>"
 	
 	attrStr += addToAttr("Name","name")
 	attrStr += addToAttr("Version","hubVersion")
     if(publicIPEnable) {
-        def combine = ["localIP", "publicIP"]        
-        attrStr += combineAttr("IP Local/Public", (String[])combine)        
+        List combine = ["localIP", "publicIP"]
+        attrStr += combineAttr("IP Local/Public", combine)
     } else
 	    attrStr += addToAttr("Address","localIP")
     if(cpuPollEnabled) {
-    	attrStr += addToAttr("Free Memory","freeMemory","int")
+        attrStr += addToAttr("Free Memory","freeMemory","int")
         if(device.currentValue("cpu5Min")){
-            def combine = ["cpu5Min", "cpuPct"]        
-            attrStr += combineAttr("CPU Load/Load%", (String[])combine)
+            List combine = ["cpu5Min", "cpuPct"]
+            attrStr += combineAttr("CPU Load/Load%", combine)
         }
 
-        def combine = ["jvmTotal", "jvmFree", "jvmFreePct"]
-        attrStr += combineAttr("JVM Total/Free/%", (String[])combine)
+        List combineA = ["jvmTotal", "jvmFree", "jvmFreePct"]
+        attrStr += combineAttr("JVM Total/Free/%", combineA)
     }
-    
+
     if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
-    
+
 	attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
 	attrStr += addToAttr("Uptime","formattedUptime")
-    
+
     if(tempPollEnable) {
-    	def tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
-	    attrStr += addToAttr("Temperature",tempAttrib)
+        String tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
+        attrStr += addToAttr("Temperature",tempAttrib)
     }
 	attrStr += "</table>"
 
@@ -226,45 +224,49 @@ def formatAttrib(){
 	updateAttr("html", attrStr)
 }
 
-def combineAttr(name, String[] keys){
+String combineAttr(String name, List<String> keys){
     if(enableDebug) log.debug "adding $name, $keys.length"
 
-    retResult = '<tr><td align="left">'
+    String retResult = '<tr><td align="left">'
     retResult += name + '</td><td align="left">'
     
-    keyResult = ""
+    String keyResult = ""
     for (i = 0;i < keys.length; i++) {
         keyResult+= device.currentValue(keys[i])
-        attrUnit = getUnitFromState(keys[i])
+        String attrUnit = getUnitFromState(keys[i])
         if (attrUnit != "null") keyResult+=attrUnit
         if (i < keys.length - 1) keyResult+= " / "
     }
             
     retResult += keyResult+'</td></tr>'
+    return retResult
 }
 
-def addToAttr(name, key, convert = "none")
+String addToAttr(String name, String key, String convert = "none")
 {
     if(enableDebug) log.debug "adding $name, $key"
-    retResult = '<tr><td align="left">'
+    String retResult = '<tr><td align="left">'
     retResult += name + '</td><td align="left">'
 
-    attrUnit = getUnitFromState(key)
+    String attrUnit = getUnitFromState(key)
     if (attrUnit == "null") attrUnit =""
-    
-    if(device.currentValue(key)){
+
+    def curVal = device.currentValue(key)
+    if(curVal){
         if (convert == "int"){
-            retResult += device.currentValue(key).toInteger().toString()+attrUnit
+            retResult += curVal.toInteger().toString()+attrUnit
         } else if (name=="Temperature"){
             // span uses integer value to allow CSS override 
-            retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + device.currentValue(key)+attrUnit + "</span>"
-        } else retResult += device.currentValue(key)+attrUnit
+            retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + curVal.toString() + attrUnit + "</span>"
+        } else retResult += curVal.toString() + attrUnit
     }
     retResult += '</td></tr>'
+    return retResult
 }
 
-def getPollValues(){
+void getPollValues(){
     // start - Modified from dman2306 Rebooter app
+    String cookie
     if(security) {
         httpPost(
             [
@@ -283,23 +285,23 @@ def getPollValues(){
     
     // get Temperature
     if(tempPollEnable) {
-        params = [
-            uri: "http://${location.hub.localIP}:8080",
-            path:"/hub/advanced/internalTempCelsius",
-            headers: [ "Cookie": cookie ]
+        Map params = [
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub/advanced/internalTempCelsius",
+                headers: ["Cookie": cookie]
         ]
-        if(debugEnable)log.debug params
+        if (debugEnable) log.debug params
         asynchttpGet("getTempHandler", params)
     }
-    
+
     // get Free Memory
     if(freeMemPollEnabled) {
         params = [
-            uri: "http://${location.hub.localIP}:8080",
-            path:"/hub/advanced/freeOSMemory",
-            headers: [ "Cookie": cookie ]
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub/advanced/freeOSMemory",
+                headers: ["Cookie": cookie]
         ]
-        if(debugEnable)log.debug params
+        if (debugEnable) log.debug params
         asynchttpGet("getFreeMemHandler", params)
     }
     
@@ -307,33 +309,33 @@ def getPollValues(){
     if(cpuPollEnabled) {
         if (location.hub.firmwareVersionString <= "2.2.5.131") {
             params = [
-                uri: "http://${location.hub.localIP}:8080",
-                path:"/hub/advanced/freeOSMemoryHistory",
-                headers: [ "Cookie": cookie ]
+                    uri    : "http://${location.hub.localIP}:8080",
+                    path   : "/hub/advanced/freeOSMemoryHistory",
+                    headers: ["Cookie": cookie]
             ]
         } else {
             params = [
-                uri: "http://${location.hub.localIP}:8080",
-                path:"/hub/advanced/freeOSMemoryLast",
-                headers: [ "Cookie": cookie ]
+                    uri    : "http://${location.hub.localIP}:8080",
+                    path   : "/hub/advanced/freeOSMemoryLast",
+                    headers: ["Cookie": cookie]
             ]
         }
-        if(debugEnable)log.debug params
+        if (debugEnable) log.debug params
         asynchttpGet("getJvmHandler", params)
     }
-    
+
     //Get DB size
-    if(dbPollEnabled){
+    if(dbPollEnabled) {
         params = [
-            uri: "http://${location.hub.localIP}:8080",
-            path:"/hub/advanced/databaseSize",
-            headers: [ "Cookie": cookie ]
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub/advanced/databaseSize",
+                headers: ["Cookie": cookie]
         ]
-	
-        if(debugEnable)log.debug params
+
+        if (debugEnable) log.debug params
         asynchttpGet("getDbHandler", params)
     }
-    
+
     //get Public IP 
     if(publicIPEnable) {
         params =
@@ -355,7 +357,7 @@ def getPollValues(){
 	formatUptime()
     
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
-    
+
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable) {
         if(tempPollRate == null){
             device.updateSetting("tempPollRate",[value:300,type:"number"])
@@ -366,18 +368,16 @@ def getPollValues(){
     }
 }
 
-
 def getTemp(){  // this is to handle the upgrade path from >= 1.8.x
     log.info "Upgrading HubInfo polling from 1.8.x"
     unschedule(getTemp)
     getPollValues()
 }
 
-
-def getTempHandler(resp, data) {
+ void getTempHandler(resp, data) {
     try {
 	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
-		    tempWork = new Double(resp.data.toString())
+		    Double tempWork = new Double(resp.data.toString())
     		if(debugEnable) log.debug tempWork
 	    	if (location.temperatureScale == "F")
 		        updateAttr("temperature",celsiusToFahrenheit(tempWork),"°F")
@@ -387,84 +387,87 @@ def getTempHandler(resp, data) {
 		    updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
     		updateAttr("temperatureC",tempWork+ " °C")
 	    }
-    } catch(Exception ex) { 
+    } catch(ignored) {
         respStatus = resp.getStatus()
         log.warn "getTemp httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
 
-def getFreeMemHandler(resp, data) {
+void getFreeMemHandler(resp, data) {
     try {
 	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
-		    memWork = new Integer(resp.data.toString())
+		    Integer memWork = new Integer(resp.data.toString())
 		    if(debugEnable) log.debug memWork
             updateAttr("freeMemory",memWork)
 	    }
-    } catch(Exception ex) { 
+    } catch(ignored) {
         respStatus = resp.getStatus()
         log.warn "getFreeMem httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
 }
+// end CSteele changes 210307
 
+void getJvmHandler(resp, data) {
+    String jvmWork
+    List<String> jvmArr = []
 
-def getJvmHandler(resp, data) {
     try {
 	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             jvmWork = resp.data.toString()
         }
         if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
-    } catch(Exception ex) { 
+    } catch(ignored) {
         respStatus = resp.getStatus()
         log.warn "getJvm httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
     if (jvmWork) {
-        lineCount = 0
+        Integer lineCount = 0
         jvmWork.eachLine{
             lineCount++
         }
-        lineCount2 = 0
+        Integer lineCount2 = 0
         jvmWork.eachLine{
             lineCount2++
             if(lineCount==lineCount2)
                 jvmArr = it.split(",")
         }
-        if(jvmArr.length > 1){
-            jvmTotal = jvmArr[2].toInteger()
-            jvmFree = jvmArr[3].toInteger()
+        if(jvmArr.size() > 1){
+            Integer jvmTotal = jvmArr[2].toInteger()
+            Integer jvmFree = jvmArr[3].toInteger()
             Double jvmFreePct = (jvmFree/jvmTotal)*100
             updateAttr("jvmTotal",jvmTotal)
             updateAttr("jvmFree",jvmFree)
             updateAttr("jvmFreePct",jvmFreePct.round(1),"%")
-            if(jvmArr.length > 4) {
-                cpuWork=jvmArr[4].toDouble()
+            if(jvmArr.size() > 4) {
+                Double cpuWork=jvmArr[4].toDouble()
                 updateAttr("cpu5Min",cpuWork.round(2))
-                cpuWork = (cpuWork/4)*100  //Load / #Cores - if cores change will need adjusted to reflect
+                cpuWork = (cpuWork/4.0D)*100.0D //Load / #Cores - if cores change will need adjusted to reflect
                 updateAttr("cpuPct",cpuWork.round(2),"%")
             }
         }
     }
 }
 
-def getDbHandler(resp, data) {
+void getDbHandler(resp, data) {
     try {
 	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
-		    dbWork = new Integer(resp.data.toString())
+		    Integer dbWork = new Integer(resp.data.toString())
     		if(debugEnable) log.debug dbWork
     		updateAttr("dbSize",dbWork,"MB")
 	    }
-    } catch(Exception ex) { 
+    } catch(ignored) {
         respStatus = resp.getStatus()
         log.warn "getDb httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
 
-def getIfHandler(resp, data){
+void getIfHandler(resp, data){
     try{
         if (resp.getStatus() == 200){
             if (debugEnable) log.info resp.data
             def jSlurp = new JsonSlurper()
             ipData = jSlurp.parseText (resp.data)
-			updateAttr("publicIP",ipData.ip)//ipData.ip)
+            updateAttr("publicIP",ipData.ip)
 		} else {
 			log.warn "Status ${resp.getStatus()} while fetching Public IP"
 		} 
@@ -473,16 +476,13 @@ def getIfHandler(resp, data){
     }
 }   
 
-def getUnitFromState(attrName){
-    def wrkStr = device.currentState(attrName).toString()
-    start = wrkStr.indexOf('(')+1
-    end = wrkStr.length() - 1
+String getUnitFromState(String attrName){
+    String wrkStr = device.currentState(attrName).toString()
+    Integer start = wrkStr.indexOf('(')+1
+    Integer end = wrkStr.length() - 1
     wrkStr = wrkStr.substring(start,end)
-    stateParts = wrkStr.split(',')
-    if(stateParts.size()>=4)
-        return stateParts[3].trim()
-    else 
-        return
+    List<String> stateParts = wrkStr.split(',')
+    return stateParts[3]?.trim()
 }
 
 void logsOff(){

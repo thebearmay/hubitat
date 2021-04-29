@@ -47,7 +47,7 @@
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
-static String version() {return "2.1.0"}
+static String version() {return "2.1.1"}
 
 metadata {
     definition (
@@ -232,11 +232,11 @@ String combineAttr(String name, List<String> keys){
     retResult += name + '</td><td align="left">'
     
     String keyResult = ""
-    for (i = 0;i < keys.length; i++) {
+    for (i = 0;i < keys.size(); i++) {
         keyResult+= device.currentValue(keys[i])
         String attrUnit = getUnitFromState(keys[i])
         if (attrUnit != "null") keyResult+=attrUnit
-        if (i < keys.length - 1) keyResult+= " / "
+        if (i < keys.size() - 1) keyResult+= " / "
     }
             
     retResult += keyResult+'</td></tr>'

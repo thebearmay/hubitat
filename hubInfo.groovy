@@ -43,7 +43,7 @@
  *    2021-04-20  thebearmay     provide a smooth transition from 1.8.x to 1.9.x
  *    2021-04-26  thebearmay     break out polls as separate preference options
  *    2021-04-27  thebearmay     replace the homegrown JSON parser, with groovy's JsonSluper
- *    2021-04-29  thebearmay	 merge pull request from nh.schottfam, clean up/add type declarations, optimize code and add local variables	
+ *    2021-04-29  thebearmay	 merge pull request from nh.schottfam, clean up-add type declarations, optimize code and add local variables	
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper

@@ -66,7 +66,7 @@ def mainPage(){
                 input "qryDate", "string", title: "Pull motion data from this date forward (yyyy-MM-dd hh:mm):", required: true, submitOnChange: true
                 if (qryDevice != null && qryDate != null) href "lockHistory", title: "Lock History", required: false
                 input "notifyDevice", "capability.notification", title: "Notification Devices:", multiple: true, submitOnChange: true
-                if(notifyDevice.size() > 0) 
+                if(notifyDevice?.size() > 0) 
                     lockSubscribe()
                 else
                     unsubscribe()

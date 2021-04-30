@@ -27,7 +27,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Display a history of the events for locks, allows side-by-side display of multiple devices for comparisons",
 	category: 		"Utility",
-	importUrl:		"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/lockHistory.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/lockHistory.groovy",
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""

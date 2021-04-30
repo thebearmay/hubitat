@@ -18,7 +18,7 @@
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.1.3'  }
 
 
 definition (
@@ -63,7 +63,7 @@ def mainPage(){
 	    	section("Main")
 		    {
                 input "qryDevice", "capability.lockCodes", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
-                input "qryDate", "string", title: "Pull motion data from this date forward (yyyy-MM-dd hh:mm):", required: true, submitOnChange: true
+                input "qryDate", "string", title: "Pull event data from this date forward (yyyy-MM-dd hh:mm):", required: true, submitOnChange: true
                 if (qryDevice != null && qryDate != null) href "lockHistory", title: "Lock History", required: false
                 input "notifyDevice", "capability.notification", title: "Notification Devices:", multiple: true, submitOnChange: true
                 if(notifyDevice?.size() > 0) 
@@ -104,7 +104,7 @@ def lockHistory(){
                 input  "codeRec", "bool", title:"Last Code Records", defaultValue: true, submitOnChange:true
                 input  "unlockRec", "bool", title:"Unlock Records", defaultValue: true, submitOnChange: true
                 input  "lockRec", "bool", title:"Lock Records", defaultValue: true, submitOnChange: true
-                input "qryDate", "string", title: "Pull motion data from this date forward (yyyy-MM-dd hh:mm):", required: true, submitOnChange: true
+                input "qryDate", "string", title: "Pull event data from this date forward (yyyy-MM-dd hh:mm):", required: true, submitOnChange: true
                 input "refreshTable", "button", title:"Refresh Table"
             }
             section (""){    

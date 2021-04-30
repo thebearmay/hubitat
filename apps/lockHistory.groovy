@@ -27,7 +27,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Display a history of the events for locks, allows side-by-side display of multiple devices for comparisons",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/lockHistory.groovy",
+	importUrl:		"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/lockHistory.groovy",
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""
@@ -131,13 +131,13 @@ String buildTable(){
             if (stateParts[0].length() < 23) stateParts[0] = stateParts[0] + "0"
             
             if (p4Trim == "unlocked" && unlockRec){
-                tempStr="${stateParts[0]}\t\t   [Unlock Event]"
+                evtArr[i].add("${stateParts[0]}\t\t   [Unlock Event]")
             } else if (p4Trim == "locked" && lockRec){
-                tempStr="${stateParts[0]}\t\t   [Lock Event]"
+                evtArr[i].add("${stateParts[0]}\t\t   [Lock Event]")
             }else if (p4Trim != "locked" && p4Trim != "unlocked")
-                tempStr="${stateParts[0]}\t [CodeName] ${stateParts[4]}"
+               evtArr[i].add("${stateParts[0]}\t [CodeName] ${stateParts[4]}")
                     
-            if(tempStr != null) evtArr[i].add(tempStr)            
+//evtArr[i].add(tempStr)            
         }
         evtArr[i].sort()
     }

@@ -36,6 +36,7 @@ definition (
 preferences {
    page name: "mainPage"
    page name: "lockHistory"
+   page name: "altName"
 }
 
 def installed() {
@@ -65,6 +66,7 @@ def mainPage(){
                 input "qryDevice", "capability.lockCodes", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
                 input "qryDate", "string", title: "Pull event data from this date forward (yyyy-MM-dd hh:mm):", required: true, submitOnChange: true
                 if (qryDevice != null && qryDate != null) href "lockHistory", title: "Lock History", required: false
+                href "altName", title: "Maintain Alternate Names", required: false
                 input "notifyDevice", "capability.notification", title: "Notification Devices:", multiple: true, submitOnChange: true
                 if(notifyDevice?.size() > 0) 
                     lockSubscribe()
@@ -128,6 +130,7 @@ String buildTable(){
         evtList.each {
             stateParts = parseState(it.toString())
             p4Trim = stateParts[4].trim()
+            if(p4Trim.find("unknown codeNumber:")) stateParts[4] = findAltName(stateParts[4])
             if (stateParts[0].length() < 23) stateParts[0] = stateParts[0] + "0"
             
             if (p4Trim == "unlocked" && unlockRec){
@@ -137,7 +140,7 @@ String buildTable(){
             }else if (p4Trim != "locked" && p4Trim != "unlocked")
                evtArr[i].add("${stateParts[0]}\t [CodeName] ${stateParts[4]}")
                     
-//evtArr[i].add(tempStr)            
+        
         }
         evtArr[i].sort()
     }
@@ -152,7 +155,33 @@ String buildTable(){
     dispTable += "</tr></table></div>"
     return dispTable
 }
+      
+String findAltName(){//TBD
+    return "Alternate Name"
+}
 
+def altName(){
+    dynamicPage (name: "altName", title: "", install: false, uninstall: false) {
+        section("Alternate Names"){          
+            dispTable = buildNames()
+            section ("Alternate Names Details", hideable: false, hidden: false) { 
+                paragraph dispTable
+                input "saveName", "button", title:"Save"
+            }
+            section (""){   
+                href "mainPage", title: "Return", required: false
+            }
+      }
+    }
+}
+
+String buildNames(){//TBD
+    return "List of Names"
+}
+
+def storeName(){//TBD
+}
+               
 def parseState(stateStr){ //returns array of the elements in the string [0] - Timestamp, [1] - Event ID, [2] - Event Name, [3] - Event Description, [4] - Event Value. [5] - Unit
     start = stateStr.indexOf('(')+1
     end = stateStr.length() - 1
@@ -164,6 +193,9 @@ def appButtonHandler(btn) {
     switch(btn) {
         case "refreshTable":
             lockHistory()
+            break
+        case "saveName":
+            storeName()
             break
         default: 
             log.error "Undefined button $btn pushed"

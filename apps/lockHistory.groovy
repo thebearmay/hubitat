@@ -167,8 +167,10 @@ String findAltName(unkStr){
     startPos = unkStr.indexOf(":")+1
     if (startPos == 0) startPos = unkStr.indexOf("#")+1
     endPos = unkStr.size()
-    result = unkStr.substring(startPos, endPos).trim()
-    return state.altNames.get(result)
+    result = unkStr.substring(startPos, endPos).trim()    
+    aName = state.altNames.get(result)
+    if(aName) return aName
+    else return unkStr
 }
 
 def altName(){

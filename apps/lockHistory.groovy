@@ -170,7 +170,7 @@ String findAltName(unkStr){
     result = unkStr.substring(startPos, endPos).trim()
     aName = state.altNames.get(result)
     if(aName) return aName
-    else return unkStr 
+    else return "Key Not Found: $result" 
 }
 
 def altName(){

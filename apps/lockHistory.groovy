@@ -68,7 +68,7 @@ def mainPage(){
                 input "qryDevice", "capability.lockCodes", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
                 input "qryDate", "string", title: "Pull event data from this date forward (yyyy-MM-dd hh:mm):", required: true, submitOnChange: true
                 if (qryDevice != null && qryDate != null) href "lockHistory", title: "Lock History", required: false
-                href "altName", title: "Maintain Alternate Names", required: false
+                href "altName", title: "Alternate Names for events that return 'unknown codeNumber:x' or 'code #x'", required: false
                 input "notifyDevice", "capability.notification", title: "Notification Devices:", multiple: true, submitOnChange: true
                 if(notifyDevice?.size() > 0) 
                     lockSubscribe()

@@ -19,7 +19,7 @@
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.2.2'  }
+static String version()	{  return '0.2.3'  }
 
 
 definition (
@@ -68,7 +68,7 @@ def mainPage(){
                 input "qryDevice", "capability.lockCodes", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
                 input "qryDate", "string", title: "Pull event data from this date forward (yyyy-MM-dd hh:mm):", required: true, submitOnChange: true
                 if (qryDevice != null && qryDate != null) href "lockHistory", title: "Lock History", required: false
-                href "altName", title: "Alternate Names for events that return 'unknown codeNumber:x' or 'code #x'", required: false
+                href "altName", title: "Maintain Alternate Names for events that return 'unknown codeNumber:x' or 'code #x'", required: false
                 input "notifyDevice", "capability.notification", title: "Notification Devices:", multiple: true, submitOnChange: true
                 if(notifyDevice?.size() > 0) 
                     lockSubscribe()
@@ -167,10 +167,10 @@ String findAltName(unkStr){
     startPos = unkStr.indexOf(":")+1
     if (startPos == 0) startPos = unkStr.indexOf("#")+1
     endPos = unkStr.size()
-    result = unkStr.substring(startPos, endPos).trim()    
+    result = unkStr.substring(startPos, endPos).trim()
     aName = state.altNames.get(result)
     if(aName) return aName
-    else return unkStr
+    else return unkStr 
 }
 
 def altName(){
@@ -182,6 +182,7 @@ def altName(){
                 input "slotNum", "number", title: "Slot Number:", submitOnChange:true
                 input "slotName", "string", title: "Name to Display:", submitOnChange:true
                 if(slotName && slotNum) input "saveName", "button", title:"Save"
+                if(slotNum) input "deleteName", "button", title:"Delete"
             }
             section (""){   
                 href "mainPage", title: "Return", required: false
@@ -208,8 +209,11 @@ def appButtonHandler(btn) {
             lockHistory()
             break
         case "saveName":
-            //log.debug "saveName $slotNum $slotName"
-            state.altNames.put(slotNum, slotName)
+            state.altNames.put(slotNum.toString(), slotName.toString())
+            altName()
+            break
+        case "deleteName":
+            state.altNames.remove(slotNum.toString())
             altName()
             break
         default: 

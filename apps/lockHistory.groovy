@@ -15,10 +15,11 @@
  *    Date          Who           What
  *    ----          ---           ----
  *    2021-04-29    thebearmay    Original version 0.1.0
+ *    2021-04-30    thebearmay    Add alternate code names
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.1.3'  }
+static String version()	{  return '0.2.0'  }
 
 
 definition (
@@ -42,6 +43,7 @@ preferences {
 def installed() {
 //	log.trace "installed()"
     state?.isInstalled = true
+    state.altNames = [:]
     initialize()
 }
 
@@ -130,7 +132,7 @@ String buildTable(){
         evtList.each {
             stateParts = parseState(it.toString())
             p4Trim = stateParts[4].trim()
-            if(p4Trim.find("unknown codeNumber:")) stateParts[4] = findAltName(stateParts[4])
+            if(p4Trim.contains("unknown codeNumber:") || p4Trim.contains("code #")) p4Trim = findAltName(p4Trim)
             if (stateParts[0].length() < 23) stateParts[0] = stateParts[0] + "0"
             
             if (p4Trim == "unlocked" && unlockRec){
@@ -138,7 +140,7 @@ String buildTable(){
             } else if (p4Trim == "locked" && lockRec){
                 evtArr[i].add("${stateParts[0]}\t\t   [Lock Event]")
             }else if (p4Trim != "locked" && p4Trim != "unlocked")
-               evtArr[i].add("${stateParts[0]}\t [CodeName] ${stateParts[4]}")
+               evtArr[i].add("${stateParts[0]}\t [CodeName] $p4Trim")
                     
         
         }
@@ -156,17 +158,23 @@ String buildTable(){
     return dispTable
 }
       
-String findAltName(){//TBD
-    return "Alternate Name"
+String findAltName(unkStr){
+    startPos = unkStr.indexOf(":")+1
+    if (startPos == 0) startPos = unkStr.indexOf("#")+1
+    endPos = unkStr.size()
+    result = unkStr.substring(startPos, endPos).trim()
+    return state.altNames.get(result)
 }
 
 def altName(){
     dynamicPage (name: "altName", title: "", install: false, uninstall: false) {
-        section("Alternate Names"){          
+        section("Alternate Names"){   
             dispTable = buildNames()
             section ("Alternate Names Details", hideable: false, hidden: false) { 
                 paragraph dispTable
-                input "saveName", "button", title:"Save"
+                input "slotNum", "number", title: "Slot Number:", submitOnChange:true
+                input "slotName", "string", title: "Name to Display:", submitOnChange:true
+                if(slotName && slotNum) input "saveName", "button", title:"Save"
             }
             section (""){   
                 href "mainPage", title: "Return", required: false
@@ -175,11 +183,9 @@ def altName(){
     }
 }
 
-String buildNames(){//TBD
-    return "List of Names"
-}
-
-def storeName(){//TBD
+String buildNames(){
+    if(state.altNames) return state.altNames
+    else return "Empty List"
 }
                
 def parseState(stateStr){ //returns array of the elements in the string [0] - Timestamp, [1] - Event ID, [2] - Event Name, [3] - Event Description, [4] - Event Value. [5] - Unit
@@ -195,14 +201,12 @@ def appButtonHandler(btn) {
             lockHistory()
             break
         case "saveName":
-            storeName()
+            //log.debug "saveName $slotNum $slotName"
+            state.altNames.put(slotNum, slotName)
+            altName()
             break
         default: 
             log.error "Undefined button $btn pushed"
             break
       }
-}
-
-def intialize() {
-
 }

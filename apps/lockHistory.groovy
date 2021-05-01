@@ -19,7 +19,7 @@
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.2.0'  }
+static String version()	{  return '0.2.1'  }
 
 
 definition (
@@ -94,7 +94,12 @@ def lockSubscribe(){
 def lockHandler(evt){ 
     if(evt.value == "unlocked") {
         notifyDevice.each {
-            it.deviceNotification(evt.descriptionText)
+            if(evt.descriptionText.contains("unknown codeNumber:") || evt.descriptionText.contains("code #")){
+                evtDev = evt.getDevice()
+                altNam = findAltName(evt.descriptionText)
+                it.deviceNotification("$evtDev was unlocked by $altNam")
+            } else
+                it.deviceNotification(evt.descriptionText)
         }
     }
 }

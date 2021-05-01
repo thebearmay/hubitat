@@ -19,7 +19,7 @@
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.2.1'  }
+static String version()	{  return '0.2.2'  }
 
 
 definition (

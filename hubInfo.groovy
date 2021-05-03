@@ -43,11 +43,12 @@
  *    2021-04-20  thebearmay     provide a smooth transition from 1.8.x to 1.9.x
  *    2021-04-26  thebearmay     break out polls as separate preference options
  *    2021-04-27  thebearmay     replace the homegrown JSON parser, with groovy's JsonSluper
- *    2021-04-29  thebearmay	 merge pull request from nh.schottfam, clean up/add type declarations, optimize code and add local variables	
+ *    2021-04-29  thebearmay	 merge pull request from nh.schottfam, clean up/add type declarations, optimize code and add local variables
+ *    2021-05-03  thebearmay     add nonPolling zigbee channel attribute, i.e. set at hub startup
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
-static String version() {return "2.1.1"}
+static String version() {return "2.2.1"}
 
 metadata {
     definition (
@@ -96,6 +97,7 @@ metadata {
         attribute "cpuPct", "number"
         attribute "dbSize", "number"
         attribute "publicIP", "string"
+        attribute "zigbeeChannel","string"
 
             
     }   
@@ -160,6 +162,9 @@ def configure() {
     for(i=0;i<locProp.size();i++){
         updateAttr(locProp[i], location["${locProp[i]}"])
     }
+    myHubData = parseHubData()
+    updateAttr("zigbeeChannel",myHubData.zigbeeChannel)
+    
     formatUptime()
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
     updateAttr("locationName", location.name)
@@ -172,6 +177,21 @@ def configure() {
 void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
+        
+HashMap parseHubData() {    
+    String dataWork = location.hub.data.toString()
+    dataWork = dataWork.substring(1,dataWork.size()-1)
+    List <String> dataMapPre = dataWork.split(",")
+    def dataMap = [:]    
+
+    dataMapPre.each() {
+        dSplit= it.split(":")
+        dataMap.put(dSplit[0].trim(),dSplit[1].trim())
+    }
+    
+    return dataMap
+}
+
 
 void formatUptime(){
     try {
@@ -219,6 +239,8 @@ void formatAttrib(){
         String tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
         attrStr += addToAttr("Temperature",tempAttrib)
     }
+    
+    attrStr += addToAttr("ZigBee Channel","zigbeeChannel")
 	attrStr += "</table>"
 
 	if (debugEnable) log.debug "after calls attr string = $attrStr"
@@ -354,6 +376,8 @@ void getPollValues(){
     
     //End Pollable Gets
     
+    myHubData = parseHubData()
+    updateAttr("zigbeeChannel",myHubData.zigbeeChannel)    
     updateAttr("uptime", location.hub.uptime)
 	formatUptime()
     
@@ -406,7 +430,6 @@ void getFreeMemHandler(resp, data) {
         log.warn "getFreeMem httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
 }
-// end CSteele changes 210307
 
 void getJvmHandler(resp, data) {
     String jvmWork

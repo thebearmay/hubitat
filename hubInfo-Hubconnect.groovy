@@ -61,6 +61,7 @@ metadata
 		attribute "cpuPct", "number"
 		attribute "dbSize", "number"
 		attribute "publicIP", "string"
+		attribute "zigbeeChannel","string"
 		
 		command "sync"
 	}

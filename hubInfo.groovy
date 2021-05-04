@@ -49,7 +49,7 @@
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
-static String version() {return "2.2.1"}
+static String version() {return "2.2.2"}
 
 metadata {
     definition (
@@ -503,14 +503,18 @@ void getIfHandler(resp, data){
 
 String getUnitFromState(String attrName){
     String wrkStr = device.currentState(attrName).toString()
-    if(location.hub.firmwareVersionString <= "2.2.7.0") 
-        Integer start = wrkStr.indexOf('(')+1
-    else
-        Integer start = wrkStr.indexOf('[')+1
+    
+    Integer start = wrkStr.indexOf('[')+1
+    
+    if(location.hub.firmwareVersionString < "2.2.7.119") 
+        start = wrkStr.indexOf('(')+1    
     Integer end = wrkStr.length() - 1
-        log.debug "$start $end $wrkStr "
+    
+    if (debugEnabled) log.debug "${location.hub.firmwareVersionString} $start $end || $wrkStr "
     wrkStr = wrkStr.substring(start,end)
-        log.debug "$wrkStr"
+    
+    if (debugEnabled) log.debug "$wrkStr"
+    
     List<String> stateParts = wrkStr.split(',')
     if(location.hub.firmwareVersionString <= "2.2.7.0") 
         return stateParts[3]?.trim()

@@ -45,10 +45,11 @@
  *    2021-04-27  thebearmay     replace the homegrown JSON parser, with groovy's JsonSluper
  *    2021-04-29  thebearmay	 merge pull request from nh.schottfam, clean up/add type declarations, optimize code and add local variables
  *    2021-05-03  thebearmay     add nonPolling zigbee channel attribute, i.e. set at hub startup
+ *    2021-05-04  thebearmay     release 2.2.7.x changes
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
-static String version() {return "2.2.0"}
+static String version() {return "2.2.1"}
 
 metadata {
     definition (
@@ -502,11 +503,20 @@ void getIfHandler(resp, data){
 
 String getUnitFromState(String attrName){
     String wrkStr = device.currentState(attrName).toString()
-    Integer start = wrkStr.indexOf('(')+1
+
+    Integer start = wrkStr.indexOf('[')+1
     Integer end = wrkStr.length() - 1
+        log.debug "$start $end $wrkStr "
     wrkStr = wrkStr.substring(start,end)
+        log.debug "$wrkStr"
     List<String> stateParts = wrkStr.split(',')
-    return stateParts[3]?.trim()
+    if(location.hub.firmwareVersionString <= "2.2.7.0") 
+        return stateParts[3]?.trim()
+    else {
+        stateParts[4] = stateParts[4].replace("unit=","")
+        return stateParts[4]?.trim()
+    }
+
 }
 
 void logsOff(){

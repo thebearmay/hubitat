@@ -18,11 +18,12 @@
  *                               add responseReady, additional minor fixes v0.5.0
  *                               add PresenceSensor capability v0.6.0
  *    2021-03-14  thebearmay     Add repeat value, tighten to release v1.0.0
- *    2021-03-15  thebearmay     Add lastIpAddress, leave presence at last value when starting new ing
+ *    2021-03-15  thebearmay     Add lastIpAddress, leave presence at last value when starting new ping
+ *    2021-05-04  thebearmay     Use 2.2.7.x ping instead of http call if available
  *
  */
 
-static String version()	{  return '1.1.0'  }
+static String version()	{  return '2.0.0'  }
 
 metadata {
     definition (
@@ -54,6 +55,7 @@ metadata {
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
+    input("numPings", "number", title: "Number of pings to issue", defaultValue:3, required:true, submitOnChange:true)
     input("pingPeriod", "number", title: "Ping Repeat in Seconds\n Zero to disable", defaultValue: 0, required:true, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
@@ -95,37 +97,56 @@ def initialize(){
 
 def sendPing(ipAddress){
     if(ipAddress == null) ipAddress = data.ip
+    if(numPings == null) numPings = 3
     configure()
     updateAttr("lastIpAddress", ipAddress)
-    
-    // start - Modified from dman2306 Rebooter app
-
-    if(security) {
-        httpPost(
-            [
-                uri: "http://127.0.0.1:8080",
-                path: "/login",
-                query: [ loginRedirect: "/" ],
-                body: [
-                    username: username,
-                    password: password,
-                    submit: "Login"
+    if (location.hub.firmwareVersionString > "2.2.6.140"){
+        updateAttr("responseReady",false)
+        updateAttr("pingReturn","Pinging $ipAddress") 
+        hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ipAddress, numPings.toInteger())
+        int pLoss = pingData.packetLoss.toInteger()
+        int pTran = pingData.packetsTransmitted.toInteger()
+        Double pctLoss = (pLoss/pTran)*100
+        String pctLossStr = "${pctLoss.round(1)}%"
+        updateAttr("percentLoss", pctLossStr)
+        String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, Lost: ${pingData.packetLoss}"
+        updateAttr("pingStats", pingStats) 
+        updateAttr("min",pingData.rttAvg)
+        updateAttr("avg",pingData.rttAvg)
+        updateAttr("max",pingData.rttMax)
+        updateAttr("mdev","N/A")
+        updateAttr("pingReturn",pingData)
+        if (percentLoss < 100 ) 
+            updateAttr("presence","present")
+        else 
+            updateAttr("presence","not present")
+        updateAttr("responseReady",true)
+    } else {
+        if(security) {
+            httpPost(
+                [
+                    uri: "http://127.0.0.1:8080",
+                    path: "/login",
+                    query: [ loginRedirect: "/" ],
+                    body: [
+                        username: username,
+                        password: password,
+                        submit: "Login"
+                    ]
                 ]
-            ]
-        ) { resp -> cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0) }
-    }
-    // End - Modified from dman2306 Rebooter app
-    
-    params = [
-        uri: "http://${location.hub.localIP}:8080",
-        path:"/hub/networkTest/ping/"+ipAddress,
-        headers: [ "Cookie": cookie ]
-    ]
-    if(debugEnable)log.debug params
-    updateAttr("responseReady",false)
-    updateAttr("pingReturn","Pinging $ipAddress")  
+            ) { resp -> cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0) }
+        }    
+        params = [
+            uri: "http://${location.hub.localIP}:8080",
+            path:"/hub/networkTest/ping/"+ipAddress,
+            headers: [ "Cookie": cookie ]
+        ]
+        if(debugEnable)log.debug params
+        updateAttr("responseReady",false)
+        updateAttr("pingReturn","Pinging $ipAddress")  
 	
-    asynchttpGet("sendPingHandler", params)
+        asynchttpGet("sendPingHandler", params)
+    }
     
 }
 

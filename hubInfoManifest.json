@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "minimumHEVersion": "2.2.5.130",
   "dateReleased": "2021-05--4",
-  "releaseNotes": "2.2.1 - changes for hub version 2.2.7.x\n2.2.0 - add zigbeeChannel attribute and table entry\n2.1.1 - code optimization and clean up merged from nh.schottfam\n2.0.1 - use Groovy JsonSluper instead of coded parser\n2.0.0 - Allows for user selection of which pieces of pollable information to return\n**Please check the Device Preferences after updating to make sure your selections are accurate**",
+  "releaseNotes": "2.2.2 - changes for hub version 2.2.7.x\n2.2.0 - add zigbeeChannel attribute and table entry\n2.1.1 - code optimization and clean up merged from nh.schottfam\n2.0.1 - use Groovy JsonSluper instead of coded parser\n2.0.0 - Allows for user selection of which pieces of pollable information to return\n**Please check the Device Preferences after updating to make sure your selections are accurate**",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

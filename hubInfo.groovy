@@ -503,8 +503,10 @@ void getIfHandler(resp, data){
 
 String getUnitFromState(String attrName){
     String wrkStr = device.currentState(attrName).toString()
-
-    Integer start = wrkStr.indexOf('[')+1
+    if(location.hub.firmwareVersionString <= "2.2.7.0") 
+        Integer start = wrkStr.indexOf('(')+1
+    else
+        Integer start = wrkStr.indexOf('[')+1
     Integer end = wrkStr.length() - 1
         log.debug "$start $end $wrkStr "
     wrkStr = wrkStr.substring(start,end)

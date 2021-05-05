@@ -15,10 +15,11 @@
  *    Date          Who           What
  *    ----          ---           ----
  *    2021-04-16    thebearmay    Original version 0.1.0
+ *    2021-05-04    thebearmay	  2.2.7.x changes
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.2.0'  }
 
 
 definition (
@@ -92,7 +93,9 @@ def motionTiming(){
                 tempStr =""
                 evtArr[i].each {
                     stateParts = parseState(it.toString())
-                    tempStr+="${stateParts[0]} ${stateParts[4]}\n"
+                    stateParts[1] = stateParts[1].replace("date=","")
+                    stateParts[5] = stateParts[5].replace("value=","")
+                    tempStr+="${stateParts[1]} ${stateParts[5]}\n"
                 }                   
                 dispTable += "<td class='mtd'>$tempStr</td>"
             }
@@ -111,7 +114,7 @@ def motionTiming(){
 }
 
 def parseState(stateStr){ //returns array of the elements in the string [0] - Timestamp, [1] - Event ID, [2] - Event Name, [3] - Event Description, [4] - Event Value. [5] - Unit
-    start = stateStr.indexOf('(')+1
+    start = stateStr.indexOf('[')+1
     end = stateStr.length() - 1
     stateStr = stateStr.substring(start, end)
     return stateStr.split(',')

@@ -109,9 +109,9 @@ def sendPing(ipAddress){
         updateAttr("percentLoss", pingData.packetLoss,"%")
         String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, %Lost: ${pingData.packetLoss}"
         updateAttr("pingStats", pingStats) 
-        updateAttr("min",pingData.rttMin)
-        updateAttr("avg",pingData.rttAvg)
-        updateAttr("max",pingData.rttMax)
+        updateAttr("min",pingData.rttMin,"ms")
+        updateAttr("avg",pingData.rttAvg,"ms")
+        updateAttr("max",pingData.rttMax,"ms")
         updateAttr("mdev","N/A")
         updateAttr("pingReturn",pingData)
         if (pingData.packetLoss < 100) 

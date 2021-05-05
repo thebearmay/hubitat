@@ -18,9 +18,10 @@
  *    2021-03-15  thebearmay    Release Candidate version 1.0.0
  *    2021-04-14  thebearmay    pull in last attribute state change
  *    2021-04-25  thebearmay    error when attribute has never been set
+ *    2021-05-04  thebearmay    hub 2.2.7x changes
  */
 
-static String version()	{  return '1.1.1'  }
+static String version()	{  return '1.2.0'  }
 
 
 definition (
@@ -89,13 +90,19 @@ def deviceCharacteristics(){
                 def tempValue = qryDevice[i].currentValue("$it")
                
              
-                def tempDisp = qryDevice[i].currentState("$it").toString()
-                start = tempDisp.indexOf('(')+1
-                end = tempDisp.length() - 1
+                def tempDisp = qryDevice[i].currentState("$it").toString()                    
+                Integer start = tempDisp.indexOf('[')+1
+                Integer end = tempDisp.length() - 1
                 tempDisp = tempDisp.substring(start, end)
                 stateParts = tempDisp.split(',')
                 if(stateParts.size() > 1){
-                    tempDisp = "\n\t\t<b>Activity Timestamp: </b>${stateParts[0]}\n\t\t<b>Event Desc: </b>${stateParts[1]}\n\t\t<b>Unit:</b>${stateParts[3]}"
+                        if(location.hub.firmwareVersionString <= "2.2.7.0") 
+                            unt = stateParts[3]?.trim()
+                        else {
+                           unt = stateParts[4]?.replace("unit=","")
+                           unt =  unt.trim()
+                        }
+                    tempDisp = "\n\t\t<b>Activity Timestamp: </b>${stateParts[0]}\n\t\t<b>Event Desc: </b>${stateParts[1]}\n\t\t<b>Unit:</b>$unt"
 		            // [2] - value, [4] - data type
                 } else tempDisp = "N/A"
                 qryDeviceState += "<span style='font-weight:bold'>$it </span>(${it.dataType}): $tempValue  \n<span style='font-weight:bold'>\tLast State Change</span> $tempDisp"

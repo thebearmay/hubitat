@@ -90,19 +90,23 @@ def deviceCharacteristics(){
                 def tempValue = qryDevice[i].currentValue("$it")
                
              
-                def tempDisp = qryDevice[i].currentState("$it").toString()                    
+                def tempDisp = qryDevice[i].currentState("$it").toString() 
                 Integer start = tempDisp.indexOf('[')+1
                 Integer end = tempDisp.length() - 1
                 tempDisp = tempDisp.substring(start, end)
                 stateParts = tempDisp.split(',')
                 if(stateParts.size() > 1){
-                        if(location.hub.firmwareVersionString <= "2.2.7.0") 
-                            unt = stateParts[3]?.trim()
-                        else {
-                           unt = stateParts[4]?.replace("unit=","")
-                           unt =  unt.trim()
-                        }
-                    tempDisp = "\n\t\t<b>Activity Timestamp: </b>${stateParts[0]}\n\t\t<b>Event Desc: </b>${stateParts[1]}\n\t\t<b>Unit:</b>$unt"
+                    if(location.hub.firmwareVersionString <= "2.2.7.0") {
+                        unt = stateParts[3]?.trim()
+                        ts = stateParts[0]
+                        dsc= stateParts[1]
+                    }else {
+                        unt = stateParts[4]?.replace("unit=","")
+                        unt =  unt.trim()
+                        ts = stateParts[1]?.replace("date=","")
+                        dsc = stateParts
+                    }
+                    tempDisp = "\n\t\t<b>Activity Timestamp: </b>${ts}\n\t\t<b>Event Desc: </b>${dsc}\n\t\t<b>Unit:</b>$unt"
 		            // [2] - value, [4] - data type
                 } else tempDisp = "N/A"
                 qryDeviceState += "<span style='font-weight:bold'>$it </span>(${it.dataType}): $tempValue  \n<span style='font-weight:bold'>\tLast State Change</span> $tempDisp"

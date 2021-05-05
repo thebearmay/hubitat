@@ -16,10 +16,11 @@
  *    ----          ---           ----
  *    2021-04-29    thebearmay    Original version 0.1.0
  *    2021-04-30    thebearmay    Add alternate code names
+ *    2021-05-04    thebearmay    2.2.7.x changes
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.2.3'  }
+static String version()	{  return '0.2.0'  }
 
 
 definition (
@@ -136,16 +137,25 @@ String buildTable(){
         if(unlockRec || lockRec) evtList+=qryDevice[i].statesSince("lock",Date.parse("yyyy-MM-dd hh:mm", qryDate),[max:100])
         evtList.each {
             stateParts = parseState(it.toString())
-            p4Trim = stateParts[4].trim()
+
+            ////Start Here
+            if (location.hub.firmwareVersionString <= "2.2.7.0") {
+                pDate = stateParts[0]
+                p4Trim = stateParts[4].trim()
+            } else {
+                pDate = stateParts[1].replace("date=","")
+                stateParts[5] = stateParts[5].replace("value=","")
+                p4Trim = stateParts[5].trim()
+            }
             if(p4Trim.contains("unknown codeNumber:") || p4Trim.contains("code #")) p4Trim = findAltName(p4Trim)
             if (stateParts[0].length() < 23) stateParts[0] = stateParts[0] + "0"
             
             if (p4Trim == "unlocked" && unlockRec){
-                evtArr[i].add("${stateParts[0]}\t\t   [Unlock Event]")
+                evtArr[i].add("$pDate\t\t   [Unlock Event]")
             } else if (p4Trim == "locked" && lockRec){
-                evtArr[i].add("${stateParts[0]}\t\t   [Lock Event]")
+                evtArr[i].add("$pDate\t\t   [Lock Event]")
             }else if (p4Trim != "locked" && p4Trim != "unlocked")
-               evtArr[i].add("${stateParts[0]}\t [CodeName] $p4Trim")
+               evtArr[i].add("$pDate\t [Unlock w/Code] $p4Trim")
                     
         
         }
@@ -170,7 +180,7 @@ String findAltName(unkStr){
     result = unkStr.substring(startPos, endPos).trim()
     aName = state.altNames.get(result)
     if(aName) return aName
-    else return "Key Not Found: $result" 
+    else return "Key Not Found: $result"
 }
 
 def altName(){
@@ -197,7 +207,10 @@ String buildNames(){
 }
                
 def parseState(stateStr){ //returns array of the elements in the string [0] - Timestamp, [1] - Event ID, [2] - Event Name, [3] - Event Description, [4] - Event Value. [5] - Unit
-    start = stateStr.indexOf('(')+1
+    Integer start = stateStr.indexOf('[')+1
+    if(location.hub.firmwareVersionString <= "2.2.7.0") 
+         start = stateStr.indexOf('(')+1
+
     end = stateStr.length() - 1
     stateStr = stateStr.substring(start, end)
     return stateStr.split(',')

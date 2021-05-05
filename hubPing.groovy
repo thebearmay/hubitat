@@ -23,7 +23,7 @@
  *
  */
 
-static String version()	{  return '2.0.1'  }
+static String version()	{  return '2.0.2'  }
 
 metadata {
     definition (
@@ -109,7 +109,7 @@ def sendPing(ipAddress){
         updateAttr("percentLoss", pingData.packetLoss,"%")
         String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, %Lost: ${pingData.packetLoss}"
         updateAttr("pingStats", pingStats) 
-        updateAttr("min",pingData.rttAvg)
+        updateAttr("min",pingData.rttMin)
         updateAttr("avg",pingData.rttAvg)
         updateAttr("max",pingData.rttMax)
         updateAttr("mdev","N/A")

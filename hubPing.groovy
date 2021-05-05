@@ -23,7 +23,7 @@
  *
  */
 
-static String version()	{  return '2.0.0'  }
+static String version()	{  return '2.0.1'  }
 
 metadata {
     definition (
@@ -106,17 +106,15 @@ def sendPing(ipAddress){
         hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ipAddress, numPings.toInteger())
         int pLoss = pingData.packetLoss.toInteger()
         int pTran = pingData.packetsTransmitted.toInteger()
-        Double pctLoss = (pLoss/pTran)*100
-        String pctLossStr = "${pctLoss.round(1)}%"
-        updateAttr("percentLoss", pctLossStr)
-        String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, Lost: ${pingData.packetLoss}"
+        updateAttr("percentLoss", pingData.packetLoss,"%")
+        String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, %Lost: ${pingData.packetLoss}"
         updateAttr("pingStats", pingStats) 
         updateAttr("min",pingData.rttAvg)
         updateAttr("avg",pingData.rttAvg)
         updateAttr("max",pingData.rttMax)
         updateAttr("mdev","N/A")
         updateAttr("pingReturn",pingData)
-        if (percentLoss < 100 ) 
+        if (pingData.packetLoss < 100) 
             updateAttr("presence","present")
         else 
             updateAttr("presence","not present")

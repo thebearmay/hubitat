@@ -113,8 +113,11 @@ def deviceCharacteristics(){
             def devCmd = qryDevice[i].supportedCommands
             def devData = qryDevice[i].getData()
             def devId = qryDevice[i].getId()
+            //def devRoom = qryDevice[i].room
+            def devType = qryDevice[i].getTypeName()
  
-            pStr1 = "<h2 style='border-top: 3px blue solid'>$qryName</h2><span style='font-weight:bold'>ID:</span> $devId\n\n"
+            pStr1 = "<h2 style='border-top: 3px blue solid'>$qryName</h2><span style='font-weight:bold'>ID:</span> $devId \n\n"// <span style='font-weight:bold'>Room:</span> $devRoom \n\n"
+            pStr1 += "<span style='font-weight:bold'>Type: </span> $devType\n\n"
             pStr1 += "<span style='font-weight:bold'>Capabilities:</span> $devCap\n\n"
             pStr1 += "<span style='font-weight:bold'>Attributes:</span>$devAttr"
               pStr2 = "<span style='font-weight:bold'>Device Data:</span> $devData"

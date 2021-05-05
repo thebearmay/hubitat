@@ -55,7 +55,7 @@ metadata {
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
-    input("numPings", "number", title: "Number of pings to issue", defaultValue:3, required:true, submitOnChange:true)
+    input("numPings", "number", title: "Number of pings to issue", defaultValue:3, required:true, submitOnChange:true, range: "1..5")
     input("pingPeriod", "number", title: "Ping Repeat in Seconds\n Zero to disable", defaultValue: 0, required:true, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 

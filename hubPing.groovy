@@ -20,10 +20,11 @@
  *    2021-03-14  thebearmay     Add repeat value, tighten to release v1.0.0
  *    2021-03-15  thebearmay     Add lastIpAddress, leave presence at last value when starting new ping
  *    2021-05-04  thebearmay     Use 2.2.7.x ping instead of http call if available
+ *    2021-05-06  thebearmay     2.2.7.121 returns all zeroes on ping not found 
  *
  */
 
-static String version()	{  return '2.0.2'  }
+static String version()	{  return '2.0.3'  }
 
 metadata {
     definition (
@@ -104,8 +105,11 @@ def sendPing(ipAddress){
         updateAttr("responseReady",false)
         updateAttr("pingReturn","Pinging $ipAddress") 
         hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ipAddress, numPings.toInteger())
-        int pLoss = pingData.packetLoss.toInteger()
         int pTran = pingData.packetsTransmitted.toInteger()
+        if (pTran == 0){ // 2.2.7.121 bug returns all zeroes on not found
+            pingData.packetsTransmitted = numPings
+            pingData.packetLoss = 100
+        }
         updateAttr("percentLoss", pingData.packetLoss,"%")
         String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, %Lost: ${pingData.packetLoss}"
         updateAttr("pingStats", pingStats) 

@@ -130,9 +130,9 @@ def installed() {
 def initialize(){
     log.trace "Hub Information initialize()"
 // psuedo restart time - can also be set at the device creation or by a manual initialize
-    restartVal = now()
+    Long restartVal = now()
     updateAttr("lastHubRestart", restartVal)
-    sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    def sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
 
@@ -187,7 +187,7 @@ HashMap parseHubData() {
     def dataMap = [:]    
 
     dataMapPre.each() {
-        dSplit= it.split(":")
+        List dSplit= it.split(":")
         dataMap.put(dSplit[0].trim(),dSplit[1].trim())
     }
     
@@ -321,7 +321,7 @@ void getPollValues(){
 
     // get Free Memory
     if(freeMemPollEnabled) {
-        params = [
+        Map params = [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/freeOSMemory",
                 headers: ["Cookie": cookie]
@@ -332,6 +332,7 @@ void getPollValues(){
     
     // get Free JVM & CPU
     if(cpuPollEnabled) {
+        Map params
         if (location.hub.firmwareVersionString <= "2.2.5.131") {
             params = [
                     uri    : "http://${location.hub.localIP}:8080",
@@ -351,7 +352,7 @@ void getPollValues(){
 
     //Get DB size
     if(dbPollEnabled) {
-        params = [
+        Map params = [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/databaseSize",
                 headers: ["Cookie": cookie]
@@ -363,7 +364,7 @@ void getPollValues(){
 
     //get Public IP 
     if(publicIPEnable) {
-        params =
+        Map params =
 	    [
 		    uri:  "https://ifconfig.co/",
             headers: [ 
@@ -378,7 +379,7 @@ void getPollValues(){
     
     //End Pollable Gets
     
-    myHubData = parseHubData()
+    def myHubData = parseHubData()
     updateAttr("zigbeeChannel",myHubData.zigbeeChannel)    
     updateAttr("uptime", location.hub.uptime)
 	formatUptime()
@@ -443,7 +444,7 @@ void getJvmHandler(resp, data) {
         }
         if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
     } catch(ignored) {
-        respStatus = resp.getStatus()
+        def respStatus = resp.getStatus()
         log.warn "getJvm httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
     if (jvmWork) {
@@ -482,7 +483,7 @@ void getDbHandler(resp, data) {
     		updateAttr("dbSize",dbWork,"MB")
 	    }
     } catch(ignored) {
-        respStatus = resp.getStatus()
+        def respStatus = resp.getStatus()
         log.warn "getDb httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
@@ -513,7 +514,7 @@ String getUnitFromState(String attrName){
         List<String> stateParts = wrkStr.split(',')
         return stateParts[3]?.trim()
     } else {
-        unt = altGetUnitProc(wrkStr) 
+        String unt = altGetUnitProc(wrkStr) 
         return unt
     }
 
@@ -528,7 +529,7 @@ String altGetUnitProc(String wrkStr) {
     List <String> wrkStrPre = wrkStr.split(",")
     HashMap statePartsMap = [:]    
     wrkStrPre.each() {
-        dSplit= it.split(":")
+        List dSplit= it.split(":")
         if(dSplit.size()>1)
             statePartsMap.put(dSplit[0].trim(),dSplit[1].trim())
         else

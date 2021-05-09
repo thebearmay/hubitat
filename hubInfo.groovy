@@ -47,6 +47,7 @@
  *    2021-05-03  thebearmay     add nonPolling zigbee channel attribute, i.e. set at hub startup
  *    2021-05-04  thebearmay     release 2.2.7.x changes (v2.2.0 - v2.2.2)
  *    2021-05-06  thebearmay     code cleanup from 2.2.2, now 2.2.3
+ *    2021-05-09  thebearmay     return NA when zigbee channel not valid
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper 
@@ -184,13 +185,14 @@ HashMap parseHubData() {
     String dataWork = location.hub.data.toString()
     dataWork = dataWork.substring(1,dataWork.size()-1)
     List <String> dataMapPre = dataWork.split(",")
-    def dataMap = [:]    
+    HashMap dataMap = [:]    
 
     dataMapPre.each() {
         dSplit= it.split(":")
         dataMap.put(dSplit[0].trim(),dSplit[1].trim())
     }
-    
+    if (dataMap.zigbeeChannel.trim() == "0x00 (0)") dataMap.zigbeeChannel = "NA"
+    // Invalid zigbee response - possibly timeout issue
     return dataMap
 }
 

@@ -14,15 +14,15 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- *    2020-12-07  thebearmay	 Original version 0.1.0
+ *    2020-12-07  thebearmay     Original version 0.1.0
  *    2021-01-30  thebearmay     Add full hub object properties
  *    2021-01-31  thebearmay     Code cleanup, release ready
  *    2021-01-31  thebearmay     Putting a config delay in at initialize to make sure version data is accurate
  *    2021-02-16  thebearmay     Add text date for restart
  *    2021-03-04  thebearmay     Added CPU and Temperature polling 
  *    2021-03-05  thebearmay     Merged CSteele additions and added the degree symbol and scale to the temperature attribute 
- *    2021-03-05  thebearmay	 Merged addtions from LGKhan: Added new formatted uptime attr, also added an html attr that stores a bunch of the useful 
- *					                info in table format so you can use on any dashboard
+ *    2021-03-05  thebearmay     Merged addtions from LGKhan: Added new formatted uptime attr, also added an html attr that stores a bunch of the useful 
+ *                                    info in table format so you can use on any dashboard
  *    2021-03-06  thebearmay     Merged security login from BPTWorld (from dman2306 rebooter app)
  *    2021-03-06  thebearmay     Change numeric attributes to type number
  *    2021-03-08  thebearmay     Incorporate CSteele async changes along with some code cleanup and adding tags to the html to allow CSS overrides
@@ -37,37 +37,39 @@
  *    2021-03-24  thebearmay     Calculate CPU % from load 
  *    2021-03-28  thebearmay     jvmWork.eachline error on reboot 
  *    2021-03-30  thebearmay     Index out of bounds on reboot
- *    2021-03-31  thebearmay 	 jvm to HTML null error (first run)
+ *    2021-03-31  thebearmay      jvm to HTML null error (first run)
  *    2021-04-13  thebearmay     pull in suggested additions from lgkhan - external IP and combining some HTML table elements
  *    2021-04-14  thebearmay     add units to the HTML
  *    2021-04-20  thebearmay     provide a smooth transition from 1.8.x to 1.9.x
  *    2021-04-26  thebearmay     break out polls as separate preference options
  *    2021-04-27  thebearmay     replace the homegrown JSON parser, with groovy's JsonSluper
- *    2021-04-29  thebearmay	 merge pull request from nh.schottfam, clean up/add type declarations, optimize code and add local variables
+ *    2021-04-29  thebearmay     merge pull request from nh.schottfam, clean up/add type declarations, optimize code and add local variables
  *    2021-05-03  thebearmay     add nonPolling zigbee channel attribute, i.e. set at hub startup
  *    2021-05-04  thebearmay     release 2.2.7.x changes (v2.2.0 - v2.2.2)
  *    2021-05-06  thebearmay     code cleanup from 2.2.2, now 2.2.3
  *    2021-05-09  thebearmay     return NA when zigbee channel not valid
  */
 import java.text.SimpleDateFormat
-import groovy.json.JsonSlurper 
+import groovy.json.JsonSlurper
+
+@SuppressWarnings('unused')
 static String version() {return "2.2.3"}
 
 metadata {
     definition (
-		name: "Hub Information", 
-		namespace: "thebearmay", 
-		author: "Jean P. May, Jr.",
-	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
-	) {
+        name: "Hub Information", 
+        namespace: "thebearmay", 
+        author: "Jean P. May, Jr.",
+        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
+    ) {
         capability "Actuator"
         capability "Configuration"
-	    capability "Initialize"
+        capability "Initialize"
         capability "Sensor"
-	    capability "TemperatureMeasurement"
+        capability "TemperatureMeasurement"
         
-	    attribute "latitude", "string"
-	    attribute "longitude", "string"
+        attribute "latitude", "string"
+        attribute "longitude", "string"
         attribute "hubVersion", "string"
         attribute "id", "string"
         attribute "name", "string"
@@ -81,7 +83,7 @@ metadata {
         attribute "uptime", "number"
         attribute "lastUpdated", "string"
         attribute "lastHubRestart", "string"
-	    attribute "firmwareVersionString", "string"
+        attribute "firmwareVersionString", "string"
         attribute "timeZone", "string"
         attribute "temperatureScale", "string"
         attribute "zipCode", "string"
@@ -89,7 +91,7 @@ metadata {
         attribute "locationId", "string"
         attribute "lastHubRestartFormatted", "string"
         attribute "freeMemory", "number"
-	    attribute "temperatureF", "string"
+        attribute "temperatureF", "string"
         attribute "temperatureC", "string"
         attribute "formattedUptime", "string"
         attribute "html", "string"
@@ -123,6 +125,7 @@ preferences {
     }
 }
 
+@SuppressWarnings('unused')
 def installed() {
     log.trace "installed()"
     initialize()
@@ -131,15 +134,16 @@ def installed() {
 def initialize(){
     log.trace "Hub Information initialize()"
 // psuedo restart time - can also be set at the device creation or by a manual initialize
-    restartVal = now()
+    Long restartVal = now()
     updateAttr("lastHubRestart", restartVal)
-    sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    def sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
 
     runIn(30,configure)
 }
 
+@SuppressWarnings('unused')
 def updated(){
     log.trace "updated()"
     if(debugEnable) runIn(1800,logsOff)
@@ -154,6 +158,7 @@ def updated(){
         sendEvent(name: "html", value: "<table></table>", isChanged: true)
 }
 
+@SuppressWarnings('unused')
 def configure() {
     if(debugEnable) log.debug "configure()"
     List locProp = ["latitude", "longitude", "timeZone", "zipCode", "temperatureScale"]
@@ -188,7 +193,7 @@ HashMap parseHubData() {
     HashMap dataMap = [:]    
 
     dataMapPre.each() {
-        dSplit= it.split(":")
+        List dSplit= it.split(":")
         dataMap.put(dSplit[0].trim(),dSplit[1].trim())
     }
     if (dataMap.zigbeeChannel.trim() == "0x00 (0)") dataMap.zigbeeChannel = "NA"
@@ -213,16 +218,16 @@ void formatUptime(){
 }
 
 void formatAttrib(){
-	if(debugEnable) log.debug "formatAttrib"
-	String attrStr = "<table id='hubInfoTable'>"
-	
-	attrStr += addToAttr("Name","name")
-	attrStr += addToAttr("Version","hubVersion")
+    if(debugEnable) log.debug "formatAttrib"
+    String attrStr = "<table id='hubInfoTable'>"
+    
+    attrStr += addToAttr("Name","name")
+    attrStr += addToAttr("Version","hubVersion")
     if(publicIPEnable) {
         List combine = ["localIP", "publicIP"]
         attrStr += combineAttr("IP Local/Public", combine)
     } else
-	    attrStr += addToAttr("Address","localIP")
+        attrStr += addToAttr("Address","localIP")
     if(cpuPollEnabled) {
         attrStr += addToAttr("Free Memory","freeMemory","int")
         if(device.currentValue("cpu5Min")){
@@ -236,8 +241,8 @@ void formatAttrib(){
 
     if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
 
-	attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
-	attrStr += addToAttr("Uptime","formattedUptime")
+    attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
+    attrStr += addToAttr("Uptime","formattedUptime")
 
     if(tempPollEnable) {
         String tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
@@ -245,10 +250,10 @@ void formatAttrib(){
     }
     
     attrStr += addToAttr("ZigBee Channel","zigbeeChannel")
-	attrStr += "</table>"
+    attrStr += "</table>"
 
-	if (debugEnable) log.debug "after calls attr string = $attrStr"
-	updateAttr("html", attrStr)
+    if (debugEnable) log.debug "after calls attr string = $attrStr"
+    updateAttr("html", attrStr)
 }
 
 String combineAttr(String name, List<String> keys){
@@ -269,8 +274,7 @@ String combineAttr(String name, List<String> keys){
     return retResult
 }
 
-String addToAttr(String name, String key, String convert = "none")
-{
+String addToAttr(String name, String key, String convert = "none") {
     if(enableDebug) log.debug "adding $name, $key"
     String retResult = '<tr><td align="left">'
     retResult += name + '</td><td align="left">'
@@ -306,7 +310,7 @@ void getPollValues(){
                     submit: "Login"
                 ]
             ]
-        ) { resp -> cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0) }
+        ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
     }
     // End - Modified from dman2306 Rebooter app
     
@@ -323,7 +327,7 @@ void getPollValues(){
 
     // get Free Memory
     if(freeMemPollEnabled) {
-        params = [
+        Map params = [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/freeOSMemory",
                 headers: ["Cookie": cookie]
@@ -334,6 +338,7 @@ void getPollValues(){
     
     // get Free JVM & CPU
     if(cpuPollEnabled) {
+        Map params
         if (location.hub.firmwareVersionString <= "2.2.5.131") {
             params = [
                     uri    : "http://${location.hub.localIP}:8080",
@@ -353,7 +358,7 @@ void getPollValues(){
 
     //Get DB size
     if(dbPollEnabled) {
-        params = [
+        Map params = [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/databaseSize",
                 headers: ["Cookie": cookie]
@@ -365,14 +370,14 @@ void getPollValues(){
 
     //get Public IP 
     if(publicIPEnable) {
-        params =
-	    [
-		    uri:  "https://ifconfig.co/",
+        Map params =
+        [
+            uri:  "https://ifconfig.co/",
             headers: [ 
                    Host: "ifconfig.co",               
                    Accept: "application/json"
             ]
-	    ]
+        ]
     
         if(debugEnable)log.debug params
         asynchttpGet("getIfHandler", params)
@@ -380,10 +385,10 @@ void getPollValues(){
     
     //End Pollable Gets
     
-    myHubData = parseHubData()
+    def myHubData = parseHubData()
     updateAttr("zigbeeChannel",myHubData.zigbeeChannel)    
     updateAttr("uptime", location.hub.uptime)
-	formatUptime()
+    formatUptime()
     
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
 
@@ -397,55 +402,59 @@ void getPollValues(){
     }
 }
 
+@SuppressWarnings('unused')
 def getTemp(){  // this is to handle the upgrade path from >= 1.8.x
     log.info "Upgrading HubInfo polling from 1.8.x"
     unschedule(getTemp)
     getPollValues()
 }
 
- void getTempHandler(resp, data) {
+@SuppressWarnings('unused')
+void getTempHandler(resp, data) {
     try {
-	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
-		    Double tempWork = new Double(resp.data.toString())
-    		if(debugEnable) log.debug tempWork
-	    	if (location.temperatureScale == "F")
-		        updateAttr("temperature",celsiusToFahrenheit(tempWork),"°F")
-		    else
-		        updateAttr("temperature",tempWork,"°C")
+        if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+            Double tempWork = new Double(resp.data.toString())
+            if(debugEnable) log.debug tempWork
+            if (location.temperatureScale == "F")
+                updateAttr("temperature",celsiusToFahrenheit(tempWork),"°F")
+            else
+                updateAttr("temperature",tempWork,"°C")
 
-		    updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
-    		updateAttr("temperatureC",tempWork+ " °C")
-	    }
+            updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
+            updateAttr("temperatureC",tempWork+ " °C")
+        }
     } catch(ignored) {
-        respStatus = resp.getStatus()
+        def respStatus = resp.getStatus()
         log.warn "getTemp httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
 
+@SuppressWarnings('unused')
 void getFreeMemHandler(resp, data) {
     try {
-	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
-		    Integer memWork = new Integer(resp.data.toString())
-		    if(debugEnable) log.debug memWork
+        if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+            Integer memWork = new Integer(resp.data.toString())
+            if(debugEnable) log.debug memWork
             updateAttr("freeMemory",memWork)
-	    }
+        }
     } catch(ignored) {
-        respStatus = resp.getStatus()
+        def respStatus = resp.getStatus()
         log.warn "getFreeMem httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
 }
 
+@SuppressWarnings('unused')
 void getJvmHandler(resp, data) {
     String jvmWork
     List<String> jvmArr = []
 
     try {
-	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+        if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             jvmWork = resp.data.toString()
         }
         if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
     } catch(ignored) {
-        respStatus = resp.getStatus()
+        def respStatus = resp.getStatus()
         log.warn "getJvm httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
     if (jvmWork) {
@@ -476,19 +485,21 @@ void getJvmHandler(resp, data) {
     }
 }
 
+@SuppressWarnings('unused')
 void getDbHandler(resp, data) {
     try {
-	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
-		    Integer dbWork = new Integer(resp.data.toString())
-    		if(debugEnable) log.debug dbWork
-    		updateAttr("dbSize",dbWork,"MB")
-	    }
+        if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+            Integer dbWork = new Integer(resp.data.toString())
+            if(debugEnable) log.debug dbWork
+            updateAttr("dbSize",dbWork,"MB")
+        }
     } catch(ignored) {
-        respStatus = resp.getStatus()
+        def respStatus = resp.getStatus()
         log.warn "getDb httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
 
+@SuppressWarnings('unused')
 void getIfHandler(resp, data){
     try{
         if (resp.getStatus() == 200){
@@ -496,9 +507,9 @@ void getIfHandler(resp, data){
             def jSlurp = new JsonSlurper()
             ipData = jSlurp.parseText (resp.data)
             updateAttr("publicIP",ipData.ip)
-		} else {
-			log.warn "Status ${resp.getStatus()} while fetching Public IP"
-		} 
+        } else {
+            log.warn "Status ${resp.getStatus()} while fetching Public IP"
+        } 
     } catch (Exception ex){
         log.info ex
     }
@@ -515,7 +526,7 @@ String getUnitFromState(String attrName){
         List<String> stateParts = wrkStr.split(',')
         return stateParts[3]?.trim()
     } else {
-        unt = altGetUnitProc(wrkStr) 
+        String unt = altGetUnitProc(wrkStr) 
         return unt
     }
 
@@ -527,10 +538,10 @@ String altGetUnitProc(String wrkStr) {
     wrkStr = wrkStr.substring(start,end)
     wrkStr = wrkStr.replace("=",":")
 
-    List <String> wrkStrPre = wrkStr.split(",")
+    List<String> wrkStrPre = wrkStr.split(",")
     HashMap statePartsMap = [:]    
     wrkStrPre.each() {
-        dSplit= it.split(":")
+        List dSplit= it.split(":")
         if(dSplit.size()>1)
             statePartsMap.put(dSplit[0].trim(),dSplit[1].trim())
         else
@@ -539,7 +550,7 @@ String altGetUnitProc(String wrkStr) {
     return statePartsMap.unit    
 }
 
-
+@SuppressWarnings('unused')
 void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }

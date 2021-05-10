@@ -21,10 +21,11 @@
  *    2021-03-15  thebearmay     Add lastIpAddress, leave presence at last value when starting new ping
  *    2021-05-04  thebearmay     Use 2.2.7.x ping instead of http call if available
  *    2021-05-06  thebearmay     2.2.7.121 returns all zeroes on ping not found 
+ *    2021-05-10  thebearmay	 Fix the scheduler option under the new method
  *
  */
 
-static String version()	{  return '2.0.3'  }
+static String version()	{  return '2.0.4'  }
 
 metadata {
     definition (
@@ -123,6 +124,7 @@ def sendPing(ipAddress){
         else 
             updateAttr("presence","not present")
         updateAttr("responseReady",true)
+	if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
     } else {
         if(security) {
             httpPost(

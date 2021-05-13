@@ -23,13 +23,13 @@ static String version()	{  return '0.2.0'  }
 
 
 definition (
-	name: 			"Motion Timing", 
-	namespace: 		"thebearmay", 
-	author: 		"Jean P. May, Jr.",
+	name:		"Motion Timing", 
+	namespace:	"thebearmay", 
+	author:		"Jean P. May, Jr.",
 	description: 	"Capture the motion events from multiple devices and compare them for timing difference",
-	category: 		"Utility",
-	importUrl:		"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/motionTiming.groovy",
-	oauth: 			false,
+	category:	"Utility",
+	importUrl:	"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/motionTiming.groovy",
+	oauth:		false,
     iconUrl:        "",
     iconX2Url:      ""
 ) 
@@ -79,7 +79,7 @@ def motionTiming(){
     dynamicPage (name: "motionTiming", title: "", install: false, uninstall: false) {
 	  section("Motion Stats"){
             dispTable = 
-                "<style type='text/css'>div{overflow:auto;} .mtable {border:1px black solid;padding:0px;width:100%;}.mth {border:1px black solid; min-width:16em;} .mtd {border:1px black solid;}</style><div class='.mdiv'><table class='mtable'><tr>"
+                "<style type='text/css'>div{overflow:auto;} .mtable {border:1px black solid;padding:0px;width:100%;}.mth {border:1px black solid; min-width:16em;} .mtd {border:1px black solid;vertical-align:top;}</style><div class='.mdiv'><table class='mtable'><tr>"
             evtList = {}
             evtArr = []
             for(i=0;i<qryDevice.size();i++){

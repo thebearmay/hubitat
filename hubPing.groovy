@@ -22,10 +22,11 @@
  *    2021-05-04  thebearmay     Use 2.2.7.x ping instead of http call if available
  *    2021-05-06  thebearmay     2.2.7.121 returns all zeroes on ping not found 
  *    2021-05-10  thebearmay	 Fix the scheduler option under the new method
+ *    2021-05-14  thebearmay     add option to use old method if desired
  *
  */
 
-static String version()	{  return '2.0.4'  }
+static String version()	{  return '2.1.0'  }
 
 metadata {
     definition (
@@ -59,6 +60,7 @@ preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
     input("numPings", "number", title: "Number of pings to issue", defaultValue:3, required:true, submitOnChange:true, range: "1..5")
     input("pingPeriod", "number", title: "Ping Repeat in Seconds\n Zero to disable", defaultValue: 0, required:true, submitOnChange: true)
+    input("useOldMethod", "bool", title: "Use HTTP endpoint to issue request")
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -102,7 +104,7 @@ def sendPing(ipAddress){
     if(numPings == null) numPings = 3
     configure()
     updateAttr("lastIpAddress", ipAddress)
-    if (location.hub.firmwareVersionString > "2.2.6.140"){
+    if (location.hub.firmwareVersionString > "2.2.6.140" && !useOldMethod){
         updateAttr("responseReady",false)
         updateAttr("pingReturn","Pinging $ipAddress") 
         hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ipAddress, numPings.toInteger())

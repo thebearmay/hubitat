@@ -223,7 +223,8 @@ private void createChildButtonDevices(numberOfButtons) {
 		def child = childDevices?.find { it.deviceNetworkId == "${device.deviceNetworkId}:${i}" }
 		if (child == null) {
 			log.debug "..Creating child $i"
-			child = addChildDevice("smartthings", "Child Button", "${device.deviceNetworkId}:${i}", device.hubId,
+//			child = addChildDevice("smartthings", "Child Button", "${device.deviceNetworkId}:${i}", device.hubId,
+			child = addChildDevice("hubitat", "Virtual Button", "${device.deviceNetworkId}:${i}", device.hubId,
 				[completedSetup: true, label: getButtonName(i),
 				 isComponent: true, componentName: "button$i", componentLabel: "Button "+getButtonLabel(i)])
 		}

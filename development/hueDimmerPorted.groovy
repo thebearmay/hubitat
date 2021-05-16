@@ -211,7 +211,7 @@ def installed() {
 		sendEvent(name: "button", value: "pushed", data: [buttonNumber: it+1], displayed: false)
 	}
 	// These devices don't report regularly so they should only go OFFLINE when Hub is OFFLINE
-	sendEvent(name: "DeviceWatch-Enroll", value: JsonOutput.toJson([protocol: "zigbee", scheme:"untracked"]), displayed: false)
+	sendEvent(name: "DeviceWatch-Enroll", value: ([protocol: "zigbee", scheme:"untracked"]), displayed: false)
 	sendEvent(name: "lastButtonState", value: "released", displayed: false)
 	//state.battRefresh = now()
 }
@@ -219,16 +219,16 @@ def installed() {
 
 private void createChildButtonDevices(numberOfButtons) {
 	log.debug "Creating $numberOfButtons child buttons"
+    def supportedValues = ["pushed", "held"]
 	for (i in 1..numberOfButtons) {
 		def child = childDevices?.find { it.deviceNetworkId == "${device.deviceNetworkId}:${i}" }
 		if (child == null) {
 			log.debug "..Creating child $i"
 //			child = addChildDevice("smartthings", "Child Button", "${device.deviceNetworkId}:${i}", device.hubId,
-			child = addChildDevice("hubitat", "Virtual Button", "${device.deviceNetworkId}:${i}", device.hubId,
-				[completedSetup: true, label: getButtonName(i),
+			child = addChildDevice("hubitat", "Virtual Button", "${device.deviceNetworkId}:${i}", [completedSetup: true, label: getButtonName(i),
 				 isComponent: true, componentName: "button$i", componentLabel: "Button "+getButtonLabel(i)])
 		}
-		child.sendEvent(name: "supportedButtonValues", value: ["pushed", "held"].encodeAsJSON(), displayed: false)
+		child.sendEvent(name: "supportedButtonValues", value: JsonOutput.toJson(supportedValues), displayed: false)
 		child.sendEvent(name: "numberOfButtons", value: 1, displayed: false)
 		child.sendEvent(name: "button", value: "pushed", data: [buttonNumber: 1], displayed: false)
 	}

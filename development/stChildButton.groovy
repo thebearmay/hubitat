@@ -1,6 +1,5 @@
-/*
+/**
  *  ST Child Button
- *
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -14,7 +13,13 @@
  *  Interpretation of the ST Child Button Device
  */
 metadata {
-	definition (name: "ST Child Button", namespace: "hubitat", author: "thebearmay") {
+	definition (
+        name: "ST Child Button", 
+        namespace: "hubitat", 
+        author: "thebearmay", 
+        importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/development/stChildButton.groovy"
+    ) 
+    {
 		capability "PushableButton"
 		capability "HoldableButton"
 		capability "Sensor"

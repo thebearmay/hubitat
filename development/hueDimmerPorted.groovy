@@ -20,7 +20,16 @@ import groovy.json.JsonOutput
 import hubitat.zigbee.zcl.DataType
 
 metadata {
-	definition (name: "Hue Dimmer Switch Ported", namespace: "circlefield05082", author: "mvevitsis", ocfDeviceType: "x.com.st.d.remotecontroller", mcdSync: true, mnmn: "SmartThings", vid: "generic-4-button") {
+	definition (
+		name: "Hue Dimmer Switch Ported", 
+		namespace: "circlefield05082", 
+		author: "mvevitsis", 
+		ocfDeviceType: "x.com.st.d.remotecontroller", 
+		mcdSync: true, 
+		mnmn: "SmartThings", 
+		vid: "generic-4-button",
+		importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/development/hueDimmerPorted.groovy"
+	) {
 		capability "Configuration"
 		capability "Battery"
 		capability "Refresh"

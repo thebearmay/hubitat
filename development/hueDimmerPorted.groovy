@@ -226,7 +226,7 @@ private void createChildButtonDevices(numberOfButtons) {
 		if (child == null) {
 			log.debug "..Creating child $i"
 //			child = addChildDevice("smartthings", "Child Button", "${device.deviceNetworkId}:${i}", device.hubId,
-			child = addChildDevice("hubitat", "Virtual Button", "${device.deviceNetworkId}:${i}", [completedSetup: true, label: getButtonName(i),
+			child = addChildDevice("hubitat", "ST Child Button", "${device.deviceNetworkId}:${i}", [completedSetup: true, label: getButtonName(i),
 				 isComponent: true, componentName: "button$i", componentLabel: "Button "+getButtonLabel(i)])
 		}
 		child.sendEvent(name: "supportedButtonValues", value: JsonOutput.toJson(supportedValues), displayed: false)

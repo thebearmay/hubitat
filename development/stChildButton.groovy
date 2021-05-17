@@ -10,7 +10,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *  Interpretation of the ST Child Button Device
+ *  Interpretation of the ST Child Button Device for HE
  */
 metadata {
 	definition (
@@ -37,8 +37,14 @@ def installed() {
 
 def push(buttonNumber){
     sendEvent(name: "pushed", value:buttonNumber)
+    runInMillis(50, release)
 }
 
 def hold(buttonNumber){
     sendEvent(name:"held", value:buttonNumber)
+    runInMillis(50, release)
+}
+
+def release(buttonNumber = 1){
+    sendEvent(name: "released", value:buttonNumber)
 }

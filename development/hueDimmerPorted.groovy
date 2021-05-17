@@ -34,6 +34,7 @@ metadata {
 		capability "Battery"
 		capability "Refresh"
 		capability "PushableButton"
+        capability "HoldableButton"
 		capability "Health Check"
 		capability "Sensor"
 
@@ -45,6 +46,7 @@ metadata {
 	}
 	preferences {
 		input name: "holdTimingValue", type: "enum", title: "Hold event firing timing", options:["0": "When Hold starts", "1": "When Hold ends"], defaultValue: "0"
+        input name: "debugEnabled", type: "bool", title: "Turn on debug logging"
 	}
 }
 
@@ -113,8 +115,12 @@ private getBatteryResult(rawValue) {
 	return createEvent(name: "battery", value: pct, descriptionText: "${device.displayName} battery is ${pct}%")
 }
 
-def push(rawVal) {
-    getButtonResult(rawVal)
+def push(buttonNumber){
+    sendEvent(name: "pushed", value:buttonNumber)
+}
+
+def hold(buttonNumber){
+    sendEvent(name:"held", value:buttonNumber)
 }
 
 private getButtonResult(rawValue) {
@@ -124,7 +130,7 @@ private getButtonResult(rawValue) {
 	def button = zigbee.convertHexToInt(rawValue[0])
 	def buttonState = rawValue[4]
 	def buttonHoldTime = rawValue[6]
-	log.debug "Button data : button=${button}  buttonState=${buttonState}  buttonHoldTime=${buttonHoldTime}"
+	if(debugEnabled) log.debug "Button data : button=${button}  buttonState=${buttonState}  buttonHoldTime=${buttonHoldTime}"
 	
 	if ( buttonState == "00" ) {  // button pressed
 		return [:]
@@ -143,7 +149,7 @@ private getButtonResult(rawValue) {
 	}
 	
 	def descriptionText = "${getButtonLabel(button)} button was ${buttonStateTxt}"
-	log.debug descriptionText
+	if(debugEnabled) log.debug descriptionText
    	result << createEvent(name: "lastButtonName", value: getButtonLabel(button), displayed: false)
 	result << createEvent(name: "lastButtonState", value: buttonStateTxt, displayed: false)
 	
@@ -162,39 +168,42 @@ private sendButtonEvent(buttonNum, buttonState) {
 	def child = childDevices?.find { channelNumber(it.deviceNetworkId) == buttonNum }
 	if (child) {
 		def descriptionText = "${child.displayName} button is ${buttonState}"
-		log.debug child.deviceNetworkId + " : " + descriptionText
+		if(debugEnabled) log.debug child.deviceNetworkId + " : " + descriptionText
 		child.sendEvent(name: "button", value: buttonState, data: [buttonNumber: 1], descriptionText: descriptionText, isStateChange: true, displayed: true)
 	} else {
-		log.debug "Child device $buttonNum not found!"
+		log.warn "Child device $buttonNum not found!"
 	}
 }
 
 
 private setReleased() {
-	log.debug "setReleased()"
+	if(debugEnabled) log.debug "setReleased()"
 	sendEvent(name: "lastButtonState", value: "released", displayed: false)
 }
 
 def ping () {
-    refresh()
+    configure()
 }
 
 def refresh() {
 	def refreshCmds = zigbee.configureReporting(0xFC00, 0x0000, DataType.BITMAP8, 30, 30, null) + zigbee.configureReporting(zigbee.POWER_CONFIGURATION_CLUSTER, BATTERY_MEASURE_VALUE, DataType.UINT8, 7200, 7200, 0x01)
 	refreshCmds += zigbee.readAttribute(zigbee.POWER_CONFIGURATION_CLUSTER, BATTERY_MEASURE_VALUE)
-	log.debug "refresh() returns " + refreshCmds
+	if(debugEnabled) log.debug "refresh() returns " + refreshCmds
 	return refreshCmds
 }
 
 
 def configure() {
-	log.debug "configure() returns refresh()"
+	if(debugEnabled) log.debug "configure() returns refresh()"
 	return refresh()
 }
 
 
 def updated() {
-	log.debug "updated() called"
+    if(debugEnabled){
+        log.debug "updated() called"
+        runIn(1800, logsOff)
+    }
 	if (childDevices && device.label != state.oldLabel) {
 		childDevices.each {
 			def newLabel = getButtonName(channelNumber(it.deviceNetworkId))
@@ -211,7 +220,7 @@ def updated() {
 
 
 def installed() {
-	log.debug "installed() called"
+	if(debugEnabled) log.debug "installed() called"
 	def numberOfButtons = 4
     def supportedValues = ["pushed","held"]
 	createChildButtonDevices(numberOfButtons)
@@ -228,12 +237,12 @@ def installed() {
 
 
 private void createChildButtonDevices(numberOfButtons) {
-	log.debug "Creating $numberOfButtons child buttons"
+	if(debugEnabled) log.debug "Creating $numberOfButtons child buttons"
     def supportedValues = ["pushed", "held"]
 	for (i in 1..numberOfButtons) {
 		def child = childDevices?.find { it.deviceNetworkId == "${device.deviceNetworkId}:${i}" }
 		if (child == null) {
-			log.debug "..Creating child $i"
+			if(debugEnabled) log.debug "..Creating child $i"
 //			child = addChildDevice("smartthings", "Child Button", "${device.deviceNetworkId}:${i}", device.hubId,
 			child = addChildDevice("hubitat", "ST Child Button", "${device.deviceNetworkId}:${i}", [completedSetup: true, label: getButtonName(i),
 				 isComponent: true, componentName: "button$i", componentLabel: "Button "+getButtonLabel(i)])
@@ -252,4 +261,8 @@ private channelNumber(String dni) {
 
 private getHOLDTIMING() {
 	return (holdTimingValue=="1")
+}
+
+void logsOff(){
+     device.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }

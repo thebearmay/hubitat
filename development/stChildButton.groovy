@@ -25,7 +25,7 @@ metadata {
 
 def installed() {
 	sendEvent(name: "numberOfButtons", value: 1)
-    subscribe( device.parent, "supportedButtonValues", "btnValueHndler")
+    subscribe( device.getParent(), "supportedButtonValues", "btnValueHndler")
 }
 
 def push(buttonNumber){

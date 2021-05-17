@@ -204,8 +204,9 @@ def updated() {
 def installed() {
 	log.debug "installed() called"
 	def numberOfButtons = 4
+    def supportedValues = ["pushed","held"]
 	createChildButtonDevices(numberOfButtons)
-	sendEvent(name: "supportedButtonValues", value: ["pushed","held"].encodeAsJson(), displayed: false)
+	sendEvent(name: "supportedButtonValues", value: JsonOutput.toJson(supportedValues), displayed: false)
 	sendEvent(name: "numberOfButtons", value: numberOfButtons, displayed: false)
 	numberOfButtons.times {
 		sendEvent(name: "button", value: "pushed", data: [buttonNumber: it+1], displayed: false)

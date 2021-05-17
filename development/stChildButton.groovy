@@ -10,7 +10,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *  Interpretation of the ST Child Button Device for HE
+ *  Interpretation of the ST Child Button Device
  */
 metadata {
 	definition (
@@ -22,7 +22,7 @@ metadata {
     {
 		capability "PushableButton"
 		capability "HoldableButton"
-	        capability "ReleasableButton"
+        capability "ReleasableButton"
 		capability "Sensor"
         
         attribute "supportedButtonValues", "ENUM"
@@ -48,4 +48,10 @@ def hold(buttonNumber){
 
 def release(buttonNumber = 1){
     sendEvent(name: "released", value:buttonNumber)
+}
+
+def parse(evtStr){
+    if(evtStr == "pushed") push(1)
+    if(evtStr == "held") hold(1)
+    if(evtStr == "released") release(1)
 }

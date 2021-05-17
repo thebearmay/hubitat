@@ -35,6 +35,7 @@ metadata {
 		capability "Refresh"
 		capability "PushableButton"
         capability "HoldableButton"
+        capability "ReleasableButton"
 		capability "Health Check"
 		capability "Sensor"
 
@@ -121,6 +122,10 @@ def push(buttonNumber){
 
 def hold(buttonNumber){
     sendEvent(name:"held", value:buttonNumber)
+}
+
+def release(buttonNumber){
+    sendEvent(name: "released", value:buttonNumber)
 }
 
 private getButtonResult(rawValue) {
@@ -242,7 +247,7 @@ private void createChildButtonDevices(numberOfButtons) {
 	for (i in 1..numberOfButtons) {
 		def child = childDevices?.find { it.deviceNetworkId == "${device.deviceNetworkId}:${i}" }
 		if (child == null) {
-			if(debugEnabled) log.debug "..Creating child $i"
+			log.trace "..Creating child $i"
 //			child = addChildDevice("smartthings", "Child Button", "${device.deviceNetworkId}:${i}", device.hubId,
 			child = addChildDevice("hubitat", "ST Child Button", "${device.deviceNetworkId}:${i}", [completedSetup: true, label: getButtonName(i),
 				 isComponent: true, componentName: "button$i", componentLabel: "Button "+getButtonLabel(i)])

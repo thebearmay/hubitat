@@ -113,17 +113,17 @@ private getBatteryResult(rawValue) {
 }
 
 def push(buttonNumber){
-    sendEvent(name: "pushed", value:buttonNumber)
+//    sendEvent(name: "pushed", value:buttonNumber)
     sendButtonEvent(buttonNumber, "pushed")
 }
 
 def hold(buttonNumber){
-    sendEvent(name:"held", value:buttonNumber)
+//    sendEvent(name:"held", value:buttonNumber)
     sendButtonEvent(buttonNumber, "held")
 }
 
 def release(buttonNumber){
-    sendEvent(name: "released", value:buttonNumber)
+//    sendEvent(name: "released", value:buttonNumber)
     sendButtonEvent(buttonNumber, "released")
 }
 

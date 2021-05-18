@@ -20,10 +20,10 @@ metadata {
         importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/development/stChildButton.groovy"
     ) 
     {
-		capability "PushableButton"
-		capability "HoldableButton"
+	capability "PushableButton"
+	capability "HoldableButton"
         capability "ReleasableButton"
-		capability "Sensor"
+	capability "Sensor"
         
         attribute "supportedButtonValues", "ENUM"
         attribute "button", "string"

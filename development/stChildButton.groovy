@@ -28,10 +28,6 @@ metadata {
         attribute "supportedButtonValues", "ENUM"
         attribute "button", "string"
         attribute "numberOfButtons", "number"
-        attribute "pushed", "number"
-        attribute "held", "number"
-        attribute "released", "number"
-        attribute "debug", "string"
 	}
 
 }
@@ -52,12 +48,4 @@ def hold(buttonNumber){
 
 def release(buttonNumber = 1){
     sendEvent(name: "released", value:buttonNumber, isStateChange:true)
-}
-
-def btnHandler(evt){
-    if(evt.value == "pushed") push("1")
-    else if(evt.value == "held") hold("1")
-    else if(evt.value == "released") release("1")
-        sendEvent(name:"debug", value:"value: ${evt.value}")
-    
 }

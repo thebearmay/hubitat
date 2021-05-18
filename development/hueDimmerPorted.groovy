@@ -178,13 +178,17 @@ private sendButtonEvent(buttonNum, buttonState) {
 		def descriptionText = "${child.displayName} button is ${buttonState}"
 		if(debugEnabled) log.debug child.deviceNetworkId + " : " + descriptionText
 		child.sendEvent(name: "button", value: buttonState, data: [buttonNumber: 1], descriptionText: descriptionText, isStateChange: true, displayed: true)
-        if(buttonState == "pushed")
-            child.sendEvent(name:"push", value:1,isStateChange: true)
-        else if (buttonState == "held")
-            child.sendEvent(name:"hold", value:1,isStateChange: true)
-        else if (buttonState == "released")
-            child.sendEvent(name:"release", value:1,isStateChange: true)
-     } else {
+		if(buttonState == "pushed") {
+			sendEvent(name:"push", value: buttonNum,isStateChange: true)
+            		child.sendEvent(name:"push", value:1,isStateChange: true)
+		}else if (buttonState == "held"){
+			sendEvent(name:"hold", value: buttonNum,isStateChange: true)
+            		child.sendEvent(name:"hold", value:1,isStateChange: true)
+		}else if (buttonState == "released") {
+			sendEvent(name:"release", value: buttonNum,isStateChange: true)
+            		child.sendEvent(name:"release", value:1,isStateChange: true)
+		}
+	} else {
 		log.warn "Child device $buttonNum not found!"
 	}
 }
@@ -236,7 +240,7 @@ def updated() {
 def installed() {
 	if(debugEnabled) log.debug "installed() called"
 	def numberOfButtons = 4
-    def supportedValues = ["pushed","held"]
+    	def supportedValues = ["pushed","held"]
 	createChildButtonDevices(numberOfButtons)
 	sendEvent(name: "supportedButtonValues", value: JsonOutput.toJson(supportedValues), displayed: false)
 	sendEvent(name: "numberOfButtons", value: numberOfButtons, displayed: false)
@@ -257,7 +261,6 @@ private void createChildButtonDevices(numberOfButtons) {
 		def child = childDevices?.find { it.deviceNetworkId == "${device.deviceNetworkId}:${i}" }
 		if (child == null) {
 			log.trace "..Creating child $i"
-//			child = addChildDevice("smartthings", "Child Button", "${device.deviceNetworkId}:${i}", device.hubId,
 			child = addChildDevice("hubitat", "ST Child Button", "${device.deviceNetworkId}:${i}", [completedSetup: true, label: getButtonName(i),
 				 isComponent: true, componentName: "button$i", componentLabel: "Button "+getButtonLabel(i)])
 		}

@@ -22,20 +22,16 @@ import hubitat.zigbee.zcl.DataType
 metadata {
 	definition (
 		name: "Hue Dimmer Switch Ported", 
-		namespace: "circlefield05082", 
+		namespace: "hubitat", 
 		author: "mvevitsis", 
-		ocfDeviceType: "x.com.st.d.remotecontroller", 
-		mcdSync: true, 
-		mnmn: "SmartThings", 
-		vid: "generic-4-button",
 		importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/development/hueDimmerPorted.groovy"
 	) {
 		capability "Configuration"
 		capability "Battery"
 		capability "Refresh"
 		capability "PushableButton"
-        capability "HoldableButton"
-        capability "ReleasableButton"
+        	capability "HoldableButton"
+        	capability "ReleasableButton"
 		capability "Health Check"
 		capability "Sensor"
 
@@ -165,7 +161,7 @@ private getButtonResult(rawValue) {
 		result << createEvent(name: "button", value: buttonStateTxt, data: [buttonNumber: button], descriptionText: descriptionText, isStateChange: true, displayed: false)
 		sendButtonEvent(button, buttonStateTxt)
 		if (buttonStateTxt == "pushed" || HOLDTIMING) {
-			runIn(1, "setReleased", [overwrite:true])
+			runIn(1, "setReleased", [overwrite:true,buttonNum:button])
 		}
 	}
 	return result
@@ -179,14 +175,14 @@ private sendButtonEvent(buttonNum, buttonState) {
 		if(debugEnabled) log.debug child.deviceNetworkId + " : " + descriptionText
 		child.sendEvent(name: "button", value: buttonState, data: [buttonNumber: 1], descriptionText: descriptionText, isStateChange: true, displayed: true)
 		if(buttonState == "pushed") {
-			sendEvent(name:"push", value: buttonNum,isStateChange: true)
-            		child.sendEvent(name:"push", value:1,isStateChange: true)
+			sendEvent(name:"pushed", value: buttonNum,isStateChange: true)
+            		child.sendEvent(name:"pushed", value:1,isStateChange: true)
 		}else if (buttonState == "held"){
-			sendEvent(name:"hold", value: buttonNum,isStateChange: true)
-            		child.sendEvent(name:"hold", value:1,isStateChange: true)
+			sendEvent(name:"held", value: buttonNum,isStateChange: true)
+            		child.sendEvent(name:"held", value:1,isStateChange: true)
 		}else if (buttonState == "released") {
-			sendEvent(name:"release", value: buttonNum,isStateChange: true)
-            		child.sendEvent(name:"release", value:1,isStateChange: true)
+			sendEvent(name:"released", value: buttonNum,isStateChange: true)
+            		child.sendEvent(name:"released", value:1,isStateChange: true)
 		}
 	} else {
 		log.warn "Child device $buttonNum not found!"
@@ -194,9 +190,10 @@ private sendButtonEvent(buttonNum, buttonState) {
 }
 
 
-private setReleased() {
+private setReleased(buttonNum=1) {
 	if(debugEnabled) log.debug "setReleased()"
 	sendEvent(name: "lastButtonState", value: "released", displayed: false)
+	sendEvent(name: "released", value: buttonNum)
 }
 
 def ping () {
@@ -206,7 +203,7 @@ def ping () {
 def refresh() {
 	def refreshCmds = zigbee.configureReporting(0xFC00, 0x0000, DataType.BITMAP8, 30, 30, null) + zigbee.configureReporting(zigbee.POWER_CONFIGURATION_CLUSTER, BATTERY_MEASURE_VALUE, DataType.UINT8, 7200, 7200, 0x01)
 	refreshCmds += zigbee.readAttribute(zigbee.POWER_CONFIGURATION_CLUSTER, BATTERY_MEASURE_VALUE)
-	if(debugEnabled) log.debug "refresh() returns " + refreshCmds
+	if(debugEnabled) log.debug "refresh() returns $refreshCmds"
 	return refreshCmds
 }
 
@@ -218,10 +215,10 @@ def configure() {
 
 
 def updated() {
-    if(debugEnabled){
-        log.debug "updated() called"
-        runIn(1800, logsOff)
-    }
+	if(debugEnabled){
+        	log.debug "updated() called"
+        	runIn(1800, logsOff)
+	}
 	if (childDevices && device.label != state.oldLabel) {
 		childDevices.each {
 			def newLabel = getButtonName(channelNumber(it.deviceNetworkId))
@@ -256,7 +253,7 @@ def installed() {
 
 private void createChildButtonDevices(numberOfButtons) {
 	if(debugEnabled) log.debug "Creating $numberOfButtons child buttons"
-    def supportedValues = ["pushed", "held"]
+	def supportedValues = ["pushed", "held"]
 	for (i in 1..numberOfButtons) {
 		def child = childDevices?.find { it.deviceNetworkId == "${device.deviceNetworkId}:${i}" }
 		if (child == null) {

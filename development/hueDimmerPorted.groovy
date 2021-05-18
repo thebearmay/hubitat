@@ -178,7 +178,13 @@ private sendButtonEvent(buttonNum, buttonState) {
 		def descriptionText = "${child.displayName} button is ${buttonState}"
 		if(debugEnabled) log.debug child.deviceNetworkId + " : " + descriptionText
 		child.sendEvent(name: "button", value: buttonState, data: [buttonNumber: 1], descriptionText: descriptionText, isStateChange: true, displayed: true)
-	} else {
+        if(buttonState == "pushed")
+            child.sendEvent(name:"push", value:1,isStateChange: true)
+        else if (buttonState == "held")
+            child.sendEvent(name:"hold", value:1,isStateChange: true)
+        else if (buttonState == "released")
+            child.sendEvent(name:"release", value:1,isStateChange: true)
+     } else {
 		log.warn "Child device $buttonNum not found!"
 	}
 }

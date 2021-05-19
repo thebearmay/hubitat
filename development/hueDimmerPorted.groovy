@@ -193,7 +193,7 @@ private sendButtonEvent(buttonNum, buttonState) {
 private setReleased(buttonNum=1) {
 	if(debugEnabled) log.debug "setReleased()"
 	sendEvent(name: "lastButtonState", value: "released", displayed: false)
-	sendEvent(name: "released", value: buttonNum)
+	sendButtonEvent(buttonNum,"released")
 }
 
 def ping () {

@@ -176,13 +176,16 @@ private sendButtonEvent(buttonNum, buttonState) {
 		child.sendEvent(name: "button", value: buttonState, data: [buttonNumber: 1], descriptionText: descriptionText, isStateChange: true, displayed: true)
 		if(buttonState == "pushed") {
 			sendEvent(name:"pushed", value: buttonNum,isStateChange: true)
-            		child.sendEvent(name:"pushed", value:1,isStateChange: true)
+            		//child.sendEvent(name:"pushed", value:1,isStateChange: true)
+            child.push(1)
 		}else if (buttonState == "held"){
 			sendEvent(name:"held", value: buttonNum,isStateChange: true)
-            		child.sendEvent(name:"held", value:1,isStateChange: true)
+            		//child.sendEvent(name:"held", value:1,isStateChange: true)
+            child.hold(1)
 		}else if (buttonState == "released") {
 			sendEvent(name:"released", value: buttonNum,isStateChange: true)
-            		child.sendEvent(name:"released", value:1,isStateChange: true)
+            		//child.sendEvent(name:"released", value:1,isStateChange: true)
+            child.release(1)
 		}
 	} else {
 		log.warn "Child device $buttonNum not found!"

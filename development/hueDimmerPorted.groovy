@@ -161,7 +161,7 @@ private getButtonResult(rawValue) {
 		result << createEvent(name: "button", value: buttonStateTxt, data: [buttonNumber: button], descriptionText: descriptionText, isStateChange: true, displayed: false)
 		sendButtonEvent(button, buttonStateTxt)
 		if (buttonStateTxt == "pushed" || HOLDTIMING) {
-			runIn(1, "setReleased", [overwrite:true,buttonNum:button])
+			runIn(1, "setReleased", [overwrite:true,data:button])
 		}
 	}
 	return result

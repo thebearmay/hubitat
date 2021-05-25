@@ -48,12 +48,13 @@
  *    2021-05-04  thebearmay     release 2.2.7.x changes (v2.2.0 - v2.2.2)
  *    2021-05-06  thebearmay     code cleanup from 2.2.2, now 2.2.3
  *    2021-05-09  thebearmay     return NA when zigbee channel not valid
+ *    2021-05-25  thebearmay     use upTime to recalculate system start when initialize called manually
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.2.4"}
+static String version() {return "2.2.5"}
 
 metadata {
     definition (
@@ -141,6 +142,7 @@ def initialize(){
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
 
     runIn(30,configure)
+    restartCheck() //reset Restart Time if initialize manually called
 }
 
 @SuppressWarnings('unused')
@@ -548,6 +550,19 @@ String altGetUnitProc(String wrkStr) {
            statePartsMap.put(dSplit[0].trim(),null)
     }
     return statePartsMap.unit    
+}
+
+void restartCheck() {
+    Long rsDate = Long.parseLong(device.currentValue('lastHubRestart'))
+    if(debugEnable) log.debug "$rsDate"
+    Long ut = now() - (location.hub.uptime.toLong()*1000)
+    Date upDate = new Date(ut)
+    if(debugEnable) log.debug "RS: $rsDate  UT:$ut  upTime Date: $upDate   upTime: ${location.hub.uptime}"
+    if(rsDate > ut){
+        updateAttr("lastHubRestart", ut)
+        SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        updateAttr("lastHubRestartFormatted",sdf.format(upDate))
+    }
 }
 
 @SuppressWarnings('unused')

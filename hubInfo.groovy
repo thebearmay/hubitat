@@ -49,12 +49,13 @@
  *    2021-05-06  thebearmay     code cleanup from 2.2.2, now 2.2.3
  *    2021-05-09  thebearmay     return NA when zigbee channel not valid
  *    2021-05-25  thebearmay     use upTime to recalculate system start when initialize called manually
+ *    2021-05-25  thebearmay     upTime display lagging by 1 poll
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.2.5"}
+static String version() {return "2.2.6"}
 
 metadata {
     definition (
@@ -206,7 +207,8 @@ HashMap parseHubData() {
 
 void formatUptime(){
     try {
-        Long ut = device.currentValue("uptime").toLong()
+//      Long ut = device.currentValue("uptime").toLong()
+        Long ut = location.hub.uptime.toLong()
         Integer days = Math.floor(ut/(3600*24)).toInteger()
         Integer hrs = Math.floor((ut - (days * (3600*24))) /3600).toInteger()
         Integer min = Math.floor( (ut -  ((days * (3600*24)) + (hrs * 3600))) /60).toInteger()

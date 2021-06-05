@@ -1,0 +1,86 @@
+ /*
+
+ */
+import java.text.SimpleDateFormat
+import groovy.json.JsonSlurper
+
+@SuppressWarnings('unused')
+static String version() {return "2.2.6"}
+
+metadata {
+    definition (
+        name: "LogicCheck", 
+        namespace: "thebearmay", 
+        author: "Jean P. May, Jr.",
+        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/xxxx.groovy"
+    ) {
+        capability "Actuator"
+        command "processStr"
+        
+            
+    }   
+}
+
+preferences {
+
+}
+
+@SuppressWarnings('unused')
+def installed() {
+
+}
+
+def processStr () {
+    wkStr = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nCALSCALE:GREGORIAN\r\nBEGIN:VEVENT\r\nSUMMARY:Access-A-Ride Pickup\r\nDTSTART;TZID=America/New_York:20210605T103400\r\nDTEND;TZID=America/New_York:20130802T110400\r\nLOCATION:1000 Broadway Ave., Brooklyn\r\nDESCRIPTION: Access-A-Ride trip to 900 Jay St., Brooklyn\r\nSTATUS:CONFIRMED\r\nSEQUENCE:3\r\nBEGIN:VALARM\r\nTRIGGER:-PT10M\r\nDESCRIPTION:Pickup Reminder\r\nACTION:DISPLAY\r\nEND:VALARM\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nSUMMARY:Access-A-Ride Pickup\r\nDTSTART;TZID=America/New_York:20210605T090000\r\nDTEND;TZID=America/New_York:20130802T203000\r\nLOCATION:900 Jay St., Brooklyn\r\nDESCRIPTION: Access-A-Ride trip to 1000 Broadway Ave., Brooklyn\r\nSTATUS:CONFIRMED\r\nSEQUENCE:3\r\nBEGIN:VALARM\r\nTRIGGER:-PT10M\r\nDESCRIPTION:Pickup Reminder\r\nACTION:DISPLAY\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+
+
+//    sendEvent(name:"string",value:wkStr)
+	HashMap iCalMap = [:] 
+    iCalMap.put("event",[:])
+    Integer eCount = 0
+    wkStr.eachLine{
+        List dSplit= it.split(":")
+        
+        if(dSplit.size()>1){
+            if (dSplit[0].trim()=="BEGIN" && dSplit[1].trim()=="VEVENT") {
+                eCount++
+                iCalMap.event.put(eCount.toString(),[:])
+            }
+            if (dSplit[0].trim()=="SUMMARY") 
+                iCalMap.event[eCount.toString()].put("summary",dSplit[1].trim())
+            else if (dSplit[0].trim().contains("DTSTART"))
+                iCalMap.event[eCount.toString()].put("start",dSplit[1].trim())
+            else if(dSplit[0].trim().contains("DTEND"))
+                iCalMap.event[eCount.toString()].put("end",dSplit[1].trim())
+            else if (dSplit[0].trim()=="LOCATION") 
+                iCalMap.event[eCount.toString()].put("location",dSplit[1].trim())
+        } 
+    }
+ 
+    iCalMap.event = iCalMap.event.values()sort{ a, b -> a.start <=> b.start }
+    sendEvent(name:"iCalMap", value:iCalMap.toString())
+    SimpleDateFormat sdf= new SimpleDateFormat("yyyyMMdd")
+    attrString = "<table>"
+    for (i=1;i<iCalMap.event.size()+1;i++){
+        wkStr = iCalMap.event["$i"].start
+        wkStr = wkStr.substring(0,8)
+        today = sdf.format(new Date()).toString()
+
+        evt=iCalMap.event["$i"]
+        if (wkStr>=today) {
+            attrString+="<tr><th colspan='2'>"+wkStr.substring(6,8)+"-"+wkStr.substring(4,6)+"-"+wkStr.substring(0,4)+"</th></tr>"
+            if(evt.start.indexOf("T") == -1)//all day event
+                attrString+="<tr><td colspan ='2'>-- All Day Event --</td></tr>"
+            else {
+                attrString+="<tr><td>"+evt.start.substring(evt.start.indexOf("T")+1,evt.start.indexOf("T")+3)+":"
+                attrString+=evt.start.substring(evt.start.indexOf("T")+3,evt.start.indexOf("T")+5)+"</td>"
+                attrString+="<tr><td>"+evt.end.substring(evt.start.indexOf("T")+1,evt.end.indexOf("T")+3)+":"
+                attrString+=evt.end.substring(evt.end.indexOf("T")+3,evt.end.indexOf("T")+5)+"</td></tr>"
+            }
+            attrString+="<tr><td colspan='2'>${evt.summary}</td></tr>"
+            attrString+="<tr><td colspan='2'>${evt.location}</td></tr>"
+        }
+    }    
+    attrString+="</table>"
+    sendEvent(name:"tileAttr",value:attrString
+}  

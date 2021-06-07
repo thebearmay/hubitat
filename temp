@@ -70,6 +70,7 @@ void getdata(){
             if(resp.status == 200) {
                 log.debug "rest status${resp.status}"
 		*/
+		if(true){
 		wkStr = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nCALSCALE:GREGORIAN\r\nBEGIN:VEVENT\r\nSUMMARY:Access-A-Ride Pickup\r\nDTSTART;TZID=America/New_York:20210608T103400\r\nDTEND;TZID=America/New_York:20210608T110400\r\nLOCATION:1000 Broadway Ave., Brooklyn\r\nDESCRIPTION: Access-A-Ride trip to 900 Jay St., Brooklyn\r\nSTATUS:CONFIRMED\r\nSEQUENCE:3\r\nBEGIN:VALARM\r\nTRIGGER:-PT10M\r\nDESCRIPTION:Pickup Reminder\r\nACTION:DISPLAY\r\nEND:VALARM\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nSUMMARY:Access-A-Ride Pickup\r\nDTSTART;TZID=America/New_York:20210607T090000\r\nDTEND;TZID=America/New_York:20210607T203000\r\nLOCATION:900 Jay St., Brooklyn\r\nDESCRIPTION: Access-A-Ride trip to 1000 Broadway Ave., Brooklyn\r\nSTATUS:CONFIRMED\r\nSEQUENCE:3\r\nBEGIN:VALARM\r\nTRIGGER:-PT10M\r\nDESCRIPTION:Pickup Reminder\r\nACTION:DISPLAY\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
                 //wkStr = resp.data
                 iCalMap.put("event",[:])

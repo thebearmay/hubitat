@@ -1,9 +1,9 @@
- */
-import java.text.SimpleDateFormat
-import groovy.json.JsonSlurper
+/* Even Day Switch - check the day of the year and turn on a switch based on even/odd
+*
+*/
 
 @SuppressWarnings('unused')
-static String version() {return "2.2.6"}
+static String version() {return "0.0.1"}
 
 metadata {
     definition (
@@ -17,7 +17,7 @@ metadata {
         capability "Switch"
         
         attribute "evenOdd", "string"
-		attribute "dayOfYear", "number"
+	attribute "dayOfYear", "number"
     }   
 }
 
@@ -39,7 +39,11 @@ def initalize() {
 	   if(onWhenEven) off()
 	   else on()
 	}
-	schedule('0 0 * * * *', intialize)
+	schedule("0 0 0 * * *", intialize)
+}
+
+def updated(){
+	initialize()
 }
 
 def on(){

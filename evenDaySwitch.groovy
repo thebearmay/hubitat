@@ -25,7 +25,7 @@ preferences {
     input("onWhenEven", "bool", title: "Turn switch on when even day of the year", defaultValue: true)
 }
 		
-def initalize() {
+def initialize() {
 	if(onWhenEven==null) device.updateSetting("onWhenEven",[value:"true",type:"bool"])
 	dateNow = new Date()
 	dayOfYear = dateNow[Calendar.DAY_OF_YEAR]

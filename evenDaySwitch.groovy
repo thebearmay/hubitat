@@ -39,7 +39,7 @@ def initialize() {
 	   if(onWhenEven) off()
 	   else on()
 	}
-	schedule("0 0 0 * * *", initialize)
+	schedule("0 0 0 ? * *", initialize)
 }
 
 def updated(){

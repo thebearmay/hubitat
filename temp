@@ -1,86 +1,202 @@
- /*
-
- */
-import java.text.SimpleDateFormat
-import groovy.json.JsonSlurper
-
-@SuppressWarnings('unused')
-static String version() {return "2.2.6"}
-
+/*
+thankyou TheBearMay
+*/
 metadata {
     definition (
-        name: "LogicCheck", 
-        namespace: "thebearmay", 
-        author: "Jean P. May, Jr.",
-        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/xxxx.groovy"
+        name: "ical", 
+        namespace: "mark-c-cuk", 
+        author: "mark c",
+        importUrl:"https://raw.githubusercontent.com/**.groovy"
     ) {
         capability "Actuator"
-        command "processStr"
-        
-            
+        capability "Sensor"
+        capability "Configuration"
+        capability "Initialize"
+
+        attribute "tileAttr", "string" 
+        attribute "CharCount", "string"
     }   
 }
 
+import java.text.SimpleDateFormat
+import java.util.TimeZone
+
 preferences {
-
+    input("icalink", "string", title: "ical link")
+    input("updatefeq", "number", title: "Polling Rate (minuites)\nDefault:60", default:60)
+    input("shLoc", "bool", title: "Show location info?", default:false)
+    input("maxEvt", "number", title: "max number of events to show, if you regualy see 'please select an atribute' on dashboad, reduce this number\nDefault:10", default:10)
+    input("fontSize","number", title: "Font size adjust", default:10)
+    
 }
-
-@SuppressWarnings('unused')
 def installed() {
-
+    log.trace "installed()"
+    initialize()
+}
+def updated(){
+    sendEvent(name:"tileAttr",value:"Nothing here yet ")
+    log.trace "updated() -  "
+    initialize()
 }
 
-def processStr () {
-    wkStr = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nCALSCALE:GREGORIAN\r\nBEGIN:VEVENT\r\nSUMMARY:Access-A-Ride Pickup\r\nDTSTART;TZID=America/New_York:20210605T103400\r\nDTEND;TZID=America/New_York:20130802T110400\r\nLOCATION:1000 Broadway Ave., Brooklyn\r\nDESCRIPTION: Access-A-Ride trip to 900 Jay St., Brooklyn\r\nSTATUS:CONFIRMED\r\nSEQUENCE:3\r\nBEGIN:VALARM\r\nTRIGGER:-PT10M\r\nDESCRIPTION:Pickup Reminder\r\nACTION:DISPLAY\r\nEND:VALARM\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nSUMMARY:Access-A-Ride Pickup\r\nDTSTART;TZID=America/New_York:20210605T090000\r\nDTEND;TZID=America/New_York:20130802T203000\r\nLOCATION:900 Jay St., Brooklyn\r\nDESCRIPTION: Access-A-Ride trip to 1000 Broadway Ave., Brooklyn\r\nSTATUS:CONFIRMED\r\nSEQUENCE:3\r\nBEGIN:VALARM\r\nTRIGGER:-PT10M\r\nDESCRIPTION:Pickup Reminder\r\nACTION:DISPLAY\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
-
-
-//    sendEvent(name:"string",value:wkStr)
-	HashMap iCalMap = [:] 
-    iCalMap.put("event",[:])
-    Integer eCount = 0
-    wkStr.eachLine{
-        List dSplit= it.split(":")
-        
-        if(dSplit.size()>1){
-            if (dSplit[0].trim()=="BEGIN" && dSplit[1].trim()=="VEVENT") {
-                eCount++
-                iCalMap.event.put(eCount.toString(),[:])
-            }
-            if (dSplit[0].trim()=="SUMMARY") 
-                iCalMap.event[eCount.toString()].put("summary",dSplit[1].trim())
-            else if (dSplit[0].trim().contains("DTSTART"))
-                iCalMap.event[eCount.toString()].put("start",dSplit[1].trim())
-            else if(dSplit[0].trim().contains("DTEND"))
-                iCalMap.event[eCount.toString()].put("end",dSplit[1].trim())
-            else if (dSplit[0].trim()=="LOCATION") 
-                iCalMap.event[eCount.toString()].put("location",dSplit[1].trim())
-        } 
+def initialize(){
+    if (icalink == null){
+        log.warn "${device} - No ical link"
+        return
     }
- 
-    iCalMap.event = iCalMap.event.values()sort{ a, b -> a.start <=> b.start }
-    sendEvent(name:"iCalMap", value:iCalMap.toString())
-    SimpleDateFormat sdf= new SimpleDateFormat("yyyyMMdd")
-    attrString = "<table>"
-    for (i=1;i<iCalMap.event.size()+1;i++){
-        wkStr = iCalMap.event["$i"].start
-        wkStr = wkStr.substring(0,8)
-        today = sdf.format(new Date()).toString()
+    if (updatefeq == null) updatefeq = 60
+    state.updatefeq = updatefeq*60
+    if (shLoc == null) shLoc = false
+    state.shLoc = shLoc
+    if (maxEvt == null) maxEvt = 10
+    state.maxEvt = maxEvt
+    if (fontSize == null) fontSize = 10
+    state.fontSize = fontSize
+    
+    log.info "${device} initialize - update fequency= ${state.updatefeq} , font= ${state.fontSize}, show location= ${state.shLoc}, max events= ${state.maxEvt}"
+    if (icalink != null) runIn(5,getdata)
+}
 
-        evt=iCalMap.event["$i"]
-        if (wkStr>=today) {
-            attrString+="<tr><th colspan='2'>"+wkStr.substring(6,8)+"-"+wkStr.substring(4,6)+"-"+wkStr.substring(0,4)+"</th></tr>"
-            if(evt.start.indexOf("T") == -1)//all day event
-                attrString+="<tr><td colspan ='2'>-- All Day Event --</td></tr>"
-            else {
-                attrString+="<tr><td>"+evt.start.substring(evt.start.indexOf("T")+1,evt.start.indexOf("T")+3)+":"
-                attrString+=evt.start.substring(evt.start.indexOf("T")+3,evt.start.indexOf("T")+5)+"</td>"
-                attrString+="<tr><td>"+evt.end.substring(evt.start.indexOf("T")+1,evt.end.indexOf("T")+3)+":"
-                attrString+=evt.end.substring(evt.end.indexOf("T")+3,evt.end.indexOf("T")+5)+"</td></tr>"
+void getdata(){
+    log.debug "${device} get data"
+/*    Map reqParams = [
+            uri: icalink,
+            timeout: 10
+        ]
+	*/
+    HashMap iCalMap = [:] 
+    try {
+     /*   httpGet(reqParams) { resp ->
+            if(resp.status == 200) {
+                log.debug "rest status${resp.status}"
+		*/
+		wkStr = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nCALSCALE:GREGORIAN\r\nBEGIN:VEVENT\r\nSUMMARY:Access-A-Ride Pickup\r\nDTSTART;TZID=America/New_York:20210608T103400\r\nDTEND;TZID=America/New_York:20210608T110400\r\nLOCATION:1000 Broadway Ave., Brooklyn\r\nDESCRIPTION: Access-A-Ride trip to 900 Jay St., Brooklyn\r\nSTATUS:CONFIRMED\r\nSEQUENCE:3\r\nBEGIN:VALARM\r\nTRIGGER:-PT10M\r\nDESCRIPTION:Pickup Reminder\r\nACTION:DISPLAY\r\nEND:VALARM\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nSUMMARY:Access-A-Ride Pickup\r\nDTSTART;TZID=America/New_York:20210607T090000\r\nDTEND;TZID=America/New_York:20210607T203000\r\nLOCATION:900 Jay St., Brooklyn\r\nDESCRIPTION: Access-A-Ride trip to 1000 Broadway Ave., Brooklyn\r\nSTATUS:CONFIRMED\r\nSEQUENCE:3\r\nBEGIN:VALARM\r\nTRIGGER:-PT10M\r\nDESCRIPTION:Pickup Reminder\r\nACTION:DISPLAY\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+                //wkStr = resp.data
+                iCalMap.put("event",[:])
+                Integer eCount = 0
+                wkStr.eachLine{
+                    if(!it.startsWith(" ")){
+                    List dSplit= it.split(":")
+                    if(dSplit.size()>1){
+                         if (dSplit[0].trim()=="BEGIN" && dSplit[1].trim()=="VEVENT") {
+                            eCount++
+                            iCalMap.event.put(eCount.toString(),[:])
+                        }
+                        if (eCount != 0 && dSplit[1].trim()!=null){
+                            if (dSplit[0].trim().contains("DTSTART")) iCalMap.event[eCount.toString()].put("start",dSplit[1].trim())
+                            else if (dSplit[0].trim().contains("DTEND")) iCalMap.event[eCount.toString()].put("end",dSplit[1].trim())
+                            else if (dSplit[0].trim()=="LOCATION" && state.shLoc) iCalMap.event[eCount.toString()].put("location",dSplit[1].trim())
+                            else if (dSplit[0].trim()=="STATUS") iCalMap.event[eCount.toString()].put("status",dSplit[1].trim())     //CONFIRMED or TENTATIVE
+                            else if (dSplit[0].trim()=="SUMMARY") iCalMap.event[eCount.toString()].put("summary",dSplit[1].trim())
+                            //else if (dSplit[0].trim()=="SEQUENCE" && dSplit[1].trim() >0) iCalMap.event[eCount.toString()].put("repeat",dSplit[1].trim())
+                       }
+                    }
+                    else { // blank - location, attiees etc
+                    }
+                  }
+                }
             }
-            attrString+="<tr><td colspan='2'>${evt.summary}</td></tr>"
-            attrString+="<tr><td colspan='2'>${evt.location}</td></tr>"
+            else { // not 200
+                log.warn "${device} Response code ${resp.status}"
+            }
         }
-    }    
-    attrString+="</table>"
-    sendEvent(name:"tileAttr",value:attrString
-}  
+    }
+    catch (e) {
+        log.warn "${device} CATCH $e"
+    }
+    
+    iCalMap.event = iCalMap.event.values()sort{ a, b -> a.start <=> b.start} //sort the data
+    
+    
+    SimpleDateFormat sdf= new SimpleDateFormat("yyyyMMdd")
+    
+    Date today = new Date()
+    
+    //def today = sdf.format(new Date()).toString()
+    
+    Integer MaxCount = 0
+    //attrString = "<table>"
+	attrString = "<div style='font-size:${state.fontSize}px>"//Bear
+    //attrString = "<div style='overflow:auto;height:90%'><table>"
+
+    iCalMap.event.each{
+      if (MaxCount < state.maxEvt){
+          if (it.start == null) it.start = it.end // not used that i know off
+          if (it.end == null) it.end = it.start //used some envents didnt have a end date
+//log.debug "${it.start} , ${it.end}"
+          //need to look at using full string
+          (t,d,z) = timeHelp(it.start)
+          fullstart = z
+        
+          wkStr = it.start
+          wkStrshort = wkStr.substring(0,8)
+        
+          (t,d,z) = timeHelp(it.end)
+          fullend = z
+          
+        wkStrEnd = it.end
+        wkStrEndshort = wkStrEnd.substring(0,8)
+                 
+          //if (today<=wkStrshort || today<=wkStrEndshort) { //and not canciled?
+          if (today<=fullstart || today<=fullend) { 
+            
+            MaxCount = MaxCount +1
+              
+            //if (today>=wkStrshort && today<=wkStrEndshort) attrString+="<tr><td colspan='2'style='font-size:${state.fontSize}px'>TODAY"+" " 
+              //if (today>=wkStrshort && today<=wkStrEndshort)  attrString+="<tr><td style='font-size:${state.fontSize}px'>"+"TODAY"+" "
+              if (today>=fullstart && today<=fullend)  //Bear //attrString+="<tr><td style='font-size:${state.fontSize}px'>"+"TODAY"+" "
+				attrString+="<p>TODAY " //Bear
+              
+            //else attrString+="<tr><td colspan='2'style='font-size:${state.fontSize}px'>"+wkStr.substring(6,8)+"-"+wkStr.substring(4,6)+"-"+wkStr.substring(0,4)+"
+             else {
+                 (t,d,z) = timeHelp(it.start)
+                //Bear //attrString+="<tr><td style='font-size:${state.fontSize}px'>"+d+" "
+				attrString+="<p>$d "
+                // attrString+="<tr><td style='font-size:${state.fontSize}px'>"+wkStr.substring(6,8)+"-"+wkStr.substring(4,6)+"-"+wkStr.substring(0,4)+" "
+             }
+              
+            if(wkStr.indexOf("T") == -1){    //all day event
+                attrString+="All Day Event</p>"// Bear //</td></tr>"
+            }
+            else {    //time event
+               (t,d,z) = timeHelp(it.start)
+                attrString+=t+" to "
+               (t,d,z) = timeHelp(it.end)
+                attrString+=t+"</p>  //Bear //"</td></tr>"
+            }
+              
+            //attrString+="<tr><td colspan='2'style='font-size:${state.fontSize-3}px'>${it.summary}</td></tr>"
+              attrString+= // Bear //"<tr><td style='font-size:${state.fontSize-2}px'>${it.summary}</td></tr>"
+				"<p>${it.summary}</p>"  //Bear
+
+              
+              //if(it.location != null) attrString+="<tr><td colspan='2'style='font-size:${state.fontSize-4}px'>${it.location.replace('\\','')}</td></tr>"
+              if(it.location != null) //Bear //attrString+="<tr><td style='font-size:${state.fontSize-5}px'>${it.location.replace('\\','')}</td></tr>"
+				attrString+="<p>${it.location.replace('\\','')}</p>" //Bear
+          }
+          
+    }
+   } 
+    //Bear //attrString+="</table>"
+	attrString+="</div>
+//log.debug"end"
+    if(attrString.length() >= 1024) log.warn "To many Char. please reduce max number of events or turn off location = ${attrString.length()}"
+    sendEvent(name:"tileAttr",value:attrString)
+    sendEvent(name: "CharCount", value: "${attrString.length()} out of 1024 allowed")
+    runIn(state.updatefeq,getdata)
+}
+                    
+private timeHelp(data) {
+//log.debug "timeHelp data= $data"
+    Date zDate
+    if (data.contains("Z")) zDate =  toDateTime(data)
+    else if (data.contains("T")) zDate = new SimpleDateFormat("yyyyMMdd'T'kkmmss").parse(data)
+    else zDate = new SimpleDateFormat("yyyyMMdd").parse(data)
+//log.debug "zDate= $zDate"
+    String localTime = new SimpleDateFormat("HH:mm").format(zDate)
+    String dateTrim = new SimpleDateFormat("dd-MM-yy").format(zDate)
+    
+//log.debug "timeHelp return=$zDate & $localTime & $dateTrim"     
+    //return [localTime, zDate]
+    return [localTime, dateTrim,zDate]
+}

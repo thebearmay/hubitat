@@ -160,6 +160,12 @@ def setLevel(value, rate = null) {
 	setShadeLevel(value)
 }
 
+def setPosition(value) {
+	log.info "setPosition($value)"
+
+	setShadeLevel(value)
+}
+
 def setShadeLevel(value) {
 	log.info "setShadeLevel($value)"
 

@@ -9,7 +9,8 @@
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubInfoManifest.json",
       "description": "Device driver that provides access to the basic hub and location information about the hub.  Has an option to allow polling to report hub temperature and memory.",
       "tags": [
-        "Misc. Devices", "Monitoring"
+        "Misc. Devices",
+        "Monitoring"
       ]
     },
     {
@@ -59,6 +60,13 @@
       "category": "Convenience",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/moonPhaseManifest.json",
       "description": "Device driver to calculate the moon phase for a given or current date/time.  Attributes include a moon phase text string, the a moon phase number (percentage, in decimal format, that the given time/date is through the lunar cycle, and a generated tile string.  Driver optionally will automatically update the attributes at 1 second past midnight to keep the phase current, and allows for an path to an alternate set of tile icons (i.e. hub file system - http://hubIpAddress/local/)."
-    } 
+    },
+    {
+      "id": "4da817ab-24c2-4d67-90f6-58d6247aef38",
+      "name": "Even Day Switch",
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/evenDaySwitchManifest.json",
+      "description": "Device driver creates a virtual switch that is set on/off based on whether the day of the year is even or odd. To handle end of year processing the driver can optionally switch the even/odd on/off to ensure that the every other day on/off is maintained."
+    }
   ]
 }

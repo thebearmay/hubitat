@@ -3,7 +3,7 @@
 */
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -17,19 +17,26 @@ metadata {
         capability "Switch"
         
         attribute "evenOdd", "string"
-	attribute "dayOfYear", "number"
+        attribute "dayOfYear", "number"
     }   
 }
 
 preferences {
     input("onWhenEven", "bool", title: "Turn switch on when even day of the year", defaultValue: true)
+    input("autoToggleOn", "bool", title: "Reverse the even-odd switch behavior \nwhen previous day = 365 and current day = 1", defaulyValue:true)
 }
 		
 def initialize() {
 	if(onWhenEven==null) device.updateSetting("onWhenEven",[value:"true",type:"bool"])
-	dateNow = new Date()
+	if(autoToggleOn==null) device.updateSetting("autoToggleOn",[value:"true",type:"bool"])
+    dayPrev = device.currentValue("dayOfYear").toInteger()
+    dateNow = new Date()
 	dayOfYear = dateNow[Calendar.DAY_OF_YEAR]
 	sendEvent(name:"dayOfYear", value: dayOfYear)
+    if(dayOfYear == 1 && dayPrev == 365 && autoToggleOn) {
+        if(onWhenEven) device.updateSetting("autoToggleOn",[value:"false",type:"bool"])
+        else device.updateSetting("autoToggleOn",[value:"true",type:"bool"])
+    }
 	if(dayOfYear % 2 == 0) {
 	   sendEvent(name:"evenOdd", value:"even")
 	   if(onWhenEven) on()

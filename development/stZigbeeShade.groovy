@@ -25,7 +25,7 @@ metadata {
 //		capability "Window Shade Preset"
 		capability "HealthCheck"
 		capability "SwitchLevel"
-		capability "Switch"
+        capability "Switch"
 
 		command "pause"
         attribute "level", "number"
@@ -145,9 +145,17 @@ def supportsLiftPercentage() {
 	device.getDataValue("manufacturer") != "Feibit Co.Ltd"
 }
 
+def off() {
+    close()
+}
+
 def close() {
 	log.info "close()"
 	zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_CLOSE)
+}
+
+def on(){
+    open()
 }
 
 def open() {

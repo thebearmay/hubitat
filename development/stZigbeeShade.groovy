@@ -25,6 +25,7 @@ metadata {
 //		capability "Window Shade Preset"
 		capability "HealthCheck"
 		capability "SwitchLevel"
+		capability "Switch"
 
 		command "pause"
         attribute "level", "number"

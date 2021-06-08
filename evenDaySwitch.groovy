@@ -1,9 +1,24 @@
 /* Even Day Switch - check the day of the year and turn on a switch based on even/odd
-*
+ *
+ *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ *  Change History:
+ *	Date		Who		Description
+ *	----------	-------------	----------------------------------------------------------------------------
+ *	2021-06-07	thebearmay	Original Code
+ *	2021-06-08	thebearmay	Code Cleanup, add license, etc.
+ *
 */
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.2"}
+static String version() {return "0.0.3"}
 
 metadata {
     definition (
@@ -23,13 +38,26 @@ metadata {
 
 preferences {
     input("onWhenEven", "bool", title: "Turn switch on when even day of the year", defaultValue: true)
-    input("autoToggleOn", "bool", title: "Reverse the even-odd switch behavior \nwhen previous day = 365 and current day = 1", defaulyValue:true)
+    input("autoToggleOn", "bool", title: "Reverse the even-odd switch behavior \nwhen previous day = 365 and current day = 1", defaultValue:true)
 }
-		
+
+def installed() {
+    initialize()
+}
+
+def uninstalled(){
+    unschedule()
+}
+
 def initialize() {
 	if(onWhenEven==null) device.updateSetting("onWhenEven",[value:"true",type:"bool"])
 	if(autoToggleOn==null) device.updateSetting("autoToggleOn",[value:"true",type:"bool"])
-    dayPrev = device.currentValue("dayOfYear").toInteger()
+	schedule("0 0 0 ? * *", dayProcessing)
+    dayProcessing()
+}
+
+void dayProcessing(){
+    dayPrev = device.currentValue("dayOfYear")?.toInteger() //will be null on device creation
     dateNow = new Date()
 	dayOfYear = dateNow[Calendar.DAY_OF_YEAR]
 	sendEvent(name:"dayOfYear", value: dayOfYear)
@@ -46,7 +74,6 @@ def initialize() {
 	   if(onWhenEven) off()
 	   else on()
 	}
-	schedule("0 0 0 ? * *", initialize)
 }
 
 def updated(){

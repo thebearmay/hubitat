@@ -41,7 +41,8 @@ metadata {
 	}
 
 	preferences {
-		input "preset", "number", title: "Preset position", description: "Set the window shade preset position", defaultValue: 50, range: "1..100", required: false, displayDuringSetup: false
+		input "reverseOnOff", "bool", title:"Reverse the on->open/off-closed action", defaultValue:false
+        input "preset", "number", title: "Preset position", description: "Set the window shade preset position", defaultValue: 50, range: "1..100", required: false, displayDuringSetup: false
 	}
 
 
@@ -70,7 +71,7 @@ private List<Map> collectAttributes(Map descMap) {
 
 // Parse incoming device messages to generate events
 def parse(String description) {
-	log.debug "description:- ${description}"
+	//log.debug "description:- ${description}"
 
 	if (device.currentValue("shadeLevel") == null && device.currentValue("level") != null) {
 		sendEvent(name: "shadeLevel", value: device.currentValue("level"), unit: "%")
@@ -109,7 +110,7 @@ def getLastLevel() {
 }
 
 def levelEventHandler(currentLevel) {
-	log.debug "levelEventHandle - currentLevel: ${currentLevel} lastLevel: ${lastLevel}"
+	//log.debug "levelEventHandle - currentLevel: ${currentLevel} lastLevel: ${lastLevel}"
 
 	if ((lastLevel == "undefined" || currentLevel == lastLevel) && state.invalidSameLevelEvent) { //Ignore invalid reports
 		log.debug "Ignore invalid reports"
@@ -134,7 +135,7 @@ def levelEventHandler(currentLevel) {
 
 def updateFinalState() {
 	def level = device.currentValue("shadeLevel")
-	log.debug "updateFinalState: ${level}"
+	//log.debug "updateFinalState: ${level}"
 
 	if (level > 0 && level < 100) {
 		sendEvent(name: "windowShade", value: "partially open")
@@ -146,37 +147,41 @@ def supportsLiftPercentage() {
 }
 
 def off() {
-    close()
+    if(reverseOnOff == null) device.updateSetting("reverseOnOff",[value:"false",type:"bool"])
+    if(reverseOnOff) open()
+    else close()
 }
 
 def close() {
-	log.info "close()"
+	//log.info "close()"
 	zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_CLOSE)
 }
 
 def on(){
-    open()
+    if(reverseOnOff == null) device.updateSetting("reverseOnOff",[value:"false",type:"bool"])
+    if(reverseOnOff) close()
+    else open()
 }
 
 def open() {
-	log.info "open()"
+	//log.info "open()"
 	zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_OPEN)
 }
 
 def setLevel(value, rate = null) {
-	log.info "setLevel($value)"
+	//log.info "setLevel($value)"
 
 	setShadeLevel(value)
 }
 
 def setPosition(value) {
-	log.info "setPosition($value)"
+	//log.info "setPosition($value)"
 
 	setShadeLevel(value)
 }
 
 def setShadeLevel(value) {
-	log.info "setShadeLevel($value)"
+	//log.info "setShadeLevel($value)"
 
 	Integer level = Math.max(Math.min(value as Integer, 100), 0)
     
@@ -203,7 +208,7 @@ def setShadeLevel(value) {
 }
 
 def pause() {
-	log.info "pause()"
+	//log.info "pause()"
 	def currentShadeStatus = device.currentValue("windowShade")
 
 	if (currentShadeStatus == "open" || currentShadeStatus == "closed") {
@@ -225,7 +230,7 @@ def ping() {
 }
 
 def refresh() {
-	log.info "refresh()"
+	//log.info "refresh()"
 	def cmds
 
 	if (supportsLiftPercentage()) {
@@ -238,7 +243,7 @@ def refresh() {
 }
 
 def installed() {
-	log.debug "installed"
+	//log.debug "installed"
 
 	state.invalidSameLevelEvent = true
 
@@ -248,12 +253,12 @@ def installed() {
 def configure() {
 	def cmds
 
-	log.info "configure()"
+	//log.info "configure()"
 
 	// Device-Watch allows 2 check-in misses from device + ping (plus 2 min lag time)
 	sendEvent(name: "checkInterval", value: 2 * 60 * 60 + 2 * 60, displayed: false, data: [protocol: "zigbee", hubHardwareId: device.hub.hardwareID])
 
-	log.debug "Configuring Reporting and Bindings."
+	//log.debug "Configuring Reporting and Bindings."
 
 	if (supportsLiftPercentage()) {
 		cmds = zigbee.configureReporting(CLUSTER_WINDOW_COVERING, ATTRIBUTE_POSITION_LIFT, DataType.UINT8, 0, 600, null)
@@ -273,11 +278,11 @@ private def parseBindingTableMessage(description) {
 }
 
 private Integer getGroupAddrFromBindingTable(description) {
-	log.info "Parsing binding table - '$description'"
+	//log.info "Parsing binding table - '$description'"
 	def btr = zigbee.parseBindingTableResponse(description)
 	def groupEntry = btr?.table_entries?.find { it.dstAddrMode == 1 }
 
-	log.info "Found ${groupEntry}"
+	//log.info "Found ${groupEntry}"
 
 	!groupEntry?.dstAddr ?: Integer.parseInt(groupEntry.dstAddr, 16)
 }

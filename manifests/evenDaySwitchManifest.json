@@ -1,0 +1,16 @@
+{
+  "packageName": "Even Day Switch",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.3",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2021-06-08",
+  "drivers": [
+    {
+      "id": "e241e478-083d-4874-891f-1c1996637d38",
+      "name": "Even Day Switch",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/evenDaySwitch.groovy",
+      "required": true
+    }
+  ]
+}

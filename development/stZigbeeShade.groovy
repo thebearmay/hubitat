@@ -41,7 +41,7 @@ metadata {
 	}
 
 	preferences {
-		input "reverseOnOff", "bool", title:"Reverse the on->open/off-closed action", defaultValue:false
+	input "reverseDirection", "bool", title:"Reverse shade direction", defaultValue:false
         input "preset", "number", title: "Preset position", description: "Set the window shade preset position", defaultValue: 50, range: "1..100", required: false, displayDuringSetup: false
 	}
 
@@ -147,9 +147,7 @@ def supportsLiftPercentage() {
 }
 
 def off() {
-    if(reverseOnOff == null) device.updateSetting("reverseOnOff",[value:"false",type:"bool"])
-    if(reverseOnOff) open()
-    else close()
+close()
 }
 
 def close() {
@@ -157,10 +155,8 @@ def close() {
 	zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_CLOSE)
 }
 
-def on(){
-    if(reverseOnOff == null) device.updateSetting("reverseOnOff",[value:"false",type:"bool"])
-    if(reverseOnOff) close()
-    else open()
+def on(){ 
+	open()
 }
 
 def open() {
@@ -296,7 +292,11 @@ private List readDeviceBindingTable() {
 }
 
 def shouldInvertLiftPercentage() {
-	return isSomfy()
+	if(reverseDirection == null) device.updateSetting("reverseDirection",[value:"false",type:"bool"])
+	if(device.getDataValue("manufacturer") == "SOMFY" || reverseDirection)
+		return true
+	else
+		return false
 }
 
 def isSomfy() {

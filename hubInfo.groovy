@@ -50,12 +50,13 @@
  *    2021-05-09  thebearmay     return NA when zigbee channel not valid
  *    2021-05-25  thebearmay     use upTime to recalculate system start when initialize called manually
  *    2021-05-25  thebearmay     upTime display lagging by 1 poll
+ *    2021-06-11  thebearmay     add units to the jvm and memory attributes
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.2.6"}
+static String version() {return "2.2.7"}
 
 metadata {
     definition (
@@ -439,7 +440,7 @@ void getFreeMemHandler(resp, data) {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             Integer memWork = new Integer(resp.data.toString())
             if(debugEnable) log.debug memWork
-            updateAttr("freeMemory",memWork)
+            updateAttr("freeMemory",memWork, "KB")
         }
     } catch(ignored) {
         def respStatus = resp.getStatus()
@@ -474,10 +475,10 @@ void getJvmHandler(resp, data) {
         }
         if(jvmArr.size() > 1){
             Integer jvmTotal = jvmArr[2].toInteger()
+            updateAttr("jvmTotal",jvmTotal, "KB")
             Integer jvmFree = jvmArr[3].toInteger()
+            updateAttr("jvmFree",jvmFree, "KB")
             Double jvmFreePct = (jvmFree/jvmTotal)*100
-            updateAttr("jvmTotal",jvmTotal)
-            updateAttr("jvmFree",jvmFree)
             updateAttr("jvmFreePct",jvmFreePct.round(1),"%")
             if(jvmArr.size() > 4) {
                 Double cpuWork=jvmArr[4].toDouble()

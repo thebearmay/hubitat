@@ -51,12 +51,13 @@
  *    2021-05-25  thebearmay     use upTime to recalculate system start when initialize called manually
  *    2021-05-25  thebearmay     upTime display lagging by 1 poll
  *    2021-06-11  thebearmay     add units to the jvm and memory attributes
+ *    2021-06-12  thebearmay     put a space between unit and values
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.2.7"}
+static String version() {return "2.2.8"}
 
 metadata {
     definition (
@@ -271,7 +272,7 @@ String combineAttr(String name, List<String> keys){
     for (i = 0;i < keys.size(); i++) {
         keyResult+= device.currentValue(keys[i])
         String attrUnit = getUnitFromState(keys[i])
-        if (attrUnit != "null") keyResult+=attrUnit
+        if (attrUnit != "null") keyResult+=" "+attrUnit
         if (i < keys.size() - 1) keyResult+= " / "
     }
             
@@ -290,11 +291,11 @@ String addToAttr(String name, String key, String convert = "none") {
     def curVal = device.currentValue(key)
     if(curVal){
         if (convert == "int"){
-            retResult += curVal.toInteger().toString()+attrUnit
+            retResult += curVal.toInteger().toString()+" "+attrUnit
         } else if (name=="Temperature"){
             // span uses integer value to allow CSS override 
             retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + curVal.toString() + attrUnit + "</span>"
-        } else retResult += curVal.toString() + attrUnit
+        } else retResult += curVal.toString() + " "+attrUnit
     }
     retResult += '</td></tr>'
     return retResult

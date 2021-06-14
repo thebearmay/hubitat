@@ -58,7 +58,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.3.1"}
+static String version() {return "2.3.2"}
 
 metadata {
     definition (
@@ -228,7 +228,7 @@ void formatUptime(){
 
 void formatAttrib(){
     if(debugEnable) log.debug "formatAttrib"
-    String attrStr = "<table id='hubInfoTable'>"
+    String attrStr = "<style>td{text-align:left;}</style><table id='hubInfoTable'>"
     
     attrStr += addToAttr("Name","name")
     attrStr += addToAttr("Version","hubVersion")
@@ -259,7 +259,7 @@ void formatAttrib(){
 
     if(tempPollEnable) {
         String tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
-        attrStr += addToAttr("Hub Temp",tempAttrib)
+        attrStr += addToAttr("Temperature",tempAttrib)
     }
     
     attrStr += addToAttr("ZB Channel","zigbeeChannel")
@@ -267,6 +267,7 @@ void formatAttrib(){
 
     if (debugEnable) log.debug "after calls attr string = $attrStr"
     updateAttr("html", attrStr)
+    updateAttr("htmlLength",attrStr.length())
     if (attrStr.length() > 1024) updateAttr("html", "Max Attribute Size Exceeded: ${attrStr.length()}")
 }
 
@@ -290,8 +291,8 @@ String combineAttr(String name, List<String> keys){
 
 String addToAttr(String name, String key, String convert = "none") {
     if(enableDebug) log.debug "adding $name, $key"
-    String retResult = '<tr><td align="left">'
-    retResult += name + '</td><td align="left">'
+    String retResult = '<tr><td>'
+    retResult += name + '</td><td>'
 
     String attrUnit = getUnitFromState(key)
     if (attrUnit == "null") attrUnit =""

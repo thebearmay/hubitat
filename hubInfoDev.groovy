@@ -65,7 +65,7 @@ metadata {
         name: "Hub Information", 
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
-        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfo.groovy"
+        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoDev.groovy"
     ) {
         capability "Actuator"
         capability "Configuration"
@@ -251,7 +251,7 @@ void formatAttrib(){
 
     if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
     if(evtStateDaysEnable){
-        List combine = ["maxEvtDays", "MaxStateDays"]
+        List combine = ["maxEvtDays", "maxStateDays"]
         attrStr += combineAttr("Max Evt/State Days", combine)
     }
 
@@ -268,7 +268,7 @@ void formatAttrib(){
 
     if (debugEnable) log.debug "after calls attr string = $attrStr"
     updateAttr("html", attrStr)
-    updateAttr("htmlSize", attrStr.length())
+    if (attrStr.length() > 1024) updateAttr("html", "Max Attribute Size Exceeded: ${attrStr.length()}")
 }
 
 String combineAttr(String name, List<String> keys){

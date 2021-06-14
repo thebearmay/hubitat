@@ -262,7 +262,7 @@ void formatAttrib(){
         attrStr += addToAttr("Temperature",tempAttrib)
     }
     
-    attrStr += addToAttr("ZigBee Channel","zigbeeChannel")
+    attrStr += addToAttr("ZB Channel","zigbeeChannel")
     attrStr += "</table>"
 
     if (debugEnable) log.debug "after calls attr string = $attrStr"

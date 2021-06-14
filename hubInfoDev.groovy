@@ -213,14 +213,13 @@ HashMap parseHubData() {
 
 void formatUptime(){
     try {
-//      Long ut = device.currentValue("uptime").toLong()
         Long ut = location.hub.uptime.toLong()
         Integer days = Math.floor(ut/(3600*24)).toInteger()
         Integer hrs = Math.floor((ut - (days * (3600*24))) /3600).toInteger()
         Integer min = Math.floor( (ut -  ((days * (3600*24)) + (hrs * 3600))) /60).toInteger()
         Integer sec = Math.floor(ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))).toInteger()
     
-        String attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec"
+        String attrval = days.toString() + "d, " + hrs.toString() + "h, " + min.toString() + "m, " + sec.toString() + "s"
         updateAttr("formattedUptime", attrval) 
     } catch(ignore) {
         updateAttr("formattedUptime", "")
@@ -301,9 +300,10 @@ String addToAttr(String name, String key, String convert = "none") {
     if(curVal){
         if (convert == "int"){
             retResult += curVal.toInteger().toString()+" "+attrUnit
-        } else if (name=="Temperature"){
+/*        } else if (name=="Temperature"){
             // span uses integer value to allow CSS override 
             retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + curVal.toString() + attrUnit + "</span>"
+*/
         } else retResult += curVal.toString() + " "+attrUnit
     }
     retResult += '</td></tr>'

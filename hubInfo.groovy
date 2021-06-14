@@ -52,12 +52,13 @@
  *    2021-05-25  thebearmay     upTime display lagging by 1 poll
  *    2021-06-11  thebearmay     add units to the jvm and memory attributes
  *    2021-06-12  thebearmay     put a space between unit and values
+ *    2021-06-14  thebearmay     add Max State/Event days, required trimming of the html attribute
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.2.8"}
+static String version() {return "2.3.0"}
 
 metadata {
     definition (
@@ -107,6 +108,8 @@ metadata {
         attribute "dbSize", "number"
         attribute "publicIP", "string"
         attribute "zigbeeChannel","string"
+        attribute "maxEvtDays", "number"
+        attribute "maxStateDays", "number"
 
             
     }   
@@ -118,9 +121,10 @@ preferences {
     input("freeMemPollEnabled", "bool", title: "Enable Free Memory Polling")
     input("cpuPollEnabled", "bool", title: "Enable CPU & JVM Polling")
     input("dbPollEnabled","bool", title: "Enable DB Size Polling")
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable)
-        input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", default: false, required: false, submitOnChange: true)
+    input("evtStateDaysEnable", "bool", title:"Enable Display of Max Event/State Days Setting")
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
+        input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
@@ -209,14 +213,13 @@ HashMap parseHubData() {
 
 void formatUptime(){
     try {
-//      Long ut = device.currentValue("uptime").toLong()
         Long ut = location.hub.uptime.toLong()
         Integer days = Math.floor(ut/(3600*24)).toInteger()
         Integer hrs = Math.floor((ut - (days * (3600*24))) /3600).toInteger()
         Integer min = Math.floor( (ut -  ((days * (3600*24)) + (hrs * 3600))) /60).toInteger()
         Integer sec = Math.floor(ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))).toInteger()
     
-        String attrval = days.toString() + " days, " + hrs.toString() + " hrs, " + min.toString() + " min, " + sec.toString() + " sec"
+        String attrval = days.toString() + "d, " + hrs.toString() + "h, " + min.toString() + "m, " + sec.toString() + "s"
         updateAttr("formattedUptime", attrval) 
     } catch(ignore) {
         updateAttr("formattedUptime", "")
@@ -246,6 +249,10 @@ void formatAttrib(){
     }
 
     if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
+    if(evtStateDaysEnable){
+        List combine = ["maxEvtDays", "maxStateDays"]
+        attrStr += combineAttr("Max Evt/State Days", combine)
+    }
 
     attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
     attrStr += addToAttr("Uptime","formattedUptime")
@@ -260,6 +267,7 @@ void formatAttrib(){
 
     if (debugEnable) log.debug "after calls attr string = $attrStr"
     updateAttr("html", attrStr)
+    if (attrStr.length() > 1024) updateAttr("html", "Max Attribute Size Exceeded: ${attrStr.length()}")
 }
 
 String combineAttr(String name, List<String> keys){
@@ -292,9 +300,10 @@ String addToAttr(String name, String key, String convert = "none") {
     if(curVal){
         if (convert == "int"){
             retResult += curVal.toInteger().toString()+" "+attrUnit
-        } else if (name=="Temperature"){
+/*        } else if (name=="Temperature"){
             // span uses integer value to allow CSS override 
             retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + curVal.toString() + attrUnit + "</span>"
+*/
         } else retResult += curVal.toString() + " "+attrUnit
     }
     retResult += '</td></tr>'
@@ -388,6 +397,32 @@ void getPollValues(){
         if(debugEnable)log.debug params
         asynchttpGet("getIfHandler", params)
     }
+ 
+    //Max State Days
+    if(evtStateDaysEnable) {
+        Map params =
+        [
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub/advanced/maxDeviceStateAgeDays",
+                headers: ["Cookie": cookie]           
+        ]
+    
+        if(debugEnable)log.debug params
+        asynchttpGet("getStateDaysHandler", params)
+     
+     //Max Event Days
+        params =
+        [
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub/advanced/maxEventAgeDays",
+                headers: ["Cookie": cookie]           
+        ]
+    
+        if(debugEnable)log.debug params
+        asynchttpGet("getEvtDaysHandler", params)
+     
+     
+    } 
     
     //End Pollable Gets
     
@@ -520,6 +555,37 @@ void getIfHandler(resp, data){
         log.info ex
     }
 }   
+
+@SuppressWarnings('unused')
+void getStateDaysHandler(resp, data) {
+    try {
+        if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+            Integer stateDays = new Integer(resp.data.toString())
+            if(debugEnable) log.debug "Max State Days $stateDays"
+
+            updateAttr("maxStateDays",stateDays)
+        }
+    } catch(ignored) {
+        def respStatus = resp.getStatus()
+        log.warn "getStateDays httpResp = $respStatus but returned invalid data, will retry next cycle"
+    } 
+}
+
+@SuppressWarnings('unused')
+void getEvtDaysHandler(resp, data) {
+    try {
+        if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+            Integer evtDays = new Integer(resp.data.toString())
+            if(debugEnable) log.debug "Max Event Days $evtDays"
+
+            updateAttr("maxEvtDays",evtDays)
+        }
+    } catch(ignored) {
+        def respStatus = resp.getStatus()
+        log.warn "getEvtDays httpResp = $respStatus but returned invalid data, will retry next cycle"
+    } 
+}
+
 
 String getUnitFromState(String attrName){
     String wrkStr = device.currentState(attrName).toString()

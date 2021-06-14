@@ -403,7 +403,7 @@ void getPollValues(){
         [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/maxDeviceStateAgeDays",
-                headers: ["Cookie": cookie]           ]
+                headers: ["Cookie": cookie]           
         ]
     
         if(debugEnable)log.debug params
@@ -414,7 +414,7 @@ void getPollValues(){
         [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/maxEventAgeDays",
-                headers: ["Cookie": cookie]           ]
+                headers: ["Cookie": cookie]           
         ]
     
         if(debugEnable)log.debug params

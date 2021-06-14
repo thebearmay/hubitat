@@ -62,6 +62,8 @@ metadata
 		attribute "dbSize", "number"
 		attribute "publicIP", "string"
 		attribute "zigbeeChannel","string"
+		attribute "maxEvtDays", "number"
+        	attribute "maxStateDays", "number"
 		
 		command "sync"
 	}

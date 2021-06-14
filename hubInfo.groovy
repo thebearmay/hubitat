@@ -219,7 +219,7 @@ void formatUptime(){
         Integer min = Math.floor( (ut -  ((days * (3600*24)) + (hrs * 3600))) /60).toInteger()
         Integer sec = Math.floor(ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))).toInteger()
     
-        String attrval = days.toString() + "d, " + hrs.toString() + "h, " + min.toString() + "m, " + sec.toString() + "s"
+        String attrval = days.toString() + "d," + hrs.toString() + "h," + min.toString() + "m," + sec.toString() + "s"
         updateAttr("formattedUptime", attrval) 
     } catch(ignore) {
         updateAttr("formattedUptime", "")
@@ -236,16 +236,16 @@ void formatAttrib(){
         List combine = ["localIP", "publicIP"]
         attrStr += combineAttr("IP Local/Public", combine)
     } else
-        attrStr += addToAttr("Address","localIP")
+        attrStr += addToAttr("IP Addr","localIP")
     if(cpuPollEnabled) {
-        attrStr += addToAttr("Free Memory","freeMemory","int")
+        attrStr += addToAttr("Free Mem","freeMemory","int")
         if(device.currentValue("cpu5Min")){
             List combine = ["cpu5Min", "cpuPct"]
             attrStr += combineAttr("CPU Load/Load%", combine)
         }
 
         List combineA = ["jvmTotal", "jvmFree", "jvmFreePct"]
-        attrStr += combineAttr("JVM Total/Free/%", combineA)
+        attrStr += combineAttr("JVM Tot/Free/%", combineA)
     }
 
     if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
@@ -259,7 +259,7 @@ void formatAttrib(){
 
     if(tempPollEnable) {
         String tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
-        attrStr += addToAttr("Temperature",tempAttrib)
+        attrStr += addToAttr("Hub Temp",tempAttrib)
     }
     
     attrStr += addToAttr("ZB Channel","zigbeeChannel")

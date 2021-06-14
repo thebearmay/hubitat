@@ -252,7 +252,7 @@ void formatAttrib(){
     if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
     if(evtStateDaysEnable){
         List combine = ["maxEvtDays", "MaxStateDays"]
-        attrStr += combineAttr("Max Evt / Max Dev State Days", combine)
+        attrStr += combineAttr("Max Evt/State Days", combine)
     }
 
     attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
@@ -268,6 +268,7 @@ void formatAttrib(){
 
     if (debugEnable) log.debug "after calls attr string = $attrStr"
     updateAttr("html", attrStr)
+    updateAttr("htmlSize", attrStr.length())
 }
 
 String combineAttr(String name, List<String> keys){
@@ -410,7 +411,7 @@ void getPollValues(){
         asynchttpGet("getStateDaysHandler", params)
      
      //Max Event Days
-        Map params =
+        params =
         [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/maxEventAgeDays",

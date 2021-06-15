@@ -64,6 +64,8 @@ metadata
 		attribute "zigbeeChannel","string"
 		attribute "maxEvtDays", "number"
         	attribute "maxStateDays", "number"
+		attribute "zwaveVersion", "string"
+        	attribute "zwaveData", "string"
 		
 		command "sync"
 	}

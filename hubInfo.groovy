@@ -53,12 +53,13 @@
  *    2021-06-11  thebearmay     add units to the jvm and memory attributes
  *    2021-06-12  thebearmay     put a space between unit and values
  *    2021-06-14  thebearmay     add Max State/Event days, required trimming of the html attribute
+ *    2021-06-15  thebearmay     add ZWave Version
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.3.2"}
+static String version() {return "2.4.0"}
 
 metadata {
     definition (
@@ -110,8 +111,9 @@ metadata {
         attribute "zigbeeChannel","string"
         attribute "maxEvtDays", "number"
         attribute "maxStateDays", "number"
-
-            
+        attribute "zwaveVersion", "string"
+        attribute "zwaveData", "string"
+        
     }   
 }
 
@@ -126,6 +128,7 @@ preferences {
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
         input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
+    input("checkZwVersion","bool",title:"Update ZWave Version Attribute", default: true, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -140,14 +143,14 @@ def installed() {
 }
 
 def initialize(){
-    log.trace "Hub Information initialize()"
+    log.trace "Hub Information Driver initialize()"
 // psuedo restart time - can also be set at the device creation or by a manual initialize
     Long restartVal = now()
     updateAttr("lastHubRestart", restartVal)
     def sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
-
+    device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
     runIn(30,configure)
     restartCheck() //reset Restart Time if initialize manually called
 }
@@ -187,7 +190,8 @@ def configure() {
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
     updateAttr("lastUpdated", now())
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable) getPollValues()
+//    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable) 
+    getPollValues()
     if (attribEnable) formatAttrib()
 }
 
@@ -231,7 +235,11 @@ void formatAttrib(){
     String attrStr = "<style>td{text-align:left;}</style><table id='hubInfoTable'>"
     
     attrStr += addToAttr("Name","name")
-    attrStr += addToAttr("Version","hubVersion")
+    if (device.currentValue("zwaveVersion")){
+        List combine = ["hubVersion", "zwaveVersion"]
+        attrStr += combineAttr("Hub / ZWave Version", combine)
+    } else
+        attrStr += addToAttr("Version","hubVersion")
     if(publicIPEnable) {
         List combine = ["localIP", "publicIP"]
         attrStr += combineAttr("IP Local/Public", combine)
@@ -329,7 +337,18 @@ void getPollValues(){
         ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
     }
     // End - Modified from dman2306 Rebooter app
-    
+    // Zwave Version
+    if(checkZwVersion == null) device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
+    if(checkZwVersion){
+        Map paramZ = [
+            uri    : "http://${location.hub.localIP}:8080",
+            path   : "/hub/zwaveVersion",
+            headers: ["Cookie": cookie]
+        ]
+        if (debugEnable) log.debug paramZ
+        asynchttpGet("getZwave", paramZ)
+    }
+ 
     // get Temperature
     if(tempPollEnable) {
         Map params = [
@@ -472,6 +491,24 @@ void getTempHandler(resp, data) {
 }
 
 @SuppressWarnings('unused')
+void getZwave(resp, data) {
+    try {
+        if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+            zwaveData = resp.data.toString()
+            if(debugEnable) log.debug resp.data.toString()
+            updateAttr("zwaveData",zwaveData)
+            device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+        }
+    } catch(ignored) {
+        def respStatus = resp.getStatus()
+        log.warn "getZwave httpResp = $respStatus but returned invalid data, will retry next cycle"    
+    }
+    
+    if(zwaveData) parseZwave(zwaveData)
+    
+}
+
+@SuppressWarnings('unused')
 void getFreeMemHandler(resp, data) {
     try {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
@@ -489,7 +526,6 @@ void getFreeMemHandler(resp, data) {
 void getJvmHandler(resp, data) {
     String jvmWork
     List<String> jvmArr = []
-
     try {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             jvmWork = resp.data.toString()
@@ -587,6 +623,23 @@ void getEvtDaysHandler(resp, data) {
     } 
 }
 
+@SuppressWarnings('unused')
+void parseZwave(zString){
+    Integer start = zString.indexOf('(')+1
+    Integer end = zString.length()-1    
+    wrkStr = zString.substring(start,end)
+
+    List<String> wrkStrPre = wrkStr.split(",")
+    HashMap zMap = [:]    
+    wrkStrPre.each() {
+        List dSplit= it.split(":")
+        if(dSplit.size()>1)
+            zMap.put(dSplit[0].trim(),dSplit[1].trim())
+        else
+           zMap.put(dSplit[0].trim(),null)
+    }
+    updateAttr("zwaveVersion","${zMap.zWaveProtocolVersion}.${zMap.zWaveProtocolSubVersion}")
+}
 
 String getUnitFromState(String attrName){
     String wrkStr = device.currentState(attrName).toString()

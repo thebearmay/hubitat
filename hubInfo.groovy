@@ -53,14 +53,15 @@
  *    2021-06-11  thebearmay     add units to the jvm and memory attributes
  *    2021-06-12  thebearmay     put a space between unit and values
  *    2021-06-14  thebearmay     add Max State/Event days, required trimming of the html attribute
- *    2021-06-15  thebearmay     add ZWave Version
+ *    2021-06-15  thebearmay     add ZWave Version attribute
  *                               2.4.1 temporary version to stop overflow on reboot
+ *    2021-06-16  thebearmay     2.4.2 overflow trap/retry 
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.1"}
+static String version() {return "2.4.2"}
 
 metadata {
     definition (
@@ -144,8 +145,8 @@ def installed() {
 }
 
 def initialize(){
-    log.trace "Hub Information Driver initialize()"
-// psuedo restart time - can also be set at the device creation or by a manual initialize
+    log.trace "Hub Information Driver ${version()} initialized"
+// psuedo restart time - gets reset by calculating from uptime vs current time below
     Long restartVal = now()
     updateAttr("lastHubRestart", restartVal)
     def sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -153,14 +154,14 @@ def initialize(){
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
     device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
     runIn(30,configure)
-    restartCheck() //reset Restart Time if initialize manually called
+    restartCheck() //reset Restart Time using uptime and current timeatamp
 }
 
 @SuppressWarnings('unused')
 def updated(){
     log.trace "updated()"
     if(debugEnable) runIn(1800,logsOff)
-    if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable){
+    if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion){
         unschedule()
         getPollValues()
     }
@@ -191,8 +192,8 @@ def configure() {
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
     updateAttr("lastUpdated", now())
-//    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable) 
-    getPollValues()
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion) 
+        getPollValues()
     if (attribEnable) formatAttrib()
 }
 
@@ -276,7 +277,7 @@ void formatAttrib(){
 
     if (debugEnable) log.debug "after calls attr string = $attrStr"
     updateAttr("html", attrStr)
-    updateAttr("htmlLength",attrStr.length())
+    //updateAttr("htmlLength",attrStr.length())
     if (attrStr.length() > 1024) updateAttr("html", "Max Attribute Size Exceeded: ${attrStr.length()}")
 }
 
@@ -454,7 +455,7 @@ void getPollValues(){
     
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
 
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable) {
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion) {
         if(tempPollRate == null){
             device.updateSetting("tempPollRate",[value:300,type:"number"])
             runIn(300,getPollValues)
@@ -497,9 +498,12 @@ void getZwave(resp, data) {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             zwaveData = resp.data.toString()
             if(debugEnable) log.debug resp.data.toString()
-            if(zwaveData.length() < 1024) updateAttr("zwaveData",zwaveData)
-         else log.warn "Invalid data returned for Zwave, length = ${zwaveData.length()} stopping retrieval of Zwave Version"
-            device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+            if(zwaveData.length() < 1024){
+                updateAttr("zwaveData",zwaveData)
+                device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+            }
+            else log.warn "Invalid data returned for Zwave, length = ${zwaveData.length()} will retry"
+
         }
     } catch(ignored) {
         def respStatus = resp.getStatus()

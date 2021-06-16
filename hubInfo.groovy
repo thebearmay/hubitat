@@ -663,7 +663,7 @@ void parseZwave(zString){
     wrkStr = zString.substring(start,end)
     wrkStr = wrkStr.replace("(","[")
     wrkStr = wrkStr.replace(")","]")
-    updateAttr("wrkStr",wrkStr)
+    
     HashMap zMap = evaluate(wrkStr)
 
     updateAttr("zwaveSDKVersion","${zMap?.zWaveProtocolVersion}.${zMap?.zWaveProtocolSubVersion}")

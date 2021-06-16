@@ -57,12 +57,13 @@
  *                               2.4.1 temporary version to stop overflow on reboot
  *    2021-06-16  thebearmay     2.4.2 overflow trap/retry
  *                               2.4.3 firmware0Version and subVersion is the radio firmware. target 1 version and subVersion is the SDK
+ *                               2.4.4 restrict Zwave Version query to C7
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.2"}
+static String version() {return "2.4.4"}
 
 metadata {
     definition (
@@ -132,7 +133,7 @@ preferences {
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
         input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
-    input("checkZwVersion","bool",title:"Update ZWave Version Attribute", default: true, submitOnChange: true)
+    input("checkZwVersion","bool",title:"Update ZWave Version Attribute (C7 only)", default: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -154,7 +155,14 @@ def initialize(){
     def sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
-    device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
+    
+    if(hub.hardwareID == "000D") 
+        device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
+    else {
+        device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+        updateAttr("zwaveData", null)
+    }
+    
     runIn(30,configure)
     restartCheck() //reset Restart Time using uptime and current timeatamp
 }
@@ -344,7 +352,11 @@ void getPollValues(){
     }
     // End - Modified from dman2306 Rebooter app
     // Zwave Version
-    if(checkZwVersion == null) device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
+    if(checkZwVersion == null && hub.hardwareID == "000D") 
+        device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
+    else 
+        device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+
     if(checkZwVersion){
         Map paramZ = [
             uri    : "http://${location.hub.localIP}:8080",
@@ -635,39 +647,21 @@ void getEvtDaysHandler(resp, data) {
 
 @SuppressWarnings('unused')
 void parseZwave(zString){
-/*
-    Integer start = zString.indexOf('(')+1
-    Integer end = zString.length()-1  
-    
-    if(start == -1 || end == -1) return //empty or invalid string - possibly non-C7
-    
-    wrkStr = zString.substring(start,end)
-
-    List<String> wrkStrPre = wrkStr.split(",")
-    HashMap zMap = [:]    
-    wrkStrPre.each() {
-        List dSplit= it.split(":")
-        if(dSplit.size()>1)
-            zMap.put(dSplit[0].trim(),dSplit[1].trim())
-        else
-           zMap.put(dSplit[0].trim(),null)
-    }
-    updateAttr("zwaveSDKVersion","${zMap?.zWaveProtocolVersion}.${zMap?.zWaveProtocolSubVersion}")
-    updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}")
-*/
     Integer start = zString.indexOf('(')
     Integer end = zString.length()  
     
-    if(start == -1 || end < 1) return //empty or invalid string - possibly non-C7
-  
-    wrkStr = zString.substring(start,end)
-    wrkStr = wrkStr.replace("(","[")
-    wrkStr = wrkStr.replace(")","]")
+    if(start == -1 || end < 1) //empty or invalid string - possibly non-C7
+        updateAttr("zwaveData",null)
+    else {
+        wrkStr = zString.substring(start,end)
+        wrkStr = wrkStr.replace("(","[")
+        wrkStr = wrkStr.replace(")","]")
+        updateAttr("wrkStr",wrkStr)
+        HashMap zMap = evaluate(wrkStr)
     
-    HashMap zMap = evaluate(wrkStr)
-
-    updateAttr("zwaveSDKVersion","${zMap?.zWaveProtocolVersion}.${zMap?.zWaveProtocolSubVersion}")
-    updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}")
+        updateAttr("zwaveSDKVersion","${zMap.targetVersions[0].version}.${zMap.targetVersions[0].subVersion}")
+        updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}")
+    }
 }
 
 String getUnitFromState(String attrName){

@@ -63,7 +63,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.5"}
+static String version() {return "2.4.6"}
 
 metadata {
     definition (
@@ -156,12 +156,12 @@ def initialize(){
     updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
     
-    if(hub.hardwareID == "000D") 
+//    if(hub.hardwareID == "000D") 
         device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
-    else {
-        device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
-        updateAttr("zwaveData", null)
-    }
+//    else {
+//        device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+//        updateAttr("zwaveData", null)
+//    }
     
     runIn(30,configure)
     restartCheck() //reset Restart Time using uptime and current timeatamp
@@ -352,10 +352,10 @@ void getPollValues(){
     }
     // End - Modified from dman2306 Rebooter app
     // Zwave Version
-    if(checkZwVersion == null && hub.hardwareID == "000D") 
+    if(checkZwVersion == null)// && hub.hardwareID == "000D") 
         device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
-    else 
-        device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+   // else 
+   //     device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
 
     if(checkZwVersion){
         Map paramZ = [

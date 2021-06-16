@@ -498,6 +498,7 @@ void getZwave(resp, data) {
             zwaveData = resp.data.toString()
             if(debugEnable) log.debug resp.data.toString()
             if(zwaveData.length() < 1024) updateAttr("zwaveData",zwaveData)
+         else log.warn "Invalid data returned for Zwave, length = ${zwaveData.length()} stopping retrieval of Zwave Version"
             device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
         }
     } catch(ignored) {
@@ -505,7 +506,7 @@ void getZwave(resp, data) {
         log.warn "getZwave httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
     
-    if(zwaveData) parseZwave(zwaveData)
+    if(zwaveData && zwaveData.length() < 1024) parseZwave(zwaveData)
     
 }
 

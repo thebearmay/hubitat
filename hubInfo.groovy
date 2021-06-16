@@ -55,7 +55,8 @@
  *    2021-06-14  thebearmay     add Max State/Event days, required trimming of the html attribute
  *    2021-06-15  thebearmay     add ZWave Version attribute
  *                               2.4.1 temporary version to stop overflow on reboot
- *    2021-06-16  thebearmay     2.4.2 overflow trap/retry 
+ *    2021-06-16  thebearmay     2.4.2 overflow trap/retry
+ *                               2.4.3 firmware0Version and subVersion is the radio firmware. target 1 version and subVersion is the SDK
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -114,6 +115,7 @@ metadata {
         attribute "maxEvtDays", "number"
         attribute "maxStateDays", "number"
         attribute "zwaveVersion", "string"
+        attribute "zwaveSDKVersion", "string"        
         attribute "zwaveData", "string"
         
     }   
@@ -237,11 +239,7 @@ void formatAttrib(){
     String attrStr = "<style>td{text-align:left;}</style><table id='hubInfoTable'>"
     
     attrStr += addToAttr("Name","name")
-    if (device.currentValue("zwaveVersion")){
-        List combine = ["hubVersion", "zwaveVersion"]
-        attrStr += combineAttr("Hub / ZWave Version", combine)
-    } else
-        attrStr += addToAttr("Version","hubVersion")
+    attrStr += addToAttr("Version","hubVersion")
     if(publicIPEnable) {
         List combine = ["localIP", "publicIP"]
         attrStr += combineAttr("IP Local/Public", combine)
@@ -273,6 +271,12 @@ void formatAttrib(){
     }
     
     attrStr += addToAttr("ZB Channel","zigbeeChannel")
+    
+    if (device.currentValue("zwaveVersion")){
+        List combine = ["zwaveVersion","zwaveVersion"]
+        attrStr += combineAttr("ZW Radio/SDK", combine)   
+    }
+    
     attrStr += "</table>"
 
     if (debugEnable) log.debug "after calls attr string = $attrStr"
@@ -632,7 +636,10 @@ void getEvtDaysHandler(resp, data) {
 @SuppressWarnings('unused')
 void parseZwave(zString){
     Integer start = zString.indexOf('(')+1
-    Integer end = zString.length()-1    
+    Integer end = zString.length()-1  
+    
+    if(start == -1 || end == -1) return //empty or invalid string - possibly non-C7
+    
     wrkStr = zString.substring(start,end)
 
     List<String> wrkStrPre = wrkStr.split(",")
@@ -644,7 +651,9 @@ void parseZwave(zString){
         else
            zMap.put(dSplit[0].trim(),null)
     }
-    updateAttr("zwaveVersion","${zMap.zWaveProtocolVersion}.${zMap.zWaveProtocolSubVersion}")
+    updateAttr("zwaveSDKVersion","${zMap?.zWaveProtocolVersion}.${zMap?.zWaveProtocolSubVersion}")
+    updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}")
+
 }
 
 String getUnitFromState(String attrName){

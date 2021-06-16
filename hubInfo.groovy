@@ -635,6 +635,7 @@ void getEvtDaysHandler(resp, data) {
 
 @SuppressWarnings('unused')
 void parseZwave(zString){
+/*
     Integer start = zString.indexOf('(')+1
     Integer end = zString.length()-1  
     
@@ -653,7 +654,20 @@ void parseZwave(zString){
     }
     updateAttr("zwaveSDKVersion","${zMap?.zWaveProtocolVersion}.${zMap?.zWaveProtocolSubVersion}")
     updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}")
+*/
+    Integer start = zString.indexOf('(')
+    Integer end = zString.length()  
+    
+    if(start == -1 || end < 1) return //empty or invalid string - possibly non-C7
+  
+    wrkStr = zString.substring(start,end)
+    wrkStr = wrkStr.replace("(","[")
+    wrkStr = wrkStr.replace(")","]")
+    updateAttr("wrkStr",wrkStr)
+    HashMap zMap = evaluate(wrkStr)
 
+    updateAttr("zwaveSDKVersion","${zMap?.zWaveProtocolVersion}.${zMap?.zWaveProtocolSubVersion}")
+    updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}")
 }
 
 String getUnitFromState(String attrName){

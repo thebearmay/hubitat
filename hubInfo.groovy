@@ -57,13 +57,13 @@
  *                               2.4.1 temporary version to stop overflow on reboot
  *    2021-06-16  thebearmay     2.4.2 overflow trap/retry
  *                               2.4.3 firmware0Version and subVersion is the radio firmware. target 1 version and subVersion is the SDK
- *                               2.4.4 restrict Zwave Version query to C7
+ *                               2.4.4/5 restrict Zwave Version query to C7
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.4"}
+static String version() {return "2.4.5"}
 
 metadata {
     definition (
@@ -133,7 +133,7 @@ preferences {
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
         input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
-    input("checkZwVersion","bool",title:"Update ZWave Version Attribute (C7 only)", default: false, submitOnChange: true)
+    input("checkZwVersion","bool",title:"Update ZWave Version Attribute", default: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -650,7 +650,7 @@ void parseZwave(zString){
     Integer start = zString.indexOf('(')
     Integer end = zString.length()  
     
-    if(start == -1 || end < 1) //empty or invalid string - possibly non-C7
+    if(start == -1 || end < 1 || zString.indexOf("starting up")) //empty or invalid string - possibly non-C7
         updateAttr("zwaveData",null)
     else {
         wrkStr = zString.substring(start,end)

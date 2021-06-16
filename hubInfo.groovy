@@ -54,12 +54,13 @@
  *    2021-06-12  thebearmay     put a space between unit and values
  *    2021-06-14  thebearmay     add Max State/Event days, required trimming of the html attribute
  *    2021-06-15  thebearmay     add ZWave Version
+ *                               2.4.1 temporary version to stop overflow on reboot
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.0"}
+static String version() {return "2.4.1"}
 
 metadata {
     definition (
@@ -496,7 +497,7 @@ void getZwave(resp, data) {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             zwaveData = resp.data.toString()
             if(debugEnable) log.debug resp.data.toString()
-            updateAttr("zwaveData",zwaveData)
+            if(zwaveData.length() < 1024) updateAttr("zwaveData",zwaveData)
             device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
         }
     } catch(ignored) {

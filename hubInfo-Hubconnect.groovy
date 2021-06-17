@@ -66,6 +66,8 @@ metadata
         	attribute "maxStateDays", "number"
 		attribute "zwaveVersion", "string"
         	attribute "zwaveData", "string"
+	        attribute "macAddr", "string"
+	        attribute "hubModel", "string"		
 		
 		command "sync"
 	}

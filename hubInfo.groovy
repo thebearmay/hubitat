@@ -58,12 +58,13 @@
  *    2021-06-16  thebearmay     2.4.2 overflow trap/retry
  *                               2.4.3 firmware0Version and subVersion is the radio firmware. target 1 version and subVersion is the SDK
  *                               2.4.4/5 restrict Zwave Version query to C7
+ *    2021-06-17  thebearmay     2.4.8 - add MAC address and hub model, code cleanup, better compatibility check, zwaveVersion check override
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.6"}
+static String version() {return "2.4.8"}
 
 metadata {
     definition (
@@ -118,6 +119,8 @@ metadata {
         attribute "zwaveVersion", "string"
         attribute "zwaveSDKVersion", "string"        
         attribute "zwaveData", "string"
+        attribute "macAddr", "string"
+        attribute "hubModel", "string"
         
     }   
 }
@@ -133,7 +136,8 @@ preferences {
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
         input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
-    input("checkZwVersion","bool",title:"Update ZWave Version Attribute", default: false, submitOnChange: true)
+    input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", default: false, submitOnChange: true)
+    input("zwLocked", "bool", title: "Never Run ZWave Version Update", default:false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -156,13 +160,10 @@ def initialize(){
     updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
     
-//    if(hub.hardwareID == "000D") 
+    // will additionally be checked before execution to determine if C-7 or above
+    if(!zwLocked)
         device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
-//    else {
-//        device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
-//        updateAttr("zwaveData", null)
-//    }
-    
+
     runIn(30,configure)
     restartCheck() //reset Restart Time using uptime and current timeatamp
 }
@@ -201,6 +202,8 @@ def configure() {
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
+    updateAttr("macAddr", getMacAddress())
+    updateAttr("hubModel", getModel())
     updateAttr("lastUpdated", now())
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion) 
         getPollValues()
@@ -247,12 +250,19 @@ void formatAttrib(){
     String attrStr = "<style>td{text-align:left;}</style><table id='hubInfoTable'>"
     
     attrStr += addToAttr("Name","name")
-    attrStr += addToAttr("Version","hubVersion")
+    //
+     if(device.currentValue("hubModel")){
+            List combine = ["hubModel", "hubVersion"]
+            attrStr += combineAttr("Version", combine)
+     } else 
+         attrStr += addToAttr("Version","hubVersion")
+    
     if(publicIPEnable) {
         List combine = ["localIP", "publicIP"]
         attrStr += combineAttr("IP Local/Public", combine)
     } else
         attrStr += addToAttr("IP Addr","localIP")
+    attrStr += addToAttr("MAC", "macAddr")
     if(cpuPollEnabled) {
         attrStr += addToAttr("Free Mem","freeMemory","int")
         if(device.currentValue("cpu5Min")){
@@ -333,6 +343,22 @@ String addToAttr(String name, String key, String convert = "none") {
     return retResult
 }
 
+String getModel(){
+    httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
+        String model = res.data.device.modelName
+        return model
+    }  
+}
+
+boolean isCompatible(minLevel) { //check to see if the hub version meets the minimum requirement
+    httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
+        String model = res.data.device.modelName
+        String[] tokens = model.split('-')
+        String revision = tokens.last()
+        return (Integer.parseInt(revision) >= minLevel)
+    }
+}
+
 void getPollValues(){
     // start - Modified from dman2306 Rebooter app
     String cookie
@@ -351,13 +377,14 @@ void getPollValues(){
         ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
     }
     // End - Modified from dman2306 Rebooter app
+    
     // Zwave Version
-    if(checkZwVersion == null)// && hub.hardwareID == "000D") 
+    if(checkZwVersion == null && isCompatible(7))
         device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
-   // else 
-   //     device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+    else if(checkZwVersion == null)
+        device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
 
-    if(checkZwVersion){
+    if(checkZwVersion && isCompatible(7) && !zwLocked){
         Map paramZ = [
             uri    : "http://${location.hub.localIP}:8080",
             path   : "/hub/zwaveVersion",
@@ -365,6 +392,9 @@ void getPollValues(){
         ]
         if (debugEnable) log.debug paramZ
         asynchttpGet("getZwave", paramZ)
+    } else if (checkZwVersion) {
+        device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+        updateAttr("zwaveData",null)
     }
  
     // get Temperature
@@ -512,7 +542,7 @@ void getTempHandler(resp, data) {
 void getZwave(resp, data) {
     try {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
-            zwaveData = resp.data.toString()
+            String zwaveData = resp.data.toString()
             if(debugEnable) log.debug resp.data.toString()
             if(zwaveData.length() < 1024){
                 updateAttr("zwaveData",zwaveData)

@@ -64,7 +64,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.8"}
+static String version() {return "2.4.9"}
 
 metadata {
     definition (
@@ -121,6 +121,7 @@ metadata {
         attribute "zwaveData", "string"
         attribute "macAddr", "string"
         attribute "hubModel", "string"
+
         
     }   
 }
@@ -344,19 +345,23 @@ String addToAttr(String name, String key, String convert = "none") {
 }
 
 String getModel(){
-    httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
-        String model = res.data.device.modelName
-        return model
-    }  
+    try{
+        httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
+            String model = res.data.device.modelName
+            return model
+        }
+    } catch(ignore) {
+        return ""
+    }
 }
 
 boolean isCompatible(minLevel) { //check to see if the hub version meets the minimum requirement
-    httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
-        String model = res.data.device.modelName
-        String[] tokens = model.split('-')
-        String revision = tokens.last()
-        return (Integer.parseInt(revision) >= minLevel)
-    }
+    String model = device.currentValue("hubModel")
+    if(!model) model = getModel()
+    String[] tokens = model.split('-')
+    String revision = tokens.last()
+    return (Integer.parseInt(revision) >= minLevel)
+
 }
 
 void getPollValues(){
@@ -383,6 +388,7 @@ void getPollValues(){
         device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
     else if(checkZwVersion == null)
         device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
+    if(zwLocked == null) device.updateSetting("zwLocked",[value:"false",type:"bool"])
 
     if(checkZwVersion && isCompatible(7) && !zwLocked){
         Map paramZ = [
@@ -546,17 +552,15 @@ void getZwave(resp, data) {
             if(debugEnable) log.debug resp.data.toString()
             if(zwaveData.length() < 1024){
                 updateAttr("zwaveData",zwaveData)
+                parseZwave(zwaveData)
                 device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
             }
             else log.warn "Invalid data returned for Zwave, length = ${zwaveData.length()} will retry"
-
         }
     } catch(ignored) {
-        def respStatus = resp.getStatus()
-        log.warn "getZwave httpResp = $respStatus but returned invalid data, will retry next cycle"    
+        log.warn "getZwave Parsing Error"    
     }
-    
-    if(zwaveData && zwaveData.length() < 1024) parseZwave(zwaveData)
+ 
     
 }
 
@@ -680,15 +684,15 @@ void parseZwave(zString){
     Integer start = zString.indexOf('(')
     Integer end = zString.length()  
     
-    if(start == -1 || end < 1 || zString.indexOf("starting up")) //empty or invalid string - possibly non-C7
+    if(start == -1 || end < 1 || zString.indexOf("starting up") > 0 ){ //empty or invalid string - possibly non-C7
         updateAttr("zwaveData",null)
-    else {
+    }else {
         wrkStr = zString.substring(start,end)
         wrkStr = wrkStr.replace("(","[")
         wrkStr = wrkStr.replace(")","]")
-        updateAttr("wrkStr",wrkStr)
+
         HashMap zMap = evaluate(wrkStr)
-    
+        
         updateAttr("zwaveSDKVersion","${zMap.targetVersions[0].version}.${zMap.targetVersions[0].subVersion}")
         updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}")
     }

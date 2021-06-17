@@ -58,7 +58,7 @@
  *    2021-06-16  thebearmay     2.4.2 overflow trap/retry
  *                               2.4.3 firmware0Version and subVersion is the radio firmware. target 1 version and subVersion is the SDK
  *                               2.4.4/5 restrict Zwave Version query to C7
- *    2021-06-17  thebearmay     2.4.8 - add MAC address and hub model, code cleanup, better compatibility check, zwaveVersion check override
+ *    2021-06-17  thebearmay     2.4.8-10 - add MAC address and hub model, code cleanup, better compatibility check, zwaveVersion check override
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper

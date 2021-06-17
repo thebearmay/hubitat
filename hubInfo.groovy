@@ -64,7 +64,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.9"}
+static String version() {return "2.4.10"}
 
 metadata {
     definition (
@@ -154,11 +154,6 @@ def installed() {
 
 def initialize(){
     log.trace "Hub Information Driver ${version()} initialized"
-// psuedo restart time - gets reset by calculating from uptime vs current time below
-    Long restartVal = now()
-    updateAttr("lastHubRestart", restartVal)
-    def sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    updateAttr("lastHubRestartFormatted",sdf.format(restartVal))
     if (!security)  device.updateSetting("security",[value:"false",type:"bool"])
     
     // will additionally be checked before execution to determine if C-7 or above
@@ -166,7 +161,7 @@ def initialize(){
         device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
 
     runIn(30,configure)
-    restartCheck() //reset Restart Time using uptime and current timeatamp
+    restartCheck() //set Restart Time using uptime and current timeatamp
 }
 
 @SuppressWarnings('unused')
@@ -334,10 +329,6 @@ String addToAttr(String name, String key, String convert = "none") {
     if(curVal){
         if (convert == "int"){
             retResult += curVal.toInteger().toString()+" "+attrUnit
-/*        } else if (name=="Temperature"){
-            // span uses integer value to allow CSS override 
-            retResult += "<span class=\"temp-${device.currentValue('temperature').toInteger()}\">" + curVal.toString() + attrUnit + "</span>"
-*/
         } else retResult += curVal.toString() + " "+attrUnit
     }
     retResult += '</td></tr>'
@@ -355,7 +346,7 @@ String getModel(){
     }
 }
 
-boolean isCompatible(minLevel) { //check to see if the hub version meets the minimum requirement
+boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement
     String model = device.currentValue("hubModel")
     if(!model) model = getModel()
     String[] tokens = model.split('-')
@@ -734,16 +725,16 @@ String altGetUnitProc(String wrkStr) {
 }
 
 void restartCheck() {
-    Long rsDate = Long.parseLong(device.currentValue('lastHubRestart'))
+ //   Long rsDate = Long.parseLong(device.currentValue('lastHubRestart'))
     if(debugEnable) log.debug "$rsDate"
     Long ut = now() - (location.hub.uptime.toLong()*1000)
     Date upDate = new Date(ut)
     if(debugEnable) log.debug "RS: $rsDate  UT:$ut  upTime Date: $upDate   upTime: ${location.hub.uptime}"
-    if(rsDate > ut){
+ //   if(rsDate > ut){
         updateAttr("lastHubRestart", ut)
         SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         updateAttr("lastHubRestartFormatted",sdf.format(upDate))
-    }
+ //   }
 }
 
 @SuppressWarnings('unused')

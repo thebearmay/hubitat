@@ -59,12 +59,13 @@
  *                               2.4.3 firmware0Version and subVersion is the radio firmware. target 1 version and subVersion is the SDK
  *                               2.4.4/5 restrict Zwave Version query to C7
  *    2021-06-17  thebearmay     2.4.8-10 - add MAC address and hub model, code cleanup, better compatibility check, zwaveVersion check override
+ *    2021-06-17  thebearmay     freeMemPollEnabled was combined with the JVM/CPU polling when creating the HTML
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.10"}
+static String version() {return "2.4.11"}
 
 metadata {
     definition (
@@ -258,9 +259,14 @@ void formatAttrib(){
         attrStr += combineAttr("IP Local/Public", combine)
     } else
         attrStr += addToAttr("IP Addr","localIP")
+    
     attrStr += addToAttr("MAC", "macAddr")
+    
+    if(freeMemPollEnabled)
+           attrStr += addToAttr("Free Mem","freeMemory","int")
+    
     if(cpuPollEnabled) {
-        attrStr += addToAttr("Free Mem","freeMemory","int")
+ 
         if(device.currentValue("cpu5Min")){
             List combine = ["cpu5Min", "cpuPct"]
             attrStr += combineAttr("CPU Load/Load%", combine)

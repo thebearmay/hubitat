@@ -60,12 +60,13 @@
  *                               2.4.4/5 restrict Zwave Version query to C7
  *    2021-06-17  thebearmay     2.4.8-10 - add MAC address and hub model, code cleanup, better compatibility check, zwaveVersion check override
  *    2021-06-17  thebearmay     freeMemPollEnabled was combined with the JVM/CPU polling when creating the HTML
- */
+ *    2021-06-19  thebearmay     fix the issue where on a driver update, if configure isn't a hubModel and macAddr weren't updated
+*/
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.11"}
+static String version() {return "2.4.12"}
 
 metadata {
     definition (
@@ -248,18 +249,20 @@ void formatAttrib(){
     
     attrStr += addToAttr("Name","name")
     //
-     if(device.currentValue("hubModel")){
-            List combine = ["hubModel", "hubVersion"]
-            attrStr += combineAttr("Version", combine)
-     } else 
-         attrStr += addToAttr("Version","hubVersion")
+     if(!device.currentValue("hubModel"))
+         updateAttr("hubModel",getModel())
+     List combineH = ["hubModel", "hubVersion"]
+     attrStr += combineAttr("Version", combineH)
+ //    } else 
+ //        attrStr += addToAttr("Version","hubVersion")
     
     if(publicIPEnable) {
         List combine = ["localIP", "publicIP"]
         attrStr += combineAttr("IP Local/Public", combine)
     } else
         attrStr += addToAttr("IP Addr","localIP")
-    
+    if(!device.currentValue("macAddr"))
+        updateAttr("macAddr", getMacAddress())
     attrStr += addToAttr("MAC", "macAddr")
     
     if(freeMemPollEnabled)
@@ -354,7 +357,10 @@ String getModel(){
 
 boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement
     String model = device.currentValue("hubModel")
-    if(!model) model = getModel()
+    if(!model){
+        model = getModel()
+        updateAttr("hubModel", model)
+    }
     String[] tokens = model.split('-')
     String revision = tokens.last()
     return (Integer.parseInt(revision) >= minLevel)

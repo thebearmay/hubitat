@@ -25,10 +25,11 @@
  *    2021-05-14  thebearmay     add option to use old method if desired
  *    2021-06-21  thebearmay	 add a dummy refresh method to deal with phantom command
  *    2021-06-22  thebearmay     code for null return
+ *                               add regEx pattern to check address format validity
  *
  */
 
-static String version()	{  return '2.1.2'  }
+static String version()	{  return '2.1.3'  }
 
 metadata {
     definition (
@@ -108,54 +109,60 @@ def sendPing(ipAddress){
     if(numPings == null) numPings = 3
     configure()
     updateAttr("lastIpAddress", ipAddress)
-    if (location.hub.firmwareVersionString > "2.2.6.140" && !useOldMethod){
-        updateAttr("responseReady",false)
-        updateAttr("pingReturn","Pinging $ipAddress") 
-        hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ipAddress, numPings.toInteger())
-        int pTran = pingData.packetsTransmitted.toInteger()
-        if (pTran == 0){ // 2.2.7.121 bug returns all zeroes on not found
-            pingData.packetsTransmitted = numPings
-            pingData.packetLoss = 100
-        }
-        updateAttr("percentLoss", pingData.packetLoss,"%")
-        String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, %Lost: ${pingData.packetLoss}"
-        updateAttr("pingStats", pingStats) 
-        updateAttr("min",pingData.rttMin,"ms")
-        updateAttr("avg",pingData.rttAvg,"ms")
-        updateAttr("max",pingData.rttMax,"ms")
-        updateAttr("mdev","N/A")
-        updateAttr("pingReturn",pingData)
-        if (pingData.packetLoss < 100) 
-            updateAttr("presence","present")
-        else 
-            updateAttr("presence","not present")
+    if(!validIP (ipAddress)) {
+        updateAttr("pingReturn", "IP address format invalid")
+        updateAttr("presence","not present")
         updateAttr("responseReady",true)
-	if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
     } else {
-        if(security) {
-            httpPost(
-                [
-                    uri: "http://127.0.0.1:8080",
-                    path: "/login",
-                    query: [ loginRedirect: "/" ],
-                    body: [
-                        username: username,
-                        password: password,
-                        submit: "Login"
+        if (location.hub.firmwareVersionString > "2.2.6.140" && !useOldMethod){
+            updateAttr("responseReady",false)
+            updateAttr("pingReturn","Pinging $ipAddress") 
+            hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ipAddress, numPings.toInteger())
+            int pTran = pingData.packetsTransmitted.toInteger()
+            if (pTran == 0){ // 2.2.7.121 bug returns all zeroes on not found
+                pingData.packetsTransmitted = numPings
+                pingData.packetLoss = 100
+            }
+            updateAttr("percentLoss", pingData.packetLoss,"%")
+            String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, %Lost: ${pingData.packetLoss}"
+            updateAttr("pingStats", pingStats) 
+            updateAttr("min",pingData.rttMin,"ms")
+            updateAttr("avg",pingData.rttAvg,"ms")
+            updateAttr("max",pingData.rttMax,"ms")
+            updateAttr("mdev","N/A")
+            updateAttr("pingReturn",pingData)
+            if (pingData.packetLoss < 100) 
+                updateAttr("presence","present")
+            else 
+                updateAttr("presence","not present")
+            updateAttr("responseReady",true)
+	        if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
+        } else {
+            if(security) {
+                httpPost(
+                    [
+                        uri: "http://127.0.0.1:8080",
+                        path: "/login",
+                        query: [ loginRedirect: "/" ],
+                        body: [
+                            username: username,
+                            password: password,
+                            submit: "Login"
+                        ]
                     ]
-                ]
-            ) { resp -> cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0) }
-        }    
-        params = [
-            uri: "http://${location.hub.localIP}:8080",
-            path:"/hub/networkTest/ping/"+ipAddress,
-            headers: [ "Cookie": cookie ]
-        ]
-        if(debugEnable)log.debug params
-        updateAttr("responseReady",false)
-        updateAttr("pingReturn","Pinging $ipAddress")  
+                ) { resp -> cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0) }
+            }    
+            params = [
+                uri: "http://${location.hub.localIP}:8080",
+                path:"/hub/networkTest/ping/"+ipAddress,
+                headers: [ "Cookie": cookie ]
+            ]
+            if(debugEnable)log.debug params
+            updateAttr("responseReady",false)
+            updateAttr("pingReturn","Pinging $ipAddress")  
 	
-        asynchttpGet("sendPingHandler", params)
+            asynchttpGet("sendPingHandler", params)
+        }
     }
     
 }
@@ -216,6 +223,12 @@ def extractValues(strWork) {
     if (percentLoss < 100 ) updateAttr("presence","present")
     else updateAttr("presence","not present")
     updateAttr("responseReady", true)
+}
+       
+def validIP(ipAddress){
+    regxPattern =/^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+    boolean match = ipAddress ==~ regxPattern
+    return match
 }
 
 def updated(){

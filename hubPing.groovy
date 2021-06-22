@@ -99,6 +99,7 @@ def initialize(){
 }
 
 def refresh() {
+	unschedule(refresh)
 }
 
 def sendPing(ipAddress){

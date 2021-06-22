@@ -24,10 +24,11 @@
  *    2021-05-10  thebearmay	 Fix the scheduler option under the new method
  *    2021-05-14  thebearmay     add option to use old method if desired
  *    2021-06-21  thebearmay	 add a dummy refresh method to deal with phantom command
+ *    2021-06-22  thebearmay     code for null return
  *
  */
 
-static String version()	{  return '2.1.1'  }
+static String version()	{  return '2.1.2'  }
 
 metadata {
     definition (
@@ -182,7 +183,10 @@ def sendPingHandler(resp, data) {
 }
 
 def extractValues(strWork) {
-    startInx = strWork.indexOf("%")
+    if(strWork == null)
+        startInx = -1
+    else
+        startInx = strWork.indexOf("%")
     if(debubEnable)log.debug startInx
     if (startInx == -1){
         updateAttr("percentLoss",100,"%")

@@ -1,10 +1,10 @@
 {
   "packageName": "Hubitat Ping Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-06-21",
-  "releaseNotes": "2.1.1 - add dummy refresh method\n2.1.0 - add option to used HTTP endpoint instead of API\n2.0.4 - fix scheduling bug with new method\n2.0.3 - fix zeroes bug under 2.2.7.121\n2.0.2 - Fix new method min value reporting\n2.0.1 - fix a presence error with new method\n2.0.0 - Use the new ping method if hub on 2.2.7.x or greater",
+  "dateReleased": "2021-06-22",
+  "releaseNotes": "2.1.2 - handle null return\n2.1.1 - add dummy refresh method\n2.1.0 - add option to used HTTP endpoint instead of API\n2.0.4 - fix scheduling bug with new method\n2.0.3 - fix zeroes bug under 2.2.7.121\n2.0.2 - Fix new method min value reporting\n2.0.1 - fix a presence error with new method\n2.0.0 - Use the new ping method if hub on 2.2.7.x or greater",
   "drivers": [
     {
       "id": "33dc6ffb-8d25-4cf0-821d-45ecbac5bfb2",

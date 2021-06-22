@@ -23,10 +23,11 @@
  *    2021-05-06  thebearmay     2.2.7.121 returns all zeroes on ping not found 
  *    2021-05-10  thebearmay	 Fix the scheduler option under the new method
  *    2021-05-14  thebearmay     add option to use old method if desired
+ *    2021-06-21  thebearmay	 add a dummy refresh method to deal with phantom command
  *
  */
 
-static String version()	{  return '2.1.0'  }
+static String version()	{  return '2.1.1'  }
 
 metadata {
     definition (
@@ -95,9 +96,10 @@ def updateAttr(aKey, aValue, aUnit){
 }
 
 def initialize(){
-
 }
 
+def refresh() {
+}
 
 def sendPing(ipAddress){
     if(ipAddress == null) ipAddress = data.ip

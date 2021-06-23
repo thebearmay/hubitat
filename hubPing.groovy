@@ -26,10 +26,12 @@
  *    2021-06-21  thebearmay	 add a dummy refresh method to deal with phantom command
  *    2021-06-22  thebearmay     code for null return
  *                               add regEx pattern to check address format validity
+ *    2021-06-23  thebearmay     HTTP endpoint method returns status 408 when pinging 8.8.8.8 and 8.8.4.4, place message in return attribute instead
+ *                                of suppressing
  *
  */
 
-static String version()	{  return '2.1.3'  }
+static String version()	{  return '2.1.4'  }
 
 metadata {
     definition (
@@ -129,7 +131,9 @@ def sendPing(ipAddress){
             updateAttr("min",pingData.rttMin,"ms")
             updateAttr("avg",pingData.rttAvg,"ms")
             updateAttr("max",pingData.rttMax,"ms")
-            updateAttr("mdev","N/A")
+            //mdev not returned, calculate using min, max and avg (accuracy decreases proportionally to the number of pings)
+            Double mdev = ((pingData.rttAvg - pingData.rttMin) + (pingData.rttMax - pingData.rttAvg))/2
+            updateAttr("mdev",mdev.round(3))
             updateAttr("pingReturn",pingData)
             if (pingData.packetLoss < 100) 
                 updateAttr("presence","present")
@@ -173,8 +177,8 @@ def sendPingHandler(resp, data) {
 	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
 		    strWork = resp.data.toString()
     		if(debugEnable) log.debug strWork
-	        sendEvent(name:"pingReturn",value:strWork)
-  	    }
+	        updateAttr("pingReturn",strWork)
+        } else updateAttr("pingReturn", "Ping Error - Status ${resp.getStatus()}")
     } catch(Exception ex) { 
         errFlag = 1
         respStatus = resp.getStatus()

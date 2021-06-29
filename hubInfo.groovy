@@ -61,12 +61,13 @@
  *    2021-06-17  thebearmay     2.4.8-10 - add MAC address and hub model, code cleanup, better compatibility check, zwaveVersion check override
  *    2021-06-17  thebearmay     freeMemPollEnabled was combined with the JVM/CPU polling when creating the HTML
  *    2021-06-19  thebearmay     fix the issue where on a driver update, if configure isn't a hubModel and macAddr weren't updated
+ *    2021-06-29  thebearmay     2.2.8.x removes JVM data -> v2.5.0
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.4.12"}
+static String version() {return "2.5.0"}
 
 metadata {
     definition (
@@ -274,9 +275,10 @@ void formatAttrib(){
             List combine = ["cpu5Min", "cpuPct"]
             attrStr += combineAttr("CPU Load/Load%", combine)
         }
-
-        List combineA = ["jvmTotal", "jvmFree", "jvmFreePct"]
-        attrStr += combineAttr("JVM Tot/Free/%", combineA)
+        if(location.hub.firmwareVersionString <= "2.2.8.0"){
+            List combineA = ["jvmTotal", "jvmFree", "jvmFreePct"]
+            attrStr += combineAttr("JVM Tot/Free/%", combineA)
+        }
     }
 
     if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
@@ -606,18 +608,26 @@ void getJvmHandler(resp, data) {
                 jvmArr = it.split(",")
         }
         if(jvmArr.size() > 1){
-            Integer jvmTotal = jvmArr[2].toInteger()
-            updateAttr("jvmTotal",jvmTotal, "KB")
-            Integer jvmFree = jvmArr[3].toInteger()
-            updateAttr("jvmFree",jvmFree, "KB")
-            Double jvmFreePct = (jvmFree/jvmTotal)*100
-            updateAttr("jvmFreePct",jvmFreePct.round(1),"%")
-            if(jvmArr.size() > 4) {
-                Double cpuWork=jvmArr[4].toDouble()
+            if(location.hub.firmwareVersionString <= "2.2.8.0"){
+                Integer jvmTotal = jvmArr[2].toInteger()
+                updateAttr("jvmTotal",jvmTotal, "KB")
+                Integer jvmFree = jvmArr[3].toInteger()
+                updateAttr("jvmFree",jvmFree, "KB")
+                Double jvmFreePct = (jvmFree/jvmTotal)*100
+                updateAttr("jvmFreePct",jvmFreePct.round(1),"%")
+                if(jvmArr.size() > 4) {
+                    Double cpuWork=jvmArr[4].toDouble()
+                    updateAttr("cpu5Min",cpuWork.round(2))
+                    cpuWork = (cpuWork/4.0D)*100.0D //Load / #Cores - if cores change will need adjusted to reflect
+                    updateAttr("cpuPct",cpuWork.round(2),"%")
+                }
+            } else {
+                Double cpuWork=jvmArr[2].toDouble()
                 updateAttr("cpu5Min",cpuWork.round(2))
                 cpuWork = (cpuWork/4.0D)*100.0D //Load / #Cores - if cores change will need adjusted to reflect
                 updateAttr("cpuPct",cpuWork.round(2),"%")
             }
+                
         }
     }
 }

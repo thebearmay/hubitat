@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.4.12",
+  "version": "2.5.0",
   "minimumHEVersion": "2.2.5.130",
-  "dateReleased": "2021-06-19",
-  "releaseNotes": "2.4.12 MAC and Model not filled in if code is updated without hitting configure \n2.4.11 fix free Memory HTML logic\n2.4.10 code streamlining\n2.4.8/9 add MAC address and hub model, code cleanup, revised hub compatibility check, zwaveVersion check override\n2.4.5/6 Trap error on some hubs\n2.4.3 Zwave data has both radio firmware and SDK, adds separate display of SDK\n2.4.2 Fix Overflow condition triggered by soft reset\n2.4.0 Add ZWave Version\n2.3.2 Add Max Device State Days and Max Event Days settings,html optimization\n**Please check the Device Preferences after updating to make sure your selections are accurate**",
+  "dateReleased": "2021-06-29",
+  "releaseNotes": "2.5.0 Prep work for HE 2.2.8.x\n**Please check the Device Preferences after updating to make sure your selections are accurate**",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

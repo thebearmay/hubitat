@@ -371,7 +371,7 @@ boolean isCompatible(Integer minLevel) { //check to see if the hub version meets
 
 void getPollValues(){
     // start - Modified from dman2306 Rebooter app
-    String cookie
+    String cookie=(String)null
     if(security) {
         httpPost(
             [
@@ -652,7 +652,7 @@ void getIfHandler(resp, data){
         if (resp.getStatus() == 200){
             if (debugEnable) log.info resp.data
             def jSlurp = new JsonSlurper()
-            ipData = jSlurp.parseText (resp.data)
+            Map ipData = (Map)jSlurp.parseText((String)resp.data)
             updateAttr("publicIP",ipData.ip)
         } else {
             log.warn "Status ${resp.getStatus()} while fetching Public IP"
@@ -693,9 +693,10 @@ void getEvtDaysHandler(resp, data) {
 }
 
 @SuppressWarnings('unused')
-void parseZwave(zString){
+void parseZwave(String zString){
     Integer start = zString.indexOf('(')
-    Integer end = zString.length()  
+    Integer end = zString.length()
+    String wrkStr
     
     if(start == -1 || end < 1 || zString.indexOf("starting up") > 0 ){ //empty or invalid string - possibly non-C7
         updateAttr("zwaveData",null)
@@ -704,9 +705,9 @@ void parseZwave(zString){
         wrkStr = wrkStr.replace("(","[")
         wrkStr = wrkStr.replace(")","]")
 
-        HashMap zMap = evaluate(wrkStr)
+        HashMap zMap = (HashMap)evaluate(wrkStr)
         
-        updateAttr("zwaveSDKVersion","${zMap.targetVersions[0].version}.${zMap.targetVersions[0].subVersion}")
+        updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
         updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}")
     }
 }
@@ -728,7 +729,7 @@ String getUnitFromState(String attrName){
 
 }
 
-String altGetUnitProc(String wrkStr) {
+ static String altGetUnitProc(String wrkStr) {
     Integer start = wrkStr.indexOf('[')+1
     Integer end = wrkStr.length()-1    
     wrkStr = wrkStr.substring(start,end)

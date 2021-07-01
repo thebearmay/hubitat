@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "minimumHEVersion": "2.2.5.130",
   "dateReleased": "2021-06-10",
-  "releaseNotes": "2.5.0 Prep work for HE 2.2.8.x\n**Please check the Device Preferences after updating to make sure your selections are accurate**",
+  "releaseNotes": "2.5.1 code cleanup\n2.5.0 Prep work for HE 2.2.8.x\n**Please check the Device Preferences after updating to make sure your selections are accurate**",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

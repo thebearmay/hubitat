@@ -63,12 +63,13 @@
  *    2021-06-19  thebearmay     fix the issue where on a driver update, if configure isn't a hubModel and macAddr weren't updated
  *    2021-06-29  thebearmay     2.2.8.x removes JVM data -> v2.5.0
  *    2021-06-30  thebearmay     clear the JVM attributes if >=2.2.8.0, merge pull request from nh.schottfam (stronger typing)
+ *    2021-07-01  thebearmay     allow Warn level logging to be suppressed
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.5.1"}
+static String version() {return "2.5.2"}
 
 metadata {
     definition (
@@ -132,6 +133,7 @@ metadata {
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
+    input("warnSuppress", "bool", title: "Suppress Warn Level Logging")
     input("tempPollEnable", "bool", title: "Enable Temperature Polling")
     input("freeMemPollEnabled", "bool", title: "Enable Free Memory Polling")
     input("cpuPollEnabled", "bool", title: "Enable CPU Load Polling")
@@ -170,13 +172,15 @@ def initialize(){
 
 @SuppressWarnings('unused')
 def updated(){
-    log.trace "updated()"
-    if(debugEnable) runIn(1800,logsOff)
+    if(debugEnable) {
+        log.debug "updated()"
+        runIn(1800,logsOff)
+    }
     if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion){
         unschedule()
         getPollValues()
     }
-
+    if(warnSuppress == null) device.updateSetting("warnSuppress",[value:"false",type:"bool"])
     if (attribEnable)
         formatAttrib()
     else
@@ -546,7 +550,7 @@ void getTempHandler(resp, data) {
         }
     } catch(ignored) {
         def respStatus = resp.getStatus()
-        log.warn "getTemp httpResp = $respStatus but returned invalid data, will retry next cycle"
+        if (!warnSuppress) log.warn "getTemp httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
 
@@ -561,10 +565,10 @@ void getZwave(resp, data) {
                 parseZwave(zwaveData)
                 device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
             }
-            else log.warn "Invalid data returned for Zwave, length = ${zwaveData.length()} will retry"
+            else if (!warnSuppress) log.warn "Invalid data returned for Zwave, length = ${zwaveData.length()} will retry"
         }
     } catch(ignored) {
-        log.warn "getZwave Parsing Error"    
+        if (!warnSuppress) log.warn "getZwave Parsing Error"    
     }
  
     
@@ -580,7 +584,7 @@ void getFreeMemHandler(resp, data) {
         }
     } catch(ignored) {
         def respStatus = resp.getStatus()
-        log.warn "getFreeMem httpResp = $respStatus but returned invalid data, will retry next cycle"    
+        if (!warnSuppress) log.warn "getFreeMem httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
 }
 
@@ -595,7 +599,7 @@ void getJvmHandler(resp, data) {
         if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
     } catch(ignored) {
         def respStatus = resp.getStatus()
-        log.warn "getJvm httpResp = $respStatus but returned invalid data, will retry next cycle"    
+        if (!warnSuppress) log.warn "getJvm httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
     if (jvmWork) {
         Integer lineCount = 0
@@ -629,8 +633,7 @@ void getJvmHandler(resp, data) {
                 updateAttr("cpuPct",cpuWork.round(2),"%")
                 updateAttr("jvmFree",null)
                 updateAttr("jvmTotal",null)
-                updateAttr("jvmFreePct",null)
-             
+                updateAttr("jvmFreePct",null)           
             }
                 
         }
@@ -647,7 +650,7 @@ void getDbHandler(resp, data) {
         }
     } catch(ignored) {
         def respStatus = resp.getStatus()
-        log.warn "getDb httpResp = $respStatus but returned invalid data, will retry next cycle"
+        if (!warnSuppress) log.warn "getDb httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
 
@@ -660,10 +663,10 @@ void getIfHandler(resp, data){
             Map ipData = (Map)jSlurp.parseText((String)resp.data)
             updateAttr("publicIP",ipData.ip)
         } else {
-            log.warn "Status ${resp.getStatus()} while fetching Public IP"
+            if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching Public IP"
         } 
     } catch (Exception ex){
-        log.info ex
+        if (!warnSuppress) log.warn ex
     }
 }   
 
@@ -678,7 +681,7 @@ void getStateDaysHandler(resp, data) {
         }
     } catch(ignored) {
         def respStatus = resp.getStatus()
-        log.warn "getStateDays httpResp = $respStatus but returned invalid data, will retry next cycle"
+        if (!warnSuppress) log.warn "getStateDays httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
 
@@ -693,7 +696,7 @@ void getEvtDaysHandler(resp, data) {
         }
     } catch(ignored) {
         def respStatus = resp.getStatus()
-        log.warn "getEvtDays httpResp = $respStatus but returned invalid data, will retry next cycle"
+        if (!warnSuppress) log.warn "getEvtDays httpResp = $respStatus but returned invalid data, will retry next cycle"
     } 
 }
 
@@ -758,11 +761,10 @@ void restartCheck() {
     Long ut = now() - (location.hub.uptime.toLong()*1000)
     Date upDate = new Date(ut)
     if(debugEnable) log.debug "RS: $rsDate  UT:$ut  upTime Date: $upDate   upTime: ${location.hub.uptime}"
- //   if(rsDate > ut){
-        updateAttr("lastHubRestart", ut)
-        SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        updateAttr("lastHubRestartFormatted",sdf.format(upDate))
- //   }
+    
+    updateAttr("lastHubRestart", ut)
+    SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    updateAttr("lastHubRestartFormatted",sdf.format(upDate))
 }
 
 @SuppressWarnings('unused')

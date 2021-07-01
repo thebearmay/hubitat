@@ -62,12 +62,13 @@
  *    2021-06-17  thebearmay     freeMemPollEnabled was combined with the JVM/CPU polling when creating the HTML
  *    2021-06-19  thebearmay     fix the issue where on a driver update, if configure isn't a hubModel and macAddr weren't updated
  *    2021-06-29  thebearmay     2.2.8.x removes JVM data -> v2.5.0
+ *    2021-06-30  thebearmay     clear the JVM attributes if >=2.2.8.0, merge pull request from nh.schottfam (stronger typing)
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.5.0"}
+static String version() {return "2.5.1"}
 
 metadata {
     definition (
@@ -133,7 +134,7 @@ preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
     input("tempPollEnable", "bool", title: "Enable Temperature Polling")
     input("freeMemPollEnabled", "bool", title: "Enable Free Memory Polling")
-    input("cpuPollEnabled", "bool", title: "Enable CPU & JVM Polling")
+    input("cpuPollEnabled", "bool", title: "Enable CPU Load Polling")
     input("dbPollEnabled","bool", title: "Enable DB Size Polling")
     input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", default: false, required: false, submitOnChange: true)
     input("evtStateDaysEnable", "bool", title:"Enable Display of Max Event/State Days Setting")
@@ -626,6 +627,10 @@ void getJvmHandler(resp, data) {
                 updateAttr("cpu5Min",cpuWork.round(2))
                 cpuWork = (cpuWork/4.0D)*100.0D //Load / #Cores - if cores change will need adjusted to reflect
                 updateAttr("cpuPct",cpuWork.round(2),"%")
+                updateAttr("jvmFree",null)
+                updateAttr("jvmTotal",null)
+                updateAttr("jvmFreePct",null)
+             
             }
                 
         }

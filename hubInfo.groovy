@@ -64,12 +64,13 @@
  *    2021-06-29  thebearmay     2.2.8.x removes JVM data -> v2.5.0
  *    2021-06-30  thebearmay     clear the JVM attributes if >=2.2.8.0, merge pull request from nh.schottfam (stronger typing)
  *    2021-07-01  thebearmay     allow Warn level logging to be suppressed
+ *    2021-07-02  thebearmay	 fix missing formatAttrib call
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.5.2"}
+static String version() {return "2.5.3"}
 
 metadata {
     definition (
@@ -514,7 +515,7 @@ void getPollValues(){
     updateAttr("zigbeeChannel",myHubData.zigbeeChannel)    
     updateAttr("uptime", location.hub.uptime)
     formatUptime()
-    
+    if (attribEnable) formatAttrib()
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
 
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion) {

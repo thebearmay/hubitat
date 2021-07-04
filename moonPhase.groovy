@@ -21,10 +21,11 @@
  *    2021-03-28  thebearmay     Add option to widen the quarterly checkpoints by 1%
  *    2021-03-29  thebearmay     Image path as an attribute
  *    2021-03-30  thebearmay     Image Only tile instead of path
+ *    2021-07-04  thebearmay	 Merge pull request from imnotbob, strong typing of variables
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.7.0'  }
+static String version()	{  return '0.7.1'  }
 
 metadata {
     definition (

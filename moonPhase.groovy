@@ -62,116 +62,105 @@ def configure() {
     if(debugEnable) log.debug "configure()"
 }
 
-def calcPhase (dateStr){
-    cDate = dateCheck(dateStr)
-    if (cDate !=0) getPhase(cDate)
+def calcPhase (String dateStr){
+    Long cDate = dateCheck(dateStr)
+    if (cDate !=0L) getPhase(cDate)
 
 }
 
-def dateCheck(dateStr) {
+Long dateCheck(String dateStr) {
     try {
-        cDate = Date.parse("yyyy-MM-dd HH:mm:ss",dateStr)
+        Date cDate = Date.parse("yyyy-MM-dd HH:mm:ss",dateStr)
         return cDate.getTime()
-    } catch (Exception e) {
+    } catch (ignored) {
         updateAttr("error", "Invalid date string use format yyyy-MM-dd HH:mm:ss")
-        return 0
+        return 0L
     }
 }
 
-def getPhase(cDate = now()) {
-    refDate = Date.parse("yyyy-MM-dd HH:mm:ss","2000-01-06 18:14:00") //First New Moon of 2000
-    refDate = refDate.getTime()
+void getPhase(Long cDate = now()) {
+    Date d_refDate = Date.parse("yyyy-MM-dd HH:mm:ss","2000-01-06 18:14:00") //First New Moon of 2000
+    Long refDate = d_refDate.getTime()
 
-    lunarDays = 29.53058770576
-    lunarSecs = lunarDays*8640000
+    Double lunarDays = 29.53058770576
+    Double lunarSecs = lunarDays*8640000
 
-    sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    def sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     
     Double phaseWork = cDate - refDate //subtract out first new moon of 2000 to get elapsed seconds
-    phaseWork = phaseWork/lunarSecs/10 //calculate lunar cycles
+    phaseWork = phaseWork/lunarSecs/10.0D //calculate lunar cycles
     
     phaseWork = phaseWork - phaseWork.toInteger() //remove whole cycles
     phaseWork = phaseWork.round(2)
     
-    if(phaseWork== 1.0) phaseWork = 0.0
+    if(phaseWork == 1.0) phaseWork = 0.0
     
 	updateAttr("moonPhaseNum", phaseWork)
     updateAttr("lastQryDate",sdf.format(cDate))
     
-    iconPath = "https://raw.githubusercontent.com/thebearmay/hubitat/main/moonPhaseRes/"
+    String iconPath = "https://raw.githubusercontent.com/thebearmay/hubitat/main/moonPhaseRes/"
     if(iconPathOvr > " ") iconPath = iconPathOvr
+    Integer imgNum
+    String phaseText
     
     if(!widenRange){
-        if (phaseWork == 0){
+        if (phaseWork == 0.0D){
             imgNum = 0
-		    phaseText = "New Moon"
-        }else if (phaseWork < 0.25){
+        }else if (phaseWork < 0.25D){
             imgNum = 1
-		    phaseText = "Waxing Crescent" 
-        }else if (phaseWork == 0.25){
+        }else if (phaseWork == 0.25D){
             imgNum = 2
-            phaseText = "First Quarter"
-        }else if (phaseWork < 0.5){
+        }else if (phaseWork < 0.5D){
             imgNum = 3
-		    phaseText =  "Waxing Gibbous"	
-        }else if (phaseWork == 0.5){
-            imgNum = 4
-		    phaseText =  "Full Moon" 	
-        }else if (phaseWork < 0.75){
+        }else if (phaseWork == 0.5D){
+            imgNum = 4	
+        }else if (phaseWork < 0.75D){
             imgNum = 5
-		    phaseText = "Waning Gibbous"	
-        }else if (phaseWork == 0.75){
+        }else if (phaseWork == 0.75D){
             imgNum = 6
-		    phaseText = "Last Quarter" 
-        }else if (phaseWork < 1){
+        }else if (phaseWork < 1.0D){
             imgNum = 7
-		    phaseText = "Waning Crescent"
         }else {
-            phaseText = "Error - Out of Range"
-            imgNum = ""
+            imgNum = null
         }
     }else {
-        if (phaseWork <= 0.01){
+        if (phaseWork <= 0.01D){
             imgNum = 0
-		    phaseText = "New Moon"
-        }else if (phaseWork < 0.24){
+        }else if (phaseWork < 0.24D){
             imgNum = 1
-		    phaseText = "Waxing Crescent" 
-        }else if (phaseWork <= 0.26){
+        }else if (phaseWork <= 0.26D){
             imgNum = 2
-            phaseText = "First Quarter"
-        }else if (phaseWork < 0.49){
+        }else if (phaseWork < 0.49D){
             imgNum = 3
-		    phaseText =  "Waxing Gibbous"	
-        }else if (phaseWork <= 0.51){
+        }else if (phaseWork <= 0.51D){
             imgNum = 4
-		    phaseText =  "Full Moon" 	
-        }else if (phaseWork < 0.74){
+        }else if (phaseWork < 0.74D){
             imgNum = 5
-		    phaseText = "Waning Gibbous"	
-        }else if (phaseWork <= 0.76){
+        }else if (phaseWork <= 0.76D){
             imgNum = 6
-		    phaseText = "Last Quarter" 
-        }else if (phaseWork < 1){
+        }else if (phaseWork < 1.0D){
             imgNum = 7
-		    phaseText = "Waning Crescent"
         }else {
-            phaseText = "Error - Out of Range"
-            imgNum = ""
+            imgNum = null
         }
     }
+    
+    List<String>imgList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbious", "Full Moon", "Waning Gibbous", "Last Quater", "Waning Crescent"]
+    if(imgNum!=null) {
+        phaseText = imgList[imgNum]
+    } else phaseText = "Error - Out of Range"
         
     updateAttr("moonPhaseImg", "<img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png' />")    
     updateAttr("moonPhase", phaseText)
-    phaseIcon = "<div id='moonTile'><img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png'><p class='small' style='text-align:center'>$phaseText</p></img></div>"
+    String phaseIcon = "<div id='moonTile'><img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png'><p class='small' style='text-align:center'>$phaseText</p></img></div>"
     updateAttr("moonPhaseTile",phaseIcon)
 }
 
-def updateAttr(aKey, aValue){
+void updateAttr(String aKey, aValue){
     sendEvent(name:aKey, value:aValue)
 }
 
-def updateAttr(aKey, aValue, aUnit){
+void updateAttr(String aKey, aValue, aUnit){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
@@ -181,11 +170,12 @@ def initialize(){
 
 def updated(){
 	log.trace "updated()"
+    unschedule()
     if(autoUpdate) schedule("1 0 0 ? * * *", getPhase)
-    else unschedule(getpPhase)
 	if(debugEnable) runIn(1800,logsOff)
 }
 
 void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }
+

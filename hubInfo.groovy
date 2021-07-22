@@ -64,7 +64,7 @@
  *    2021-06-29  thebearmay     2.2.8.x removes JVM data -> v2.5.0
  *    2021-06-30  thebearmay     clear the JVM attributes if >=2.2.8.0, merge pull request from nh.schottfam (stronger typing)
  *    2021-07-01  thebearmay     allow Warn level logging to be suppressed
- *    2021-07-02  thebearmay	 fix missing formatAttrib call
+ *    2021-07-02  thebearmay	    fix missing formatAttrib call
  *    2021-07-15  thebearmay     attribute clear fix
  *    2021-07-15  thebearmay     prep work for deleteCurrentState() with JVM attributes
 */

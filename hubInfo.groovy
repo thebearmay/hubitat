@@ -636,9 +636,9 @@ void getJvmHandler(resp, data) {
                 updateAttr("cpuPct",cpuWork.round(2),"%")
                 if(device.currentValue("jvmFree")) {
                     try {
-                        device.deleteCurrrentState("jvmFree")
-                        device.deleteCurrrentState("jvmTotal")
-                        device.deleteCurrrentState("jvmFreePct")
+                        device.deleteCurrentState("jvmFree")
+                        device.deleteCurrentState("jvmTotal")
+                        device.deleteCurrentState("jvmFreePct")
                     } catch (ignore) {
                         updateAttr("jvmFree","\0")
                         updateAttr("jvmTotal","\0")

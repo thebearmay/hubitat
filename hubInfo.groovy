@@ -67,6 +67,7 @@
  *    2021-07-02  thebearmay	    fix missing formatAttrib call
  *    2021-07-15  thebearmay     attribute clear fix
  *    2021-07-15  thebearmay     prep work for deleteCurrentState() with JVM attributes
+ *                               use the getHubVersion() call for >=2.2.8.141 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -356,12 +357,16 @@ String addToAttr(String name, String key, String convert = "none") {
 
 String getModel(){
     try{
-        httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
-            String model = res.data.device.modelName
+        String model = getHubVersion()
+    } catch (ignore){
+        try{
+            httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
+                model = res.data.device.modelName
             return model
+            }        
+        } catch(ignore_again) {
+            return ""
         }
-    } catch(ignore) {
-        return ""
     }
 }
 
@@ -643,8 +648,8 @@ void getJvmHandler(resp, data) {
                         updateAttr("jvmFree","\0")
                         updateAttr("jvmTotal","\0")
                         updateAttr("jvmFreePct","\0") 
-                    }
-                }                
+                    } 
+                }         
             }
                 
         }

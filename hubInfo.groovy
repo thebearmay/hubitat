@@ -65,13 +65,14 @@
  *    2021-06-30  thebearmay     clear the JVM attributes if >=2.2.8.0, merge pull request from nh.schottfam (stronger typing)
  *    2021-07-01  thebearmay     allow Warn level logging to be suppressed
  *    2021-07-02  thebearmay	 fix missing formatAttrib call
- *    2021-07-15  thebearmay     attribute clear fix 
+ *    2021-07-15  thebearmay     attribute clear fix
+ *    2021-07-15  thebearmay     prep work for deleteCurrentState() with JVM attributes
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.5.4"}
+static String version() {return "2.5.5"}
 
 metadata {
     definition (
@@ -633,9 +634,17 @@ void getJvmHandler(resp, data) {
                 updateAttr("cpu5Min",cpuWork.round(2))
                 cpuWork = (cpuWork/4.0D)*100.0D //Load / #Cores - if cores change will need adjusted to reflect
                 updateAttr("cpuPct",cpuWork.round(2),"%")
-                updateAttr("jvmFree"," ")
-                updateAttr("jvmTotal"," ")
-                updateAttr("jvmFreePct"," ")           
+                if(device.currentValue("jvmFree")) {
+                    try {
+                        device.deleteCurrrentState("jvmFree")
+                        device.deleteCurrrentState("jvmTotal")
+                        device.deleteCurrrentState("jvmFreePct")
+                    } catch (ignore) {
+                        updateAttr("jvmFree","\0")
+                        updateAttr("jvmTotal","\0")
+                        updateAttr("jvmFreePct","\0") 
+                    }
+                }                
             }
                 
         }

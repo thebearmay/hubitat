@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.5.5",
+  "version": "2.5.6",
   "minimumHEVersion": "2.2.5.130",
   "dateReleased": "2021-07-22",
-  "releaseNotes": "2.5.5 prep work for deleteCurrentState()\n2.5.4 JVM attribute clear\n2.5.3 fix missing HTML update\n2.5.2 allow Warn level logging to be suppressed\n2.5.1 code cleanup\n2.5.0 Prep work for HE 2.2.8.x\n**Please check the Device Preferences after updating to make sure your selections are accurate**",
+  "releaseNotes": "2.2.6 use getHubVersion() for hubModel\n2.5.5 prep work for deleteCurrentState()\n2.5.4 JVM attribute clear\n2.5.3 fix missing HTML update\n2.5.2 allow Warn level logging to be suppressed\n2.5.1 code cleanup\n2.5.0 Prep work for HE 2.2.8.x\n**Please check the Device Preferences after updating to make sure your selections are accurate**",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

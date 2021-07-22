@@ -73,7 +73,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.5.5"}
+static String version() {return "2.5.6"}
 
 metadata {
     definition (

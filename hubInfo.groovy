@@ -66,14 +66,15 @@
  *    2021-07-01  thebearmay     allow Warn level logging to be suppressed
  *    2021-07-02  thebearmay	    fix missing formatAttrib call
  *    2021-07-15  thebearmay     attribute clear fix
- *    2021-07-15  thebearmay     prep work for deleteCurrentState() with JVM attributes
+ *    2021-07-22  thebearmay     prep work for deleteCurrentState() with JVM attributes
  *                               use the getHubVersion() call for >=2.2.8.141 
+ *    2021-07-23  thebearmay     add remUnused preference to remove all attributes that are not being polled 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.5.6"}
+static String version() {return "2.5.7"}
 
 metadata {
     definition (
@@ -149,6 +150,7 @@ preferences {
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
     input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", default: false, submitOnChange: true)
     input("zwLocked", "bool", title: "Never Run ZWave Version Update", default:false, submitOnChange: true)
+	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", default: false)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -187,8 +189,46 @@ def updated(){
     if(warnSuppress == null) device.updateSetting("warnSuppress",[value:"false",type:"bool"])
     if (attribEnable)
         formatAttrib()
-    else
+    else if(location.hub.firmwareVersionString < "2.2.8.141")
         sendEvent(name: "html", value: "<table></table>", isChanged: true)
+		
+	if(remUnused && location.hub.firmwareVersionString >= "2.2.8.141") {
+		if(location.hub.firmwareVersionString >= "2.2.8.0") {
+            device.deleteCurrentState("jvmFree")
+            device.deleteCurrentState("jvmTotal")
+            device.deleteCurrentState("jvmFreePct")
+		}
+		if(!tempPollEnable) {
+		    device.deleteCurrentState("temperatureC")
+			device.deleteCurrentState("temperatureF")
+			device.deleteCurrentState("temperature")
+		}
+		if(!freeMemPollEnabled){
+		    device.deleteCurrentState("freeMemory")
+		}
+		if(!cpuPollEnabled){
+		    device.deleteCurrentState("cpu5Min")
+			device.deleteCurrentState("cpuPct")
+		}
+		if(!dbPollEnabled){
+		    device.deleteCurrentState("dbSize")
+		}
+		if(!publicIPEnable){
+		    device.deleteCurrentState("publicIP")
+		}
+		if(!checkZwVersion){
+		    device.deleteCurrentState("zwaveSDKVersion")
+		    device.deleteCurrentState("zwaveVersion")
+		}
+		if(!attribEnable){
+			device.deleteCurrentState("html")
+		}
+        if(!evtStateDaysEnable){
+			device.deleteCurrentState("maxStateDays")
+			device.deleteCurrentState("maxEvtDays")
+        }                     
+	}
+				
 }
 
 @SuppressWarnings('unused')
@@ -258,13 +298,11 @@ void formatAttrib(){
     String attrStr = "<style>td{text-align:left;}</style><table id='hubInfoTable'>"
     
     attrStr += addToAttr("Name","name")
-    //
+
      if(!device.currentValue("hubModel"))
          updateAttr("hubModel",getModel())
      List combineH = ["hubModel", "hubVersion"]
      attrStr += combineAttr("Version", combineH)
- //    } else 
- //        attrStr += addToAttr("Version","hubVersion")
     
     if(publicIPEnable) {
         List combine = ["localIP", "publicIP"]
@@ -357,7 +395,7 @@ String addToAttr(String name, String key, String convert = "none") {
 
 String getModel(){
     try{
-        String model = getHubVersion()
+        String model = getHubVersion() // requires >=2.2.8.141
     } catch (ignore){
         try{
             httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
@@ -640,9 +678,9 @@ void getJvmHandler(resp, data) {
                 cpuWork = (cpuWork/4.0D)*100.0D //Load / #Cores - if cores change will need adjusted to reflect
                 updateAttr("cpuPct",cpuWork.round(2),"%")
                 if(device.currentValue("jvmFree")) {
-                    try {
-                        device.deleteCurrentState("jvmFree")
-                        device.deleteCurrentState("jvmTotal")
+                    try { // requires >= 2.2.8.141
+                        devi.deleteCurrentState("jvmFree")
+                        devie.deleteCurrentState("jvmTotal")
                         device.deleteCurrentState("jvmFreePct")
                     } catch (ignore) {
                         updateAttr("jvmFree","\0")

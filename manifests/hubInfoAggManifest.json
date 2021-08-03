@@ -1,0 +1,27 @@
+{
+  "packageName": "Hub Information Aggregation",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.1",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2021-08-03",
+  "apps": [
+    {
+      "id": "24466ca8-d09d-4b43-92d1-8805b75c97ff",
+      "name": "Hub Information Aggregation",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoAggregation.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ],
+  "drivers": [
+    {
+      "id": "6655b4f1-88f1-4403-86f0-9ef7fa785d7f",
+      "name": "Hub Information Aggregation Device",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoAggDev.groovy",
+      "required": true
+    }
+  ]
+}

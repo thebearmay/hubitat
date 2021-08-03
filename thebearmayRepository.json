@@ -67,6 +67,13 @@
       "category": "Convenience",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/evenDaySwitchManifest.json",
       "description": "Device driver creates a virtual switch that is set on/off based on whether the day of the year is even or odd. To handle end of year processing the driver can optionally switch the even/odd on/off to ensure that the every other day on/off is maintained."
+    },
+    {
+      "id": "4375e6be-7dc0-4770-8779-ef3420823db4",
+      "name": "Hub Information Aggregation",
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubInfoAggManifest.json",
+      "description": "Application allows multiple instances of the Hub Information Driver to be displayed in one space. Also permits the creation of a customized html attribute that can be displayed on a dashboard attribute tile."
     }
   ]
 }

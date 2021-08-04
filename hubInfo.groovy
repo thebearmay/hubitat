@@ -69,12 +69,13 @@
  *    2021-07-22  thebearmay     prep work for deleteCurrentState() with JVM attributes
  *                               use the getHubVersion() call for >=2.2.8.141 
  *    2021-07-23  thebearmay     add remUnused preference to remove all attributes that are not being polled 
+ *    2021-08-03  thebearmay     put back in repoll on invalid zigbee channel
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.5.7"}
+static String version() {return "2.5.8"}
 
 metadata {
     definition (
@@ -341,7 +342,10 @@ void formatAttrib(){
         String tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
         attrStr += addToAttr("Temperature",tempAttrib)
     }
-    
+    if (device.currentValue("zigbeeChannel") == "NA") { 
+        myHubData = parseHubData()
+        updateAttr("zigbeeChannel",myHubData.zigbeeChannel)
+    }
     attrStr += addToAttr("ZB Channel","zigbeeChannel")
     
     if (device.currentValue("zwaveVersion")){

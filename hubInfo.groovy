@@ -342,10 +342,6 @@ void formatAttrib(){
         String tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
         attrStr += addToAttr("Temperature",tempAttrib)
     }
-    if (device.currentValue("zigbeeChannel") == "NA") { 
-        myHubData = parseHubData()
-        updateAttr("zigbeeChannel",myHubData.zigbeeChannel)
-    }
     attrStr += addToAttr("ZB Channel","zigbeeChannel")
     
     if (device.currentValue("zwaveVersion")){
@@ -442,6 +438,12 @@ void getPollValues(){
         ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
     }
     // End - Modified from dman2306 Rebooter app
+    // repoll zigbee channel if invalid
+	
+    if (device.currentValue("zigbeeChannel") == "NA") { 
+        myHubData = parseHubData()
+        updateAttr("zigbeeChannel",myHubData.zigbeeChannel)
+    }
     
     // Zwave Version
     if(checkZwVersion == null && isCompatible(7))

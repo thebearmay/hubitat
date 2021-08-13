@@ -110,8 +110,11 @@ def off() {
 
 def checkSync() {
     if(device.currentValue("motion") == "active") {
-        syncNR()
-        runIn(300,checkSync)
+        if(device.currentValue("switch") == "on") {
+            syncNR()
+            runIn(300,checkSync)
+            log.warn "Sync lost with ${device.currentValue('nodeName')}, retrying..."
+        } else updateAttr("motion","inactive")
     }
 }
     

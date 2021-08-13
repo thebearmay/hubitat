@@ -16,9 +16,10 @@
  *    ----        ---            ----
  *    2021-03-31  thebearmay	 Original version 0.1.0
  *    2021-04-03  thebearmay     Release version 1.0.0
+ *    2021-08-12  thebearmay     Remove clip processing, only check sync if camera is on
  */
 
-static String version()	{  return '0.3.0'  }
+static String version()	{  return '1.0.1'  }
 
 metadata {
     definition (
@@ -39,7 +40,7 @@ metadata {
         
             attribute "battery", "number"
             attribute "nodeName", "string"
-        	attribute "lastUpdate", "number"
+//        	attribute "lastUpdate", "number"
             attribute "syncPending", "bool"
             attribute "captureTS", "number"
 		    command "updateStatus", [[name:"statusString*", type:"STRING", description:"JSON string containing nodeName, motion, battery and switch attributes"]]  
@@ -79,7 +80,7 @@ def updated(){
 def updateStatus(sStr) {
     if(debugEnable) log.debug "updateStatus $sStr"
 
-    updateAttr("lastUpdate", new Date())
+//    updateAttr("lastUpdate", new Date())
     updateAttr("syncPending", false)
     sStr = sStr.replaceAll("\"","")
     sStr = sStr.replace("{","")
@@ -91,12 +92,14 @@ def updateStatus(sStr) {
         if(nodeArr[0] == "battery")
             updateAttr(nodeArr[0],nodeArr[1],"%")
         else if (nodeArr[0] == "clip"){
+/*
             reconstruct = nodeArr[1].replaceAll("=",":'")
             reconstruct = reconstruct.replaceAll(";","',")
             reconstruct = reconstruct.replaceAll(/\./,":")
             reconstruct = reconstruct.replaceAll(/\[/,"{")
             reconstruct = reconstruct.replaceAll(/\]/,"'}")
             updateAttr(nodeArr[0],reconstruct)
+*/
         } else
             updateAttr(nodeArr[0],nodeArr[1])
     }
@@ -129,9 +132,11 @@ def capture(start = now(), capture = now(), end = now()){
 
 def checkSync() {
     if(device.currentValue("motion") == "active") {
-        syncNR()
-        runIn(300,checkSync)
-        log.warn "Sync lost with ${device.currentValue('nodeName')}, retrying..."
+        if(device.currentValue("switch") == "on") {
+            syncNR()
+            runIn(300,checkSync)
+            log.warn "Sync lost with ${device.currentValue('nodeName')}, retrying..."
+        } else updateAttr("motion","inactive")
     }
 }
     

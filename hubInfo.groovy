@@ -70,12 +70,13 @@
  *                               use the getHubVersion() call for >=2.2.8.141 
  *    2021-07-23  thebearmay     add remUnused preference to remove all attributes that are not being polled 
  *    2021-08-03  thebearmay     put back in repoll on invalid zigbee channel
+ *    2021-08-14  thebearmay     add html update from HIA
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.5.8"}
+static String version() {return "2.6.0"}
 
 metadata {
     definition (
@@ -133,7 +134,7 @@ metadata {
         attribute "macAddr", "string"
         attribute "hubModel", "string"
 
-        
+        command "hiaUpdate", ["string", "string"]
     }   
 }
 
@@ -826,6 +827,16 @@ void restartCheck() {
     SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(upDate))
 }
+
+
+@SuppressWarnings('unused')
+void hiaUpdate(htmlStr, auth) {
+    if(auth == device.currentValue("macAddr"))
+        updateAttr("html",htmlStr)
+    else 
+        updateAttr("html", "Illegal attempt using $auth")
+}
+
 
 @SuppressWarnings('unused')
 void logsOff(){

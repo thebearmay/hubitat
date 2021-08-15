@@ -18,7 +18,7 @@ definition (
 	name: 			"Hub Information Aggregation", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Provides a utility to compare multiple Hub Information devices, and customize the html attribute",
+	description: 	"Provides a utility to compare multiple Hub Information devices, customize the html attributes, and set alert levels",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoAggregation.groovy",
 	oauth: 			false,

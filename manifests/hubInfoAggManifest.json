@@ -22,7 +22,7 @@
       "name": "Hub Information Aggregation Device",
       "namespace": "thebearmay",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoAggDev.groovy",
-      "required": false
+      "required": true
     }
   ]
 }

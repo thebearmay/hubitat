@@ -11,14 +11,14 @@
  *
  */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.5.0'  }
 
 
 definition (
 	name: 			"Hub Information Aggregation", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Provides a utility to compare multiple Hub Information devices",
+	description: 	"Provides a utility to compare multiple Hub Information devices, customize the html attributes, and set alert levels",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoAggregation.groovy",
 	oauth: 			false,
@@ -27,10 +27,11 @@ definition (
 ) 
 
 preferences {
-   page name: "mainPage"
-   page name: "hubAttrSelect"
-   page name: "attrRepl"
-   page name: "hubInfoAgg"
+    page name: "mainPage"
+    page name: "hubAttrSelect"
+    page name: "attrRepl"
+    page name: "hubInfoAgg"
+    page name: "hubAlerts"
 }
 
 void installed() {
@@ -69,12 +70,16 @@ def mainPage(){
                         href "hubInfoAgg", title: "Show Hubs", required: false
                         input "createChild", "bool", title: "Create child device for HTML attribute?", defaultValue: false, submitOnChange: true
                         if(createChild) {
-                            input "childPollRate", "number", title: "Polling frequency in seconds (300..86400)", range: "300..86400", required: true, submitOnChange: true
                             addDevice()
-                            if(childPollRate != null) refreshDevice()
                         } else {
                             removeDevice()
                         }
+                        input "overwrite", "bool", title:"Overwrite Hub Info (2.6.0+ required) html attribute(s)", defaultValue: false
+                        if(createChild || overwrite){
+                            subscribe(qryDevice[0], "uptime", "refreshDevice")
+                            refreshDevice()
+                        } else unsubscribe
+                        href "hubAlerts", title: "Configure Hub Alerts", required: false
                     } else
                         paragraph "Invalid Device Selected"
                 }
@@ -136,8 +141,24 @@ def hubInfoAgg(){
     }
 }
 
+def hubAlerts(){
+    dynamicPage (name: "hubAlerts", title: "Hub Alerts", install: false, uninstall: false) {
+	  section(""){
+          input "notifyDevice", "capability.notification", title: "Notification Devices:", multiple:true
+          int numHub=0
+          qryDevice.each{
+              paragraph "<b><u>${it.currentValue('locationName')}</u></b>"
+              input "maxTemp$numHub", "number", title:"Max Temperature (0..200)",range:"0..200"//,submitOnChange:true
+              input "maxDb$numHub", "number", title:"Max DB Size (0..1000)", range:"0..1000"//, submitOnChange:true
+              input "minMem$numHub", "number", title:"Min Free Memory (0..600000)", range:"0..600000"//, submitOnChange:true
+              numHub++
+          }
+      }
+    }
+}
+
 String buildTable() {
-            String htmlWork = '<table id=\'hia\'><tr><th></th>'
+        String htmlWork = '<table id=\'hia\'><tr><th></th>'
         for(i=0;i<qryDevice.size();i++){
               htmlWork+='<th>'+qryDevice[i].currentValue('locationName')+'</th>'
         }
@@ -170,13 +191,43 @@ def removeDevice(){
     deleteChildDevice("hiad001")
 }
 
-def refreshDevice(){
-    htmlStr = buildTable()
+def refreshDevice(evt = null){
+    String htmlStr = buildTable()
     if(htmlStr.size() > 1024) htmlStr="<b>Attribute Size Exceeded - ${htmlStr.size()} Characters</b>"
-    dev = getChildDevice("hiad001")
-    dev.sendEvent(name:"html",value:htmlStr)
-    if(childPollRate == null) updateSetting("childPollRate",[value:300,type:"number"])
-    runIn(childPollRate, "refreshDevice")
+    if(createChild){
+        dev = getChildDevice("hiad001")
+        dev.sendEvent(name:"html",value:htmlStr)
+    }
+    if(overwrite){
+        qryDevice.each{      
+            it.hiaUpdate(htmlStr,it.currentValue("macAddr"))
+        }
+    }
+    if(notifyDevice){
+        int numHub=0
+        qryDevice.each{
+            if(it.currentValue("temperature") >= settings["maxTemp$numHub"]){
+                notifyStr = "Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
+                sendNotification(notifyStr)
+            }
+            if(it.currentValue("dbSize") >= settings["maxDb$numHub"]){
+                notifyStr = "DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize")}"
+                sendNotification(notifyStr)
+            }
+            if(it.currentValue("freeMemory") <= settings["minMem$numHub"]){
+                notifyStr = "Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
+                sendNotification(notifyStr)
+            }
+            numHub++
+         }
+    
+    }
+ }
+
+void sendNotification(notifyStr){
+    notifyDevice.each { 
+      it.deviceNotification(notifyStr)  
+    }   
 }
 
 def appButtonHandler(btn) {

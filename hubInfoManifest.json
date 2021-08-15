@@ -3,7 +3,7 @@
   "author": "Jean P. May, Jr.",
   "version": "2.6.0",
   "minimumHEVersion": "2.2.5.130",
-  "dateReleased": "2021-08-03",
+  "dateReleased": "2021-08-15",
   "releaseNotes": "2.6.0 - adds Hub Information Aggregation integration",
   "drivers": [
     {

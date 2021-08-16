@@ -11,7 +11,7 @@
  *
  */
 
-static String version()	{  return '0.5.0'  }
+static String version()	{  return '0.5.1'  }
 
 
 definition (
@@ -76,7 +76,9 @@ def mainPage(){
                         }
                         input "overwrite", "bool", title:"Overwrite Hub Info (2.6.0+ required) html attribute(s)", defaultValue: false
                         if(createChild || overwrite){
-                            subscribe(qryDevice[0], "uptime", "refreshDevice")
+			    qryDevice.each{
+                            	subscribe(it, "uptime", "refreshDevice")
+			    }
                             refreshDevice()
                         } else unsubscribe
                         href "hubAlerts", title: "Configure Hub Alerts", required: false

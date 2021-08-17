@@ -76,11 +76,12 @@ def mainPage(){
                         }
                         input "overwrite", "bool", title:"Overwrite Hub Info (2.6.0+ required) html attribute(s)", defaultValue: false
                         if(createChild || overwrite){
+			    unsubscribe()
 			    qryDevice.each{
                             	subscribe(it, "uptime", "refreshDevice")
 			    }
                             refreshDevice()
-                        } else unsubscribe
+                        } else unsubscribe()
                         href "hubAlerts", title: "Configure Hub Alerts", required: false
                     } else
                         paragraph "Invalid Device Selected"

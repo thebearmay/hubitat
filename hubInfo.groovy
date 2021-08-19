@@ -71,12 +71,13 @@
  *    2021-07-23  thebearmay     add remUnused preference to remove all attributes that are not being polled 
  *    2021-08-03  thebearmay     put back in repoll on invalid zigbee channel
  *    2021-08-14  thebearmay     add html update from HIA
+ *    2021-08-19  thebearmay     zwaveSDKVersion not in HTML
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.0"}
+static String version() {return "2.6.1"}
 
 metadata {
     definition (
@@ -346,7 +347,7 @@ void formatAttrib(){
     attrStr += addToAttr("ZB Channel","zigbeeChannel")
     
     if (device.currentValue("zwaveVersion")){
-        List combine = ["zwaveVersion","zwaveVersion"]
+        List combine = ["zwaveVersion","zwaveSDKVersion"]
         attrStr += combineAttr("ZW Radio/SDK", combine)   
     }
     

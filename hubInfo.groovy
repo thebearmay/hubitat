@@ -72,12 +72,13 @@
  *    2021-08-03  thebearmay     put back in repoll on invalid zigbee channel
  *    2021-08-14  thebearmay     add html update from HIA
  *    2021-08-19  thebearmay     zwaveSDKVersion not in HTML
+ *    2021-08-23  thebearmay     simplify unit retrieval
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.1"}
+static String version() {return "2.6.2"}
 
 metadata {
     definition (
@@ -369,7 +370,7 @@ String combineAttr(String name, List<String> keys){
     for (i = 0;i < keys.size(); i++) {
         keyResult+= device.currentValue(keys[i])
         String attrUnit = getUnitFromState(keys[i])
-        if (attrUnit != "null") keyResult+=" "+attrUnit
+        if (attrUnit != null) keyResult+=" "+attrUnit
         if (i < keys.size() - 1) keyResult+= " / "
     }
             
@@ -383,7 +384,7 @@ String addToAttr(String name, String key, String convert = "none") {
     retResult += name + '</td><td>'
 
     String attrUnit = getUnitFromState(key)
-    if (attrUnit == "null") attrUnit =""
+    if (attrUnit == null) attrUnit =""
 
     def curVal = device.currentValue(key)
     if(curVal){
@@ -783,7 +784,8 @@ void parseZwave(String zString){
 }
 
 String getUnitFromState(String attrName){
-    String wrkStr = device.currentState(attrName).toString()
+    return device.currentState(attrName).unit
+/*    String wrkStr = device.currentState(attrName).toString()
     if(location.hub.firmwareVersionString <= "2.2.7.0") {
         Integer start = wrkStr.indexOf('(')+1    
         Integer end = wrkStr.length() - 1
@@ -796,10 +798,10 @@ String getUnitFromState(String attrName){
         String unt = altGetUnitProc(wrkStr) 
         return unt
     }
-
+*/
 }
 
- static String altGetUnitProc(String wrkStr) {
+/* static String altGetUnitProc(String wrkStr) {
     Integer start = wrkStr.indexOf('[')+1
     Integer end = wrkStr.length()-1    
     wrkStr = wrkStr.substring(start,end)
@@ -815,7 +817,7 @@ String getUnitFromState(String attrName){
            statePartsMap.put(dSplit[0].trim(),null)
     }
     return statePartsMap.unit    
-}
+} */
 
 void restartCheck() {
  //   Long rsDate = Long.parseLong(device.currentValue('lastHubRestart'))

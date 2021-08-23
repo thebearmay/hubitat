@@ -3,7 +3,7 @@
   "author": "Jean P. May, Jr.",
   "version": "2.6.2",
   "minimumHEVersion": "2.2.5.130",
-  "dateReleased": "2021-08-19",
+  "dateReleased": "2021-08-23",
   "releaseNotes": "2.6.2 - simplify unit retrieval\n2.6.1 - report correct ZWave SDK\n2.6.0 - adds Hub Information Aggregation integration",
   "drivers": [
     {

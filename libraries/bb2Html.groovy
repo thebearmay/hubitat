@@ -1,3 +1,14 @@
+library (
+    base: "driver",
+    author: "Jean P. May Jr.",
+    category: "driverUtilities",
+    description: "Converts a string containing BBCode syntax to HTML",
+    name: "bb2Html",
+    namespace: "hubitat",
+    documentationLink: ""
+)
+
+
 String bb2Html(String htmlStr) {
     htmlStr=htmlStr.replace("[b]","<b>")
     htmlStr=htmlStr.replace("[/b]","</b>")

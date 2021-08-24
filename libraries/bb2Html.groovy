@@ -5,6 +5,7 @@ library (
     description: "Converts a string containing BBCode syntax to HTML",
     name: "bb2Html",
     namespace: "hubitat",
+    importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/bb2Html.groovy",
     documentationLink: ""
 )
 

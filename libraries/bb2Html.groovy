@@ -6,6 +6,7 @@ library (
     name: "bb2Html",
     namespace: "hubitat",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/bb2Html.groovy",
+    version: "0.0.2",
     documentationLink: ""
 )
 
@@ -17,6 +18,12 @@ String bb2Html(String htmlStr) {
     htmlStr=htmlStr.replace("[/i]","</i>")
     htmlStr=htmlStr.replace("[u]","<u>")
     htmlStr=htmlStr.replace("[/u]","</u>")
+    htmlStr=htmlStr.replace("[s]","<s>")
+    htmlStr=htmlStr.replace("[/s]","</s>")
+    htmlStr=htmlStr.replace("[sup]","<sup>")
+    htmlStr=htmlStr.replace("[/sup]","</sup>")  
+    htmlStr=htmlStr.replace("[sub]","<sub>")
+    htmlStr=htmlStr.replace("[/sub]","</sub>")  
     htmlStr=htmlStr.replace("[br]","<br>")    
     while(htmlStr.indexOf("[color=")>=0) {
         htmlStr=htmlStr.replace("[/color]","</font>")

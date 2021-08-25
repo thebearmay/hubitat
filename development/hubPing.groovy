@@ -104,7 +104,7 @@ def updateAttr(aKey, aValue, aUnit){
 def initialize(){
   if(pingPeriod > 0 && numPings > 0 && device.currentValue("lastIpAddress") != null){
     unschedule()
-    sendPing(device.currentValue("lastIpAddress")
+    sendPing(device.currentValue("lastIpAddress"))
   }
 }
 

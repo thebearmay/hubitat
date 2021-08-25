@@ -21,17 +21,18 @@
  *    2021-03-15  thebearmay     Add lastIpAddress, leave presence at last value when starting new ping
  *    2021-05-04  thebearmay     Use 2.2.7.x ping instead of http call if available
  *    2021-05-06  thebearmay     2.2.7.121 returns all zeroes on ping not found 
- *    2021-05-10  thebearmay	 Fix the scheduler option under the new method
+ *    2021-05-10  thebearmay	   Fix the scheduler option under the new method
  *    2021-05-14  thebearmay     add option to use old method if desired
- *    2021-06-21  thebearmay	 add a dummy refresh method to deal with phantom command
+ *    2021-06-21  thebearmay	   add a dummy refresh method to deal with phantom command
  *    2021-06-22  thebearmay     code for null return
  *                               add regEx pattern to check address format validity
  *    2021-06-23  thebearmay     HTTP endpoint method returns status 408 when pinging 8.8.8.8 and 8.8.4.4, place message in return attribute instead
  *                                of suppressing
+ *    2021-08-25  thebearmay     Add restart of scheduled ping on reboot     
  *
  */
 
-static String version()	{  return '2.1.4'  }
+static String version()	{  return '2.1.5'  }
 
 metadata {
     definition (
@@ -43,6 +44,7 @@ metadata {
         capability "Actuator"
         capability "Configuration"
         capability "PresenceSensor"
+        capability "Initialize"
        
         attribute "pingReturn", "string"
         attribute "percentLoss", "number"
@@ -51,7 +53,7 @@ metadata {
         attribute "min", "number"
         attribute "mdev", "number"
         attribute "pingStats", "string"
-	    attribute "responseReady", "bool"
+	      attribute "responseReady", "bool"
         attribute "lastIpAddress", "string"
         
         
@@ -100,6 +102,10 @@ def updateAttr(aKey, aValue, aUnit){
 }
 
 def initialize(){
+  if(pingPeriod > 0 && numPings > 0 && device.currentValue("lastIpAddress") != null){
+    unschedule()
+    sendPing(device.currentValue("lastIpAddress"))
+  }
 }
 
 def refresh() {

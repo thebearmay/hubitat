@@ -28,11 +28,12 @@
  *                               add regEx pattern to check address format validity
  *    2021-06-23  thebearmay     HTTP endpoint method returns status 408 when pinging 8.8.8.8 and 8.8.4.4, place message in return attribute instead
  *                                of suppressing
- *    2021-08-25  thebearmay     Add restart of scheduled ping on reboot     
+ *    2021-08-25  thebearmay     Add restart of scheduled ping on reboot
+ *    2021-08-26  thebearmay	 data.ipAddress was truncate to data.ip 
  *
  */
 
-static String version()	{  return '2.1.5'  }
+static String version()	{  return '2.1.6'  }
 
 metadata {
     definition (
@@ -113,7 +114,7 @@ def refresh() {
 }
 
 def sendPing(ipAddress){
-    if(ipAddress == null) ipAddress = data.ip
+    if(ipAddress == null) ipAddress = data.ipAddress
     if(numPings == null) numPings = 3
     configure()
     updateAttr("lastIpAddress", ipAddress)

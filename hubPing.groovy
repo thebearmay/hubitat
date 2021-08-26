@@ -30,10 +30,11 @@
  *                                of suppressing
  *    2021-08-25  thebearmay     Add restart of scheduled ping on reboot
  *    2021-08-26  thebearmay	 data.ipAddress was truncate to data.ip 
+ *                               IP not passing when using old method and repeating ping
  *
  */
 
-static String version()	{  return '2.1.6'  }
+static String version()	{  return '2.1.7'  }
 
 metadata {
     definition (
@@ -195,7 +196,7 @@ def sendPingHandler(resp, data) {
         
     } 
     if (!errFlag) extractValues(strWork)
-
+    ipAddress = device.currentValue("lastIpAddress")
     if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
 
 }
@@ -244,6 +245,7 @@ def validIP(ipAddress){
 
 def updated(){
 	log.trace "updated()"
+    if(!(pingPeriod > 0)) unschedule()
 	if(debugEnable) runIn(1800,logsOff)
 }
 

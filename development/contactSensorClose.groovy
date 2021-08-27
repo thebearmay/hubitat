@@ -82,8 +82,8 @@ def closeContacts(evt = "pushed"){
 
 def addDevice() {
     if(!this.getChildDevice("cscButton001")){
-      addChildDevice("thebearmay","Virtual Button","cscButton001")
-		  subscribe(cscButton001, "pushed", "closeContacts")
+      addChildDevice("hubitat","Virtual Button","cscButton001")
+		  subscribe(this.getChildDevice("cscButton001"), "pushed", "closeContacts")
 	  }
 }
 

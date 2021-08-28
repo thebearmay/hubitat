@@ -22,10 +22,11 @@
  *    2021-03-29  thebearmay     Image path as an attribute
  *    2021-03-30  thebearmay     Image Only tile instead of path
  *    2021-07-04  thebearmay	 Merge pull request from imnotbob, strong typing of variables
+ *    2021-08-28  thebearmay	 add option to use html attribute instead of moonPhaseTile
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.7.1'  }
+static String version()	{  return '0.7.2'  }
 
 metadata {
     definition (
@@ -41,6 +42,7 @@ metadata {
 		attribute "lastQryDate", "string"
         attribute "moonPhaseTile", "string"
         attribute "moonPhaseImg", "string"
+        attribute "html", "string"
         
         command "getPhase"
         command "calcPhase", [[name:"dateStr", type:"STRING", description:"Date (yyyy-MM-dd HH:mm:ss) to calculate the moon phase for."]]              
@@ -52,6 +54,7 @@ preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
     input("autoUpdate", "bool", title: "Enable automatic update at midnight")
     input("widenRange","bool",title:"Widen the Qtrly Checkpoints by 1%")
+    input("htmlVtile", "bool", title:"Use html attribute instead of moonPhaseTile")
     input("iconPathOvr", "string", title: "Alternate path to moon phase icons \n(must contain file names moon-phase-icon-0 through moon-phase-icon-7)")
 }
 
@@ -154,7 +157,10 @@ void getPhase(Long cDate = now()) {
     updateAttr("moonPhaseImg", "<img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png' />")    
     updateAttr("moonPhase", phaseText)
     String phaseIcon = "<div id='moonTile'><img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png'><p class='small' style='text-align:center'>$phaseText</p></img></div>"
-    updateAttr("moonPhaseTile",phaseIcon)
+    if(!htmlVtile)
+        updateAttr("moonPhaseTile",phaseIcon)
+    else
+        updateAttr("html",phaseIcon)
 }
 
 void updateAttr(String aKey, aValue){
@@ -179,4 +185,3 @@ def updated(){
 void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }
-

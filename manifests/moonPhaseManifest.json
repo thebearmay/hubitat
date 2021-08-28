@@ -1,9 +1,9 @@
 {
   "packageName": "Moon Phase Device",
   "author": "Jean P. May, Jr.",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-07-04",
+  "dateReleased": "2021-08-28",
   "releaseNotes":"Merged pull request from imnotbob - java variable declarations typing",
   "drivers": [
     {

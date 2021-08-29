@@ -31,7 +31,7 @@
  *    2021-08-25  thebearmay     Add restart of scheduled ping on reboot
  *    2021-08-26  thebearmay	 data.ipAddress was truncate to data.ip 
  *                               IP not passing when using old method and repeating ping
- *
+ *    2021-08-28  thebearmay	 Attributes can't be bool
  */
 
 static String version()	{  return '2.1.7'  }
@@ -55,7 +55,7 @@ metadata {
         attribute "min", "number"
         attribute "mdev", "number"
         attribute "pingStats", "string"
-	      attribute "responseReady", "bool"
+	      attribute "responseReady", "string"
         attribute "lastIpAddress", "string"
         
         
@@ -90,7 +90,7 @@ def configure() {
     updateAttr("max"," ")
     updateAttr("mdev"," ")
     updateAttr("pingReturn"," ")
-    updateAttr("responseReady",false)
+    updateAttr("responseReady","false")
     if (device.currentValue("presence") == null) updateAttr("presence","not present")
 
 }
@@ -122,7 +122,7 @@ def sendPing(ipAddress){
     if(!validIP (ipAddress)) {
         updateAttr("pingReturn", "IP address format invalid")
         updateAttr("presence","not present")
-        updateAttr("responseReady",true)
+        updateAttr("responseReady","true")
     } else {
         if (location.hub.firmwareVersionString > "2.2.6.140" && !useOldMethod){
             updateAttr("responseReady",false)
@@ -147,7 +147,7 @@ def sendPing(ipAddress){
                 updateAttr("presence","present")
             else 
                 updateAttr("presence","not present")
-            updateAttr("responseReady",true)
+            updateAttr("responseReady","true")
 	        if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
         } else {
             if(security) {
@@ -234,7 +234,7 @@ def extractValues(strWork) {
     }
     if (percentLoss < 100 ) updateAttr("presence","present")
     else updateAttr("presence","not present")
-    updateAttr("responseReady", true)
+    updateAttr("responseReady", "true")
 }
        
 def validIP(ipAddress){

@@ -34,7 +34,7 @@
  *    2021-08-28  thebearmay	 Attributes can't be bool
  */
 
-static String version()	{  return '2.1.7'  }
+static String version()	{  return '2.1.8'  }
 
 metadata {
     definition (

@@ -65,8 +65,7 @@ def mainPage(){
 	    	section("Main")
 		    {
                 input "qryDevice", "capability.*", title: "Devices of Interest:", multiple: false, required: true, submitOnChange: true
-                //input "motionDate", "string", title: "Pull motion data from this date forward (yyyy-MM-dd hh:mm):", required: true, submitOnChange: true
-                buildAttrList()
+                if(qryDevice!=null) buildAttrList()
                 input "attrSelected", "enum", title: "Attribute to pull events/states for:", required: true, options: attrList
                 if (qryDevice != null && attrSelected != null) href "showItems", title: "Event/State Information", required: false
 		    }

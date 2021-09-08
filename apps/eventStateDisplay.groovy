@@ -86,7 +86,7 @@ def showItems(){
             dName = qryDevice.displayName 
             dispTable+="<table class='mtable'><tr><th>$dName State Changes</th><th>Attribute:$attrSelected</th></tr>"
             dispTable+="<tr><th>Date-Time</th><th>Value</th></tr>"
-            evtList=qryDevice.statesSince(attrSelected.toString(),Date.parse("yyyy-MM-dd hh:mm", "1970-01-01 00:00:00"), [max:100000])
+            evtList=qryDevice.statesSince(attrSelected.toString(),Date.parse("yyyy-MM-dd hh:mm", "1970-01-01 00:00:00"), [max:1000000])
             if(dwnldState) statePipe="$dName State Changes|Attribute:$attrSelected|[crlf]"
             evtList.each {
                 dispTable += "<tr><td>${it.date}</td><td>${it.value}</td></tr>"
@@ -96,7 +96,7 @@ def showItems(){
           
             dispTable2="<table class='mtable'><tr><th>$dName Events</th><th>Attribute:$attrSelected</th></tr><tr>"
             dispTable2+="<tr><th>Date-Time</th><th>Value</th><th>Type</th></tr>"
-            evtList=qryDevice.eventsSince(Date.parse("yyyy-MM-dd hh:mm", "1970-01-01 00:00:00"), [max:1000000])
+            evtList=qryDevice.eventsSince(Date.parse("yyyy-MM-dd hh:mm", "1970-01-01 00:00:00"), [max:10000000])
             if(dwnldEvent) eventPipe="$dName Events|Attribute:$attrSelected||[crlf]"          
             evtList.each {
                 if(it.properties.name == attrSelected){

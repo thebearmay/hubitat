@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Aggregation",
   "author": "Jean P. May, Jr.",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-08-16",
-  "releaseNotes": "0.5.1 - unsubscribe bug fix\n0.5.0 - Release Candidate, adds ability to override Hub Info html attributes and set alert levels for Free Memory, DB Size, and Temperature",
+  "dateReleased": "2021-09-11",
+  "releaseNotes": "0.6.0 - Require all alerts have values if activated, prepend alerts with HIA\n0.5.1 - unsubscribe bug fix\n0.5.0 - Release Candidate, adds ability to override Hub Info html attributes and set alert levels for Free Memory, DB Size, and Temperature",
   "apps": [
     {
       "id": "24466ca8-d09d-4b43-92d1-8805b75c97ff",

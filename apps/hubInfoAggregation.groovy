@@ -9,9 +9,12 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *     Date              Who           Description
+ *    ===========       ===========   =====================================================
+ *    2021-09-11        thebearmay    Change alerts to include HIA and require values
  */
 
-static String version()	{  return '0.5.1'  }
+static String version()	{  return '0.6.0'  }
 
 
 definition (
@@ -20,7 +23,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Provides a utility to compare multiple Hub Information devices, customize the html attributes, and set alert levels",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoAggregation.groovy",
+	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoAggregation.groovy",
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""
@@ -151,9 +154,9 @@ def hubAlerts(){
           int numHub=0
           qryDevice.each{
               paragraph "<b><u>${it.currentValue('locationName')}</u></b>"
-              input "maxTemp$numHub", "number", title:"Max Temperature (0..200)",range:"0..200"//,submitOnChange:true
-              input "maxDb$numHub", "number", title:"Max DB Size (0..1000)", range:"0..1000"//, submitOnChange:true
-              input "minMem$numHub", "number", title:"Min Free Memory (0..600000)", range:"0..600000"//, submitOnChange:true
+              input "maxTemp$numHub", "number", title:"Max Temperature (0..200)",range:"0..200", required: true
+              input "maxDb$numHub", "number", title:"Max DB Size (0..1000)", range:"0..1000", required:true
+              input "minMem$numHub", "number", title:"Min Free Memory (0..600000)", range:"0..600000", required:true
               numHub++
           }
       }
@@ -210,15 +213,15 @@ def refreshDevice(evt = null){
         int numHub=0
         qryDevice.each{
             if(it.currentValue("temperature") >= settings["maxTemp$numHub"]){
-                notifyStr = "Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
+                notifyStr = "HIA Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
                 sendNotification(notifyStr)
             }
             if(it.currentValue("dbSize") >= settings["maxDb$numHub"]){
-                notifyStr = "DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize")}"
+                notifyStr = "HIA DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize")}"
                 sendNotification(notifyStr)
             }
             if(it.currentValue("freeMemory") <= settings["minMem$numHub"]){
-                notifyStr = "Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
+                notifyStr = "HIA Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
                 sendNotification(notifyStr)
             }
             numHub++

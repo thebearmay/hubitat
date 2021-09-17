@@ -73,12 +73,13 @@
  *    2021-08-14  thebearmay     add html update from HIA
  *    2021-08-19  thebearmay     zwaveSDKVersion not in HTML
  *    2021-08-23  thebearmay     simplify unit retrieval
+ *    2021-09-16  thebearmay     add localIP check into the polling cycle instead of one time check
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.2"}
+static String version() {return "2.6.3"}
 
 metadata {
     definition (
@@ -447,6 +448,9 @@ void getPollValues(){
         myHubData = parseHubData()
         updateAttr("zigbeeChannel",myHubData.zigbeeChannel)
     }
+    
+    //verify localIP in case of change
+    updateAttr("localIP", location.hub.localIP)
     
     // Zwave Version
     if(checkZwVersion == null && isCompatible(7))

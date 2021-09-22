@@ -26,13 +26,16 @@ metadata {
 		author: "Jean P. May, Jr.",
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/tileIframe.groovy"
 	) {
-        	capability "Actuator"
-	    	capability "Sensor"
-  //          capability "Variable"
+        capability "Actuator"
 		
-		attribute "html", "string"
-        attribute "url", "string"
-        command "setSource", [[name:"url", type:"STRING", description:"URL to display"]]   
+		attribute "html1", "string"
+        attribute "url1", "string"
+        attribute "html2", "string"
+        attribute "url2", "string"
+        attribute "html3", "string"
+        attribute "url3", "string"
+
+        command "setSource", [[name:"url", type:"STRING", description:"URL to display"],[name:"url2", type:"STRING", description:"URL to display"],[name:"url3", type:"STRING", description:"URL to display"]]   
             
     }   
 }
@@ -51,10 +54,18 @@ def updated(){
     if(debugEnable) runIn(1800,logsOff)
 }
 
-def setSource(url) {
-    if(debugEnable) log.debug "setSource $url"
-    sendEvent(name:"html", value:"<iframe src='$url' style='width:100%;height:100%;border:none;'></iframe>")
-    sendEvent(name:"url",value:url)
+def setSource(url1, url2="", url3="") {
+    if(debugEnable) log.debug "setSource $url1 $url2 $url3"
+    sendEvent(name:"html1", value:"<iframe src='$url1' style='width:100%;height:100%;border:none;'></iframe>")
+    sendEvent(name:"url1",value:url1)
+    if(url2 > ""){
+        sendEvent(name:"html2", value:"<iframe src='$url2' style='width:100%;height:100%;border:none;'></iframe>")
+        sendEvent(name:"url2",value:url2)
+    }
+    if(url3 > "") {
+        sendEvent(name:"html3", value:"<iframe src='$url3' style='width:100%;height:100%;border:none;'></iframe>")
+        sendEvent(name:"url3",value:url3)
+    }
 }
 
 

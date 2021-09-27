@@ -45,9 +45,9 @@ def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
 	   section("Main") {
-                input "qryDevice", "capability.contactSensor", title: "Contact Sensors of Interest:", multiple: true, required: true, submitOnChange: true
+                input "qryDevice", "capability.contactSensor", title: "Contact Sensors of Interest:", multiple: true, required: false, submitOnChange: true
                 if (qryDevice != null) href "deviceCharacteristics", title: "Send Close Event", required: false
-                input "qryDevice2", "capability.motionSensor", title: "Motion Sensors of Interest:", multiple: true, required: true, submitOnChange: true
+                input "qryDevice2", "capability.motionSensor", title: "Motion Sensors of Interest:", multiple: true, required: false, submitOnChange: true
                 if (qryDevice2 != null) href "deviceCharacteristics", title: "Send Inactive Event", required: false
 	   }
 	} else {

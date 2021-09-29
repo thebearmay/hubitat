@@ -74,12 +74,13 @@
  *    2021-08-19  thebearmay     zwaveSDKVersion not in HTML
  *    2021-08-23  thebearmay     simplify unit retrieval
  *    2021-09-16  thebearmay     add localIP check into the polling cycle instead of one time check
+ *    2021-09-29  thebearmay     suppress temperature event if negative
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.3"}
+static String version() {return "2.6.4"}
 
 metadata {
     definition (
@@ -598,14 +599,16 @@ void getTempHandler(resp, data) {
     try {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             Double tempWork = new Double(resp.data.toString())
-            if(debugEnable) log.debug tempWork
-            if (location.temperatureScale == "F")
-                updateAttr("temperature",celsiusToFahrenheit(tempWork),"°F")
-            else
-                updateAttr("temperature",tempWork,"°C")
+            if(tempWork > 0) {
+                if(debugEnable) log.debug tempWork
+                if (location.temperatureScale == "F")
+                    updateAttr("temperature",celsiusToFahrenheit(tempWork),"°F")
+                else
+                    updateAttr("temperature",tempWork,"°C")
 
-            updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
-            updateAttr("temperatureC",tempWork+ " °C")
+                updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
+                updateAttr("temperatureC",tempWork+ " °C")
+            }
         }
     } catch(ignored) {
         def respStatus = resp.getStatus()

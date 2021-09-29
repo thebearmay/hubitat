@@ -23,10 +23,11 @@
  *    2021-03-30  thebearmay     Image Only tile instead of path
  *    2021-07-04  thebearmay	 Merge pull request from imnotbob, strong typing of variables
  *    2021-08-28  thebearmay	 add option to use html attribute instead of moonPhaseTile
+ *    2021-09-29  thebearmay	 Last Quarter typo - left out the first "r"
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.7.2'  }
+static String version()	{  return '0.7.3'  }
 
 metadata {
     definition (
@@ -149,7 +150,7 @@ void getPhase(Long cDate = now()) {
         }
     }
     
-    List<String>imgList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbious", "Full Moon", "Waning Gibbous", "Last Quater", "Waning Crescent"]
+    List<String>imgList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbious", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
     if(imgNum!=null) {
         phaseText = imgList[imgNum]
     } else phaseText = "Error - Out of Range"

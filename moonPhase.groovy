@@ -24,10 +24,11 @@
  *    2021-07-04  thebearmay	 Merge pull request from imnotbob, strong typing of variables
  *    2021-08-28  thebearmay	 add option to use html attribute instead of moonPhaseTile
  *    2021-09-29  thebearmay	 Last Quarter typo - left out the first "r"
+ *    2021-10-03  thebearmay     Change refresh to sunset
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.7.3'  }
+static String version()	{  return '0.7.4'  }
 
 metadata {
     definition (
@@ -53,7 +54,7 @@ metadata {
 
 preferences {
     input("debugEnable", "bool", title: "Enable debug logging?")
-    input("autoUpdate", "bool", title: "Enable automatic update at midnight")
+    input("autoUpdate", "bool", title: "Enable automatic update at sunset")
     input("widenRange","bool",title:"Widen the Qtrly Checkpoints by 1%")
     input("htmlVtile", "bool", title:"Use html attribute instead of moonPhaseTile")
     input("iconPathOvr", "string", title: "Alternate path to moon phase icons \n(must contain file names moon-phase-icon-0 through moon-phase-icon-7)")
@@ -162,6 +163,13 @@ void getPhase(Long cDate = now()) {
         updateAttr("moonPhaseTile",phaseIcon)
     else
         updateAttr("html",phaseIcon)
+    
+    HashMap riseAndSet = getSunriseAndSunset()
+    if(riseAndSet.sunset < new Date()){
+        getSunriseAndSunset(sunsetOffset: "+24:00")
+    }
+    unschedule()
+    runOnce(riseAndSet.sunset, getPhase)
 }
 
 void updateAttr(String aKey, aValue){
@@ -178,8 +186,12 @@ def initialize(){
 
 def updated(){
 	log.trace "updated()"
+    HashMap riseAndSet = getSunriseAndSunset()
+    if(riseAndSet.sunset < new Date()){
+        getSunriseAndSunset(sunsetOffset: "+24:00")
+    }
     unschedule()
-    if(autoUpdate) schedule("1 0 0 ? * * *", getPhase)
+    runOnce(riseAndSet.sunset, getPhase)
 	if(debugEnable) runIn(1800,logsOff)
 }
 

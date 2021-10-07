@@ -6,12 +6,12 @@ static String version()	{  return '0.0.1'  }
 
 
 definition (
-	name: 			"Contact Sensor Close", 
+	name: 			"Contact Sensor Close with Button", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Logic Check .",
+	description: 	"Force/Send close event with optional button.",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxxxx.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/contactCloseButton.groovy",
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""

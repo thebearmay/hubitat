@@ -119,7 +119,8 @@ def refreshDevice(evt = null){
             }
             if(it.currentValue("localIP") != settings["ip$numHub"] && settings["ip$numHub"]) {
                 notifyStr = "Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP")}"
-                sendNotification(notifyStr)           
+                sendNotification(notifyStr)
+		app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
             }
             numHub++
          }

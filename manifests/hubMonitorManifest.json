@@ -1,0 +1,18 @@
+{
+  "packageName": "Hub Monitor",
+  "author": "Jean P. May, Jr.",
+  "version": "0.1.0",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2021-10-08",
+  "apps": [
+    {
+      "id": "6a76eb1c-bc61-42d8-88db-4a12742f9839",
+      "name": "Hub Monitor",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubMonitor.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ]
+}

@@ -4,6 +4,7 @@
   "version": "0.1.2",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-10-08",
+  "releaseNotes":"0.1.2 - add debug code and make sure variables are float/integer when appropriate",
   "apps": [
     {
       "id": "6a76eb1c-bc61-42d8-88db-4a12742f9839",

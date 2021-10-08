@@ -74,6 +74,13 @@
       "category": "Convenience",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubInfoAggManifest.json",
       "description": "Application allows multiple instances of the Hub Information Driver to be displayed in one space. Also permits the creation of a customized html attribute that can be displayed on a dashboard attribute tile."
+    },
+    {
+      "id": "1e09b985-03b7-4cdc-96dc-2b2e6586a8df",
+      "name": "Hub Monitor",
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubMonitorManifest.json",
+      "description": "Application allows monitoring of multiple instances of the Hub Information Driver, and will generate notifications for temperature, database size, free memory and IP address changes."
     }
   ]
 }

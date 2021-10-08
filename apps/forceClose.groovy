@@ -1,12 +1,21 @@
-/*
+/* Contact Sensor Close / Motion Sensor Inactive
 
+ *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
  */
 
-static String version()	{  return '0.0.0'  }
+static String version()	{  return '0.0.1'  }
 
 
 definition (
-	name: 			"Force Close", 
+	name: 			"Force Sensor Close/Inactive", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
 	description: 	"Logic Check .",
@@ -23,9 +32,15 @@ preferences {
 }
 
 def installed() {
-//	log.trace "installed()"
+    log.info "${app.name} v${version()} installed()"
     state?.isInstalled = true
+    state?.singleThreaded = true
     initialize()
+}
+
+def uninstalled() {
+    log.info "${app.name} v${version()} uninstalled()"
+    removeDevice()
 }
 
 def updated(){
@@ -44,38 +59,58 @@ void logsOff(){
 def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
-	   section("Main") {
-                input "qryDevice", "capability.contactSensor", title: "Contact Sensors of Interest:", multiple: true, required: false, submitOnChange: true
+	    	section("Main")
+		    {
+                input "qryDevice", "capability.contactSensor", title: "Contact Sensors Selected:", multiple: true, required: false, submitOnChange: true
                 if (qryDevice != null) href "deviceCharacteristics", title: "Send Close Event", required: false
-                input "qryDevice2", "capability.motionSensor", title: "Motion Sensors of Interest:", multiple: true, required: false, submitOnChange: true
-                if (qryDevice2 != null) href "deviceCharacteristics", title: "Send Inactive Event", required: false
-	   }
-	} else {
-	   section("") {
+                input "qryDevice2", "capability.motionSensor", title: "Motion Sensors Selected:", multiple: true, required: false, submitOnChange: true
+                if (qryDevice2 != null) href "deviceCharacteristics", title: "Send Inactive Event", required: false                
+                input "createChild", "bool", title: "Create Button Device?", defaultValue: false, submitOnChange: true
+                if(createChild) {
+					addDevice()
+                } else {
+                    removeDevice()
+                }				
+                if (qryDevice != null) href "deviceCharacteristics", title: "Send Close Event", required: false
+		    }
+	    } else {
+		    section("") {
 			    paragraph title: "Click Done", "Please click Done to install app before continuing"
-	   }
-	}
+		    }
+	    }
     }
 }
 
 def deviceCharacteristics(){
     dynamicPage (name: "deviceCharacteristics", title: "", install: false, uninstall: false) {
-	  section(""){
-	  	if (qryDevice != null) {
-          		qryDevice.each{
-              			it.sendEvent(name:"contact",value:"closed",isStateChange:true)
-              			paragraph "<p>${it.displayName} ${it.currentValue('contact')}</p>"
-          		}
-		}
-	  	if (qryDevice2 != null) {
-			qryDevice2.each{
-              			it.sendEvent(name:"motion",value:"inactive",isStateChange:true)
-              			paragraph "<p>${it.displayName} ${it.currentValue('motion')}</p>"
-          		}
-		}
-       }
+	    section(""){
+		    closeContacts()
+        qryDevice.each{
+          paragraph "<p>${it.displayName} ${it.currentValue('contact')}</p>"
+        }
+      }
     }
 }
+
+def closeContacts(evt = "pushed"){
+	qryDevice.each{
+		it.sendEvent(name:"contact",value:"closed",isStateChange:true)
+	}
+}
+
+def addDevice() {
+    if(!this.getChildDevice("cscButton001")){
+        addChildDevice("hubitat","Virtual Button","cscButton001",[name:"Close Contact Button"])
+        chDev = this.getChildDevice("cscButton001")
+        subscribe(chDev, "pushed", "closeContacts")
+    }
+}
+
+def removeDevice(){
+	unsubscribe()
+  deleteChildDevice("cscButton001")
+}
+
 
 def appButtonHandler(btn) {
     switch(btn) {
@@ -84,7 +119,6 @@ def appButtonHandler(btn) {
               break
       }
 }
-
 def intialize() {
 
 }

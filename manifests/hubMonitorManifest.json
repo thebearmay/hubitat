@@ -1,7 +1,7 @@
 {
   "packageName": "Hub Monitor",
   "author": "Jean P. May, Jr.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-10-08",
   "apps": [

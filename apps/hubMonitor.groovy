@@ -87,7 +87,7 @@ def mainPage(){
 def hubAlerts(){
     dynamicPage (name: "hubAlerts", title: "Hub Alerts", install: false, uninstall: false) {
 	  section(""){
-          input "notifyDevice", "capability.notification", title: "Notification Devices:", multiple:true
+          input "notifyDevice", "capability.notification", title: "Notification Devices:", multiple:true, required:true
           int numHub=0
           qryDevice.each{
               paragraph "<b><u>${it.currentValue('locationName')}</u></b>"

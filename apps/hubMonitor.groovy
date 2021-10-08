@@ -12,9 +12,10 @@
  *     Date              Who           Description
  *    ===========       ===========   =====================================================
  *    2021-10-08        thebearmay    New code
+ *                                    0.1.1 fix null condition coming from hub information device
  */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.1.1'  }
 
 
 definition (
@@ -105,22 +106,22 @@ def refreshDevice(evt = null){
     if(notifyDevice){
         int numHub=0
         qryDevice.each{
-            if(it.currentValue("temperature") >= settings["maxTemp$numHub"]){
+            if(it.currentValue("temperature") >= settings["maxTemp$numHub"] && it.currentValue("temperature") != null ){
                 notifyStr = "HIA Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("dbSize") >= settings["maxDb$numHub"]){
+            if(it.currentValue("dbSize") >= settings["maxDb$numHub"] && it.currentValue("dbSize") != null ){
                 notifyStr = "HIA DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize")}"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("freeMemory") <= settings["minMem$numHub"]){
+            if(it.currentValue("freeMemory") <= settings["minMem$numHub"] && it.currentValue("freeMemory") != null ){
                 notifyStr = "HIA Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
                 sendNotification(notifyStr)
             }
             if(it.currentValue("localIP") != settings["ip$numHub"] && settings["ip$numHub"]) {
                 notifyStr = "Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP")}"
                 sendNotification(notifyStr)
-		app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
+		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
             }
             numHub++
          }

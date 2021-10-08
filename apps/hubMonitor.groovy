@@ -16,7 +16,7 @@
  *                                    0.1.2 add debugging logic
  */
 
-static String version()	{  return '0.1.2'  }
+static String version()	{  return '0.1.3'  }
 
 
 definition (
@@ -115,7 +115,7 @@ def refreshDevice(evt = null){
                 log.debug "${it.currentValue('locationName')} Temperature reported: ${it.currentValue("temperature")} Alert Level: ${settings["maxTemp$numHub"]}"
                 log.debug "${it.currentValue('locationName')} Database Size reported: ${it.currentValue("dbSize")} Alert Level: ${settings["maxDb$numHub"]}"
                 log.debug "${it.currentValue('locationName')} Free Memory reported: ${it.currentValue("freeMemory")} Alert Level: ${settings["minMem$numHub"]}"
-                log.debug "${it.currentValue('locationName')} IP reported: ${it.currentValue("localIP")} Previous Value: ${settings["ip$numHub"]}"
+                if(settings["ip$numHub"])log.debug "${it.currentValue('locationName')} IP reported: ${it.currentValue("localIP")} Previous Value: ${settings["ip$numHub"]}"
             }
             if(it.currentValue("temperature").toFloat() >= settings["maxTemp$numHub"].toFloat() && it.currentValue("temperature") != null ){
                 notifyStr = "HIA Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
@@ -142,6 +142,7 @@ def refreshDevice(evt = null){
 
 void sendNotification(notifyStr){
     notifyDevice.each { 
+      if(debugEnable) log.debug "Sending notification to $it, text: $notifyStr"
       it.deviceNotification(notifyStr)  
     }   
 }

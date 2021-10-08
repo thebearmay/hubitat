@@ -115,7 +115,7 @@ def refreshDevice(evt = null){
                 log.debug "${it.currentValue('locationName')} Temperature reported: ${it.currentValue("temperature")} Alert Level: ${settings["maxTemp$numHub"]}"
                 log.debug "${it.currentValue('locationName')} Database Size reported: ${it.currentValue("dbSize")} Alert Level: ${settings["maxDb$numHub"]}"
                 log.debug "${it.currentValue('locationName')} Free Memory reported: ${it.currentValue("freeMemory")} Alert Level: ${settings["minMem$numHub"]}"
-                log.debug "${it.currentValue('locationName')} IP reported: ${it.currentValue("localIP")} Alert Level: ${settings["ip$numHub"]}"
+                log.debug "${it.currentValue('locationName')} IP reported: ${it.currentValue("localIP")} Previous Value: ${settings["ip$numHub"]}"
             }
             if(it.currentValue("temperature").toFloat() >= settings["maxTemp$numHub"].toFloat() && it.currentValue("temperature") != null ){
                 notifyStr = "HIA Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"

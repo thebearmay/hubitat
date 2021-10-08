@@ -13,9 +13,10 @@
  *    ===========       ===========   =====================================================
  *    2021-10-08        thebearmay    New code
  *                                    0.1.1 fix null condition coming from hub information device
+ *                                    0.1.2 add debugging logic
  */
 
-static String version()	{  return '0.1.1'  }
+static String version()	{  return '0.1.2'  }
 
 
 definition (
@@ -44,7 +45,10 @@ void installed() {
 void updated(){
 //	log.trace "updated()"
     if(!state?.isInstalled) { state?.isInstalled = true }
-	if(debugEnable) runIn(1800,logsOff)
+    if(debugEnable) {
+        unschedule(logsOff)
+        runIn(1800,logsOff)
+    }
 }
 
 void initialize(){
@@ -60,6 +64,7 @@ def mainPage(){
 	    	section("Main")
 		    {
                 input "qryDevice", "capability.initialize", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
+                input "debugEnable", "bool", title: "Enable Debugging:", submitOnChange: true
                 if (qryDevice != null){
                     hubDevCheck = true
                     qryDevice.each{
@@ -106,15 +111,21 @@ def refreshDevice(evt = null){
     if(notifyDevice){
         int numHub=0
         qryDevice.each{
-            if(it.currentValue("temperature") >= settings["maxTemp$numHub"] && it.currentValue("temperature") != null ){
+            if(debugEnable){
+                log.debug "${it.currentValue('locationName')} Temperature reported: ${it.currentValue("temperature")} Alert Level: ${settings["maxTemp$numHub"]}"
+                log.debug "${it.currentValue('locationName')} Database Size reported: ${it.currentValue("dbSize")} Alert Level: ${settings["maxDb$numHub"]}"
+                log.debug "${it.currentValue('locationName')} Free Memory reported: ${it.currentValue("freeMemory")} Alert Level: ${settings["minMem$numHub"]}"
+                log.debug "${it.currentValue('locationName')} IP reported: ${it.currentValue("localIP")} Alert Level: ${settings["ip$numHub"]}"
+            }
+            if(it.currentValue("temperature").toFloat() >= settings["maxTemp$numHub"].toFloat() && it.currentValue("temperature") != null ){
                 notifyStr = "HIA Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("dbSize") >= settings["maxDb$numHub"] && it.currentValue("dbSize") != null ){
+            if(it.currentValue("dbSize").toInteger() >= settings["maxDb$numHub"].toInteger() && it.currentValue("dbSize") != null ){
                 notifyStr = "HIA DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize")}"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("freeMemory") <= settings["minMem$numHub"] && it.currentValue("freeMemory") != null ){
+            if(it.currentValue("freeMemory").toInteger() <= settings["minMem$numHub"].toInteger() && it.currentValue("freeMemory") != null ){
                 notifyStr = "HIA Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
                 sendNotification(notifyStr)
             }

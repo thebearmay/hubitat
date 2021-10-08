@@ -31,9 +31,6 @@ definition (
 
 preferences {
     page name: "mainPage"
-    page name: "hubAttrSelect"
-    page name: "attrRepl"
-    page name: "hubInfoAgg"
     page name: "hubAlerts"
 }
 

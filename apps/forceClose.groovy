@@ -18,7 +18,7 @@ definition (
 	name: 			"Force Sensor Close-Inactive", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Logic Check .",
+	description: 	"Sends inactive/close event to designated sensors.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/forceClose.groovy",
 	oauth: 			false,

@@ -15,7 +15,7 @@ static String version()	{  return '0.0.2'  }
 
 
 definition (
-	name: 			"Force Sensor Close/Inactive", 
+	name: 			"Force Sensor Close-Inactive", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
 	description: 	"Logic Check .",
@@ -62,16 +62,14 @@ def mainPage(){
 	    	section("Main")
 		    {
                 input "qryDevice", "capability.contactSensor", title: "Contact Sensors Selected:", multiple: true, required: false, submitOnChange: true
-                if (qryDevice != null) href "deviceCharacteristics", title: "Send Close Event", required: false
                 input "qryDevice2", "capability.motionSensor", title: "Motion Sensors Selected:", multiple: true, required: false, submitOnChange: true
-                if (qryDevice2 != null) href "deviceCharacteristics", title: "Send Inactive Event", required: false                
                 input "createChild", "bool", title: "Create Button Device?", defaultValue: false, submitOnChange: true
                 if(createChild) {
 					addDevice()
                 } else {
                     removeDevice()
                 }				
-                if (qryDevice != null) href "deviceCharacteristics", title: "Send Close Event", required: false
+                if (qryDevice != null || qryDevide2 != null) href "deviceCharacteristics", title: "Send Close-Inactive Event", required: false
 		    }
 	    } else {
 		    section("") {

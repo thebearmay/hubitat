@@ -11,7 +11,7 @@
  *
  */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 
 definition (
@@ -88,6 +88,9 @@ def deviceCharacteristics(){
         qryDevice.each{
           paragraph "<p>${it.displayName} ${it.currentValue('contact')}</p>"
         }
+        qryDevice2.each{
+          paragraph "<p>${it.displayName} ${it.currentValue('motion')}</p>"
+        }
       }
     }
 }
@@ -95,6 +98,9 @@ def deviceCharacteristics(){
 def closeContacts(evt = "pushed"){
 	qryDevice.each{
 		it.sendEvent(name:"contact",value:"closed",isStateChange:true)
+	}
+    qryDevice2.each{
+		it.sendEvent(name:"motion",value:"inactive",isStateChange:true)
 	}
 }
 

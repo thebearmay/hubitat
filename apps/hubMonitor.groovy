@@ -118,19 +118,19 @@ def refreshDevice(evt = null){
                 if(settings["ip$numHub"])log.debug "${it.currentValue('locationName')} IP reported: ${it.currentValue("localIP")} Previous Value: ${settings["ip$numHub"]}"
             }
             if(it.currentValue("temperature").toFloat() >= settings["maxTemp$numHub"].toFloat() && it.currentValue("temperature") != null ){
-                notifyStr = "HIA Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
+                notifyStr = "Hub Monitor Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
                 sendNotification(notifyStr)
             }
             if(it.currentValue("dbSize").toInteger() >= settings["maxDb$numHub"].toInteger() && it.currentValue("dbSize") != null ){
-                notifyStr = "HIA DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize")}"
+                notifyStr = "Hub Monitor DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize")}"
                 sendNotification(notifyStr)
             }
             if(it.currentValue("freeMemory").toInteger() <= settings["minMem$numHub"].toInteger() && it.currentValue("freeMemory") != null ){
-                notifyStr = "HIA Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
+                notifyStr = "Hub Monitor Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
                 sendNotification(notifyStr)
             }
             if(it.currentValue("localIP") != settings["ip$numHub"] && settings["ip$numHub"]) {
-                notifyStr = "Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP")}"
+                notifyStr = "Hub Monitor - Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP")}"
                 sendNotification(notifyStr)
 		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
             }

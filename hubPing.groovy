@@ -32,16 +32,18 @@
  *    2021-08-26  thebearmay	 data.ipAddress was truncate to data.ip 
  *                               IP not passing when using old method and repeating ping
  *    2021-08-28  thebearmay	 Attributes can't be bool
+ *    2021-10-11  thebearmay	 Restrict to one instance running at a time
  */
 
-static String version()	{  return '2.1.8'  }
+static String version()	{  return '2.1.9'  }
 
 metadata {
     definition (
 		name: "Hubitat Ping", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
-	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubPing.groovy"
+	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubPing.groovy",
+	    	singleThreaded: true
 	) {
         capability "Actuator"
         capability "Configuration"

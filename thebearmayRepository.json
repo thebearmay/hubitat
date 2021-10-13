@@ -45,14 +45,20 @@
       "name": "Hubitat Ping Device",
       "category": "Integrations",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubPingManifest.json",
-      "description": "Device driver that provides a wrapper for the Hubitat Ping endpoint.  sendPing command accepts an IPv4 sring and will send it to the hub, which will do 5 ICMP requests.  Optionally, can be set through the preferences to repeat the ping command on a specified interval.  Returns: percentLoss, avg, min, max, mdev, pingReturn, and presence.  Implements capabilities Acutator, Configuration, and Presence."
+      "description": "Device driver that provides a wrapper for the Hubitat Ping endpoint.  sendPing command accepts an IPv4 sring and will send it to the hub, which will do 5 ICMP requests.  Optionally, can be set through the preferences to repeat the ping command on a specified interval.  Returns: percentLoss, avg, min, max, mdev, pingReturn, and presence.  Implements capabilities Acutator, Configuration, and Presence.",
+      "tags": [
+        "Misc. Devices"
+      ]
     },
     {
       "id": "70b5f419-c511-4614-811d-f90b302a3d8a",
       "name": "Device Details Display",
       "category": "Convenience",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/devCharManifest.json",
-      "description": "Simple application that displays the capabilities, attributes (summary and detail, commands (summary and detail) and device data for devices selected.  Allows for the quick comparison of multiple devices."
+      "description": "Simple application that displays the capabilities, attributes (summary and detail, commands (summary and detail) and device data for devices selected.  Allows for the quick comparison of multiple devices.",
+      "tags": [
+        "Misc. Devices"
+      ]
     },
     {
       "id": "6c2681e0-747f-45fc-8c14-1ccb86111f93",
@@ -80,7 +86,10 @@
       "name": "Hub Monitor",
       "category": "Convenience",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubMonitorManifest.json",
-      "description": "Application allows monitoring of multiple instances of the Hub Information Driver, and will generate notifications for temperature, database size, free memory and IP address changes."
+      "description": "Application allows monitoring of multiple instances of the Hub Information Driver, and will generate notifications for temperature, database size, free memory and IP address changes.",
+      "tags": [
+        "Monitoring"
+      ]      
     }
   ]
 }

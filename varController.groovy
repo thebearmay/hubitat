@@ -62,6 +62,7 @@ def mainPage(){
 def ccSubscribe(){
     unsubscribe()
     subscribe(qryDevice,"varName",ccProcess)
+    subscribe(qryDevice,"varCmd",ccProcess)
 }
 
 def ccProcess(evt=null) {

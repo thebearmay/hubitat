@@ -3,7 +3,6 @@
  */
 
 static String version()	{  return '0.0.0'  }
-#include hubitat.bb2Html
 
 definition (
 	name: 			"Hub Variable Controller", 

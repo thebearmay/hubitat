@@ -70,7 +70,7 @@ def mainPage(){
           		if (qryDevice != null){
             			href "sendCodeEvent", title: "Send Last Code Name Event", required: false
             			unsubscribe(qryDevice)
-            			subscribe(qryDevice,"lock","nameOverride")
+            			subscribe(qryDevice,"lastCodeName","nameOverride")
           		}
 		}
 	} else {
@@ -94,8 +94,7 @@ def sendCodeEvent(){
 
 def nameOverride(evt = "pushed"){
 	qryDevice.each{
-		if (it.currentValue("lock") == "unlocked")
-			it.sendEvent(name:"lastCodeName",value:"None",isStateChange:true)
+		it.sendEvent(name:"lastCodeName",value:"None")
 	}
 }
 

@@ -59,37 +59,36 @@ void logsOff(){
 def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
-	    	section("Main")
-		    {
-          input "qryDevice", "capability.lock", title: "Contact Sensors Selected:", multiple: true, required: false, submitOnChange: true
-          input "createChild", "bool", title: "Create Button Device?", defaultValue: false, submitOnChange: true
-          if(createChild) {
-					   addDevice()
-          } else {
-             removeDevice()
-          }				
-          if (qryDevice != null){
-            href "sendCodeEvent", title: "Send Close-Inactive Event", required: false
-            unsubscribe()
-            subscribe(qryDevice,"lastCodeName","nameOverride")
-          }
-		    }
-	    } else {
-		    section("") {
-			    paragraph title: "Click Done", "Please click Done to install app before continuing"
-		    }
-	    }
+		section("Main"){
+          		input "qryDevice", "capability.lock", title: "Contact Sensors Selected:", multiple: true, required: false, submitOnChange: true
+          		input "createChild", "bool", title: "Create Button Device?", defaultValue: false, submitOnChange: true
+          		if(createChild) {
+				addDevice()
+          		} else {
+             			removeDevice()
+          		}				
+          		if (qryDevice != null){
+            			href "sendCodeEvent", title: "Send Close-Inactive Event", required: false
+            			unsubscribe(qryDevice)
+            			subscribe(qryDevice,"lastCodeName","nameOverride")
+          		}
+		}
+	} else {
+		section("") {
+			paragraph title: "Click Done", "Please click Done to install app before continuing"
+		}
+	}
     }
 }
 
 def sendCodeEvent(){
     dynamicPage (name: "sendCodeEvent", title: "", install: false, uninstall: false) {
-	    section(""){
-		    nameOverride()
-        qryDevice.each{
-          paragraph "<p>${it.displayName} lastCodeName: <b>${it.currentValue('lastCodeName')}</b></p>"
-        }
-      }
+	section(""){
+		nameOverride()
+        	qryDevice.each{
+          		paragraph "${it.displayName} lastCodeName: <b>${it.currentValue('lastCodeName')}</b>"
+        	}
+	}
     }
 }
 
@@ -97,7 +96,6 @@ def nameOverride(evt = "pushed"){
 	qryDevice.each{
 		it.sendEvent(name:"lastCodeName",value:"None",isStateChange:true)
 	}
-
 }
 
 def addDevice() {
@@ -109,8 +107,8 @@ def addDevice() {
 }
 
 def removeDevice(){
-	unsubscribe()
-  deleteChildDevice("lcnOvrButton001")
+	unsubscribe(getChildDevice("lcnOvrButton001"))
+	deleteChildDevice("lcnOvrButton001")
 }
 
 

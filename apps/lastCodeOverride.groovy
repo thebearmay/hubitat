@@ -70,7 +70,7 @@ def mainPage(){
           		if (qryDevice != null){
             			href "sendCodeEvent", title: "Send Last Code Name Event", required: false
             			unsubscribe(qryDevice)
-            			subscribe(qryDevice,"lastCodeName","nameOverride")
+            			subscribe(qryDevice,"lock","nameOverride")
           		}
 		}
 	} else {

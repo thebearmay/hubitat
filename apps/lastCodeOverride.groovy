@@ -86,7 +86,7 @@ def sendCodeEvent(){
 	section(""){
 		nameOverride()
         	qryDevice.each{
-          		paragraph "${it.displayName} lastCodeName: <b>${it.currentValue('lastCodeName')}</b>"
+          		paragraph "${it.displayName} lastCodeName: <b>${it.currentValue('lastCodeName', true)}</b>"
         	}
 	}
     }

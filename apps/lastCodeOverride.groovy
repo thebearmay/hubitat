@@ -60,7 +60,7 @@ def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
 		section("Main"){
-          		input "qryDevice", "capability.lock", title: "Contact Sensors Selected:", multiple: true, required: false, submitOnChange: true
+          		input "qryDevice", "capability.lock", title: "Locks Selected:", multiple: true, required: false, submitOnChange: true
           		input "createChild", "bool", title: "Create Button Device?", defaultValue: false, submitOnChange: true
           		if(createChild) {
 				addDevice()
@@ -68,7 +68,7 @@ def mainPage(){
              			removeDevice()
           		}				
           		if (qryDevice != null){
-            			href "sendCodeEvent", title: "Send Close-Inactive Event", required: false
+            			href "sendCodeEvent", title: "Send Last Code Name Event", required: false
             			unsubscribe(qryDevice)
             			subscribe(qryDevice,"lastCodeName","nameOverride")
           		}
@@ -100,7 +100,7 @@ def nameOverride(evt = "pushed"){
 
 def addDevice() {
     if(!this.getChildDevice("lcnOvrButton001")){
-        addChildDevice("hubitat","Virtual Button","cscButton001",[name:"Close Contact Button"])
+        addChildDevice("hubitat","Virtual Button","lcnOvrButton001",[name:"Override Button"])
         chDev = this.getChildDevice("lcnOvrButton001")
         subscribe(chDev, "pushed", "nameOverride")
     }

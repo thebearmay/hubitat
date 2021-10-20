@@ -38,7 +38,7 @@ def installed() {
 
 }
 void updateAttr(String aKey, aValue, String aUnit = ""){
-    sendEvent(name:aKey, value:aValue, unit:aUnit,hasChanged:true)
+    sendEvent(name:aKey, value:aValue, unit:aUnit,isStateChange:true)
 }
 
 

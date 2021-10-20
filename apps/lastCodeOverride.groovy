@@ -94,7 +94,7 @@ def sendCodeEvent(){
 
 def nameOverride(evt = "pushed"){
 	qryDevice.each{
-		it.sendEvent(name:"lastCodeName",value:"None")
+		it.sendEvent(name:"lastCodeName",value:"None") //shouldn't create a race condition because None = None won't create a new event
 	}
 }
 

@@ -10,7 +10,7 @@
  *
  */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 
 definition (
@@ -27,7 +27,7 @@ definition (
 
 preferences {
    page name: "mainPage"
-   page name: "sendEvent"
+   page name: "sendCodeEvent"
 }
 
 def installed() {

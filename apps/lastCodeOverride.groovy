@@ -94,7 +94,8 @@ def sendCodeEvent(){
 
 def nameOverride(evt = "pushed"){
 	qryDevice.each{
-		it.sendEvent(name:"lastCodeName",value:"None",isStateChange:true)
+		if (it.currentValue("lock") == "unlocked")
+			it.sendEvent(name:"lastCodeName",value:"None",isStateChange:true)
 	}
 }
 

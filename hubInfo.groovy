@@ -75,12 +75,13 @@
  *    2021-08-23  thebearmay     simplify unit retrieval
  *    2021-09-16  thebearmay     add localIP check into the polling cycle instead of one time check
  *    2021-09-29  thebearmay     suppress temperature event if negative
+ *    2021-10-21  thebearmay     force a read against the database instead of cache when building html
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.4"}
+static String version() {return "2.6.5"}
 
 metadata {
     definition (
@@ -370,7 +371,7 @@ String combineAttr(String name, List<String> keys){
     
     String keyResult = ""
     for (i = 0;i < keys.size(); i++) {
-        keyResult+= device.currentValue(keys[i])
+        keyResult+= device.currentValue(keys[i],true)
         String attrUnit = getUnitFromState(keys[i])
         if (attrUnit != null) keyResult+=" "+attrUnit
         if (i < keys.size() - 1) keyResult+= " / "
@@ -388,7 +389,7 @@ String addToAttr(String name, String key, String convert = "none") {
     String attrUnit = getUnitFromState(key)
     if (attrUnit == null) attrUnit =""
 
-    def curVal = device.currentValue(key)
+    def curVal = device.currentValue(key,true)
     if(curVal){
         if (convert == "int"){
             retResult += curVal.toInteger().toString()+" "+attrUnit
@@ -414,7 +415,7 @@ String getModel(){
 }
 
 boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement
-    String model = device.currentValue("hubModel")
+    String model = device.currentValue("hubModel",true)
     if(!model){
         model = getModel()
         updateAttr("hubModel", model)

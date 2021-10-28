@@ -163,6 +163,7 @@ Content-Disposition: form-data; name="folder"
 }
 
 Boolean installBundle(bundle) {
+    //from the github make sure that the url ends with "?raw=true"
     if(security) cookie = securityLogin().cookie
     //adapted from BPTWorld code 
     try {

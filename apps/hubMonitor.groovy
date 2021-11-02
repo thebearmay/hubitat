@@ -17,7 +17,7 @@
  *    2021-11-02        thebearmay    add monitoring for hubUpdateStatus
  */
 
-static String version()	{  return '0.1.3'  }
+static String version()	{  return '0.1.4'  }
 
 
 definition (

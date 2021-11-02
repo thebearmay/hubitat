@@ -14,7 +14,7 @@
  *    2021-09-11        thebearmay    Change alerts to include HIA and require values
  */
 
-static String version()	{  return '0.6.0'  }
+static String version()	{  return '0.6.1'  }
 
 
 definition (
@@ -157,6 +157,10 @@ def hubAlerts(){
               input "maxTemp$numHub", "number", title:"Max Temperature (0..200)",range:"0..200", required: true
               input "maxDb$numHub", "number", title:"Max DB Size (0..1000)", range:"0..1000", required:true
               input "minMem$numHub", "number", title:"Min Free Memory (0..600000)", range:"0..600000", required:true
+              input "trackIp$numHub", "bool", title:"Alert on IP Change", required:true, submitOnChange:true
+              if(settings["trackIp$numHub"]) app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
+              input "trackUpdStat$numHub", "bool", title:"Alert on Hub Update Status Change", required:true, submitOnChange:true
+              if(settings["trackUpdStat$numHub"]) app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus'), type:"string"])
               numHub++
           }
       }
@@ -179,7 +183,7 @@ String buildTable() {
             if(settings["$replacement"]) htmlWork+="<tr><th>${settings[replacement]}</th>"
             else htmlWork+="<tr><th>$it</th>"
             for(i=0;i<qryDevice.size();i++){
-                htmlWork += '<td>'+qryDevice[i].currentValue("$it")+'</td>'
+                htmlWork += '<td>'+qryDevice[i].currentValue("$it",true)+'</td>'
             }
             htmlWork+='</tr>'
         }
@@ -212,17 +216,27 @@ def refreshDevice(evt = null){
     if(notifyDevice){
         int numHub=0
         qryDevice.each{
-            if(it.currentValue("temperature") >= settings["maxTemp$numHub"]){
-                notifyStr = "HIA Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
+            if(it.currentValue("temperature",true) >= settings["maxTemp$numHub"]){
+                notifyStr = "HIA Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature",true)}°"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("dbSize") >= settings["maxDb$numHub"]){
-                notifyStr = "HIA DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize")}"
+            if(it.currentValue("dbSize",true) >= settings["maxDb$numHub"]){
+                notifyStr = "HIA DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize",true)}"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("freeMemory") <= settings["minMem$numHub"]){
-                notifyStr = "HIA Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
+            if(it.currentValue("freeMemory",true) <= settings["minMem$numHub"]){
+                notifyStr = "HIA Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem",true)}"
                 sendNotification(notifyStr)
+            }
+            if(it.currentValue("localIP",true) != settings["ip$numHub"] && settings["ip$numHub"]) {
+                notifyStr = "Hub Monitor - Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP",true)}"
+                sendNotification(notifyStr)
+		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
+            }
+               if(it.currentValue("hubUpdateStatus",true) != settings["updStat$numHub"] && settings["updStat$numHub"]) {
+                notifyStr = "Hub Update Status for ${it.currentValue('locationName')} has changed to ${it.currentValue("hubUpdateStatus",true)}"
+                sendNotification(notifyStr)
+		        app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus'), type:"string"])
             }
             numHub++
          }

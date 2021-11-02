@@ -120,27 +120,27 @@ def refreshDevice(evt = null){
                 log.debug "${it.currentValue('locationName')} Free Memory reported: ${it.currentValue("freeMemory")} Alert Level: ${settings["minMem$numHub"]}"
                 if(settings["ip$numHub"])log.debug "${it.currentValue('locationName')} IP reported: ${it.currentValue("localIP")} Previous Value: ${settings["ip$numHub"]}"
             }
-            if(it.currentValue("temperature").toFloat() >= settings["maxTemp$numHub"].toFloat() && it.currentValue("temperature") != null ){
-                notifyStr = "Hub Monitor Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature")}°"
+            if(it.currentValue("temperature",true).toFloat() >= settings["maxTemp$numHub"].toFloat() && it.currentValue("temperature",true) != null ){
+                notifyStr = "Hub Monitor Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature",true)}°"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("dbSize").toInteger() >= settings["maxDb$numHub"].toInteger() && it.currentValue("dbSize") != null ){
-                notifyStr = "Hub Monitor DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize")}"
+            if(it.currentValue("dbSize",true).toInteger() >= settings["maxDb$numHub"].toInteger() && it.currentValue("dbSize",true) != null ){
+                notifyStr = "Hub Monitor DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize",true)}"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("freeMemory").toInteger() <= settings["minMem$numHub"].toInteger() && it.currentValue("freeMemory") != null ){
+            if(it.currentValue("freeMemory",true).toInteger() <= settings["minMem$numHub"].toInteger() && it.currentValue("freeMemory",true) != null ){
                 notifyStr = "Hub Monitor Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("localIP") != settings["ip$numHub"] && settings["ip$numHub"]) {
-                notifyStr = "Hub Monitor - Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP")}"
+            if(it.currentValue("localIP",true) != settings["ip$numHub"] && settings["ip$numHub"]) {
+                notifyStr = "Hub Monitor - Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP",true)}"
                 sendNotification(notifyStr)
-		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
+		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP',true), type:"string"])
             }
-               if(it.currentValue("hubUpdateStatus") != settings["updStat$numHub"] && settings["updStat$numHub"]) {
-                notifyStr = "Hub Update Status for ${it.currentValue('locationName')} has changed to ${it.currentValue("hubUpdateStatus")}"
+               if(it.currentValue("hubUpdateStatus",true) != settings["updStat$numHub"] && settings["updStat$numHub"]) {
+                notifyStr = "Hub Update Status for ${it.currentValue('locationName')} has changed to ${it.currentValue("hubUpdateStatus",true)}"
                 sendNotification(notifyStr)
-		        app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus'), type:"string"])
+		        app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus',true), type:"string"])
             }            
             numHub++
          }

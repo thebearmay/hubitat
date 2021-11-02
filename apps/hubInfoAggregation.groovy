@@ -11,10 +11,11 @@
  *
  *     Date              Who           Description
  *    ===========       ===========   =====================================================
- *    2021-09-11        thebearmay    Change alerts to include HIA and require values
+ *    2021-09-11        thebearmay    Change alerts to include HIA and require values, Add IP change to the alerts, default alert values, move to release statu
+ *    2021-11-02	thebearmay    Add hubUpdateStatus check
  */
 
-static String version()	{  return '0.6.1'  }
+static String version()	{  return '1.0.1'  }
 
 
 definition (

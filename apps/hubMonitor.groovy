@@ -14,6 +14,7 @@
  *    2021-10-08        thebearmay    New code
  *                                    0.1.1 fix null condition coming from hub information device
  *                                    0.1.2 add debugging logic
+ *    2021-11-02        thebearmay    add monitoring for hubUpdateStatus
  */
 
 static String version()	{  return '0.1.3'  }
@@ -101,6 +102,8 @@ def hubAlerts(){
               input "minMem$numHub", "number", title:"Min Free Memory (0..600000)", range:"0..600000", required:true,defaultValue:0
               input "trackIp$numHub", "bool", title:"Alert on IP Change", required:true, submitOnChange:true
               if(settings["trackIp$numHub"]) app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
+              input "trackUpdStat$numHub", "bool", title:"Alert on Hub Update Status Change", required:true, submitOnChange:true
+              if(settings["trackUpdStat$numHub"]) app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus'), type:"string"])
               numHub++
           }
       }
@@ -134,6 +137,11 @@ def refreshDevice(evt = null){
                 sendNotification(notifyStr)
 		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
             }
+               if(it.currentValue("hubUpdateStatus") != settings["updStat$numHub"] && settings["updStat$numHub"]) {
+                notifyStr = "Hub Update Status for ${it.currentValue('locationName')} has changed to ${it.currentValue("hubUpdateStatus")}"
+                sendNotification(notifyStr)
+		        app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus'), type:"string"])
+            }            
             numHub++
          }
     

@@ -1,7 +1,7 @@
 {
   "packageName": "Hub Information Aggregation",
   "author": "Jean P. May, Jr.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-11-02",
   "releaseNotes": "1.0.1 - Add alert for Hub Update Status\n1.0.0 - Add IP change to the alerts, default alert values, move to release status",

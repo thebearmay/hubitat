@@ -17,7 +17,7 @@
  *    2021-11-02        thebearmay    add monitoring for hubUpdateStatus
  */
 
-static String version()	{  return '0.1.4'  }
+static String version()	{  return '0.1.5'  }
 
 
 definition (
@@ -137,7 +137,7 @@ def refreshDevice(evt = null){
                 sendNotification(notifyStr)
 		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP',true), type:"string"])
             }
-               if(it.currentValue("hubUpdateStatus",true) != settings["updStat$numHub"] && settings["updStat$numHub"]) {
+               if(it.currentValue("hubUpdateStatus",true) != settings["updStat$numHub"] && settings["updStat$numHub"] && it.currentValue("hubUpdateStatus",true) != null) {
                 notifyStr = "Hub Update Status for ${it.currentValue('locationName')} has changed to ${it.currentValue("hubUpdateStatus",true)}"
                 sendNotification(notifyStr)
 		        app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus',true), type:"string"])

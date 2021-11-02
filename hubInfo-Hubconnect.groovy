@@ -67,7 +67,8 @@ metadata
 		attribute "zwaveVersion", "string"
         	attribute "zwaveData", "string"
 	        attribute "macAddr", "string"
-	        attribute "hubModel", "string"		
+	        attribute "hubModel", "string"	
+		attribute "hubUpdateStatus", "string"
 		
 		command "sync"
 	}

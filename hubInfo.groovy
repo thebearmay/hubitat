@@ -76,12 +76,13 @@
  *    2021-09-16  thebearmay     add localIP check into the polling cycle instead of one time check
  *    2021-09-29  thebearmay     suppress temperature event if negative
  *    2021-10-21  thebearmay     force a read against the database instead of cache when building html
+ *    2021-11-02  thebearmay     add hubUpdateStatus
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.5"}
+static String version() {return "2.6."}
 
 metadata {
     definition (
@@ -138,6 +139,7 @@ metadata {
         attribute "zwaveData", "string"
         attribute "macAddr", "string"
         attribute "hubModel", "string"
+        attribute "hubUpdateStatus", "string"
 
         command "hiaUpdate", ["string", "string"]
     }   
@@ -150,19 +152,20 @@ preferences {
     input("freeMemPollEnabled", "bool", title: "Enable Free Memory Polling")
     input("cpuPollEnabled", "bool", title: "Enable CPU Load Polling")
     input("dbPollEnabled","bool", title: "Enable DB Size Polling")
-    input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", default: false, required: false, submitOnChange: true)
+    input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", defaultValue: false, required: false, submitOnChange: true)
     input("evtStateDaysEnable", "bool", title:"Enable Display of Max Event/State Days Setting")
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
-        input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", default:300, submitOnChange: true)
+        input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
-    input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", default: false, submitOnChange: true)
+    input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", defaultValue: false, submitOnChange: true)
     input("zwLocked", "bool", title: "Never Run ZWave Version Update", default:false, submitOnChange: true)
-	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", default: false)
+	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
         input("password", "password", title: "Hub Security Password", required: false)
     }
+    input("fwUpdatePollRate","number", title:"Poll rate (in seconds) for FW Update Check (Default:6000, Disable:0):", defaultValue:6000, submitOnChange:true)
 }
 
 @SuppressWarnings('unused')
@@ -190,8 +193,14 @@ def updated(){
         runIn(1800,logsOff)
     }
     if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion){
-        unschedule()
+        unschedule("getPollValues")
         getPollValues()
+    }
+    if(fwUpdateCheckPollRate == null) 
+        device.updateSetting("fwUpdateCheckPollRate",[value:6000,type:"number"])
+    if(fwUpdatePollRate>0){
+        unschedule("updateCheck")
+        updateCheck()
     }
     if(warnSuppress == null) device.updateSetting("warnSuppress",[value:"false",type:"bool"])
     if (attribEnable)
@@ -263,6 +272,9 @@ def configure() {
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion) 
         getPollValues()
     if (attribEnable) formatAttrib()
+    if(fwUpdateCheckPollRate == null) 
+        device.updateSetting("fwUpdateCheckPollRate",[value:6000,type:"number"])
+    if(fwUpdatePollRate > 0 ) updateCheck()
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
@@ -581,9 +593,9 @@ void getPollValues(){
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion) {
         if(tempPollRate == null){
             device.updateSetting("tempPollRate",[value:300,type:"number"])
-            runIn(300,getPollValues)
+            runIn(300,"getPollValues")
         }else {
-            runIn(tempPollRate,getPollValues)
+            runIn(tempPollRate,"getPollValues")
         }
     }
 }
@@ -591,7 +603,7 @@ void getPollValues(){
 @SuppressWarnings('unused')
 def getTemp(){  // this is to handle the upgrade path from >= 1.8.x
     log.info "Upgrading HubInfo polling from 1.8.x"
-    unschedule(getTemp)
+    unschedule("getTemp")
     getPollValues()
 }
 
@@ -793,39 +805,7 @@ void parseZwave(String zString){
 
 String getUnitFromState(String attrName){
     return device.currentState(attrName).unit
-/*    String wrkStr = device.currentState(attrName).toString()
-    if(location.hub.firmwareVersionString <= "2.2.7.0") {
-        Integer start = wrkStr.indexOf('(')+1    
-        Integer end = wrkStr.length() - 1
-        wrkStr = wrkStr.substring(start,end)
-
-        if (debugEnabled) log.debug "$wrkStr"
-        List<String> stateParts = wrkStr.split(',')
-        return stateParts[3]?.trim()
-    } else {
-        String unt = altGetUnitProc(wrkStr) 
-        return unt
-    }
-*/
 }
-
-/* static String altGetUnitProc(String wrkStr) {
-    Integer start = wrkStr.indexOf('[')+1
-    Integer end = wrkStr.length()-1    
-    wrkStr = wrkStr.substring(start,end)
-    wrkStr = wrkStr.replace("=",":")
-
-    List<String> wrkStrPre = wrkStr.split(",")
-    HashMap statePartsMap = [:]    
-    wrkStrPre.each() {
-        List dSplit= it.split(":")
-        if(dSplit.size()>1)
-            statePartsMap.put(dSplit[0].trim(),dSplit[1].trim())
-        else
-           statePartsMap.put(dSplit[0].trim(),null)
-    }
-    return statePartsMap.unit    
-} */
 
 void restartCheck() {
  //   Long rsDate = Long.parseLong(device.currentValue('lastHubRestart'))
@@ -839,6 +819,34 @@ void restartCheck() {
     updateAttr("lastHubRestartFormatted",sdf.format(upDate))
 }
 
+@SuppressWarnings('unused')
+void updateCheck(){
+    if(fwUpdateCheckPollRate == 0) {
+        unschedule("updateCheck")
+        return
+    }
+    params = [
+            uri: "http://127.0.0.1:8080",
+            path:"/hub/cloud/checkForUpdate",
+            timeout: 10
+        ]
+   asynchttpGet("updChkCallback", params)
+   runIn(fwUpdateCheckPollRate,"updateCheck")
+}
+
+@SuppressWarnings('unused')
+void updChkCallback(resp, data) {
+    try {
+        if (resp.status == 200) {
+           def jSlurp = new JsonSlurper()
+           Map resMap = (Map)jSlurp.parseText((String)resp.data)
+           updateAttr("hubUpdateStatus",resMap.status)
+        }
+    } catch(ignore) {
+       updateAttr("hubUpdateStatus","Status Not Available")
+    }
+
+}
 
 @SuppressWarnings('unused')
 void hiaUpdate(htmlStr, auth) {

@@ -82,7 +82,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.6"}
+static String version() {return "2.6.7"}
 
 metadata {
     definition (
@@ -196,8 +196,8 @@ def updated(){
         unschedule("getPollValues")
         getPollValues()
     }
-    if(fwUpdateCheckPollRate == null) 
-        device.updateSetting("fwUpdateCheckPollRate",[value:6000,type:"number"])
+    if(fwUpdatePollRate == null) 
+        device.updateSetting("fwUpdatePollRate",[value:6000,type:"number"])
     if(fwUpdatePollRate>0){
         unschedule("updateCheck")
         updateCheck()
@@ -272,8 +272,8 @@ def configure() {
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion) 
         getPollValues()
     if (attribEnable) formatAttrib()
-    if(fwUpdateCheckPollRate == null) 
-        device.updateSetting("fwUpdateCheckPollRate",[value:6000,type:"number"])
+    if(fwUpdatePollRate == null) 
+        device.updateSetting("fwUpdatePollRate",[value:6000,type:"number"])
     if(fwUpdatePollRate > 0 ) updateCheck()
 }
 
@@ -821,7 +821,7 @@ void restartCheck() {
 
 @SuppressWarnings('unused')
 void updateCheck(){
-    if(fwUpdateCheckPollRate == 0) {
+    if(fwUpdatePollRate == 0) {
         unschedule("updateCheck")
         return
     }
@@ -831,7 +831,7 @@ void updateCheck(){
             timeout: 10
         ]
    asynchttpGet("updChkCallback", params)
-   runIn(fwUpdateCheckPollRate,"updateCheck")
+   runIn(fwUpdatePollRate,"updateCheck")
 }
 
 @SuppressWarnings('unused')
@@ -855,7 +855,6 @@ void hiaUpdate(htmlStr, auth) {
     else 
         updateAttr("html", "Illegal attempt using $auth")
 }
-
 
 @SuppressWarnings('unused')
 void logsOff(){

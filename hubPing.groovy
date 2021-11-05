@@ -33,9 +33,10 @@
  *                               IP not passing when using old method and repeating ping
  *    2021-08-28  thebearmay	 Attributes can't be bool
  *    2021-10-11  thebearmay	 Restrict to one instance running at a time
+ *    2021-11-05  thebearmay     Add Text Logging option
  */
 
-static String version()	{  return '2.1.9'  }
+static String version()	{  return '2.1.10'  }
 
 metadata {
     definition (
@@ -72,6 +73,7 @@ preferences {
     input("numPings", "number", title: "Number of pings to issue", defaultValue:3, required:true, submitOnChange:true, range: "1..5")
     input("pingPeriod", "number", title: "Ping Repeat in Seconds\n Zero to disable", defaultValue: 0, required:true, submitOnChange: true)
     input("useOldMethod", "bool", title: "Use HTTP endpoint to issue request")
+    input("textLoggingEnabled", "bool", title: "Enable Text Logging", defaultValue:false)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -121,12 +123,15 @@ def sendPing(ipAddress){
     if(numPings == null) numPings = 3
     configure()
     updateAttr("lastIpAddress", ipAddress)
+    if(textLoggingEnabled) log.debug "Ping initiated for $ipAddress"
     if(!validIP (ipAddress)) {
+        if(textLoggingEnabled) log.debug "IP address $ipAddress failed pattern check - ping request terminated"
         updateAttr("pingReturn", "IP address format invalid")
         updateAttr("presence","not present")
         updateAttr("responseReady","true")
     } else {
         if (location.hub.firmwareVersionString > "2.2.6.140" && !useOldMethod){
+            if(textLoggingEnabled) log.debug "Hub internal ping method selected"
             updateAttr("responseReady",false)
             updateAttr("pingReturn","Pinging $ipAddress") 
             hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ipAddress, numPings.toInteger())
@@ -137,6 +142,7 @@ def sendPing(ipAddress){
             }
             updateAttr("percentLoss", pingData.packetLoss,"%")
             String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, %Lost: ${pingData.packetLoss}"
+            if(textLoggingEnabled) log.debug "Ping Stats: $pingStats"
             updateAttr("pingStats", pingStats) 
             updateAttr("min",pingData.rttMin,"ms")
             updateAttr("avg",pingData.rttAvg,"ms")
@@ -145,13 +151,18 @@ def sendPing(ipAddress){
             Double mdev = ((pingData.rttAvg - pingData.rttMin) + (pingData.rttMax - pingData.rttAvg))/2
             updateAttr("mdev",mdev.round(3))
             updateAttr("pingReturn",pingData)
-            if (pingData.packetLoss < 100) 
+            if (pingData.packetLoss < 100) {
+                if(textLoggingEnabled) log.debug "Presence set to 'present' for $ipAddress"
                 updateAttr("presence","present")
-            else 
+            } else {
+                if(textLoggingEnabled) log.debug "Presence set to 'not present' for $ipAddress"
                 updateAttr("presence","not present")
+            }
             updateAttr("responseReady","true")
 	        if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
+            if(textLoggingEnabled && pingPeriod > 0) log.debug "Next ping for $ipAddress scheduled in $pingPeriod seconds"
         } else {
+            if(textLoggingEnabled) log.debug "Hub Endpoint ping method selected"
             if(security) {
                 httpPost(
                     [
@@ -200,6 +211,7 @@ def sendPingHandler(resp, data) {
     if (!errFlag) extractValues(strWork)
     ipAddress = device.currentValue("lastIpAddress")
     if(pingPeriod > 0) runIn(pingPeriod, "sendPing", [data:ipAddress])
+    if(textLoggingEnabled && pingPeriod > 0) log.debug "Next ping scheduled for $ipAddress in $pingPeriod seconds"
 
 }
 
@@ -210,6 +222,7 @@ def extractValues(strWork) {
         startInx = strWork.indexOf("%")
     if(debubEnable)log.debug startInx
     if (startInx == -1){
+        if(textLoggingEnabled) log.debug "Invalid response received from endpoint"
         updateAttr("percentLoss",100,"%")
         updateAttr("pingStats"," ") 
         updateAttr("min"," ")
@@ -228,14 +241,20 @@ def extractValues(strWork) {
         
         startInx = strWork.indexOf("=")
         pingStats= strWork.substring(startInx+2,strWork.length()-4).tokenize("/")
+        if(textLoggingEnabled) log.debug "Ping Stats: $pingStats"
         updateAttr("pingStats",pingStats) 
         updateAttr("min",pingStats[0]," ms")
         updateAttr("avg",pingStats[1]," ms")
         updateAttr("max",pingStats[2]," ms")
         updateAttr("mdev",pingStats[3], " ms")
     }
-    if (percentLoss < 100 ) updateAttr("presence","present")
-    else updateAttr("presence","not present")
+    if (percentLoss < 100 ) {
+        updateAttr("presence","present")
+        if(textLoggingEnabled) log.debug "Presence set to 'present' for $ipAddress"
+    } else {
+        updateAttr("presence","not present")
+        if(textLoggingEnabled) log.debug "Presence set to 'not present' for $ipAddress"
+    }
     updateAttr("responseReady", "true")
 }
        
@@ -246,7 +265,7 @@ def validIP(ipAddress){
 }
 
 def updated(){
-	log.trace "updated()"
+	if(debugEnable) log.trace "updated()"
     if(!(pingPeriod > 0)) unschedule()
 	if(debugEnable) runIn(1800,logsOff)
 }

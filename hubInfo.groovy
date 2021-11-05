@@ -77,12 +77,13 @@
  *    2021-09-29  thebearmay     suppress temperature event if negative
  *    2021-10-21  thebearmay     force a read against the database instead of cache when building html
  *    2021-11-02  thebearmay     add hubUpdateStatus
+ *    2021-11-05  thebearmay     add hubUpdateVersion
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.7"}
+static String version() {return "2.6.8"}
 
 metadata {
     definition (
@@ -140,6 +141,8 @@ metadata {
         attribute "macAddr", "string"
         attribute "hubModel", "string"
         attribute "hubUpdateStatus", "string"
+        attribute "hubUpdateVersion", "string"
+        attribute "hubUpdateResp","string"
 
         command "hiaUpdate", ["string", "string"]
     }   
@@ -841,6 +844,8 @@ void updChkCallback(resp, data) {
            def jSlurp = new JsonSlurper()
            Map resMap = (Map)jSlurp.parseText((String)resp.data)
            updateAttr("hubUpdateStatus",resMap.status)
+           updateAttr("hubUpdateResp", resMap)
+           updateAttr("hubUpdateVersion",resMap.version)
         }
     } catch(ignore) {
        updateAttr("hubUpdateStatus","Status Not Available")

@@ -845,7 +845,8 @@ void updChkCallback(resp, data) {
            Map resMap = (Map)jSlurp.parseText((String)resp.data)
            updateAttr("hubUpdateStatus",resMap.status)
            updateAttr("hubUpdateResp", resMap)
-           updateAttr("hubUpdateVersion",resMap.version)
+           if(resMap.version)
+		updateAttr("hubUpdateVersion",resMap.version)
         }
     } catch(ignore) {
        updateAttr("hubUpdateStatus","Status Not Available")

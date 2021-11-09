@@ -78,12 +78,13 @@
  *    2021-10-21  thebearmay     force a read against the database instead of cache when building html
  *    2021-11-02  thebearmay     add hubUpdateStatus
  *    2021-11-05  thebearmay     add hubUpdateVersion
+ *    2021-11-09  thebearmay     add NTP Information
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.8"}
+static String version() {return "2.6.9"}
 
 metadata {
     definition (
@@ -143,6 +144,7 @@ metadata {
         attribute "hubUpdateStatus", "string"
         attribute "hubUpdateVersion", "string"
         attribute "hubUpdateResp","string"
+        attribute "ntpServer", "string"
 
         command "hiaUpdate", ["string", "string"]
     }   
@@ -159,9 +161,10 @@ preferences {
     input("evtStateDaysEnable", "bool", title:"Enable Display of Max Event/State Days Setting")
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
         input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true)
-    input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", default: false, required: false, submitOnChange: true)
+    input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true)
     input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", defaultValue: false, submitOnChange: true)
-    input("zwLocked", "bool", title: "Never Run ZWave Version Update", default:false, submitOnChange: true)
+    input("zwLocked", "bool", title: "Never Run ZWave Version Update", defaultValue:false, submitOnChange: true)
+    input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
@@ -245,7 +248,10 @@ def updated(){
         if(!evtStateDaysEnable){
 			device.deleteCurrentState("maxStateDays")
 			device.deleteCurrentState("maxEvtDays")
-        }                     
+        } 
+        if(!ntpCkEnable){
+			device.deleteCurrentState("ntpServer")
+        }         
 	}
 				
 }
@@ -272,7 +278,7 @@ def configure() {
     updateAttr("macAddr", getMacAddress())
     updateAttr("hubModel", getModel())
     updateAttr("lastUpdated", now())
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion) 
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable) 
         getPollValues()
     if (attribEnable) formatAttrib()
     if(fwUpdatePollRate == null) 
@@ -584,6 +590,18 @@ void getPollValues(){
      
     } 
     
+    // NTP Server
+    if(ntpCkEnable){
+        Map params =
+        [
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub/advanced/ntpServer",
+                headers: ["Cookie": cookie]           
+        ]
+    
+        if(debugEnable)log.debug params
+        asynchttpGet("getNtpServer", params)
+    }    
     //End Pollable Gets
     
     def myHubData = parseHubData()
@@ -787,6 +805,20 @@ void getEvtDaysHandler(resp, data) {
 }
 
 @SuppressWarnings('unused')
+void getNtpServer(resp, data) {
+    try {
+        if (resp.status == 200) {
+            ntpServer = resp.data.toString()
+            if(ntpServer == "No value set") ntpServer = "Hub Default(Google)"
+            updateAttr("ntpServer", ntpServer)
+        } else {
+            if(!warnSuppress) log.warn "NTP server check returned status: ${resp.status}"
+        }
+    }catch (ignore) {
+    }
+}
+
+@SuppressWarnings('unused')
 void parseZwave(String zString){
     Integer start = zString.indexOf('(')
     Integer end = zString.length()
@@ -846,7 +878,7 @@ void updChkCallback(resp, data) {
            updateAttr("hubUpdateStatus",resMap.status)
            updateAttr("hubUpdateResp", resMap)
            if(resMap.version)
-		updateAttr("hubUpdateVersion",resMap.version)
+		        updateAttr("hubUpdateVersion",resMap.version)
         }
     } catch(ignore) {
        updateAttr("hubUpdateStatus","Status Not Available")

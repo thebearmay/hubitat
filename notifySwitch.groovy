@@ -16,7 +16,7 @@
  *    ----        ---            ----
  * 
  */
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 metadata {
     definition (
@@ -29,30 +29,34 @@ metadata {
        		capability "Notification"
 			capability "Switch"
             capability "Configuration"
-		attribute "notificationText", "STRING"
+            attribute "notificationText", "STRING"
 
-		command "configure"
     }   
 }
 
 preferences {
-	input("debugEnable", "bool", title: "Enable debug logging?")
+	input("debugEnabled", "bool", title: "Enable debug logging?")
     input("toggleDelay","number", title:"Seconds before turning off switch (Zero=off)",defaultValue:0)
+    input("onText","string",title:"If notification contains this text, turn on")
+    input("offText","string",title:"If notification contains this text, turn off")
 }
 
 def installed() {
-	log.trace "installed()"
+    log.trace "${device.displayName} installed using ${device.typeName} v${version()} "
     configure()
 }
 
 def updated(){
-	log.trace "updated()"
-	if(debugEnable) runIn(1800,logsOff)
+	log.trace "${device.displayName} preferences updated"
+	if(debugEnabled) runIn(1800,logsOff)
 }
 
 def deviceNotification(notification){
     sendEvent(name:"notificationText", value: notification)
-    on()
+    if((!onText && !offText) || (onText && notification.indexOf(onText) > -1))
+        on()
+    else if(offText && notification.indexOf(offText) > -1)
+        off()
 }
 
 def on(){

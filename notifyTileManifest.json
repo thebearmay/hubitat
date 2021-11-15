@@ -3,7 +3,7 @@
   "author": "Jean P. May, Jr.",
   "version": "1.0.2",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-03-10",
+  "dateReleased": "2021-11-15",
   "releaseNotes": "1.0.2 - add momentary capability (arnb suggestion) to allow reset from dashboards",
   "drivers": [
     {

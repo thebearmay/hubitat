@@ -19,7 +19,8 @@
  *    2021-01-07  thebearmay     Add alternative date format
  *    2021-01-07  thebearmay     Add last5H for horizontal display
  *    2021-01-07  thebearmay     Add leading date option
- *    2011-03-10  thebearmay     Lost span tag with class=last5
+ *    2021-03-10  thebearmay     Lost span tag with class=last5
+ *    2021-11-15  thebearmay	 Add momentary capability at arnb's suggestion to allow reset from the dashboard
  * 
  */
 import java.text.SimpleDateFormat
@@ -34,6 +35,8 @@ metadata {
 	    	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/notifyTile.groovy"
 	) {
        		capability "Notification"
+	    	capability "Momentary"
+	    	capability "Configuration"
 			
 	    	attribute "last5", "STRING"
             	attribute "last5H", "STRING"
@@ -44,24 +47,24 @@ metadata {
             	attribute "notify5", "STRING"
 		attribute "notificationText", "STRING"
 
-		command "configure"//, [[name:"notification*", type:"STRING", description:"Notification Text"]]   
+		//command "configure"//, [[name:"notification*", type:"STRING", description:"Notification Text"]]   
             
     }   
 }
 
 preferences {
-	input("debugEnable", "bool", title: "Enable debug logging?")
+    input("debugEnable", "bool", title: "Enable debug logging?")
     input("dfEU", "bool", title: "Use Date Format dd/MM/yyyy")
     input("leadingDate", "bool", title:"Use leading date instead of trailing")
 }
 
 def installed() {
-	log.trace "installed()"
+    if(debugEnable) log.trace "installed()"
     configure()
 }
 
 def updated(){
-	log.trace "updated()"
+	if(debugEnable) log.trace "updated()"
 	if(debugEnable) runIn(1800,logsOff)
 }
 
@@ -101,6 +104,9 @@ def configure() {
     sendEvent(name:"notify3", value:" ")
     sendEvent(name:"notify4", value:" ")
     sendEvent(name:"notify5", value:" ")
+}
+def push(){
+	configure()
 }
 
 void logsOff(){

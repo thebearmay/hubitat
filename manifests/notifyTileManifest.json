@@ -4,7 +4,7 @@
   "version": "2.0.5",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-11-18",
-  "releaseNotes": "2.0.5 - Arnb rewrite of core functions, reduce attributes to last5 and last5H, streamline processing flow\n***NOTE: Must hit Configure and update Preferences after upgrading"',
+  "releaseNotes": "2.0.5 - Arnb rewrite of core functions, reduce attributes to last5 and last5H, streamline processing flow\n***NOTE: Must hit Configure and update Preferences after upgrading",
   "drivers": [
     {
       "id": "5af8354f-afef-4d6b-be80-f802a4ac2962",

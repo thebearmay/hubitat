@@ -1,9 +1,10 @@
 {
   "packageName": "Device Details Display",
   "author": "Jean P. May, Jr.",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "minimumHEVersion": "2.2.7.119",
-  "dateReleased": "2021-07-28",
+  "dateReleased": "2021-11-19",
+  "releaseNotes": "2.0.0 - added a formatted report option - may need to override browser popups to allow it",
   "apps": [
     {
       "id": "329e0ca6-319c-411d-90cc-18deb1d18515",

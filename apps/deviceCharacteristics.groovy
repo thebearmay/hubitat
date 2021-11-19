@@ -21,8 +21,8 @@
  *    2021-05-04  thebearmay    hub 2.2.7x changes
  *	  2021-07-28  thebearmay	add .properties expansion
  */
-
-static String version()	{  return '1.3.0'  }
+import java.text.SimpleDateFormat
+static String version()	{  return '2.0.0'  }
 
 
 definition (
@@ -40,6 +40,7 @@ definition (
 preferences {
    page name: "mainPage"
    page name: "deviceCharacteristics"
+   page name: "deviceReport"
 }
 
 def installed() {
@@ -67,7 +68,10 @@ def mainPage(){
 	    	section("Main")
 		    {
                 input "qryDevice", "capability.*", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
-                if (qryDevice != null) href "deviceCharacteristics", title: "Device Characteristics", required: false
+                if (qryDevice != null) {
+                    href "deviceCharacteristics", title: "Device Characteristics", required: false
+                    href "deviceReport", title: "Device Report", required: false
+                }
 		    }
 	    } else {
 		    section("") {
@@ -118,7 +122,6 @@ def deviceCharacteristics(){
             def devCmd = qryDevice[i].supportedCommands
             def devData = qryDevice[i].getData()
             def devId = qryDevice[i].getId()
-            //def devRoom = qryDevice[i].room
             def devType = qryDevice[i].getTypeName()
  
             pStr1 = "<h2 style='border-top: 3px blue solid'>$qryName</h2><span style='font-weight:bold'>ID:</span> $devId \n\n"// <span style='font-weight:bold'>Room:</span> $devRoom \n\n"
@@ -154,6 +157,92 @@ def deviceCharacteristics(){
           }
        }
     }
+}
+
+def deviceReport(){
+    dynamicPage (name: "deviceReport", title: "", install: false, uninstall: false) {
+	  section("Device Characteristics Report"){
+          rpt=buildReport()
+          String rptHTML = """
+        <script type='text/javascript'>
+            winObj=window.open('','_blank');
+            winObj.document.body.innerHTML='$rpt';
+        winObj.focus();
+        </script>
+        """
+         paragraph "$rptHTML"
+         paragraph "<div id='devRpt'>$rpt</div>"
+      }
+    }
+}
+
+def buildReport() {
+     hh = hubitat.helper.HexUtils
+
+    String html = "<style>div{overflow:auto;}th, td{text-align:left;border:solid 1px blue;vertical-align:top;}</style>"
+    html += "<table><tr><th>Name</th><th>Type</th><th>Status</th><th>Disabled</th><th>Controller</th><th>Attributes</th><th>Data</th><th>DNI</th><th>Last Activity</th></tr>"
+    qdSorted = qryDevice.displayName.sort()
+    for(i=0; i<qdSorted.size(); i++) {   
+        qryDevice.each {
+            if (it.displayName == qdSorted[i]){
+                html += "<tr><td>${it.displayName}</td>"
+                html += "<td>${it.typeName}</td>"
+                html += "<td>${it.status}</td>"
+                html += "<td>${it.disabled}</td>"
+                if(it.controllerType == "LNK")
+                    cType = "Mesh Link"
+                else if (it.controllerType == "ZGB")
+                    cType = "Zigbee"
+                else if (it.controllerType == "ZWV")
+                    cType = "Z-Wave"
+                else
+                    cType = "Other"
+                html += "<td>$cType</td>"
+                attrString = ""
+                it.currentStates.each{
+                    tVal = it.value.replace('"','')
+                    tVal = it.value.replace("'","")
+                    attrString += "<b>Name:</b>${it.name} <b>Value:</b>${tVal}<b> Type:</b>${it.dataType}<br>"
+                }
+                html += "<td>$attrString</td>"
+            
+                dData = it.getData()
+                dString = ""
+                dData.each{
+                    if(it.key == "ip" && it.key.indexOf(".") == -1){
+                        tval = ""
+                        for (i=0;i<8;i=i+2){
+                            tVal = hh.hexStringToInt(it.value.substring(i,i+2))+"."
+                        }
+                        tVal = tVal.substring(0,tVal.size()-1)
+                        dString = "<b>${it.key}</b> ${tVal}<br>"
+                    } else if(it.key == "mac" && it.key.indexOf(":") == -1){
+                        tVal = ""
+                        for (i=0;i<12;i=i+2){
+                            tVal+=it.value.substring(i,i+2)+":"
+                        }
+                        tVal = tVal.substring(0,tVal.size()-1)
+                        dString = "<b>${it.key}</b> ${tVal}<br>"
+                    }else if(it.key == port){
+                        dString = "<b>${it.key}</b> ${hh.hexStringToInt(it.value)}<br>"                
+                    } else {
+                        dString += "<b>${it.key}</b>" 
+                        if(it.value) dString+= " ${it.value.replace('\"','')}<br>"
+                    }
+                }            
+                html += "<td>$dString</td>"
+        
+                html += "<td>${it.deviceNetworkId}</td>"
+                html += "<td>${it.lastActivity}</td>"
+        
+                html +="</tr>"
+            }                
+        }
+    }
+    
+    html +="</table>"
+
+    return html
 }
 
 def appButtonHandler(btn) {

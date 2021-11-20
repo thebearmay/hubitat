@@ -29,9 +29,10 @@
 	 *    2021-11-17  ArnB  2.0.3	Add logic when message count shinks rather than reconfigure
      *    2021-11-18  ArnB  2.0.4	Add singleThreaded true
      *    2021-11-18  thebearmay    2.0.5 Remove unused attributes from v1.x.x
+     *    2021-11-20  thebearmay    Add option to only display time
 	 */
 	import java.text.SimpleDateFormat
-	static String version()	{  return '2.0.5'  }
+	static String version()	{  return '2.0.6'  }
 
 	metadata {
 		definition (
@@ -58,6 +59,7 @@
 		input("leadingDate", "bool", title:"Use leading date instead of trailing")
 		input("msgLimit", "number", title:"Number of messages from 5 to 20",defaultValue:5, range:5..20)
 		input("create5H", "bool", title: "Create horizontal message tile?")
+        input("timeOnly", "bool", title: "Drop date portion of notification")
 
 	}
 
@@ -147,7 +149,9 @@
 		dateNow = new Date()
 		if (dfEU)
 			sdf= new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-		else
+		else if(timeOnly)
+            sdf = new SimpleDateFormat("HH:mm")
+        else
 			sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
 		if (leadingDate)
 			notification = sdf.format(dateNow) + " " + notification

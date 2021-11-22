@@ -150,7 +150,7 @@ metadata {
 void deviceNotification(notification){
 	if (debugEnable) log.debug "deviceNotification entered: ${notification}" 
 	dateNow = new Date()
-        if(sdfPref == null) device.updateSetting("sdfPref",[value:"ddMMMyyyy HH:mm",type:"string"])
+        if(sdfPref == null) device.updateSetting("sdfPref",[value:"ddMMMyyyy HH:mm",type:"enum"])
         SimpleDateFormat sdf = new SimpleDateFormat(sdfPref)
 	if (leadingDate)
 			notification = sdf.format(dateNow) + " " + notification

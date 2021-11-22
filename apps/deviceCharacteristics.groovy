@@ -208,7 +208,7 @@ def buildReport() {
                 }
                 html += "<td>$attrString</td>"
                 cStr =""
-                qryDevice[i].supportedCommands.each{
+                it.supportedCommands.each{
                     cStr +="<b>$it.name</b>(${it.parameters})<br>"
                 }
                 html += "<td>$cStr</td>"

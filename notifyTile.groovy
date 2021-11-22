@@ -30,9 +30,13 @@
      *    2021-11-18  ArnB  2.0.4	Add singleThreaded true
      *    2021-11-18  thebearmay    2.0.5 Remove unused attributes from v1.x.x
      *    2021-11-20  thebearmay    Add option to only display time
+     *    2021-11-22  thebearmay    make date time format a selectable option
 	 */
 	import java.text.SimpleDateFormat
-	static String version()	{  return '2.0.6'  }
+    import groovy.transform.Field
+	static String version()	{  return '2.0.7'  }
+
+    @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm"]
 
 	metadata {
 		definition (
@@ -55,11 +59,10 @@
 
 	preferences {
 		input("debugEnable", "bool", title: "Enable debug logging?")
-		input("dfEU", "bool", title: "Use Date Format dd/MM/yyyy")
+		input("sdfPref", "enum", title: "Date/Time Format", options:sdfList, defaultValue:"ddMMMyyyy HH:mm")
 		input("leadingDate", "bool", title:"Use leading date instead of trailing")
 		input("msgLimit", "number", title:"Number of messages from 5 to 20",defaultValue:5, range:5..20)
 		input("create5H", "bool", title: "Create horizontal message tile?")
-        input("timeOnly", "bool", title: "Drop date portion of notification")
 
 	}
 
@@ -147,12 +150,8 @@
 	void deviceNotification(notification){
 		if (debugEnable) log.debug "deviceNotification entered: ${notification}" 
 		dateNow = new Date()
-		if (dfEU)
-			sdf= new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-		else if(timeOnly)
-            sdf = new SimpleDateFormat("HH:mm")
-        else
-			sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
+        
+        SimpleDateFormat sdf = new SimpleDateFormat(sdfPref)
 		if (leadingDate)
 			notification = sdf.format(dateNow) + " " + notification
 		else

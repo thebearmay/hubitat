@@ -1,45 +1,45 @@
-	 /*
-	 * Notify Tile Device
-	 *
-	 *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
-	 *  in compliance with the License. You may obtain a copy of the License at:
-	 *
-	 *      http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
-	 *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
-	 *  for the specific language governing permissions and limitations under the License.
-	 *
-	 *  Change History:
-	 *
-	 *    Date        Who            What
-	 *    ----        ---            ----
-	 *    2021-01-06  thebearmay	Original version 0.1.0
-	 *    2021-01-07  thebearmay	Fix condition causing a loss notifications if they come in rapidly
-	 *    2021-01-07  thebearmay	Add alternative date format
-	 *    2021-01-07  thebearmay	Add last5H for horizontal display
-	 *    2021-01-07  thebearmay	Add leading date option
-	 *    2021-03-10  thebearmay	Lost span tag with class=last5
-	 *    2021-11-14  ArnB  2.0.0	Add capability Momentary an routine Push allowing a Dashboard switch to clear all messages. 	
-	 *    2021-11-15  ArnB  2.0.0	Revise logic minimizing attributes and sendevents. Allow for 5 to 20 messages in tile. Insure tile is less than 1024 	
-	 *    2021-11-16  ArnB  2.0.1	Fix: storing one less message than requested. 
-	 *											correct <br/> to <br />
-	 *											Restore: attribute last5H as an optional preference. 
-	 *    2021-11-17  ArnB  2.0.2	Add conversion logic from original version in Update routine 
-	 *    2021-11-17  ArnB  2.0.3	Add logic when message count shinks rather than reconfigure
-     *    2021-11-18  ArnB  2.0.4	Add singleThreaded true
-     *    2021-11-18  thebearmay    2.0.5 Remove unused attributes from v1.x.x
-     *    2021-11-20  thebearmay    Add option to only display time
-     *    2021-11-22  thebearmay    make date time format a selectable option
-	 */
-	import java.text.SimpleDateFormat
-    import groovy.transform.Field
-	static String version()	{  return '2.0.7'  }
+/*
+* Notify Tile Device
+*
+*  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
+*  in compliance with the License. You may obtain a copy of the License at:
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+*  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+*  for the specific language governing permissions and limitations under the License.
+*
+*  Change History:
+*
+*    Date        Who            What
+*    ----        ---            ----
+*    2021-01-06  thebearmay	Original version 0.1.0
+*    2021-01-07  thebearmay	Fix condition causing a loss notifications if they come in rapidly
+*    2021-01-07  thebearmay	Add alternative date format
+*    2021-01-07  thebearmay	Add last5H for horizontal display
+*    2021-01-07  thebearmay	Add leading date option
+*    2021-03-10  thebearmay	Lost span tag with class=last5
+*    2021-11-14  ArnB  2.0.0	Add capability Momentary an routine Push allowing a Dashboard switch to clear all messages. 	
+*    2021-11-15  ArnB  2.0.0	Revise logic minimizing attributes and sendevents. Allow for 5 to 20 messages in tile. Insure tile is less than 1024 	
+*    2021-11-16  ArnB  2.0.1	Fix: storing one less message than requested. 
+*					correct <br/> to <br />
+*					Restore: attribute last5H as an optional preference. 
+*    2021-11-17  ArnB  2.0.2	Add conversion logic from original version in Update routine 
+*    2021-11-17  ArnB  2.0.3	Add logic when message count shinks rather than reconfigure
+*    2021-11-18  ArnB  2.0.4	Add singleThreaded true
+*    2021-11-18  thebearmay    2.0.5 Remove unused attributes from v1.x.x
+*    2021-11-20  thebearmay    Add option to only display time
+*    2021-11-22  thebearmay    make date time format a selectable option
+*/
+import java.text.SimpleDateFormat
+import groovy.transform.Field
+static String version()	{  return '2.0.7'  }
 
-    @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm"]
+@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm"]
 
-	metadata {
-		definition (
+metadata {
+	definition (
 			name: "Notification Tile", 
 			namespace: "thebearmay", 
 			description: "Simple driver to act as a destination for notifications, and provide an attribute to display the last 5 on a tile.",

@@ -147,12 +147,12 @@ metadata {
         }
 	}
 
-	void deviceNotification(notification){
-		if (debugEnable) log.debug "deviceNotification entered: ${notification}" 
-		dateNow = new Date()
-        
+void deviceNotification(notification){
+	if (debugEnable) log.debug "deviceNotification entered: ${notification}" 
+	dateNow = new Date()
+        if(sdfPref == null) device.updateSetting("sdfPref",[value:"ddMMMyyyy HH:mm",type:"string"])
         SimpleDateFormat sdf = new SimpleDateFormat(sdfPref)
-		if (leadingDate)
+	if (leadingDate)
 			notification = sdf.format(dateNow) + " " + notification
 		else
 			notification += " " + sdf.format(dateNow)

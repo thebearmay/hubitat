@@ -20,9 +20,11 @@
  *    2021-04-25  thebearmay    error when attribute has never been set
  *    2021-05-04  thebearmay    hub 2.2.7x changes
  *	  2021-07-28  thebearmay	add .properties expansion
+ *    2021-11-19  thebearmay    add report option ->v2.0.0
+ *    2021-11-22  thebearmay    clean up last activity date on report and add commands
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '2.0.0'  }
+static String version()	{  return '2.0.1'  }
 
 
 definition (
@@ -180,7 +182,7 @@ def buildReport() {
      hh = hubitat.helper.HexUtils
 
     String html = "<style>div{overflow:auto;}th, td{text-align:left;border:solid 1px blue;vertical-align:top;}</style>"
-    html += "<table><tr><th>Name</th><th>Type</th><th>Status</th><th>Disabled</th><th>Controller</th><th>Attributes</th><th>Data</th><th>DNI</th><th>Last Activity</th></tr>"
+    html += "<table><tr><th>Name</th><th>Type</th><th>Status</th><th>Disabled</th><th>Controller</th><th>Attributes</th><th>Commands</th><th>Data</th><th>DNI</th><th>Last Activity</th></tr>"
     qdSorted = qryDevice.displayName.sort()
     for(i=0; i<qdSorted.size(); i++) {   
         qryDevice.each {
@@ -205,7 +207,11 @@ def buildReport() {
                     attrString += "<b>Name:</b>${it.name} <b>Value:</b>${tVal}<b> Type:</b>${it.dataType}<br>"
                 }
                 html += "<td>$attrString</td>"
-            
+                cStr =""
+                qryDevice[i].supportedCommands.each{
+                    cStr +="<b>$it.name</b>(${it.parameters})<br>"
+                }
+                html += "<td>$cStr</td>"
                 dData = it.getData()
                 dString = ""
                 dData.each{
@@ -233,7 +239,11 @@ def buildReport() {
                 html += "<td>$dString</td>"
         
                 html += "<td>${it.deviceNetworkId}</td>"
-                html += "<td>${it.lastActivity}</td>"
+                SimpleDateFormat sdfIn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZZZZZ")
+                SimpleDateFormat sdfOut = new SimpleDateFormat("ddMMMyyyy HH:mm:ss")
+                Date wkDate = sdfIn.parse((String)it.lastActivity)
+                fDate = sdfOut.format(wkDate)
+                html += "<td>${fDate}</td>"
         
                 html +="</tr>"
             }                

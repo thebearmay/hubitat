@@ -878,6 +878,8 @@ void updChkCallback(resp, data) {
            Map resMap = (Map)jSlurp.parseText((String)resp.data)
            updateAttr("hubUpdateStatus",resMap.status)
            //updateAttr("hubUpdateResp", resMap)
+           if(location.hub.firmwareVersionString >= "2.2.8.0" && device.currentValue("hubUpdateResp"))
+               device.deleteCurrentState("hubUpdateResp")
            if(resMap.version)
 		        updateAttr("hubUpdateVersion",resMap.version)
         }

@@ -79,12 +79,13 @@
  *    2021-11-02  thebearmay     add hubUpdateStatus
  *    2021-11-05  thebearmay     add hubUpdateVersion
  *    2021-11-09  thebearmay     add NTP Information
+ *    2021-11-24  thebearmay     remove the hub update response attribute - release notes push it past the 1024 size limit.
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.9"}
+static String version() {return "2.6.10"}
 
 metadata {
     definition (
@@ -143,7 +144,7 @@ metadata {
         attribute "hubModel", "string"
         attribute "hubUpdateStatus", "string"
         attribute "hubUpdateVersion", "string"
-        attribute "hubUpdateResp","string"
+        //attribute "hubUpdateResp","string"
         attribute "ntpServer", "string"
 
         command "hiaUpdate", ["string", "string"]
@@ -876,7 +877,7 @@ void updChkCallback(resp, data) {
            def jSlurp = new JsonSlurper()
            Map resMap = (Map)jSlurp.parseText((String)resp.data)
            updateAttr("hubUpdateStatus",resMap.status)
-           updateAttr("hubUpdateResp", resMap)
+           //updateAttr("hubUpdateResp", resMap)
            if(resMap.version)
 		        updateAttr("hubUpdateVersion",resMap.version)
         }

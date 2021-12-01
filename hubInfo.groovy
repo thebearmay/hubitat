@@ -80,12 +80,13 @@
  *    2021-11-05  thebearmay     add hubUpdateVersion
  *    2021-11-09  thebearmay     add NTP Information
  *    2021-11-24  thebearmay     remove the hub update response attribute - release notes push it past the 1024 size limit.
+ *    2021-12-01  thebearmay     add additional subnets information
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.10"}
+static String version() {return "2.6.11"}
 
 metadata {
     definition (
@@ -146,6 +147,7 @@ metadata {
         attribute "hubUpdateVersion", "string"
         //attribute "hubUpdateResp","string"
         attribute "ntpServer", "string"
+        attribute "ipSubnetsAllowed", "string"
 
         command "hiaUpdate", ["string", "string"]
     }   
@@ -166,6 +168,7 @@ preferences {
     input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", defaultValue: false, submitOnChange: true)
     input("zwLocked", "bool", title: "Never Run ZWave Version Update", defaultValue:false, submitOnChange: true)
     input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true)
+    input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
@@ -252,7 +255,10 @@ def updated(){
         } 
         if(!ntpCkEnable){
 			device.deleteCurrentState("ntpServer")
-        }         
+        }
+        if(!subnetEnable){
+            device.deleteCurrentState("ipSubnetsAllowed")
+        }
 	}
 				
 }
@@ -269,8 +275,8 @@ def configure() {
     for(i=0;i<locProp.size();i++){
         updateAttr(locProp[i], location["${locProp[i]}"])
     }
-    myHubData = parseHubData()
-    updateAttr("zigbeeChannel",myHubData.zigbeeChannel)
+    
+    updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)
     
     formatUptime()
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
@@ -279,7 +285,7 @@ def configure() {
     updateAttr("macAddr", getMacAddress())
     updateAttr("hubModel", getModel())
     updateAttr("lastUpdated", now())
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable) 
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) 
         getPollValues()
     if (attribEnable) formatAttrib()
     if(fwUpdatePollRate == null) 
@@ -290,7 +296,7 @@ def configure() {
 void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
-        
+/*        
 HashMap parseHubData() {    
     String dataWork = location.hub.data.toString()
     dataWork = dataWork.substring(1,dataWork.size()-1)
@@ -305,7 +311,7 @@ HashMap parseHubData() {
     // Invalid zigbee response - possibly timeout issue
     return dataMap
 }
-
+*/
 
 void formatUptime(){
     try {
@@ -469,8 +475,8 @@ void getPollValues(){
     // repoll zigbee channel if invalid
 	
     if (device.currentValue("zigbeeChannel") == "NA") { 
-        myHubData = parseHubData()
-        updateAttr("zigbeeChannel",myHubData.zigbeeChannel)
+        //myHubData = parseHubData()
+        updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)
     }
     
     //verify localIP in case of change
@@ -602,17 +608,29 @@ void getPollValues(){
     
         if(debugEnable)log.debug params
         asynchttpGet("getNtpServer", params)
-    }    
+    }
+    // Additional Subnets 
+    if(subnetEnable) {
+        Map params =
+        [
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub/allowSubnets",
+                headers: ["Cookie": cookie]           
+        ]
+    
+        if(debugEnable)log.debug params
+        asynchttpGet("getSubnets", params)    
+    
+    }
     //End Pollable Gets
     
-    def myHubData = parseHubData()
-    updateAttr("zigbeeChannel",myHubData.zigbeeChannel)    
+    updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)    
     updateAttr("uptime", location.hub.uptime)
     formatUptime()
     if (attribEnable) formatAttrib()
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
 
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion) {
+    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) {
         if(tempPollRate == null){
             device.updateSetting("tempPollRate",[value:300,type:"number"])
             runIn(300,"getPollValues")
@@ -820,6 +838,20 @@ void getNtpServer(resp, data) {
 }
 
 @SuppressWarnings('unused')
+void getSubnets(resp, data) {
+    try {
+        if (resp.status == 200) {
+            subNets = resp.data.toString()
+            if(subNets == "Not set") subNets = "Hub Default"
+            updateAttr("ipSubnetsAllowed", subNets)
+        } else {
+            if(!warnSuppress) log.warn "Subnet check returned status: ${resp.status}"
+        }
+    }catch (ignore) {
+    }
+}
+
+@SuppressWarnings('unused')
 void parseZwave(String zString){
     Integer start = zString.indexOf('(')
     Integer end = zString.length()
@@ -882,6 +914,7 @@ void updChkCallback(resp, data) {
                device.deleteCurrentState("hubUpdateResp")
            if(resMap.version)
 		        updateAttr("hubUpdateVersion",resMap.version)
+           else updateAttr("hubUpdateVersion",location.hub.firmwareVersionString)
         }
     } catch(ignore) {
        updateAttr("hubUpdateStatus","Status Not Available")

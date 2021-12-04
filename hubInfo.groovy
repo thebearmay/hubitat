@@ -871,10 +871,10 @@ void parseZwave(String zString){
     }
 }
 
-String getUnitFromState(String attrName){
+getUnitFromState(String attrName){
 	try {
     		return device.currentState(attrName).unit
-	} catch ignore {
+	} catch (ignore) {
 		return
 	}
 }

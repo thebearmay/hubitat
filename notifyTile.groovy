@@ -31,12 +31,13 @@
 *    2021-11-18  thebearmay    2.0.5 Remove unused attributes from v1.x.x
 *    2021-11-20  thebearmay    Add option to only display time
 *    2021-11-22  thebearmay    make date time format a selectable option
+*    2021-12-07  thebearmay    add "none" as a date time format
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
 static String version()	{  return '2.0.7'  }
 
-@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma"]
+@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "None"]
 
 metadata {
 	definition (
@@ -150,12 +151,14 @@ metadata {
 void deviceNotification(notification){
 	if (debugEnable) log.debug "deviceNotification entered: ${notification}" 
 	dateNow = new Date()
-        if(sdfPref == null) device.updateSetting("sdfPref",[value:"ddMMMyyyy HH:mm",type:"enum"])
+    if(sdfPref == null) device.updateSetting("sdfPref",[value:"ddMMMyyyy HH:mm",type:"enum"])
+    if(sdfPref != "None") {
         SimpleDateFormat sdf = new SimpleDateFormat(sdfPref)
-	if (leadingDate)
+	    if (leadingDate)
 			notification = sdf.format(dateNow) + " " + notification
 		else
 			notification += " " + sdf.format(dateNow)
+    }
 
 	//	insert new message at beginning	of last5 string
 		msgFilled = state.msgCount

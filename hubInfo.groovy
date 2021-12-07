@@ -81,12 +81,13 @@
  *    2021-11-09  thebearmay     add NTP Information
  *    2021-11-24  thebearmay     remove the hub update response attribute - release notes push it past the 1024 size limit.
  *    2021-12-01  thebearmay     add additional subnets information
+ *    2021-12-07  thebearmay     allow data attribute to be suppressed if zigbee data is null, remove getMacAddress() as it has been retired from the API
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.11"}
+static String version() {return "2.6.12"}
 
 metadata {
     definition (
@@ -141,7 +142,6 @@ metadata {
         attribute "zwaveVersion", "string"
         attribute "zwaveSDKVersion", "string"        
         attribute "zwaveData", "string"
-        attribute "macAddr", "string"
         attribute "hubModel", "string"
         attribute "hubUpdateStatus", "string"
         attribute "hubUpdateVersion", "string"
@@ -169,6 +169,7 @@ preferences {
     input("zwLocked", "bool", title: "Never Run ZWave Version Update", defaultValue:false, submitOnChange: true)
     input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true)
     input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true)
+    input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
@@ -270,7 +271,12 @@ def configure() {
     def myHub = location.hub
     List hubProp = ["id","name","data","zigbeeId","zigbeeEui","hardwareID","type","localIP","localSrvPortTCP","firmwareVersionString","uptime"]
     for(i=0;i<hubProp.size();i++){
-        updateAttr(hubProp[i], myHub["${hubProp[i]}"])
+        if(hubProp[i] != "data")
+            updateAttr(hubProp[i], myHub["${hubProp[i]}"])
+        else if(location.hub.properties.zigbeeChannel != null || suppressData == false)
+            updateAttr(hubProp[i], myHub["${hubProp[i]}"])
+        else if(location.hub.firmwareVersionString >= "2.2.8.0") 
+            device.deleteCurrentState("data")
     }
     for(i=0;i<locProp.size();i++){
         updateAttr(locProp[i], location["${locProp[i]}"])
@@ -282,7 +288,13 @@ def configure() {
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
-    updateAttr("macAddr", getMacAddress())
+    //updateAttr("macAddr", getMacAddress())
+    if(device.currentValue("macAddr")){
+        if(location.hub.firmwareVersionString >= "2.2.8.0") 
+            device.deleteCurrentState("macAddr")
+        else
+            updateAttr("macAddr","NA")
+    }
     updateAttr("hubModel", getModel())
     updateAttr("lastUpdated", now())
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) 
@@ -296,22 +308,6 @@ def configure() {
 void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
-/*        
-HashMap parseHubData() {    
-    String dataWork = location.hub.data.toString()
-    dataWork = dataWork.substring(1,dataWork.size()-1)
-    List <String> dataMapPre = dataWork.split(",")
-    HashMap dataMap = [:]    
-
-    dataMapPre.each() {
-        List dSplit= it.split(":")
-        dataMap.put(dSplit[0].trim(),dSplit[1].trim())
-    }
-    if (dataMap.zigbeeChannel.trim() == "0x00 (0)") dataMap.zigbeeChannel = "NA"
-    // Invalid zigbee response - possibly timeout issue
-    return dataMap
-}
-*/
 
 void formatUptime(){
     try {
@@ -344,9 +340,6 @@ void formatAttrib(){
         attrStr += combineAttr("IP Local/Public", combine)
     } else
         attrStr += addToAttr("IP Addr","localIP")
-    if(!device.currentValue("macAddr"))
-        updateAttr("macAddr", getMacAddress())
-    attrStr += addToAttr("MAC", "macAddr")
     
     if(freeMemPollEnabled)
            attrStr += addToAttr("Free Mem","freeMemory","int")
@@ -871,12 +864,8 @@ void parseZwave(String zString){
     }
 }
 
-def getUnitFromState(String attrName){
-	try {
-    		return device.currentState(attrName).unit
-	} catch (ignore) {
-		return
-	}
+String getUnitFromState(String attrName){
+   	return device.currentState(attrName)?.unit
 }
 
 void restartCheck() {
@@ -928,7 +917,7 @@ void updChkCallback(resp, data) {
 
 @SuppressWarnings('unused')
 void hiaUpdate(htmlStr, auth) {
-    if(auth == device.currentValue("macAddr"))
+    if(auth == '')
         updateAttr("html",htmlStr)
     else 
         updateAttr("html", "Illegal attempt using $auth")

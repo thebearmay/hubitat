@@ -11,11 +11,12 @@
  *
  *     Date              Who           Description
  *    ===========       ===========   =====================================================
- *    2021-09-11        thebearmay    Change alerts to include HIA and require values, Add IP change to the alerts, default alert values, move to release statu
- *    2021-11-02	thebearmay    Add hubUpdateStatus check
+ *    2021-09-11        thebearmay    Change alerts to include HIA and require values, Add IP change to the alerts, default alert values, move to release status
+ *    2021-11-02	    thebearmay    Add hubUpdateStatus check
+ *    2021-12-07        thebearmay    getMacAddress() retired from API
  */
 
-static String version()	{  return '1.0.1'  }
+static String version()	{  return '1.0.2'  }
 
 
 definition (
@@ -210,8 +211,9 @@ def refreshDevice(evt = null){
         dev.sendEvent(name:"html",value:htmlStr)
     }
     if(overwrite){
-        qryDevice.each{      
-            it.hiaUpdate(htmlStr,it.currentValue("macAddr"))
+        qryDevice.each{ 
+            //log.debug "$it ${htmlStr.size()} ${it.currentValue("macAddr")}"
+            it.hiaUpdate( "$htmlStr", '')
         }
     }
     if(notifyDevice){

@@ -87,7 +87,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.12"}
+static String version() {return "2.6.13"}
 
 metadata {
     definition (
@@ -275,14 +275,16 @@ def configure() {
             updateAttr(hubProp[i], myHub["${hubProp[i]}"])
         else if(location.hub.properties.zigbeeChannel != null || suppressData == false)
             updateAttr(hubProp[i], myHub["${hubProp[i]}"])
-        else if(location.hub.firmwareVersionString >= "2.2.8.0") 
+        else if(location.hub.firmwareVersionString >= "2.2.8.0") {
             device.deleteCurrentState("data")
+            device.deleteCurrentState("zigbeeChannel")
+        }
     }
     for(i=0;i<locProp.size();i++){
         updateAttr(locProp[i], location["${locProp[i]}"])
     }
-    
-    updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)
+    if(!suppressData)
+        updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)
     
     formatUptime()
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
@@ -369,7 +371,8 @@ void formatAttrib(){
         String tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
         attrStr += addToAttr("Temperature",tempAttrib)
     }
-    attrStr += addToAttr("ZB Channel","zigbeeChannel")
+    if(!suppressData)
+        attrStr += addToAttr("ZB Channel","zigbeeChannel")
     
     if (device.currentValue("zwaveVersion")){
         List combine = ["zwaveVersion","zwaveSDKVersion"]
@@ -616,8 +619,8 @@ void getPollValues(){
     
     }
     //End Pollable Gets
-    
-    updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)    
+    if(!suppressData)
+        updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)    
     updateAttr("uptime", location.hub.uptime)
     formatUptime()
     if (attribEnable) formatAttrib()

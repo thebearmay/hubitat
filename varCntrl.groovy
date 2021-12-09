@@ -1,6 +1,6 @@
  /*
  *  Variable Controller Device 
- *  This is an intermediary device to allow programatic create/delete/get/set of hub variables 
+ *  This is an intermediary device to allow programatic get/set of hub variables 
  */
 
 
@@ -24,7 +24,7 @@ metadata {
         attribute "varCmd", "string"
         attribute "varReturn", "string"
 
-        command "varControl", [[name:"vName*",type:"STRING"],[name:"vCmd*",type:"ENUM",constraints:["create","delete","get","set"]],[name:"vValue",type:"STRING"],[name:"vType",type:"ENUM",constraints:[" ","bigdecimal","boolean","datetime","integer","string"]]]
+        command "varControl", [[name:"vName*",type:"STRING"],[name:"vCmd*",type:"ENUM",constraints:["get","set"]],[name:"vValue",type:"STRING"]]
         command "varReturn",[[name:"returnVal",type:"STRING"]] 
     }   
 }
@@ -44,7 +44,6 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 
 def varControl(vName,vCmd,vValue=" ",vType=" "){
     updateAttr("varName",vName)
-    updateAttr("varType",vType)
     updateAttr("varCmd",vCmd)
     updateAttr("varValue",vValue)
 }

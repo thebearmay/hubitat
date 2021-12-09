@@ -82,12 +82,13 @@
  *    2021-11-24  thebearmay     remove the hub update response attribute - release notes push it past the 1024 size limit.
  *    2021-12-01  thebearmay     add additional subnets information
  *    2021-12-07  thebearmay     allow data attribute to be suppressed if zigbee data is null, remove getMacAddress() as it has been retired from the API
+ *    2021-12-08  thebearmay     fix zigbee channel bug
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.13"}
+static String version() {return "2.6.14"}
 
 metadata {
     definition (
@@ -273,7 +274,7 @@ def configure() {
     for(i=0;i<hubProp.size();i++){
         if(hubProp[i] != "data")
             updateAttr(hubProp[i], myHub["${hubProp[i]}"])
-        else if(location.hub.properties.zigbeeChannel != null || suppressData == false)
+        else if(location.hub.properties.data.zigbeeChannel != null || suppressData == false)
             updateAttr(hubProp[i], myHub["${hubProp[i]}"])
         else if(location.hub.firmwareVersionString >= "2.2.8.0") {
             device.deleteCurrentState("data")
@@ -283,8 +284,8 @@ def configure() {
     for(i=0;i<locProp.size();i++){
         updateAttr(locProp[i], location["${locProp[i]}"])
     }
-    if(!suppressData)
-        updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)
+    if(!suppressData || location.hub.properties.data.zigbeeChannel != null)
+        updateAttr("zigbeeChannel",location.hub.properties.data.zigbeeChannel)
     
     formatUptime()
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
@@ -619,8 +620,8 @@ void getPollValues(){
     
     }
     //End Pollable Gets
-    if(!suppressData)
-        updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)    
+    if(!suppressData || location.hub.properties.data.zigbeeChannel != null)
+        updateAttr("zigbeeChannel",location.hub.properties.data.zigbeeChannel)    
     updateAttr("uptime", location.hub.uptime)
     formatUptime()
     if (attribEnable) formatAttrib()

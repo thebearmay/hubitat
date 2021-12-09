@@ -19,7 +19,6 @@ metadata {
         capability "Actuator"
 
         attribute "varName","string"
-        attribute "varType","string"
         attribute "varValue","string"
         attribute "varCmd", "string"
         attribute "varReturn", "string"
@@ -43,9 +42,9 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 
 
 def varControl(vName,vCmd,vValue=" ",vType=" "){
-    updateAttr("varName",vName)
-    updateAttr("varCmd",vCmd)
-    updateAttr("varValue",vValue)
+    updateAttr("varName",vName.trim())
+    updateAttr("varCmd",vCmd.trim())
+    updateAttr("varValue",vValue.trim())
 }
 
 def varReturn(rVal) {

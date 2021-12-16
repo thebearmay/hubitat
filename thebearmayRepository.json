@@ -89,7 +89,14 @@
       "description": "Application allows monitoring of multiple instances of the Hub Information Driver, and will generate notifications for temperature, database size, free memory and IP address changes.",
       "tags": [
         "Monitoring"
-      ]      
+      ]
+    },
+    {
+      "id": "14eb07f4-b7e6-4d4d-82f8-120290661d46",
+      "name": "Hub Variable Sync",
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubVarSyncManifest.json",
+      "description": "Application allows the synchronization of hub variables across multiple hubs."
     }
   ]
 }

@@ -2,8 +2,9 @@
  * Hub Variable Synchronizer
  */
 
-static String version()	{  return '0.0.0'  }
+static String version()	{  return '0.0.1'  }
 import groovy.transform.Field
+import java.net.URLEncoder
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
@@ -21,6 +22,8 @@ definition (
 
 preferences {
    page name: "mainPage"
+   page name: "localInfo"
+   page name: "remoteInfo"
 }
 
 mappings {
@@ -70,36 +73,14 @@ def mainPage(){
                 input "varList", "enum", title: "Select variables to sync:", options: varListIn.sort(), multiple: true, required: false, submitOnChange: true
                 List<String> l1 = varList
                 List<String> l2 = atomicState.priorList?.value
-                if(!listsEqual(l1, l2)){
-//                    paragraph "${atomicState.priorList?.value} <br/> $varList"
+                if(varList != null && !listsEqual(l1, l2)){
                     manageSubscriptions()
                     atomicState.priorList = varList
                 } 
-
+                href "remoteInfo", title: "Remote Server Information", required: false
+                href "localInfo", title: "Local Server Information", required: false
      	    }
-            section("Remote Hub Information", hideable: true, hidden: false){
-                input "remoteAPI", "text", title:"<b>Remote Server API:</b>",submitOnChange:true
-                input "token","text", title:"<b>Remote Access Token:</b>",submitOnChange:true
-                if (remoteAPI != null) {
-                    input "checkConnection", "button", title:"Check Connection"
-                    try {
-                        JsonSlurper jSlurp = new JsonSlurper()
-                        Map resMap = (Map)jSlurp.parseText((String)atomicState.returnString)
-                        paragraph "<b>Connection response status:</b>$atomicState.lastStatus $resMap.status"
-                    } catch (ignore) {
-                        paragraph "<b>Connection parse error - response:</b>$atomicState.lastStatus $atomicState.returnString"
-                    }
-                }
-                                
-            }
-            section("Local Hub Information", hideable: true, hidden: true){
-                paragraph "<b>Local Server API:</b> ${getFullLocalApiServerUrl()}"
-                paragraph "<b>Cloud Server API: </b>${getFullApiServerUrl()}"
-                if(state.accessToken == null) createAccessToken()
-                paragraph "<b>Access Token: </b>${state.accessToken}"
-                input "resetToken", "button", title:"Reset Token"
-            }
-           section("Optional Controller Device", hideable: true, hidden: true){
+            section("Optional Controller Device", hideable: true, hidden: true){
                 input "qryDevice", "device.VariableControllerDevice", title: "Select Controller Device:", multiple: true, required: false, submitOnChange: true
                 if (qryDevice != null) 
                     ccSubscribe()
@@ -116,6 +97,37 @@ def mainPage(){
 			    paragraph title: "Click Done", "Please click Done to install app before continuing"
 		    }
 	    }
+    }
+}
+
+def localInfo(){
+    dynamicPage (name: "localInfo", title: "", install: false, uninstall: false) {
+        section("Local Hub Information", hideable: false, hidden: false){
+            paragraph "<b>Local Server API:</b> ${getFullLocalApiServerUrl()}"
+            paragraph "<b>Cloud Server API: </b>${getFullApiServerUrl()}"
+            if(state.accessToken == null) createAccessToken()
+            paragraph "<b>Access Token: </b>${state.accessToken}"
+            input "resetToken", "button", title:"Reset Token"
+        }
+    }
+}
+
+def remoteInfo(){
+    dynamicPage (name: "remoteInfo", title: "", install: false, uninstall: false) {
+        section("Remote Hub Information", hideable: true, hidden: false){
+            input "remoteAPI", "text", title:"<b>Remote Server API:</b>",submitOnChange:true
+            input "token","text", title:"<b>Remote Access Token:</b>",submitOnChange:true
+            if (remoteAPI != null) {
+                input "checkConnection", "button", title:"Check Connection"
+                try {
+                    JsonSlurper jSlurp = new JsonSlurper()
+                    Map resMap = (Map)jSlurp.parseText((String)atomicState.returnString)
+                    paragraph "<b>Connection response status:</b>$atomicState.lastStatus $resMap.status"
+                } catch (ignore) {
+                    paragraph "<b>Connection parse error - response:</b>$atomicState.lastStatus $atomicState.returnString"
+                }
+            }
+        }        
     }
 }
 
@@ -203,7 +215,8 @@ void getVar() {
 
 void setVar() {
     log.debug "setVar $params.varName, $params.varValue"
-    success = this.setGlobalVar(params.varName, params.varValue)
+    varValue = URLDecoder.decode(params.varValue)
+    success = this.setGlobalVar(params.varName, varValue)
     jsonResponse(successful:"$success")
 }
 // End App Communication
@@ -228,7 +241,8 @@ void variableSync(evt){
     log.debug evt
     varName = evt.name.substring(evt.name.indexOf(":")+1,evt.name.length())
     log.debug varName
-    sendRemote("/setVar/$varName/${this.getGlobalVar(varName).value}")
+    varValue = URLEncoder.encode(this.getGlobalVar(varName).value, "UTF-8")
+    sendRemote("/setVar/$varName/$varValue")
 }
    
 Boolean listsEqual(l1,l2){

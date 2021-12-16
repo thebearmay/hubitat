@@ -1,0 +1,27 @@
+{
+  "packageName": "Hub Variable Sync",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.3",
+  "minimumHEVersion": "2.2.9.0",
+  "dateReleased": "2021-12-16",
+  "apps": [
+    {
+      "id": "95c9119e-c074-41e8-b54c-5843d93c0127",
+      "name": "Hub Variable Sync",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubVarSync.groovy",
+      "required": true,
+      "oauth": true,
+      "primary": false
+    }
+  ],
+  "drivers": [
+    {
+      "id": "37a7b041-f34e-478c-a058-b40845492978",
+      "name": "Variable Controller Device",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/varCntrl.groovy",
+      "required": false
+    }
+  ]
+}

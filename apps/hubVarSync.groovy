@@ -1,8 +1,22 @@
 /*
  * Hub Variable Synchronizer
+ *
+ *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ *  Change History:
+ *
+ *    Date        Who           What
+ *    ----        ---           ----
  */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.3'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -12,7 +26,7 @@ definition (
 	name: 			"Hub Variable Sync", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Keep Hub Variables in Sync across Hub Mesh",
+	description: 	"Keep Hub Variables in Sync across multiple hubs",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubVarSync.groovy",
 	oauth: 			true,
@@ -41,23 +55,23 @@ mappings {
     }
 }
 
-def installed() {
-//	log.trace "installed()"
+void installed() {
+	if(debugEnabled) log.trace "installed()"
     state?.isInstalled = true
     initialize()
 }
 
-def updated(){
-//	log.trace "updated()"
+void updated(){
+	if(debugEnabled) log.trace "updated()"
     if(!state?.isInstalled) { state?.isInstalled = true }
-	if(debugEnable) runIn(1800,logsOff)
+	if(debugEnabled) runIn(1800,logsOff)
 }
 
-def initialize(){
+void initialize(){
 }
 
 void logsOff(){
-     app.updateSetting("debugEnable",[value:"false",type:"bool"])
+     app.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }
 
 def mainPage(){
@@ -76,9 +90,11 @@ def mainPage(){
                 if(varList != null && !listsEqual(l1, l2)){
                     manageSubscriptions()
                     atomicState.priorList = varList
-                } 
+                }
+                if(varList) input "sendUpd", "button", title:"Send Update"
                 href "remoteInfo", title: "Remote Server Information", required: false
                 href "localInfo", title: "Local Server Information", required: false
+				input "debugEnabled", "bool", title:"Enable Debug Logging:", submitOnChange:true, required:false, defaultValue:false
      	    }
             section("Optional Controller Device", hideable: true, hidden: true){
                 input "qryDevice", "device.VariableControllerDevice", title: "Select Controller Device:", multiple: true, required: false, submitOnChange: true
@@ -131,29 +147,19 @@ def remoteInfo(){
     }
 }
 
-def ccSubscribe(){
+// Begin Device Interface
+void ccSubscribe(){
     unsubscribe(qryDevice)
     subscribe(qryDevice,"varName",ccProcess)
     subscribe(qryDevice,"varCmd",ccProcess)
 }
-// Begin Device Interface
-def ccProcess(evt=null) {
+
+void ccProcess(evt=null) {
     dev = this.getSubscribedDeviceById(evt.deviceId)
     vName = dev.currentValue("varName")
     vCmd = dev.currentValue("varCmd")
     vValue = dev.currentValue("varValue")
     vType = dev.currentValue("varType")
-/*
-    if(vCmd == "create") {
-        if (!this.getGlobalVar(vName))
-            success = this.createGlobalVar(vName, vValue, vType)
-        else
-            success = "Already existed"
-        dev.varReturn(success)
-    }else if (vCmd == "delete"){
-        success = this.deleteGlobalVar(vName)
-        dev.varReturn(success)
-    }else */
     
     if (vCmd == "set"){
         success = this.setGlobalVar(vName, vValue)
@@ -176,21 +182,22 @@ void sendRemote(command) {
         body: []
 	]
 
-    log.debug "$requestParams"
-    asynchttpPost("getResp", requestParams, [hubName:"$location.hub.name"]) 
+    if(debugEnabled) log.debug "$requestParams"
+    asynchttpPost("getResp", requestParams, [cmd:"${command.substring(1)}"]) 
 }
 
 void getResp(resp, data) {
     try {
-        log.debug "$resp.properties - $resp.data - ${data['hubName']} - ${resp.getStatus()}"
+        if(debugEnabled) log.debug "$resp.properties - $resp.data - ${data['cmd']} - ${resp.getStatus()}"
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data != null || resp.data <= " ") 
                 atomicState.returnString = resp.data
-            else atomicState.returnString = "Null Data Set Returned"
+            else atomicState.returnString = "{'value':'Null Data Set', 'status':'${resp.getStatus()}'}"
         } else 
-            atomicState.returnString =  "Error: ${resp.getStatus()}"
+            atomicState.returnString =  "{'status':'${resp.getStatus()}'}"
     } catch (Exception ex) {
         atomicState.returnString = ex.message
+        log.error ex.message
     }
     atomicState.lastStatus = resp.getStatus()
 
@@ -201,12 +208,12 @@ void jsonResponse(retData){
 }                                                                  
 
 void connectPing() {
-    log.debug "Ping received"
+    if(debugEnabled) log.debug "Ping received"
     jsonResponse(status: "acknowledged")
 }
 
 void getVar() {
-    log.debug "getVar $params.varName"
+    if(debugEnabled) log.debug "getVar $params.varName"
     if(getGlobalVar(params.varName)) 
         jsonResponse(value: "${this.getGlobalVar(params.varName).value}")
     else
@@ -214,7 +221,7 @@ void getVar() {
 }
 
 void setVar() {
-    log.debug "setVar $params.varName, $params.varValue"
+    if(debugEnabled) log.debug "setVar $params.varName, $params.varValue"
     varValue = URLDecoder.decode(params.varValue)
     success = this.setGlobalVar(params.varName, varValue)
     jsonResponse(successful:"$success")
@@ -223,56 +230,70 @@ void setVar() {
          
 void manageSubscriptions(){
     atomicState.priorList.value.each{
-//        log.debug "unsub $it"
+        if(debugEnabled) log.debug "unsub $it"
         unsubscribe(location, it.toString())
     }
     removeAllInUseGlobalVar()
     varList.each{
-//        log.debug "sub $it"
+        if(debugEnabled) log.debug "sub $it"
         var="variable:$it"
-        log.debug var
+        if(debugEnabled) log.debug var
         subscribe(location,"$var", "variableSync")
         success = addInUseGlobalVar(it.toString())
-//        log.debug "Added $it $success"
+        if(debugEnabled) log.debug "Added $it $success"
     }  
 }
 
 void variableSync(evt){
-    log.debug evt
+    if(debugEnabled) log.debug evt
     varName = evt.name.substring(evt.name.indexOf(":")+1,evt.name.length())
-    log.debug varName
-    varValue = URLEncoder.encode(this.getGlobalVar(varName).value, "UTF-8")
+    if(debugEnabled) log.debug varName
+    varValue = URLEncoder.encode(this.getGlobalVar(varName).value.toString(), "UTF-8")
     sendRemote("/setVar/$varName/$varValue")
 }
    
 Boolean listsEqual(l1,l2){
-//    log.debug "L1: $l1"
-//    log.debug "L2: $l2"
+    if(debugEnabled) log.debug "L1: $l1"
+    if(debugEnabled) log.debug "L2: $l2"
     if(l1.size() != l2.size()){
-//        log.debug "Failed size"
+        if(debugEnabled) log.debug "Failed size"
         return false
     }
     for (i=0; i<l1.size(); i++) {
         if(l1[i].toString() != l2[i].toString()){
-//            log.debug "Failed on item $i"
+            if(debugEnabled) log.debug "Failed on item $i"
             return false
         }
     }
-//    log.debug "Lists equal"
+    if(debugEnabled) log.debug "Lists equal"
     return true    
+}
+
+void manualSend() {
+    if(debugEnabled) log.debug "Manual Send"
+    varList.each {
+        varName = it.toString()
+        if(debugEnabled) log.debug varName
+        varValue = URLEncoder.encode(this.getGlobalVar(varName).value.toString(), "UTF-8")
+        sendRemote("/setVar/$varName/$varValue")
+        pauseExecution(100)
+    }
 }
 
 def appButtonHandler(btn) {
     switch(btn) {
           case "checkConnection":
-              log.debug "Ping requested"
+              if(debugEnabled) log.debug "Ping requested"
               sendRemote("/ping")
+              break
+          case "sendUpd":
+              manualSend()
               break
           case "resetToken":
               createAccessToken()
               break
           default: 
-              log.error "Undefined button $btn pushed"
+              if(debugEnabled) log.error "Undefined button $btn pushed"
               break
       }
 }

@@ -14,9 +14,10 @@
  *
  *    Date        Who           What
  *    ----        ---           ----
+ *   17Dec21    thebearmay    Add a debug shutoff timer
  */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -95,6 +96,10 @@ def mainPage(){
                 href "remoteInfo", title: "Remote Server Information", required: false
                 href "localInfo", title: "Local Server Information", required: false
 				input "debugEnabled", "bool", title:"Enable Debug Logging:", submitOnChange:true, required:false, defaultValue:false
+                if(debugEnabled) {
+                    unschedule()
+                    runIn(1800,logsOff)
+                }
      	    }
             section("Optional Controller Device", hideable: true, hidden: true){
                 input "qryDevice", "device.VariableControllerDevice", title: "Select Controller Device:", multiple: true, required: false, submitOnChange: true

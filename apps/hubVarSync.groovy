@@ -188,13 +188,13 @@ void sendRemote(command) {
 
 void getResp(resp, data) {
     try {
-        if(debugEnabled) log.debug "$resp.properties - $resp.data - ${data['cmd']} - ${resp.getStatus()}"
+        if(debugEnabled) log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
-            if(resp.data != null || resp.data <= " ") 
+            if(resp.data) 
                 atomicState.returnString = resp.data
-            else atomicState.returnString = "{'value':'Null Data Set', 'status':'${resp.getStatus()}'}"
+            else atomicState.returnString = "{\"value\":\"Null Data Set\", \"status\":\"${resp.getStatus()}\"}"
         } else 
-            atomicState.returnString =  "{'status':'${resp.getStatus()}'}"
+            atomicState.returnString =  "{\"status\":\"${resp.getStatus()}\"}"
     } catch (Exception ex) {
         atomicState.returnString = ex.message
         log.error ex.message

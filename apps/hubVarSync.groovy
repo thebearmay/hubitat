@@ -14,10 +14,12 @@
  *
  *    Date        Who           What
  *    ----        ---           ----
- *   17Dec21    thebearmay    Add a debug shutoff timer
+ *    17Dec21    thebearmay    Add a debug shutoff timer
+ *                             Add uninstalled()
+ *    20Dec21    thebearmay    Add HSM and Mode options
  */
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.6'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -39,6 +41,7 @@ preferences {
    page name: "mainPage"
    page name: "localInfo"
    page name: "remoteInfo"
+   page name: "hsmMode"
 }
 
 mappings {
@@ -53,6 +56,14 @@ mappings {
     path("/getVar/:varName"){
         action: [POST: "getVar",
                  GET: "getVar"]
+    }
+    path("/hsmStat/:varValue"){
+        action: [POST: "hsmStat",
+                 GET: "hsmStat"]
+    }    
+    path("/modeStat/:varValue"){
+        action: [POST: "modeStat",
+                 GET: "modeStat"]
     }
 }
 
@@ -95,6 +106,7 @@ def mainPage(){
                 if(varList) input "sendUpd", "button", title:"Send Update"
                 href "remoteInfo", title: "Remote Server Information", required: false
                 href "localInfo", title: "Local Server Information", required: false
+                href "hsmMode", title: "HSM and Mode Settings", required: false
 				input "debugEnabled", "bool", title:"Enable Debug Logging:", submitOnChange:true, required:false, defaultValue:false
                 if(debugEnabled) {
                     unschedule()
@@ -149,6 +161,26 @@ def remoteInfo(){
                 }
             }
         }        
+    }
+}
+
+def hsmMode(){
+    dynamicPage (name: "hsmMode", title: "", install: false, uninstall: false) {
+        section("HSM and Mode Settings", hideable: false, hidden: false){
+            input "hsmSend", "bool", title:"Send HSM status to remote hub"
+            if(hsmSend) 
+                subscribe(location, "hsmStatus", "hsmSend")
+            else 
+                unsubscribe(location, "hsmStatus")
+            input "hsmRec", "bool", title:"Allow remote hub to update HSM Status"
+            input "modeSend", "bool", title: "Send Hub Mode to remote hub"
+            if(modeSend) 
+                subscribe(location, "mode", "modeSend")
+            else
+                unsubscribe(location, "mode")
+            input "modeRec", "bool", title: "Allow remote hub to update Hub Mode"
+            
+        }
     }
 }
 
@@ -231,6 +263,20 @@ void setVar() {
     success = this.setGlobalVar(params.varName, varValue)
     jsonResponse(successful:"$success")
 }
+
+void hsmStat(){
+    if(debugEnabled) log.debug "hsmStat $params.varValue"
+    if(hsmRec) {
+        sendLocationEvent(name: "hsmSetArm", value: params.varValue)
+    }
+}
+
+void modeStat(){
+    if(debugEnabled) log.debug "modeStat $params.varValue"
+    if(modeRec)
+        location.setMode(params.varValue)
+}
+
 // End App Communication
          
 void manageSubscriptions(){
@@ -285,7 +331,17 @@ void manualSend() {
     }
 }
 
-def appButtonHandler(btn) {
+void hsmSend(evt) {
+    if(debugEnabled) log.debug "hsmSend $evt.value"
+    sendRemote("/hsmStat/$evt.value")  
+}
+
+void modeSend(evt){
+    if(debugEnabled) log.debug "hsmSend $evt.value"
+    sendRemote("/modeStat/$evt.value")  
+}
+
+void appButtonHandler(btn) {
     switch(btn) {
           case "checkConnection":
               if(debugEnabled) log.debug "Ping requested"
@@ -303,6 +359,10 @@ def appButtonHandler(btn) {
       }
 }
 
-def intialize() {
+void intialize() {
 
+}
+
+void uninstalled(){
+	removeAllInUseGlobalVar()
 }

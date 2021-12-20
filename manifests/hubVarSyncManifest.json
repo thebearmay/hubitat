@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Variable Sync",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "minimumHEVersion": "2.2.9.0",
-  "dateReleased": "2021-12-16",
-  "releaseNotes": "0.0.4 - debug auto shutoff",
+  "dateReleased": "2021-12-20",
+  "releaseNotes": "0.0.6 - add HSM and Mode sync options\n0.0.5 - remove in use by at uninstall\n0.0.4 - debug auto shutoff",
   "apps": [
     {
       "id": "95c9119e-c074-41e8-b54c-5843d93c0127",

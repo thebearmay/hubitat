@@ -267,7 +267,7 @@ void setVar() {
 void hsmStat(){
     if(debugEnabled) log.debug "hsmStat $params.varValue"
     if(hsmRec) {
-        sendLocationEvent(name: "hsmSetArm", value: params.varValue)
+        sendLocationEvent(name: "hsmSetArm", value: params.varValue.replace("armed","arm"))
     }
 }
 

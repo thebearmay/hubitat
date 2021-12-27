@@ -18,7 +18,7 @@
  *    2021-12-27        thebearmay    169.254.x.x reboot option
  */
 
-static String version()	{  return '1.0.5'  }
+static String version()	{  return '1.0.6'  }
 
 
 definition (
@@ -105,8 +105,11 @@ def hubAlerts(){
               if(settings["trackIp$numHub"]){
                   app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
                   input "rebootRequested$numHub", "bool", title:"Reboot hub if IP = 169.254.x.x", required:true, submitOnChange:true, width:6
-                  if("rebootRequested") 
+                  if("rebootRequested") {
+                      app.updateSetting("rbAttempts$numHub",[value: 0, type:"number"])
                       input "rebootInterval$numHub", "number", title:"Number of seconds to delay reboot (30..360)", range:"0..360",submitOnChange:true,required:true, defaultValue:60, width:6
+                      input "rebootMax$numHub", "number", title: "Maximum Reboot Attempts", defaultValue: 1//, width:6
+                  }
               }
               input "trackUpdStat$numHub", "bool", title:"Alert on Hub Update Status Change", required:true, submitOnChange:true, width:6
               if(settings["trackUpdStat$numHub"]) app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus'), type:"string"])
@@ -143,13 +146,17 @@ def refreshDevice(evt = null){
                 sendNotification(notifyStr)
 		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP',true), type:"string"])
                 String ip = it.currentValue('localIP',true)
+                if(!ip.startsWith("169.254")) app.updateSetting("rbAttempts$numHub",[value: 0, type:"number"])
                 if(settings["rebootRequested$numHub"] && ip.startsWith("169.254")) {
-                    notifyStr = "Hub Monitor - ${it.currentValue('locationName')} will be rebooted in $rebootInterval seconds"
-                    sendNotification(notifyStr)
-                    runIn(settings["rebootInterval$numHub"],"rebootHub", [data:[ipAddress:ip],overwrite:false])  
-                }
+                    if(settings["rbAttemptsMade$numHub"] < settings["rebootMax$numHub"]) {
+                        app.updateSetting("rbAttempts$numHub",[value: settings["rbAttemptsMade$numHub"].toInteger + 1, type:"number"])
+                        notifyStr = "Hub Monitor - ${it.currentValue('locationName')} will be rebooted in $rebootInterval seconds"
+                        sendNotification(notifyStr)
+                        runIn(settings["rebootInterval$numHub"],"rebootHub", [data:[ipAddress:ip],overwrite:false]) 
+                    }
+                } 
             }
-               if(it.currentValue("hubUpdateStatus",true) != settings["updStat$numHub"] && settings["updStat$numHub"] && it.currentValue("hubUpdateStatus",true) != null) {
+            if(it.currentValue("hubUpdateStatus",true) != settings["updStat$numHub"] && settings["updStat$numHub"] && it.currentValue("hubUpdateStatus",true) != null) {
                 notifyStr = "Hub Update Status for ${it.currentValue('locationName')} has changed to ${it.currentValue("hubUpdateStatus",true)}"
                 sendNotification(notifyStr)
 		        app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus',true), type:"string"])

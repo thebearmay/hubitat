@@ -83,12 +83,13 @@
  *    2021-12-01  thebearmay     add additional subnets information
  *    2021-12-07  thebearmay     allow data attribute to be suppressed if zigbee data is null, remove getMacAddress() as it has been retired from the API
  *    2021-12-08  thebearmay     fix zigbee channel bug
+ *    2021-12-27  thebearmay     169.254.x.x reboot option
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.14"}
+static String version() {return "2.6.15"}
 
 metadata {
     definition (
@@ -151,6 +152,7 @@ metadata {
         attribute "ipSubnetsAllowed", "string"
 
         command "hiaUpdate", ["string", "string"]
+        command "reboot", ["string"]
     }   
 }
 
@@ -164,20 +166,21 @@ preferences {
     input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", defaultValue: false, required: false, submitOnChange: true)
     input("evtStateDaysEnable", "bool", title:"Enable Display of Max Event/State Days Setting")
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
-        input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true)
+        input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true, width:4)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true)
     input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", defaultValue: false, submitOnChange: true)
     input("zwLocked", "bool", title: "Never Run ZWave Version Update", defaultValue:false, submitOnChange: true)
     input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true)
     input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true)
     input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
-	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false)
+	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true)
+    input("allowReboot","bool", title: "Allow Hub Monitor to reboot if IP Address is 169.254.x.x", defaultValue: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
         input("password", "password", title: "Hub Security Password", required: false)
     }
-    input("fwUpdatePollRate","number", title:"Poll rate (in seconds) for FW Update Check (Default:6000, Disable:0):", defaultValue:6000, submitOnChange:true)
+    input("fwUpdatePollRate","number", title:"Poll rate (in seconds) for FW Update Check (Default:6000, Disable:0):", defaultValue:6000, submitOnChange:true, width:6)
 }
 
 @SuppressWarnings('unused')
@@ -261,6 +264,7 @@ def updated(){
         if(!subnetEnable){
             device.deleteCurrentState("ipSubnetsAllowed")
         }
+        device.deleteCurrentState("hubUpdateResp")
 	}
 				
 }
@@ -925,6 +929,58 @@ void hiaUpdate(htmlStr, auth) {
         updateAttr("html",htmlStr)
     else 
         updateAttr("html", "Illegal attempt using $auth")
+}
+
+@SuppressWarnings('unused')
+void reboot(a) {
+    if (!aCheck(a)) {
+        log.warn "Attempt to reboot hub without proper authorization"
+        if(debubEnable) log.debug "Attempted Value:$a"
+        return
+    }
+    if(!allowReboot){
+        log.warn "Reboot was requested, but allowReboot was set to false"
+        return
+    }
+    log.info "Hub Reboot requested"
+    // start - Modified from dman2306 Rebooter app
+    String cookie=(String)null
+    if(security) {
+        httpPost(
+            [
+                uri: "http://127.0.0.1:8080",
+                path: "/login",
+                query: [ loginRedirect: "/" ],
+                body: [
+                    username: username,
+                    password: password,
+                    submit: "Login"
+                ]
+            ]
+        ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
+    }
+	httpPost(
+		[
+			uri: "http://127.0.0.1:8080",
+			path: "/hub/reboot",
+			headers:[
+				"Cookie": cookie
+			]
+		]
+	) {		resp ->	} 
+    // end - Modified from dman2306 Rebooter app
+}
+
+@SuppressWarnings('unused')
+Boolean aCheck(a){
+    try{
+        httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
+            b = res.data.device.UDN.toString()
+            b = b.substring(b.indexOf(":")+1,b.length())
+            if(a==b) return true
+            else return false
+            }        
+    } catch(ignore) {}
 }
 
 @SuppressWarnings('unused')

@@ -15,9 +15,10 @@
  *                                    0.1.1 fix null condition coming from hub information device
  *                                    0.1.2 add debugging logic
  *    2021-11-02        thebearmay    add monitoring for hubUpdateStatus
+ *    2021-12-27        thebearmay    169.254.x.x reboot option
  */
 
-static String version()	{  return '0.1.5'  }
+static String version()	{  return '1.0.5'  }
 
 
 definition (
@@ -64,7 +65,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main")
 		    {
-                input "qryDevice", "capability.initialize", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
+                input "qryDevice", "device.HubInformation", title: "Hubs to Monitor:", multiple: true, required: true, submitOnChange: true
                 input "debugEnable", "bool", title: "Enable Debugging:", submitOnChange: true
                 if (qryDevice != null){
                     hubDevCheck = true
@@ -97,12 +98,17 @@ def hubAlerts(){
           int numHub=0
           qryDevice.each{
               paragraph "<b><u>${it.currentValue('locationName')}</u></b>"
-              input "maxTemp$numHub", "number", title:"Max Temperature (0..200)",range:"0..200", required: true, defaultValue:200
-              input "maxDb$numHub", "number", title:"Max DB Size (0..1000)", range:"0..1000", required:true, defaultValue:1000
-              input "minMem$numHub", "number", title:"Min Free Memory (0..600000)", range:"0..600000", required:true,defaultValue:0
+              input "maxTemp$numHub", "number", title:"Max Temperature (0..200)",range:"0..200", required: true, defaultValue:200, width:6
+              input "maxDb$numHub", "number", title:"Max DB Size (0..1000)", range:"0..1000", required:true, defaultValue:1000, width:6
+              input "minMem$numHub", "number", title:"Min Free Memory (0..600000)", range:"0..600000", required:true,defaultValue:0, width:6
               input "trackIp$numHub", "bool", title:"Alert on IP Change", required:true, submitOnChange:true
-              if(settings["trackIp$numHub"]) app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
-              input "trackUpdStat$numHub", "bool", title:"Alert on Hub Update Status Change", required:true, submitOnChange:true
+              if(settings["trackIp$numHub"]){
+                  app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
+                  input "rebootRequested$numHub", "bool", title:"Reboot hub if IP = 169.254.x.x", required:true, submitOnChange:true, width:6
+                  if("rebootRequested") 
+                      input "rebootInterval$numHub", "number", title:"Number of seconds to delay reboot (30..360)", range:"0..360",submitOnChange:true,required:true, defaultValue:60, width:6
+              }
+              input "trackUpdStat$numHub", "bool", title:"Alert on Hub Update Status Change", required:true, submitOnChange:true, width:6
               if(settings["trackUpdStat$numHub"]) app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus'), type:"string"])
               numHub++
           }
@@ -133,9 +139,15 @@ def refreshDevice(evt = null){
                 sendNotification(notifyStr)
             }
             if(it.currentValue("localIP",true) != settings["ip$numHub"] && settings["ip$numHub"]) {
-                notifyStr = "Hub Monitor - Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP",true)}"
+                "Hub Monitor - Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP",true)}"
                 sendNotification(notifyStr)
 		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP',true), type:"string"])
+                String ip = it.currentValue('localIP',true)
+                if(settings["rebootRequested$numHub"] && ip.startsWith("169.254")) {
+                    notifyStr = "Hub Monitor - ${it.currentValue('locationName')} will be rebooted in $rebootInterval seconds"
+                    sendNotification(notifyStr)
+                    runIn(settings["rebootInterval$numHub"],"rebootHub", [data:[ipAddress:ip],overwrite:false])  
+                }
             }
                if(it.currentValue("hubUpdateStatus",true) != settings["updStat$numHub"] && settings["updStat$numHub"] && it.currentValue("hubUpdateStatus",true) != null) {
                 notifyStr = "Hub Update Status for ${it.currentValue('locationName')} has changed to ${it.currentValue("hubUpdateStatus",true)}"
@@ -147,6 +159,20 @@ def refreshDevice(evt = null){
     
     }
  }
+
+void rebootHub(data){
+    qryDevice.each{ 
+        if(it.currentValue('localIP',true) == data.ipAddress) {
+            try{
+                httpGet("http://${data.ipAddress}:8080/api/hubitat.xml") { res ->
+                    String b = res.data.device.UDN.toString()
+                    b = b.substring(b.indexOf(":")+1,b.length())
+                    it.reboot(b)
+                }        
+            } catch(ignore) {}
+        }
+    }
+}
 
 void sendNotification(notifyStr){
     notifyDevice.each { 

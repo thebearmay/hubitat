@@ -142,7 +142,7 @@ def refreshDevice(evt = null){
                 notifyStr = "Hub Monitor Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
                 sendNotification(notifyStr)
             }
-            if((it.currentValue("localIP",true) != settings["ip$numHub"] && settings["ip$numHub"]) || it.currentValue("localIP",true).startsWith("169.254")) {
+            if((it.currentValue("localIP",true) != settings["ip$numHub"] && settings["ip$numHub"]) || (it.currentValue("localIP",true).startsWith("169.254") && settings["ip$numHub"])) {
                 notifyStr = "Hub Monitor - Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP",true)}"
                 sendNotification(notifyStr)
 		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP',true), type:"string"])

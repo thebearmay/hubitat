@@ -16,9 +16,10 @@
  *                                    0.1.2 add debugging logic
  *    2021-11-02        thebearmay    add monitoring for hubUpdateStatus
  *    2021-12-27        thebearmay    169.254.x.x reboot option
+ *    2021-12-28        thebearmay    bug fix 
  */
 
-static String version()	{  return '1.0.6'  }
+static String version()	{  return '1.0.7'  }
 
 
 definition (
@@ -105,7 +106,7 @@ def hubAlerts(){
               if(settings["trackIp$numHub"]){
                   app.updateSetting("ip$numHub",[value: it.currentValue('localIP'), type:"string"])
                   input "rebootRequested$numHub", "bool", title:"Reboot hub if IP = 169.254.x.x", required:true, submitOnChange:true, width:6
-                  if("rebootRequested") {
+                  if("rebootRequested$numHub") {
                       app.updateSetting("rbAttempts$numHub",[value: 0, type:"number"])
                       input "rebootInterval$numHub", "number", title:"Number of seconds to delay reboot (30..360)", range:"0..360",submitOnChange:true,required:true, defaultValue:60, width:6
                       input "rebootMax$numHub", "number", title: "Maximum Reboot Attempts", defaultValue: 1//, width:6
@@ -141,8 +142,8 @@ def refreshDevice(evt = null){
                 notifyStr = "Hub Monitor Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("localIP",true) != settings["ip$numHub"] && settings["ip$numHub"]) {
-                "Hub Monitor - Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP",true)}"
+            if((it.currentValue("localIP",true) != settings["ip$numHub"] && settings["ip$numHub"]) || it.currentValue("localIP",true).startsWith("169.254")) {
+                notifyStr = "Hub Monitor - Hub IP Address for ${it.currentValue('locationName')} has changed to ${it.currentValue("localIP",true)}"
                 sendNotification(notifyStr)
 		        app.updateSetting("ip$numHub",[value: it.currentValue('localIP',true), type:"string"])
                 String ip = it.currentValue('localIP',true)

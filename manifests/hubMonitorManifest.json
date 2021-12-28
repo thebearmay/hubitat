@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Monitor",
   "author": "Jean P. May, Jr.",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2021-12-27",
-  "releaseNotes":"1.0.6 - Add the ability to reboot the hub if the IP changes to 169.254.x.x, requires Hub Information driver ≥ v2.6.15",
+  "releaseNotes":"1.0.7 - bug fix\n1.0.6 - Add the ability to reboot the hub if the IP changes to 169.254.x.x, requires Hub Information driver ≥ v2.6.15",
   "apps": [
     {
       "id": "6a76eb1c-bc61-42d8-88db-4a12742f9839",

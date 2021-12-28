@@ -17,10 +17,11 @@
  *    2021-04-29    thebearmay    Original version 0.1.0
  *    2021-04-30    thebearmay    Add alternate code names
  *    2021-05-04    thebearmay    2.2.7.x changes
+ *    2021-12-28    thebearmay    return State as a map
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.2.0'  }
+static String version()	{  return '0.2.1'  }
 
 
 definition (
@@ -135,32 +136,25 @@ String buildTable(){
         def evtList = [] 
         if(codeRec) evtList+=qryDevice[i].statesSince("lastCodeName",Date.parse("yyyy-MM-dd hh:mm", qryDate),[max:100])
         if(unlockRec || lockRec) evtList+=qryDevice[i].statesSince("lock",Date.parse("yyyy-MM-dd hh:mm", qryDate),[max:100])
-        evtList.each {
+        evtList.each {        
             stateParts = parseState(it.toString())
 
-            ////Start Here
-            if (location.hub.firmwareVersionString <= "2.2.7.0") {
-                pDate = stateParts[0]
-                p4Trim = stateParts[4].trim()
-            } else {
-                pDate = stateParts[1].replace("date=","")
-                stateParts[5] = stateParts[5].replace("value=","")
-                p4Trim = stateParts[5].trim()
-            }
+            pDate=stateParts["date"]
+            p4Trim = stateParts["value"].trim()
+
             if(p4Trim.contains("unknown codeNumber:") || p4Trim.contains("code #")) p4Trim = findAltName(p4Trim)
-            if (stateParts[0].length() < 23) stateParts[0] = stateParts[0] + "0"
+            if(pDate.length() < 23) pDate = pDate + "0"
             
             if (p4Trim == "unlocked" && unlockRec){
                 evtArr[i].add("$pDate\t\t   [Unlock Event]")
             } else if (p4Trim == "locked" && lockRec){
                 evtArr[i].add("$pDate\t\t   [Lock Event]")
             }else if (p4Trim != "locked" && p4Trim != "unlocked")
-               evtArr[i].add("$pDate\t [Unlock w/Code] $p4Trim")
-                    
-        
+               evtArr[i].add("$pDate\t [Unlock w/Code] $p4Trim")            
         }
         evtArr[i].sort()
     }
+
     dispTable += "</tr><tr>"
     for(i=0;i<qryDevice.size();i++){
         tempStr =""
@@ -169,7 +163,12 @@ String buildTable(){
         }                    
         dispTable += "<td class='mtd'>$tempStr</td>"
     }
+
+
+        
     dispTable += "</tr></table></div>"
+
+        
     return dispTable
 }
       
@@ -213,7 +212,14 @@ def parseState(stateStr){ //returns array of the elements in the string [0] - Ti
 
     end = stateStr.length() - 1
     stateStr = stateStr.substring(start, end)
-    return stateStr.split(',')
+    stateStr=stateStr.split(',')
+    HashMap stateMap = [:]
+    stateStr.each {
+        tempList = it.split("=")
+        stateMap.put(tempList[0].trim(),tempList[1].trim())
+    }
+
+    return stateMap
 }
 
 def appButtonHandler(btn) {

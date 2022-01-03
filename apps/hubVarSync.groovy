@@ -19,7 +19,7 @@
  *    20Dec21    thebearmay    Add HSM and Mode options
  */
 
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.7'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -99,7 +99,7 @@ def mainPage(){
                 input "varList", "enum", title: "Select variables to sync:", options: varListIn.sort(), multiple: true, required: false, submitOnChange: true
                 List<String> l1 = varList
                 List<String> l2 = atomicState.priorList?.value
-                if(varList != null && !listsEqual(l1, l2)){
+                if(varList != null && l2 !=null && !listsEqual(l1, l2)){
                     manageSubscriptions()
                     atomicState.priorList = varList
                 }

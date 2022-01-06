@@ -17,9 +17,10 @@
  *    17Dec21    thebearmay    Add a debug shutoff timer
  *                             Add uninstalled()
  *    20Dec21    thebearmay    Add HSM and Mode options
+ *    06Jan22    thebearmay    Add option to send variable updates to nodeRed
  */
 
-static String version()	{  return '0.0.7'  }
+static String version()	{  return '0.1.6'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -42,6 +43,7 @@ preferences {
    page name: "localInfo"
    page name: "remoteInfo"
    page name: "hsmMode"
+   page name: "nodeRed"
 }
 
 mappings {
@@ -107,6 +109,7 @@ def mainPage(){
                 href "remoteInfo", title: "Remote Server Information", required: false
                 href "localInfo", title: "Local Server Information", required: false
                 href "hsmMode", title: "HSM and Mode Settings", required: false
+                href "nodeRed", title: "NodeRed Settings", required: false
 				input "debugEnabled", "bool", title:"Enable Debug Logging:", submitOnChange:true, required:false, defaultValue:false
                 if(debugEnabled) {
                     unschedule()
@@ -184,6 +187,17 @@ def hsmMode(){
     }
 }
 
+def nodeRed(){
+    dynamicPage (name: "nodeRed", title:"", install: false, uninstall: false) {
+        section ("Node Red Settings", hideable: false, hidden: false){
+            input "nrServer","text", title:"<b>NodeRed Server path</b> (i.e. http://192.168.x.x:1880)", submitOnChange: true
+            input "nrPath", "text", title:"<b>NodeRed Endpoint path</b> (i.e. /hubVariable)", submitOnChange:true
+            input "nrEnabled", "bool", title:"Enable Variable Send to NodeRed", submitOnChange:true, defaultValue:false
+            input "nrTest", "button", title: "Send Test"
+        }
+    }
+}
+
 // Begin Device Interface
 void ccSubscribe(){
     unsubscribe(qryDevice)
@@ -221,6 +235,19 @@ void sendRemote(command) {
 
     if(debugEnabled) log.debug "$requestParams"
     asynchttpPost("getResp", requestParams, [cmd:"${command.substring(1)}"]) 
+}
+
+void sendNR(vName, vValue){
+
+	Map requestParams =
+	[
+        uri: "$nrServer$nrPath?varName=$vName&varValue=$vValue",
+        body: []
+	]
+
+    if(debugEnabled) log.debug "$requestParams"
+    atomicState.debugS = "$requestParams"
+    asynchttpGet("getResp", requestParams, [cmd:"$vName/$vValue"])     
 }
 
 void getResp(resp, data) {
@@ -297,10 +324,15 @@ void manageSubscriptions(){
 
 void variableSync(evt){
     if(debugEnabled) log.debug evt
-    varName = evt.name.substring(evt.name.indexOf(":")+1,evt.name.length())
+    varName = URLEncoder.encode(evt.name.substring(evt.name.indexOf(":")+1,evt.name.length()), "UTF-8")
     if(debugEnabled) log.debug varName
     varValue = URLEncoder.encode(this.getGlobalVar(varName).value.toString(), "UTF-8")
-    sendRemote("/setVar/$varName/$varValue")
+    if (remoteAPI != null){
+        sendRemote("/setVar/$varName/$varValue")
+        pauseExecution(100)
+    }
+    if(nrEnabled)
+        sendNR(varName, varValue)
 }
    
 Boolean listsEqual(l1,l2){
@@ -331,6 +363,10 @@ void manualSend() {
     }
 }
 
+void sendTest2NR(){
+    sendNR("testName", "testValue")
+}
+
 void hsmSend(evt) {
     if(debugEnabled) log.debug "hsmSend $evt.value"
     sendRemote("/hsmStat/$evt.value")  
@@ -352,6 +388,9 @@ void appButtonHandler(btn) {
               break
           case "resetToken":
               createAccessToken()
+              break
+          case "nrTest":
+              sendTest2NR()
               break
           default: 
               if(debugEnabled) log.error "Undefined button $btn pushed"

@@ -18,9 +18,10 @@
  *                             Add uninstalled()
  *    20Dec21    thebearmay    Add HSM and Mode options
  *    06Jan22    thebearmay    Add option to send variable updates to nodeRed
+ *    10Jan22    thebearmay    change nodeRed to Post instead of Get
  */
 
-static String version()	{  return '0.1.6'  }
+static String version()	{  return '0.1.7'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -237,17 +238,19 @@ void sendRemote(command) {
     asynchttpPost("getResp", requestParams, [cmd:"${command.substring(1)}"]) 
 }
 
-void sendNR(vName, vValue){
+void sendNR(vName, vValue, vType){
 
 	Map requestParams =
-	[
-        uri: "$nrServer$nrPath?varName=$vName&varValue=$vValue",
-        body: []
+	[   
+       uri: "$nrServer",
+       path: "$nrPath",
+       contentType: "application/json", 
+       body: [varName: vName, varValue: vValue, varType: vType]        
 	]
 
     if(debugEnabled) log.debug "$requestParams"
     atomicState.debugS = "$requestParams"
-    asynchttpGet("getResp", requestParams, [cmd:"$vName/$vValue"])     
+    asynchttpPost("getResp", requestParams, [cmd:"$vName/$vValue/$vType"])     
 }
 
 void getResp(resp, data) {
@@ -268,7 +271,7 @@ void getResp(resp, data) {
 }
 
 void jsonResponse(retData){
-    render (contentType: 'application/json', text: JsonOutput.toJson(retData) )
+    render (contentType: 'application/json', body: JsonOutput.toJson(retData) )
 }                                                                  
 
 void connectPing() {
@@ -324,15 +327,17 @@ void manageSubscriptions(){
 
 void variableSync(evt){
     if(debugEnabled) log.debug evt
-    varName = URLEncoder.encode(evt.name.substring(evt.name.indexOf(":")+1,evt.name.length()), "UTF-8")
+    vName = evt.name.substring(evt.name.indexOf(":")+1,evt.name.length())
+    varName = URLEncoder.encode(vName, "UTF-8")
     if(debugEnabled) log.debug varName
-    varValue = URLEncoder.encode(this.getGlobalVar(varName).value.toString(), "UTF-8")
+    vValue = this.getGlobalVar(vName).value.toString()
+    varValue = URLEncoder.encode(vValue, "UTF-8")
     if (remoteAPI != null){
         sendRemote("/setVar/$varName/$varValue")
         pauseExecution(100)
     }
     if(nrEnabled)
-        sendNR(varName, varValue)
+        sendNR(vName, vValue, this.getGlobalVar(vName).type.toString())
 }
    
 Boolean listsEqual(l1,l2){

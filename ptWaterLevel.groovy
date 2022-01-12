@@ -27,7 +27,7 @@ metadata {
         name: "PT Device", 
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
-        importUrl:""
+        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/ptWaterLevel.groovy"
     ) {
         capability "Actuator"
         capability "Configuration"

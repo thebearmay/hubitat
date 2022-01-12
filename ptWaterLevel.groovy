@@ -20,7 +20,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.0"}
+static String version() {return "0.1.1"}
 
 metadata {
     definition (
@@ -38,7 +38,8 @@ metadata {
         attribute "tx3", "decimal"
         attribute "battery", "number"
         attribute "fillPct", "number"
-        attribute "computedFill", "number"
+        attribute "compLiquid", "number"
+//        command "forceCompute"
     }   
 }
 
@@ -147,18 +148,24 @@ void getPTData(resp, data){
     }
 }   
 
+/*void forceCompute() {
+    updateAttr("tx1", 529)
+    updateAttr("tx2", 5.95)
+    computeValues()
+}*/
+
 @SuppressWarnings('unused')
 void computeValues() {
     if(obsFull && obsEmpty){
-        Integer fillPct = round(((device.currentValue(tx1, true).toInteger() - obsEmpty)/(obsFull - obsEmpty))*100)
+        Integer fillPct = (((device.currentValue("tx1", true).toInteger() - obsEmpty)/(obsFull - obsEmpty))*100)
         updateAttr("fillPct", fillPct, "%")
         if(tankCap > 0){
-            Integer computedFill = round(tankCap * (fillPct / 100)) 
-            updateAttr("computedFill", computedFill, volumeUnit)
+            Integer computedFill = (tankCap * (fillPct / 100)) 
+            updateAttr("compLiquid", computedFill, volumeUnit)
         }        
     }
     // Unit uses 4 AA batteries with a nominal voltage reported of ~6.0v, 1.5v/battery is considered full and 1.2v is considered "dead"
-    Integer battery = round(((device.currentValue("tx2").toDouble() - (1.2 * 4)) / (6 - (1.2 * 4)))*100)
+    Integer battery = (((device.currentValue("tx2").toDouble() - (1.2 * 4)) / (6 - (1.2 * 4)))*100)
     updateAttr("battery", battery, "%")
                                                                             
 }

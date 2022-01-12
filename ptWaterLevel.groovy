@@ -158,7 +158,7 @@ void computeValues() {
         }        
     }
     // Unit uses 4 AA batteries with a nominal voltage reported of ~6.0v, 1.5v/battery is considered full and 1.2v is considered "dead"
-    Integer battery = round(((device.currentValue("tx2").toDouble() - (1.2 * 4)) / (6 - (1.2 * 4))))
+    Integer battery = round(((device.currentValue("tx2").toDouble() - (1.2 * 4)) / (6 - (1.2 * 4)))*100)
     updateAttr("battery", battery, "%")
                                                                             
 }

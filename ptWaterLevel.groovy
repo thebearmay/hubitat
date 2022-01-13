@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.2"}
+static String version() {return "0.1.3"}
 
 metadata {
     definition (
@@ -169,6 +169,8 @@ void computeValues() {
     }
     // Unit uses 4 AA batteries with a nominal voltage reported of ~6.0v, 1.5v/battery is considered full and 1.2v is considered "dead"
     Integer battery = (((device.currentValue("tx2").toDouble() - (1.2 * 4)) / (6 - (1.2 * 4)))*100)
+    if(battery > 100) battery = 100
+    if(battery < 0) battery = 0
     updateAttr("battery", battery, "%")
                                                                             
 }

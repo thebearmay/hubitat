@@ -15,12 +15,13 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    12Jan2022    thebearmay    Add computations based on observed values
+ *    13Jan2022    thebearmay    Add html attribute
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.1"}
+static String version() {return "0.1.2"}
 
 metadata {
     definition (
@@ -39,6 +40,7 @@ metadata {
         attribute "battery", "number"
         attribute "fillPct", "number"
         attribute "compLiquid", "number"
+        attribute "html", "string"
 //        command "forceCompute"
     }   
 }
@@ -80,6 +82,7 @@ def updated(){
 def configure() {
     if(debugEnable) log.debug "configure()"
     getPollValues()
+    buildHtml()
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
@@ -140,6 +143,7 @@ void getPTData(resp, data){
             updateAttr("tx2",retData['2'])
             updateAttr("tx3",retData['3'])
             computeValues()
+            buildHtml()
         } else {
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching IP"
         } 
@@ -168,6 +172,16 @@ void computeValues() {
     Integer battery = (((device.currentValue("tx2").toDouble() - (1.2 * 4)) / (6 - (1.2 * 4)))*100)
     updateAttr("battery", battery, "%")
                                                                             
+}
+
+@SuppressWarnings('unused')
+void buildHtml() {
+    String htmlStr = ""
+    htmlStr+="<div class='tile-contents'>"
+    htmlStr+="<div class='tile-primary'>Fill Level ${device.currentValue('fillPct',true)}%<br/>${device.currentValue('compLiquid',true)} ${device.currentState('compLiquid')?.unit}</div>"
+    htmlStr+="<div style='text-align:left;position:absolute;top:4px;left:8px;font-size:12px'>${device.currentValue('battery',true)}%</div>"
+    htmlStr+="</div>"
+    updateAttr("html",htmlStr)
 }
 
 

@@ -82,7 +82,6 @@ def updated(){
 def configure() {
     if(debugEnable) log.debug "configure()"
     getPollValues()
-    buildHtml()
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){

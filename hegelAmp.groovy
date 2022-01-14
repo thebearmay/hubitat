@@ -45,7 +45,7 @@ metadata {
         command "muteOn"
         command "muteOff"
         command "muteToggle"
-        command "setInput", [[name:"input*", type:"NUMBER", description:"Input Number", range:"1..9"]]
+        command "setInput", [[name:"inputNum*", type:"NUMBER", description:"Input Number", range:"1..9"]]
 
 
     }   
@@ -139,8 +139,9 @@ def setVolume(level=50){
     updateAttr("lastVolume",level)
 }
 
-def setInput(input){
-    sendMsg("i.${input.toInteger()}")
+def setInput(inputNum=1){
+    if(inputNum.toInteger() < 1 || inputNum.toInteger() > 9) inputNum = 1
+    sendMsg("i.${inputNum.toInteger()}")
     iVals = ["1": "Balanced","2": "Analog 1","3": "Analog 2","4": "Coaxial","5": "Optical 1","6": "Optical 2","7": "Optical 3","8": "USB","9": "Network"]
     updateAttr("input", iVals["$input"])
 }

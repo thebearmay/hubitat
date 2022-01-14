@@ -16,12 +16,13 @@
  *    ----         ---           ----
  *    12Jan2022    thebearmay    Add computations based on observed values
  *    13Jan2022    thebearmay    Add html attribute
+ *    14Jan2022    thebearmay    Option to use factory zero instead of observed
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.3"}
+static String version() {return "0.1.4"}
 
 metadata {
     definition (
@@ -51,7 +52,8 @@ preferences {
     input("obsFull", "number", title: "Observed Full Tx Value", submitOnChange: true)
     input("obsEmpty", "number", title: "Observed Empty Tx Value", submitOnChange: true)
     input("tankCap", "number", title: "Tank Capacity", submitOnChange: true)
-    input("volumeUnit", "text", title: "Unit for Volume, i.e. <i>G</i>allon, <i>L</i>iter, etc.", submitOnChange:true)
+    input("volumeUnit", "text", title: "Unit for Volume, i.e. <i>G</i>allons, <i>L</i>iters, etc.", submitOnChange:true)
+    input("factoryZero", "bool", title: "Use Factory Zero instead of Observed", defaultValue: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled?", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -75,7 +77,8 @@ def updated(){
     if(debugEnable) {
         log.debug "updated()"
         runIn(1800,logsOff)
-    }			
+    }
+    getPollValues()
 }
 
 @SuppressWarnings('unused')
@@ -138,7 +141,7 @@ void getPTData(resp, data){
             updateAttr("debug",focusData)
             HashMap retData=(HashMap)evaluate(focusData)
             updateAttr("tx1",retData['1'])
-            updateAttr("txz",retData['z'])
+            updateAttr("tx1z",retData['z'])
             updateAttr("tx2",retData['2'])
             updateAttr("tx3",retData['3'])
             computeValues()
@@ -152,15 +155,19 @@ void getPTData(resp, data){
 }   
 
 /*void forceCompute() {
-    updateAttr("tx1", 529)
+    updateAttr("tx1", 430)
     updateAttr("tx2", 5.95)
+    updateAttr("tx1z", 58)
     computeValues()
+    buildHtml()
 }*/
 
 @SuppressWarnings('unused')
 void computeValues() {
-    if(obsFull && obsEmpty){
-        Integer fillPct = (((device.currentValue("tx1", true).toInteger() - obsEmpty)/(obsFull - obsEmpty))*100)
+    if((obsFull && obsEmpty) || (obsFull && factoryZero)){
+        if(factoryZero) zValue = device.currentValue("tx1z", true).toInteger()
+        else zValue =  obsEmpty
+        Integer fillPct = (((device.currentValue("tx1", true).toInteger() - obsEmpty)/(obsFull - zValue))*100)
         updateAttr("fillPct", fillPct, "%")
         if(tankCap > 0){
             Integer computedFill = (tankCap * (fillPct / 100)) 

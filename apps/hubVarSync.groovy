@@ -311,7 +311,7 @@ void modeStat(){
 // End App Communication
          
 void manageSubscriptions(){
-    atomicState.priorList.value.each{
+    atomicState.priorList?.value.each{
         if(debugEnabled) log.debug "unsub $it"
         unsubscribe(location, it.toString())
     }

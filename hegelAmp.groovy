@@ -18,7 +18,7 @@
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.6"}
+static String version() {return "0.1.7"}
 
 metadata {
     definition (
@@ -58,6 +58,8 @@ preferences {
     input(name: "ipAddr", type: "string", title:"IP Address", required: true)
     input(name: "portNum", type: "number", title: "Port Number", required: true)
     input(name: "volume", type: "number", title: "Starting Volume Level", defaultValue: 50, range:"0..100", submitOnChange: true)
+    input(name: "startInput", type: "number", title: "Input at Power On (0 to use last value)", defaultValue: 0, range:"0..9", submitOnChange:true)
+    input(name: "keepAlive", type: "bool", title: "Use device keep alive", defaultValue: false, sibmitOnChange: true)
 }
 
 @SuppressWarnings('unused')
@@ -67,6 +69,11 @@ def installed() {
 
 def updated(){
     if(volume == null) device.updateSetting("volume",[value:50,type:"number"])
+    if(startInput == null) device.updateSetting("startInput",[value:0,type:"number"])
+    if(keepAlive) 
+        runIn(120, "sendReset")
+    else 
+        unschedule()
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
@@ -91,19 +98,31 @@ def sendMsg(message) {
 
 def on(){
     connectTelnet()
+    pauseExecution(100)
     sendMsg("-p.1")
     updateAttr("switch", "on")
     setVolume(volume)
     updateAttr("mute","off")
     updateAttr("networkStatus", "online")
+    if(startInput > 0){     
+        pauseExecution(100)
+        setInput(startInput)
+    } 
+    if(keepAlive){
+        pauseExecution(100)
+        runIn(120, "sendReset")
+    }
 }
 
 def off(){
     sendMsg("-p.0")
     pauseExecution(100)
+    unschedule()
+    sendMsg("-r.~")
+    pauseExecution(100)
     disconnectTelnet()
     updateAttr("switch", "off")
-    updateAttr("networkStatus", "offline")    
+    updateAttr("networkStatus", "offline")
 }
 
 def powerToggle(){
@@ -162,6 +181,11 @@ def setInput(inputNum){
 
     sendMsg("-i.$inputNum")
         
+}
+
+def sendReset(){
+    sendMsg("-r.3")
+    runIn(120,"sendReset")
 }
 
 def parse(message) {

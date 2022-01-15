@@ -107,7 +107,10 @@ def on(){
     if(startInput > 0){     
         pauseExecution(100)
         setInput(startInput)
-    } 
+    } else {
+        pauseExecution(100)
+        setInput(device.currentValue("input", true))        
+    }
     if(keepAlive){
         pauseExecution(100)
         runIn(120, "sendReset")

@@ -18,7 +18,7 @@
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.5"}
+static String version() {return "0.1.6"}
 
 metadata {
     definition (
@@ -160,7 +160,7 @@ def setInput(inputNum){
     iVals = ['Balanced','Analog 1','Analog 2','Coaxial','Optical 1','Optical 2','Optical 3','USB','Network']
     updateAttr("input", "${iVals[(Integer)inputNum-1]}")
 
-    sendMsg("i.$inputNum")
+    sendMsg("-i.$inputNum")
         
 }
 

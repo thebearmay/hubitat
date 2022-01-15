@@ -18,7 +18,7 @@
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.0"}
+static String version() {return "0.1.5"}
 
 metadata {
     definition (
@@ -33,6 +33,8 @@ metadata {
         
         attribute "mute", "ENUM", ["on", "off"]
         attribute "input", "STRING"
+        attribute "lastStatusMessage", "STRING"
+        attribute "lastParseMessage", "STRING"
         attribute "lastMessage", "STRING"
         attribute "lastVolume", "NUMBER"
 
@@ -55,20 +57,25 @@ preferences {
 
     input(name: "ipAddr", type: "string", title:"IP Address", required: true)
     input(name: "portNum", type: "number", title: "Port Number", required: true)
-    input(name: "volume", type: "number", title: "Starting Volume Level", defaultValue: 50, submitOnChange: true)
+    input(name: "volume", type: "number", title: "Starting Volume Level", defaultValue: 50, range:"0..100", submitOnChange: true)
 }
 
 @SuppressWarnings('unused')
 def installed() {
 
 }
+
+def updated(){
+    if(volume == null) device.updateSetting("volume",[value:50,type:"number"])
+}
+
 void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
 def connectTelnet(){
     try{
-        telnetConnect([termChars:[10]], ipAddr, (int)portNum, null, null)
+        telnetConnect([termChars:[13]], ipAddr, (int)portNum, null, null)
     } catch (ex) {
         updateAttr("lastMessage", ex)
     }
@@ -79,7 +86,7 @@ def disconnectTelnet() {
 }
 
 def sendMsg(message) {
-    sendHubCommand(new hubitat.device.HubAction("""$message\r\n""", hubitat.device.Protocol.TELNET))
+    sendHubCommand(new hubitat.device.HubAction("""$message\r""", hubitat.device.Protocol.TELNET))
 }
 
 def on(){
@@ -87,12 +94,16 @@ def on(){
     sendMsg("-p.1")
     updateAttr("switch", "on")
     setVolume(volume)
+    updateAttr("mute","off")
+    updateAttr("networkStatus", "online")
 }
 
 def off(){
     sendMsg("-p.0")
+    pauseExecution(100)
     disconnectTelnet()
     updateAttr("switch", "off")
+    updateAttr("networkStatus", "offline")    
 }
 
 def powerToggle(){
@@ -100,8 +111,10 @@ def powerToggle(){
     if(device.currentValue("switch") == "on")
         updateAttr("switch", "off")
     else {
-        updateAttr("switch", "off")
+        updateAttr("switch", "on")
+        pauseExecution(100)
         setVolume(volume)
+        updateAttr("mute","off")
     }
 }
 
@@ -120,36 +133,41 @@ def muteToggle(){
     if(device.currentValue("mute") == "on")
         updateAttr("mute", "off")
     else        
-        updateAttr("mute", "off")
+        updateAttr("mute", "on")
 }
 
 def volUp() {
     sendMsg("-v.u")
-    updateAttr("lastVolume", device.currentValue("lastVolume").toInteger + 1)
+    updateAttr("lastVolume", device.currentValue("lastVolume").toInteger() + 1)
 }
 
 def volDown() {
     sendMsg("-v.d")
-    updateAttr("lastVolume", device.currentValue("lastVolume").toInteger - 1)
+    updateAttr("lastVolume", device.currentValue("lastVolume").toInteger() - 1)
 }
 
-def setVolume(level=50){
-    if(level == null) level = 50
-    sendMsg("-v.${level.toInteger()}")
+def setVolume(level){
+    level = level.toInteger()
+    if(level < 0 || level > 100) level = 50
+    sendMsg("-v.$level")
     updateAttr("lastVolume",level)
 }
 
-def setInput(inputNum=1){
-    if(inputNum.toInteger() < 1 || inputNum.toInteger() > 9) inputNum = 1
-    sendMsg("i.${inputNum.toInteger()}")
-    iVals = ["1": "Balanced","2": "Analog 1","3": "Analog 2","4": "Coaxial","5": "Optical 1","6": "Optical 2","7": "Optical 3","8": "USB","9": "Network"]
-    updateAttr("input", iVals["$input"])
+def setInput(inputNum){
+    inputNum = inputNum.toInteger()
+    if(inputNum < 1 || inputNum> 9) inputNum = 1
+
+    iVals = ['Balanced','Analog 1','Analog 2','Coaxial','Optical 1','Optical 2','Optical 3','USB','Network']
+    updateAttr("input", "${iVals[(Integer)inputNum-1]}")
+
+    sendMsg("i.$inputNum")
+        
 }
 
 def parse(message) {
-    updateAttr("lastMessage", message)
+    updateAttr("lastParseMessage", message)
 }
 
 def telnetStatus(message){
-    updateAttr("lastMessage", message)
+    updateAttr("lastStatusMessage", message)
 }

@@ -19,9 +19,10 @@
  *    20Dec21    thebearmay    Add HSM and Mode options
  *    06Jan22    thebearmay    Add option to send variable updates to nodeRed
  *    10Jan22    thebearmay    change nodeRed to Post instead of Get
+ *    15Jan22    thebearmay    Fix 1st time issue
  */
 
-static String version()	{  return '0.1.7'  }
+static String version()	{  return '0.1.8'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -102,7 +103,7 @@ def mainPage(){
                 input "varList", "enum", title: "Select variables to sync:", options: varListIn.sort(), multiple: true, required: false, submitOnChange: true
                 List<String> l1 = varList
                 List<String> l2 = atomicState.priorList?.value
-                if(varList != null && l2 !=null && !listsEqual(l1, l2)){
+                if((varList != null && l2 !=null && !listsEqual(l1, l2)) || (varList != null && l2 == null)){
                     manageSubscriptions()
                     atomicState.priorList = varList
                 }

@@ -84,12 +84,13 @@
  *    2021-12-07  thebearmay     allow data attribute to be suppressed if zigbee data is null, remove getMacAddress() as it has been retired from the API
  *    2021-12-08  thebearmay     fix zigbee channel bug
  *    2021-12-27  thebearmay     169.254.x.x reboot option
+ *    2022-01-17  thebearmay     allow reboot to be called without Hub Monitor parameter
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.15"}
+static String version() {return "2.6.16"}
 
 metadata {
     definition (
@@ -932,7 +933,7 @@ void hiaUpdate(htmlStr, auth) {
 }
 
 @SuppressWarnings('unused')
-void reboot(a) {
+void reboot(a = "ignore") {
     if (!aCheck(a)) {
         log.warn "Attempt to reboot hub without proper authorization"
         if(debubEnable) log.debug "Attempted Value:$a"
@@ -942,7 +943,7 @@ void reboot(a) {
         log.warn "Reboot was requested, but allowReboot was set to false"
         return
     }
-    log.info "Hub Reboot requested"
+    log.info "Hub Reboot requested - auth = $a"
     // start - Modified from dman2306 Rebooter app
     String cookie=(String)null
     if(security) {
@@ -973,6 +974,7 @@ void reboot(a) {
 
 @SuppressWarnings('unused')
 Boolean aCheck(a){
+    if (a=="ignore") return true
     try{
         httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
             b = res.data.device.UDN.toString()

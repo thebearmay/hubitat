@@ -175,7 +175,7 @@ preferences {
     input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true)
     input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true)
-    input("allowReboot","bool", title: "Allow Hub Monitor to reboot if IP Address is 169.254.x.x", defaultValue: false, submitOnChange: true)
+    input("allowReboot","bool", title: "Allow Hub to be rebooted", defaultValue: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)

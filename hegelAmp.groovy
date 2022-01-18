@@ -14,7 +14,7 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- *	  18Jan2022	  thebearmay	Add a forced reconnect option 
+ *    18Jan2022	  thebearmay	Add a forced reconnect option 
  */
 
 

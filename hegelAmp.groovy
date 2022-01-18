@@ -61,7 +61,7 @@ preferences {
     input(name: "volume", type: "number", title: "Starting Volume Level", defaultValue: 50, range:"0..100", submitOnChange: true)
     input(name: "startInput", type: "number", title: "Input at Power On (0 to use last value)", defaultValue: 0, range:"0..9", submitOnChange:true)
     input(name: "keepAlive", type: "bool", title: "Use device keep alive", defaultValue: false, sibmitOnChange: true)
-    input(name: "forceConnect", type: "bool", title: "Re-establish Connection with each Command", defaultValue: false, sibmitOnChange: true)
+    input(name: "forceConnect", type: "bool", title: "Re-establish Connection with each Command", defaultValue: false, submitOnChange: true)
 }
 
 @SuppressWarnings('unused')

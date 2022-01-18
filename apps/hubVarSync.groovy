@@ -20,9 +20,10 @@
  *    06Jan22    thebearmay    Add option to send variable updates to nodeRed
  *    10Jan22    thebearmay    change nodeRed to Post instead of Get
  *    15Jan22    thebearmay    Fix 1st time issue
+ *    18Jan22    thebearmay    408 on 2-way HSM exchange
  */
 
-static String version()	{  return '0.1.8'  }
+static String version()	{  return '0.1.9'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -299,13 +300,19 @@ void hsmStat(){
     if(debugEnabled) log.debug "hsmStat $params.varValue"
     if(hsmRec) {
         sendLocationEvent(name: "hsmSetArm", value: params.varValue.replace("armed","arm"))
-    }
+        jsonResponse(armStatus:"$params.varValue")
+    } else
+    	jsonResponse(armStatus:"Not Authorized")
 }
 
 void modeStat(){
     if(debugEnabled) log.debug "modeStat $params.varValue"
-    if(modeRec)
+    if(modeRec) {
         location.setMode(params.varValue)
+    	jsonResponse(modeStatus:"$params.varValue")
+    } else
+	jsonResponse(modeStatus:"Not Authorized")
+	
 }
 
 // End App Communication

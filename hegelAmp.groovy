@@ -95,7 +95,7 @@ def disconnectTelnet() {
 }
 
 def sendMsg(message) {
-	if(forceConnect) connectTelnet()
+    if(forceConnect) connectTelnet()
     sendHubCommand(new hubitat.device.HubAction("""$message\r""", hubitat.device.Protocol.TELNET))
 }
 

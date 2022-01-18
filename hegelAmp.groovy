@@ -14,11 +14,12 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
+ *	  18Jan2022	  thebearmay	Add a forced reconnect option 
  */
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.7"}
+static String version() {return "0.1.8"}
 
 metadata {
     definition (
@@ -60,6 +61,7 @@ preferences {
     input(name: "volume", type: "number", title: "Starting Volume Level", defaultValue: 50, range:"0..100", submitOnChange: true)
     input(name: "startInput", type: "number", title: "Input at Power On (0 to use last value)", defaultValue: 0, range:"0..9", submitOnChange:true)
     input(name: "keepAlive", type: "bool", title: "Use device keep alive", defaultValue: false, sibmitOnChange: true)
+	input(name: "forceConnect", type: "bool", title: "Re-establish Connect with each Command", defaultValue: false, sibmitOnChange: true)
 }
 
 @SuppressWarnings('unused')
@@ -93,6 +95,7 @@ def disconnectTelnet() {
 }
 
 def sendMsg(message) {
+	if(forceConnect) connectTelnet()
     sendHubCommand(new hubitat.device.HubAction("""$message\r""", hubitat.device.Protocol.TELNET))
 }
 
@@ -118,6 +121,7 @@ def on(){
 }
 
 def off(){
+	if(forceConnect) connectTelnet()
     sendMsg("-p.0")
     pauseExecution(100)
     unschedule()
@@ -129,6 +133,7 @@ def off(){
 }
 
 def powerToggle(){
+	if(forceConnect) connectTelnet()
     sendMsg("-p.t")
     if(device.currentValue("switch") == "on")
         updateAttr("switch", "off")
@@ -141,16 +146,19 @@ def powerToggle(){
 }
 
 def muteOn(){
+	if(forceConnect) connectTelnet()
     sendMsg("-m.1")
     updateAttr("mute", "on")
 }
 
 def muteOff(){
+	if(forceConnect) connectTelnet()
     sendMsg("-m.0")
     updateAttr("mute", "off")
 }
 
 def muteToggle(){
+	if(forceConnect) connectTelnet()
     sendMsg("-m.t")
     if(device.currentValue("mute") == "on")
         updateAttr("mute", "off")
@@ -159,16 +167,19 @@ def muteToggle(){
 }
 
 def volUp() {
+	if(forceConnect) connectTelnet()
     sendMsg("-v.u")
     updateAttr("lastVolume", device.currentValue("lastVolume").toInteger() + 1)
 }
 
 def volDown() {
+	if(forceConnect) connectTelnet()
     sendMsg("-v.d")
     updateAttr("lastVolume", device.currentValue("lastVolume").toInteger() - 1)
 }
 
 def setVolume(level){
+	if(forceConnect) connectTelnet()
     level = level.toInteger()
     if(level < 0 || level > 100) level = 50
     sendMsg("-v.$level")
@@ -176,6 +187,7 @@ def setVolume(level){
 }
 
 def setInput(inputNum){
+	if(forceConnect) connectTelnet()
     inputNum = inputNum.toInteger()
     if(inputNum < 1 || inputNum> 9) inputNum = 1
 
@@ -187,6 +199,7 @@ def setInput(inputNum){
 }
 
 def sendReset(){
+	if(forceConnect) connectTelnet()
     sendMsg("-r.3")
     runIn(120,"sendReset")
 }

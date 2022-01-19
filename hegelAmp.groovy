@@ -190,7 +190,7 @@ def powerToggle(){
     else {
         updateAttr("switch", "on")
         pauseExecution(100)
-        setVolume(volume,false)
+        setVolume(volume)
         updateAttr("mute","off")
     }
 }

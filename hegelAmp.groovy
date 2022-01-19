@@ -249,8 +249,8 @@ def parse(message) {
 
 def telnetStatus(message){
     updateAttr("lastStatusMessage", message)
-    if(message.contains("Stream is closed")){
-        updateAttr("lastMessage","Reconnecting...")
+    if(message.contains("receive error: Stream is closed")){
+        updateAttr("lastMessage","Stream closed, Reconnecting...")
         connectTelnet()
         sendMsg(device.currentValue("lastParseMessage",true) ,false)
     }

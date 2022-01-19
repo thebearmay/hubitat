@@ -156,7 +156,7 @@ def on(){
     pauseExecution(100)
     sendMsg("-p.1",false)
     updateAttr("switch", "on")
-    setVolume(volume,false)
+    setVolume(volume)
     updateAttr("mute","off")
     updateAttr("networkStatus", "online")
     if(startInput > 0){     

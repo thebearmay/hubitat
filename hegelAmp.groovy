@@ -14,12 +14,13 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- *    18Jan2022	  thebearmay	Add a forced reconnect option 
+ *    18Jan2022	  thebearmay    Add a forced reconnect option
+ *    18Jan2022   thebearmay    Sync current state when sendMsg used  
  */
-
-
+import groovy.transform.Field
+@Field iVals = ['Balanced','Analog 1','Analog 2','Coaxial','Optical 1','Optical 2','Optical 3','USB','Network']
 @SuppressWarnings('unused')
-static String version() {return "0.1.8"}
+static String version() {return "0.1.10"}
 
 metadata {
     definition (
@@ -49,7 +50,7 @@ metadata {
         command "muteOff"
         command "muteToggle"
         command "setInput", [[name:"inputNum*", type:"NUMBER", description:"Input Number", range:"1..9"]]
-
+        command "clearMsg"
 
     }   
 }
@@ -61,7 +62,6 @@ preferences {
     input(name: "volume", type: "number", title: "Starting Volume Level", defaultValue: 50, range:"0..100", submitOnChange: true)
     input(name: "startInput", type: "number", title: "Input at Power On (0 to use last value)", defaultValue: 0, range:"0..9", submitOnChange:true)
     input(name: "keepAlive", type: "bool", title: "Use device keep alive", defaultValue: false, sibmitOnChange: true)
-    input(name: "forceConnect", type: "bool", title: "Re-establish Connection with each Command", defaultValue: false, submitOnChange: true)
 }
 
 @SuppressWarnings('unused')
@@ -78,13 +78,20 @@ def updated(){
         unschedule()
 }
 
-void updateAttr(String aKey, aValue, String aUnit = ""){
-    sendEvent(name:aKey, value:aValue, unit:aUnit)
+void updateAttr(String aKey, aValue, String aUnit = "", String aDesc = ""){
+    sendEvent(name:aKey, value:aValue, unit:aUnit, descriptionText:aDesc)
+}
+
+def clearMsg(){
+    updateAttr("lastMessage","-")
+    updateAttr("lastStatusMessage","-")
+    updateAttr("lastParseMessage","-")    
 }
 
 def connectTelnet(){
     try{
         telnetConnect([termChars:[13]], ipAddr, (int)portNum, null, null)
+		updateAttr("networkStatus", "online")
     } catch (ex) {
         updateAttr("lastMessage", ex)
     }
@@ -92,19 +99,64 @@ def connectTelnet(){
 
 def disconnectTelnet() {
     telnetClose()
+	updateAttr("networkStatus", "offline")
 }
 
-def sendMsg(message) {
-    if(forceConnect) connectTelnet()
+def sendMsg(message, manual=true) {
+	if(manual) syncState(message)
     sendHubCommand(new hubitat.device.HubAction("""$message\r""", hubitat.device.Protocol.TELNET))
+}
+
+def syncState(message){
+    msgCmd = message.substring(1,2)
+	msgParam = message.substring(3,message.length())
+	switch (msgCmd) {
+		case "i":
+            updateAttr("input", "${iVals[(Integer)msgParam.toInteger()-1]}","","Set by sendMsg")
+			break
+		case "m":
+		    if(msgParam == "t"){
+		        if(device.currentValue("mute") == "on")
+                    updateAttr("mute", "off","","Set by sendMsg")
+                else        
+                    updateAttr("mute", "on","","Set by sendMsg")
+			} else if(msgParam == 1)
+                updateAttr("mute", "on","","Set by sendMsg")			
+			else
+                updateAttr("mute", "off","","Set by sendMsg")			
+			break
+		case "p":
+		    if(msgParam == "t"){
+			    if(device.currentValue("switch") == "on")
+                    updateAttr("switch", "off","","Set by sendMsg")
+                else 
+                    updateAttr("switch", "on","","Set by sendMsg")
+			} else if(msgParam==1)
+				updateAttr("switch", "on", "", "Set by sendMsg")
+			else
+				updateAttr("switch", "off", "", "Set by sendMsg")
+			break
+		case "v":
+		    if (msgParam == "u")
+			    updateAttr("lastVolume", device.currentValue("lastVolume").toInteger() + 1,"","Set by sendMsg")
+		    else if (msgParam == "d")
+			    updateAttr("lastVolume", device.currentValue("lastVolume").toInteger() - 1,"","Set by sendMsg")
+			else 
+			    updateAttr("lastVolume", msgParam, "", "Set by sendMsg")
+			break
+		 default:
+            updateAttr("lastMessage","Invalid Cmd or Param - $message:$msgCmd|$msgParam") 
+			break
+	}
+
 }
 
 def on(){
     connectTelnet()
     pauseExecution(100)
-    sendMsg("-p.1")
+    sendMsg("-p.1",false)
     updateAttr("switch", "on")
-    setVolume(volume)
+    setVolume(volume,false)
     updateAttr("mute","off")
     updateAttr("networkStatus", "online")
     if(startInput > 0){     
@@ -112,7 +164,7 @@ def on(){
         setInput(startInput)
     } else {
         pauseExecution(100)
-        setInput(device.currentValue("input", true))        
+        setInput(iVals.findIndexOf{it == device.currentValue("input", true)} + 1)        
     }
     if(keepAlive){
         pauseExecution(100)
@@ -121,11 +173,10 @@ def on(){
 }
 
 def off(){
-    if(forceConnect) connectTelnet()
-    sendMsg("-p.0")
+    sendMsg("-p.0",false)
     pauseExecution(100)
     unschedule()
-    sendMsg("-r.~")
+    sendMsg("-r.~",false)
     pauseExecution(100)
     disconnectTelnet()
     updateAttr("switch", "off")
@@ -133,33 +184,29 @@ def off(){
 }
 
 def powerToggle(){
-    if(forceConnect) connectTelnet()
-    sendMsg("-p.t")
+    sendMsg("-p.t",false)
     if(device.currentValue("switch") == "on")
         updateAttr("switch", "off")
     else {
         updateAttr("switch", "on")
         pauseExecution(100)
-        setVolume(volume)
+        setVolume(volume,false)
         updateAttr("mute","off")
     }
 }
 
 def muteOn(){
-    if(forceConnect) connectTelnet()
-    sendMsg("-m.1")
+    sendMsg("-m.1",false)
     updateAttr("mute", "on")
 }
 
 def muteOff(){
-    if(forceConnect) connectTelnet()
-    sendMsg("-m.0")
+    sendMsg("-m.0",false)
     updateAttr("mute", "off")
 }
 
 def muteToggle(){
-    if(forceConnect) connectTelnet()
-    sendMsg("-m.t")
+    sendMsg("-m.t",false)
     if(device.currentValue("mute") == "on")
         updateAttr("mute", "off")
     else        
@@ -167,40 +214,32 @@ def muteToggle(){
 }
 
 def volUp() {
-    if(forceConnect) connectTelnet()
-    sendMsg("-v.u")
+    sendMsg("-v.u",false)
     updateAttr("lastVolume", device.currentValue("lastVolume").toInteger() + 1)
 }
 
 def volDown() {
-    if(forceConnect) connectTelnet()
-    sendMsg("-v.d")
+    sendMsg("-v.d",false)
     updateAttr("lastVolume", device.currentValue("lastVolume").toInteger() - 1)
 }
 
 def setVolume(level){
-    if(forceConnect) connectTelnet()
     level = level.toInteger()
     if(level < 0 || level > 100) level = 50
-    sendMsg("-v.$level")
+    sendMsg("-v.$level",false)
     updateAttr("lastVolume",level)
 }
 
 def setInput(inputNum){
-    if(forceConnect) connectTelnet()
     inputNum = inputNum.toInteger()
     if(inputNum < 1 || inputNum> 9) inputNum = 1
-
-    iVals = ['Balanced','Analog 1','Analog 2','Coaxial','Optical 1','Optical 2','Optical 3','USB','Network']
     updateAttr("input", "${iVals[(Integer)inputNum-1]}")
-
-    sendMsg("-i.$inputNum")
+    sendMsg("-i.$inputNum",false)
         
 }
 
 def sendReset(){
-    if(forceConnect) connectTelnet()
-    sendMsg("-r.3")
+    sendMsg("-r.3",false)
     runIn(120,"sendReset")
 }
 
@@ -210,4 +249,9 @@ def parse(message) {
 
 def telnetStatus(message){
     updateAttr("lastStatusMessage", message)
+    if(message.contains("Stream is closed")){
+        updateAttr("lastMessage","Reconnecting...")
+        connectTelnet()
+        sendMsg(device.currentValue("lastParseMessage",true) ,false)
+    }
 }

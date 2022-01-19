@@ -302,7 +302,7 @@ void hsmStat(){
     if(hsmRec && location.hsmStatus != params.varValue) {
         sendLocationEvent(name: "hsmSetArm", value: params.varValue.replace("armed","arm"), descriptionText:"Hub Variable Sync:v{$version()}")
         jsonResponse(armStatus:"$params.varValue")
-    } else if(location.hsmStatus == params.varValue) {
+    } else if(hsmRec && location.hsmStatus == params.varValue) {
         jsonResponse(armStatus:"$params.varValue")
     } else
     	jsonResponse(armStatus:"Not Authorized")

@@ -85,12 +85,13 @@
  *    2021-12-08  thebearmay     fix zigbee channel bug
  *    2021-12-27  thebearmay     169.254.x.x reboot option
  *    2022-01-17  thebearmay     allow reboot to be called without Hub Monitor parameter
+ *    2022-01-21  thebearmay     add Mode and HSM Status as a pollable attribute
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.16"}
+static String version() {return "2.6.17"}
 
 metadata {
     definition (
@@ -148,7 +149,8 @@ metadata {
         attribute "hubModel", "string"
         attribute "hubUpdateStatus", "string"
         attribute "hubUpdateVersion", "string"
-        //attribute "hubUpdateResp","string"
+        attribute "currentMode", "string"
+        attribute "currentHsmMode", "string"
         attribute "ntpServer", "string"
         attribute "ipSubnetsAllowed", "string"
 
@@ -483,6 +485,10 @@ void getPollValues(){
     
     //verify localIP in case of change
     updateAttr("localIP", location.hub.localIP)
+    
+    //Hub Mode & HSM Status
+    updateAttr("currentMode", location.properties.currentMode)
+    updateAttr("currentHsmMode", location.hsmStatus)
     
     // Zwave Version
     if(checkZwVersion == null && isCompatible(7))

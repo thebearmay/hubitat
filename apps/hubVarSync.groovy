@@ -22,9 +22,10 @@
  *    15Jan22    thebearmay    Fix 1st time issue
  *    18Jan22    thebearmay    408 on 2-way HSM exchange
  *    19Jan22    thebearmay    Don't update HSM Status if already in desired state (debounce)
+ *    23Jan22	 thebearmay    Fix HSM event description
  */
 
-static String version()	{  return '0.1.10'  }
+static String version()	{  return '0.1.11'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -300,7 +301,7 @@ void setVar() {
 void hsmStat(){
     if(debugEnabled) log.debug "hsmStat $params.varValue"
     if(hsmRec && location.hsmStatus != params.varValue) {
-        sendLocationEvent(name: "hsmSetArm", value: params.varValue.replace("armed","arm"), descriptionText:"Hub Variable Sync:v{$version()}")
+        sendLocationEvent(name: "hsmSetArm", value: params.varValue.replace("armed","arm"), descriptionText:"Hub Variable Sync:v${version()}")
         jsonResponse(armStatus:"$params.varValue")
     } else if(hsmRec && location.hsmStatus == params.varValue) {
         jsonResponse(armStatus:"$params.varValue")

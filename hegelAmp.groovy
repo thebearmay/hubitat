@@ -15,12 +15,13 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    18Jan2022	  thebearmay    Add a forced reconnect option
- *    18Jan2022   thebearmay    Sync current state when sendMsg used  
+ *    18Jan2022   thebearmay    Sync current state when sendMsg used
+ *    26Jan2022   thebearmay	For input 1 default volume to 85
  */
 import groovy.transform.Field
 @Field iVals = ['Balanced','Analog 1','Analog 2','Coaxial','Optical 1','Optical 2','Optical 3','USB','Network']
 @SuppressWarnings('unused')
-static String version() {return "0.1.10"}
+static String version() {return "0.1.1"}
 
 metadata {
     definition (
@@ -235,7 +236,10 @@ def setInput(inputNum){
     if(inputNum < 1 || inputNum> 9) inputNum = 1
     updateAttr("input", "${iVals[(Integer)inputNum-1]}")
     sendMsg("-i.$inputNum",false)
-        
+    if(inputNum == 1) {
+	pauseExecution(100)
+	setVolume(85)
+    }      
 }
 
 def sendReset(){

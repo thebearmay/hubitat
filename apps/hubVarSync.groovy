@@ -23,9 +23,10 @@
  *    18Jan22    thebearmay    408 on 2-way HSM exchange
  *    19Jan22    thebearmay    Don't update HSM Status if already in desired state (debounce)
  *    23Jan22	 thebearmay    Fix HSM event description
+ *    28Jan22    thebearmay    Change POST processsing to pull from the body, eliminate GET except for ping
  */
 
-static String version()	{  return '0.1.11'  }
+static String version()	{  return '0.1.12'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -35,7 +36,7 @@ definition (
 	name: 			"Hub Variable Sync", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Keep Hub Variables in Sync across multiple hubs",
+	description: 	"Keep Hub Variables, HSM Status, and Mode Status in Sync across multiple hubs",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubVarSync.groovy",
 	oauth: 			true,
@@ -56,22 +57,20 @@ mappings {
         action: [POST: "connectPing",
                  GET: "connectPing"]
     }
-    path("/setVar/:varName/:varValue") {
-        action: [POST: "setVar",
-                 GET: "setVar"]
+
+    path("/setVar") {
+        action: [POST: "setVar"]
     }
     path("/getVar/:varName"){
         action: [POST: "getVar",
                  GET: "getVar"]
+    }   
+    path("/hsmStat") {
+        action: [POST: "hsmStat"]
     }
-    path("/hsmStat/:varValue"){
-        action: [POST: "hsmStat",
-                 GET: "hsmStat"]
+    path("/modeStat") {
+        action: [POST: "modeStat"]
     }    
-    path("/modeStat/:varValue"){
-        action: [POST: "modeStat",
-                 GET: "modeStat"]
-    }
 }
 
 void installed() {
@@ -228,14 +227,14 @@ void ccProcess(evt=null) {
 //End Device Interface
          
 //Begin App Communication         
-void sendRemote(command) {
-
+void sendRemote(command, bodyMap){
+    def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
         uri:  "$remoteAPI$command?access_token=$token",
         requestContentType: 'application/json',
 		contentType: 'application/json',
-        body: []
+        body: "$bodyText"
 	]
 
     if(debugEnabled) log.debug "$requestParams"
@@ -284,36 +283,39 @@ void connectPing() {
 }
 
 void getVar() {
-    if(debugEnabled) log.debug "getVar $params.varName"
+    jsonData = (HashMap) request.JSON
+    if(debugEnabled) log.debug "getVar $jsonData.varName"
     if(getGlobalVar(params.varName)) 
-        jsonResponse(value: "${this.getGlobalVar(params.varName).value}")
+        jsonResponse(value: "${this.getGlobalVar(jsonData.varName).value}")
     else
-        jsonResponse(value: "Invalid variable name: $params.varName")
+        jsonResponse(value: "Invalid variable name: $jsonData.varName")
 }
 
 void setVar() {
-    if(debugEnabled) log.debug "setVar $params.varName, $params.varValue"
-    varValue = URLDecoder.decode(params.varValue)
-    success = this.setGlobalVar(params.varName, varValue)
+    jsonData = (HashMap) request.JSON
+    if(debugEnabled) log.debug "${jsonData.name}, ${jsonData.value}"
+    success = this.setGlobalVar("${jsonData.name}", "${jsonData.value}")
     jsonResponse(successful:"$success")
 }
 
 void hsmStat(){
-    if(debugEnabled) log.debug "hsmStat $params.varValue"
-    if(hsmRec && location.hsmStatus != params.varValue) {
-        sendLocationEvent(name: "hsmSetArm", value: params.varValue.replace("armed","arm"), descriptionText:"Hub Variable Sync:v${version()}")
-        jsonResponse(armStatus:"$params.varValue")
-    } else if(hsmRec && location.hsmStatus == params.varValue) {
-        jsonResponse(armStatus:"$params.varValue")
+    jsonData = (HashMap) request.JSON
+    if(debugEnabled) log.debug "hsmStat ${jsonData.value}"
+    if(hsmRec && location.hsmStatus != jsonData.value) {
+        sendLocationEvent(name: "hsmSetArm", value: jsonData.value.replace("armed","arm"), descriptionText:"Hub Variable Sync:v${version()}")
+        jsonResponse(armStatus:"$jsonData.value")
+    } else if(hsmRec && location.hsmStatus == jsonData.value) {
+        jsonResponse(armStatus:"$jsonData.value")
     } else
     	jsonResponse(armStatus:"Not Authorized")
 }
 
 void modeStat(){
-    if(debugEnabled) log.debug "modeStat $params.varValue"
+    jsonData = (HashMap) request.JSON
+    if(debugEnabled) log.debug "modeStat ${jsonData.value}"
     if(modeRec) {
-        location.setMode(params.varValue)
-    	jsonResponse(modeStatus:"$params.varValue")
+        location.setMode(jsonData.value)
+    	jsonResponse(modeStatus:"$jsonData.value")
     } else
 	jsonResponse(modeStatus:"Not Authorized")
 	
@@ -345,7 +347,7 @@ void variableSync(evt){
     vValue = this.getGlobalVar(vName).value.toString()
     varValue = URLEncoder.encode(vValue, "UTF-8")
     if (remoteAPI != null){
-        sendRemote("/setVar/$varName/$varValue")
+        sendRemote("/setVar", [name:"$vName",value:"$vValue"])
         pauseExecution(100)
     }
     if(nrEnabled)
@@ -374,8 +376,8 @@ void manualSend() {
     varList.each {
         varName = it.toString()
         if(debugEnabled) log.debug varName
-        varValue = URLEncoder.encode(this.getGlobalVar(varName).value.toString(), "UTF-8")
-        sendRemote("/setVar/$varName/$varValue")
+        vValue = this.getGlobalVar(varName).value.toString()
+        sendRemote("/setVar", [name:"$varName",value:"$vValue"])
         pauseExecution(100)
     }
 }
@@ -386,12 +388,12 @@ void sendTest2NR(){
 
 void hsmSend(evt) {
     if(debugEnabled) log.debug "hsmSend $evt.value"
-    sendRemote("/hsmStat/$evt.value")  
+    sendRemote("/hsmStat", [value:"$evt.value"])
 }
 
 void modeSend(evt){
-    if(debugEnabled) log.debug "hsmSend $evt.value"
-    sendRemote("/modeStat/$evt.value")  
+    if(debugEnabled) log.debug "modeSend $evt.value" 
+    sendRemote("/modeStat", [value:"$evt.value"])
 }
 
 void appButtonHandler(btn) {

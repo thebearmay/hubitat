@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Variable Sync",
   "author": "Jean P. May, Jr.",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "minimumHEVersion": "2.2.9.0",
-  "dateReleased": "2022-01-23",
-  "releaseNotes": "0.1.11 - fix HSM event description\n0.1.10 - Check HSM status before updating\n0.1.9 - fix 408 in HSM 2-way exchange\n0.1.8 - Fix 1st run bug\n0.1.7 - change nodeRed to use Post\n0.1.6 - added possibility to send to nodeRed, code clean up\n0.0.6 - add HSM and Mode sync options\n0.0.5 - remove in use by at uninstall\n0.0.4 - debug auto shutoff",
+  "dateReleased": "2022-01-28",
+  "releaseNotes": "0.1.12 - Change to all POST processing with value passed via JSON in the body\n0.1.11 - fix HSM event description\n0.1.10 - Check HSM status before updating\n0.1.9 - fix 408 in HSM 2-way exchange\n0.1.8 - Fix 1st run bug\n0.1.7 - change nodeRed to use Post\n0.1.6 - added possibility to send to nodeRed, code clean up\n0.0.6 - add HSM and Mode sync options\n0.0.5 - remove in use by at uninstall\n0.0.4 - debug auto shutoff",
   "apps": [
     {
       "id": "95c9119e-c074-41e8-b54c-5843d93c0127",

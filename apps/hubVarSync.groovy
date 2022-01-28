@@ -24,9 +24,10 @@
  *    19Jan22    thebearmay    Don't update HSM Status if already in desired state (debounce)
  *    23Jan22	 thebearmay    Fix HSM event description
  *    28Jan22    thebearmay    Change POST processsing to pull from the body, eliminate GET except for ping
+ *                             Fix render issue on response
  */
 
-static String version()	{  return '0.1.12'  }
+static String version()	{  return '0.1.13'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -61,9 +62,8 @@ mappings {
     path("/setVar") {
         action: [POST: "setVar"]
     }
-    path("/getVar/:varName"){
-        action: [POST: "getVar",
-                 GET: "getVar"]
+    path("/getVar"){
+        action: [POST: "getVar"]
     }   
     path("/hsmStat") {
         action: [POST: "hsmStat"]
@@ -260,8 +260,8 @@ void getResp(resp, data) {
     try {
         if(debugEnabled) log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
-            if(resp.data) 
-                atomicState.returnString = resp.data
+            if(resp.json) 
+                atomicState.returnString = resp.json
             else atomicState.returnString = "{\"value\":\"Null Data Set\", \"status\":\"${resp.getStatus()}\"}"
         } else 
             atomicState.returnString =  "{\"status\":\"${resp.getStatus()}\"}"
@@ -273,29 +273,33 @@ void getResp(resp, data) {
 
 }
 
-void jsonResponse(retData){
-    render (contentType: 'application/json', body: JsonOutput.toJson(retData) )
+def jsonResponse(retData){
+    return JsonOutput.toJson(retData)    
 }                                                                  
 
-void connectPing() {
+def connectPing() {
     if(debugEnabled) log.debug "Ping received"
-    jsonResponse(status: "acknowledged")
+    jsonText = jsonResponse([status: 'acknowledged'])
+    if(debugEnabled) log.debug "JSON $jsonText"
+    render contentType:'application/json', data: "$jsonText", status:200
 }
 
 void getVar() {
     jsonData = (HashMap) request.JSON
     if(debugEnabled) log.debug "getVar $jsonData.varName"
-    if(getGlobalVar(params.varName)) 
-        jsonResponse(value: "${this.getGlobalVar(jsonData.varName).value}")
+    if(getGlobalVar(jsonData.varName)) 
+        jsonText = jsonResponse([value: "${this.getGlobalVar(jsonData.varName).value}"])
     else
-        jsonResponse(value: "Invalid variable name: $jsonData.varName")
+        jsonText = jsonResponse([value: "Invalid variable name: $jsonData.varName"])
+    render contentType:'application/json', data: "$jsonText", status:200
 }
 
 void setVar() {
     jsonData = (HashMap) request.JSON
     if(debugEnabled) log.debug "${jsonData.name}, ${jsonData.value}"
     success = this.setGlobalVar("${jsonData.name}", "${jsonData.value}")
-    jsonResponse(successful:"$success")
+    jsonText = jsonResponse([successful:"$success"])
+    render contentType:'application/json', data: "$jsonText", status:200
 }
 
 void hsmStat(){
@@ -303,11 +307,12 @@ void hsmStat(){
     if(debugEnabled) log.debug "hsmStat ${jsonData.value}"
     if(hsmRec && location.hsmStatus != jsonData.value) {
         sendLocationEvent(name: "hsmSetArm", value: jsonData.value.replace("armed","arm"), descriptionText:"Hub Variable Sync:v${version()}")
-        jsonResponse(armStatus:"$jsonData.value")
+        jsonText = jsonResponse([armStatus:"$jsonData.value"])
     } else if(hsmRec && location.hsmStatus == jsonData.value) {
-        jsonResponse(armStatus:"$jsonData.value")
+        jsonText = jsonResponse([armStatus:"$jsonData.value"])
     } else
-    	jsonResponse(armStatus:"Not Authorized")
+    	jsonText = jsonResponse([armStatus:"Not Authorized"])
+    render contentType:'application/json', data: "$jsonText", status:200
 }
 
 void modeStat(){
@@ -315,9 +320,10 @@ void modeStat(){
     if(debugEnabled) log.debug "modeStat ${jsonData.value}"
     if(modeRec) {
         location.setMode(jsonData.value)
-    	jsonResponse(modeStatus:"$jsonData.value")
+    	jsonText = jsonResponse([modeStatus:"$jsonData.value"])
     } else
-	jsonResponse(modeStatus:"Not Authorized")
+	    jsonText = jsonResponse([modeStatus:"Not Authorized"])
+    render contentType:'application/json', data: "$jsonText", status:200
 	
 }
 
@@ -400,7 +406,7 @@ void appButtonHandler(btn) {
     switch(btn) {
           case "checkConnection":
               if(debugEnabled) log.debug "Ping requested"
-              sendRemote("/ping")
+              sendRemote("/ping", [ping:"request"])
               break
           case "sendUpd":
               manualSend()

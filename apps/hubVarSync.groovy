@@ -24,10 +24,13 @@
  *    19Jan22    thebearmay    Don't update HSM Status if already in desired state (debounce)
  *    23Jan22	 thebearmay    Fix HSM event description
  *    28Jan22    thebearmay    Change POST processsing to pull from the body, eliminate GET except for ping
- *                             Fix render issue on response
+ *                             Fix render issue on response (scope plus method return must = "def")
+ *    31Jan22    thebearmay    Add option to request full resync from remote at startup (remote will wait 60 seconds before transmitting)
+ *                             additional code cleanup
+ *                             Change to Release Status - v1.0.0
  */
 
-static String version()	{  return '0.1.13'  }
+static String version()	{  return '1.0.0'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -70,7 +73,10 @@ mappings {
     }
     path("/modeStat") {
         action: [POST: "modeStat"]
-    }    
+    }
+    path("/resync") {
+        action: [POST: "resyncReq"]
+    }
 }
 
 void installed() {
@@ -103,12 +109,15 @@ def mainPage(){
                     varListIn.add("$it.key")
                 }
                 input "varList", "enum", title: "Select variables to sync:", options: varListIn.sort(), multiple: true, required: false, submitOnChange: true
-                List<String> l1 = varList
-                List<String> l2 = atomicState.priorList?.value
-                if((varList != null && l2 !=null && !listsEqual(l1, l2)) || (varList != null && l2 == null)){
-                    manageSubscriptions()
+                //List<String> l1 = varList
+                //List<String> l2 = atomicState.priorList?.value
+                //if((varList != null && l2 !=null && !listsEqual(l1, l2)) || (varList != null && l2 == null)){
+                manageSubscriptions()
+                if(varList)
                     atomicState.priorList = varList
-                }
+                else
+                    state.remove("priorList")
+                //}
                 if(varList) input "sendUpd", "button", title:"Send Update"
                 href "remoteInfo", title: "Remote Server Information", required: false
                 href "localInfo", title: "Local Server Information", required: false
@@ -157,16 +166,21 @@ def remoteInfo(){
         section("Remote Hub Information", hideable: true, hidden: false){
             input "remoteAPI", "text", title:"<b>Remote Server API:</b>",submitOnChange:true
             input "token","text", title:"<b>Remote Access Token:</b>",submitOnChange:true
+            input "resyncOnStart", "bool", title: "Request Variable updates at Restart", defaultValue: false, submitOnChange:true
             if (remoteAPI != null) {
                 input "checkConnection", "button", title:"Check Connection"
                 try {
-                    JsonSlurper jSlurp = new JsonSlurper()
-                    Map resMap = (Map)jSlurp.parseText((String)atomicState.returnString)
-                    paragraph "<b>Connection response status:</b>$atomicState.lastStatus $resMap.status"
+                    //JsonSlurper jSlurp = new JsonSlurper()
+                    //Map resMap = (Map)jSlurp.parseText((String)atomicState.returnString)
+                    paragraph "<b>Connection response status:</b>$atomicState.lastStatus $atomicState.returnString"
                 } catch (ignore) {
                     paragraph "<b>Connection parse error - response:</b>$atomicState.lastStatus $atomicState.returnString"
                 }
             }
+            if(resyncOnStart && remoteAPI != null)
+                subscribe(location, "systemStart", "resyncReqSend")
+            else 
+                unsubscribe(location, "systemStart")
         }        
     }
 }
@@ -260,71 +274,80 @@ void getResp(resp, data) {
     try {
         if(debugEnabled) log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
-            if(resp.json) 
+            if(resp.data)
                 atomicState.returnString = resp.json
             else atomicState.returnString = "{\"value\":\"Null Data Set\", \"status\":\"${resp.getStatus()}\"}"
         } else 
             atomicState.returnString =  "{\"status\":\"${resp.getStatus()}\"}"
     } catch (Exception ex) {
         atomicState.returnString = ex.message
-        log.error ex.message
-    }
+        log.error "getResp - $ex.message"
+    } 
     atomicState.lastStatus = resp.getStatus()
 
 }
 
-def jsonResponse(retData){
-    return JsonOutput.toJson(retData)    
-}                                                                  
-
+// Methods with render must use def as the return type
 def connectPing() {
     if(debugEnabled) log.debug "Ping received"
-    jsonText = jsonResponse([status: 'acknowledged'])
-    if(debugEnabled) log.debug "JSON $jsonText"
+    jsonText = JsonOutput.toJson([status: 'acknowledged'])
+    if(debugEnabled) log.debug "ping rendering $jsonText"
     render contentType:'application/json', data: "$jsonText", status:200
 }
 
-void getVar() {
+def getVar() {
     jsonData = (HashMap) request.JSON
     if(debugEnabled) log.debug "getVar $jsonData.varName"
     if(getGlobalVar(jsonData.varName)) 
-        jsonText = jsonResponse([value: "${this.getGlobalVar(jsonData.varName).value}"])
+        jsonText = JsonOutput.toJson([value: "${this.getGlobalVar(jsonData.varName).value}"])
     else
-        jsonText = jsonResponse([value: "Invalid variable name: $jsonData.varName"])
+        jsonText = JsonOutput.toJson([value: "Invalid variable name: $jsonData.varName"])
     render contentType:'application/json', data: "$jsonText", status:200
 }
 
-void setVar() {
+def setVar() {
     jsonData = (HashMap) request.JSON
-    if(debugEnabled) log.debug "${jsonData.name}, ${jsonData.value}"
+    jsonData = (HashMap) request.JSON
+    if(debugEnabled) log.debug "setVar - ${jsonData.name}, ${jsonData.value}"
     success = this.setGlobalVar("${jsonData.name}", "${jsonData.value}")
-    jsonText = jsonResponse([successful:"$success"])
+    jsonText = JsonOutput.toJson([successful:"$success"])
+    if(debugEnabled) log.debug "rendering $jsonText"
     render contentType:'application/json', data: "$jsonText", status:200
 }
 
-void hsmStat(){
+def hsmStat(){
     jsonData = (HashMap) request.JSON
     if(debugEnabled) log.debug "hsmStat ${jsonData.value}"
     if(hsmRec && location.hsmStatus != jsonData.value) {
         sendLocationEvent(name: "hsmSetArm", value: jsonData.value.replace("armed","arm"), descriptionText:"Hub Variable Sync:v${version()}")
-        jsonText = jsonResponse([armStatus:"$jsonData.value"])
+        jsonText = JsonOutput.toJson([armStatus:"$jsonData.value"])
     } else if(hsmRec && location.hsmStatus == jsonData.value) {
-        jsonText = jsonResponse([armStatus:"$jsonData.value"])
+        jsonText = JsonOutput.toJson([armStatus:"$jsonData.value"])
     } else
-    	jsonText = jsonResponse([armStatus:"Not Authorized"])
+    	jsonText = JsonOutput.toJson([armStatus:'Not Authorized'])
+    if(debugEnabled) log.debug "hsmStat render $jsonText"
     render contentType:'application/json', data: "$jsonText", status:200
 }
 
-void modeStat(){
+def modeStat(){
     jsonData = (HashMap) request.JSON
     if(debugEnabled) log.debug "modeStat ${jsonData.value}"
     if(modeRec) {
         location.setMode(jsonData.value)
-    	jsonText = jsonResponse([modeStatus:"$jsonData.value"])
+    	jsonText = JsonOutput.toJson([modeStatus:"$jsonData.value"])
     } else
-	    jsonText = jsonResponse([modeStatus:"Not Authorized"])
+	    jsonText = JsonOutput.toJson([modeStatus:"Not Authorized"])
     render contentType:'application/json', data: "$jsonText", status:200
-	
+}
+
+def resyncReq(){
+    if(debugEnabled){
+        jsonData = (HashMap) request.JSON
+        log.debug "resyncReq ${jsonData.value}"        
+    }
+    runIn(60, "resyncProc")
+	jsonText = JsonOutput.toJson([resyncStatus:"scheduled"])
+    render contentType:'application/json', data: "$jsonText", status:200   
 }
 
 // End App Communication
@@ -332,9 +355,24 @@ void modeStat(){
 void manageSubscriptions(){
     atomicState.priorList?.value.each{
         if(debugEnabled) log.debug "unsub $it"
-        unsubscribe(location, it.toString())
+        unsubscribe(location, "variable:$it")
     }
+
     removeAllInUseGlobalVar()
+    
+    if(modeSend) 
+        subscribe(location, "mode", "modeSend")
+    else 
+        unsubscribe(location, "mode")
+    if(hsmSend) 
+        subscribe(location, "hsmStatus", "hsmSend")    
+    else
+        subscribe(location, "hsmStatus", "hsmSend")
+    if(resyncOnStart && remoteAPI != null)
+        subscribe(location, "systemStart", "resyncReqSend")
+    else 
+        unsubscribe(location, "systemStart")
+    
     varList.each{
         if(debugEnabled) log.debug "sub $it"
         var="variable:$it"
@@ -393,13 +431,33 @@ void sendTest2NR(){
 }
 
 void hsmSend(evt) {
+    if(!hsmSend) return
     if(debugEnabled) log.debug "hsmSend $evt.value"
     sendRemote("/hsmStat", [value:"$evt.value"])
 }
 
 void modeSend(evt){
+    if(!modeSend) return
     if(debugEnabled) log.debug "modeSend $evt.value" 
     sendRemote("/modeStat", [value:"$evt.value"])
+}
+
+void resyncReqSend(evt){
+    if(!resyncOnStart) return
+    if(debugEnabled) log.debug "resyncReq $evt.value" 
+    sendRemote("/resync", [value:"${location.hub.name}"])
+}
+
+void resyncProc(){
+    manualSend()
+    if(hsmSend) {
+        pauseExecution(100)
+        sendRemote("/hsmStat", [value:"$location.hsmStatus"])
+    }
+    if(modeSend) {
+        pauseExecution(100)
+        sendRemote("/modeStat", [value:"$location.properties.currentMode"])
+    }                   
 }
 
 void appButtonHandler(btn) {

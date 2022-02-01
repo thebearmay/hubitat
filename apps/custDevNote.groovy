@@ -15,7 +15,7 @@
  *    ----          ---           ----
  */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 
 definition (
@@ -58,7 +58,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main")
 		    {
-                input "qryDevice", "capability.*", title: "Devices to Add Notes to:", multiple: true, required: true, submitOnChange: true
+                input "qryDevice", "capability.*", title: "Devices to Add Notes to:", multiple: true, required: false, submitOnChange: true
                 if(qryDevice){ 
 					input "custNote", "text", title: "Custom Note Text", required: true, submitOnChange: true
 					input "addNote", "button", title: "Update Note"

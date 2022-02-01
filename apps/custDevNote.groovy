@@ -64,7 +64,7 @@ def appButtonHandler(btn) {
     switch(btn) {
 	case "addNote":
 		qryDevice.each{
-			it.updateDataValue(customNote, custNote)
+			it.updateDataValue('customNote', custNote)
 		}
 			break
         default: 

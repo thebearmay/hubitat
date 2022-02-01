@@ -15,7 +15,7 @@
  *    ----          ---           ----
  */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 
 definition (
@@ -60,8 +60,9 @@ def mainPage(){
 		    {
                 input "qryDevice", "capability.*", title: "Devices to Add Notes to:", multiple: true, required: false, submitOnChange: true
                 if(qryDevice){ 
-					input "custNote", "text", title: "Custom Note Text", required: true, submitOnChange: true
+					input "custNote", "text", title: "Custom Note Text", required: false, submitOnChange: true
 					input "addNote", "button", title: "Update Note"
+					input "remNote", "button", title: "Remove Note"
 		}
 				
 		    }
@@ -80,7 +81,12 @@ def appButtonHandler(btn) {
 			it.updateDataValue('customNote', custNote)
 		}
 			break
-        default: 
+	case "remNote":
+		qryDevice.each{
+			it.removeDataValue('customNote')
+		}
+		break	
+    default: 
 		log.error "Undefined button $btn pushed"
 		break
 	}

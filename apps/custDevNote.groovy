@@ -49,6 +49,7 @@ def mainPage(){
                 if(qryDevice){ 
 					input "custNote", "text", title: "Custom Note Text", required: true, submitOnChange: true
 					input "addNote", "button", title: "Update Note"
+		}
 				
 		    }
 	    } else {

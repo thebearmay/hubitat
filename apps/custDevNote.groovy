@@ -60,29 +60,16 @@ def mainPage(){
     }
 }
 
-def deviceCharacteristics(){
-    dynamicPage (name: "deviceCharacteristics", title: "", install: false, uninstall: false) {
-	    section(""){
-		    closeContacts()
-        qryDevice.each{
-          paragraph "<p>${it.displayName} ${it.currentValue('contact')}</p>"
-        }
-      }
-    }
-}
-
-
-
 def appButtonHandler(btn) {
     switch(btn) {
-		case "addNote":
-			qryDevice.each{
-				it.state.customNote = custNote
-			}
+	case "addNote":
+		qryDevice.each{
+			it.updateDataValue(customNote, custNote)
+		}
 			break
         default: 
-			log.error "Undefined button $btn pushed"
-            break
+		log.error "Undefined button $btn pushed"
+		break
 	}
 }
 def intialize() {

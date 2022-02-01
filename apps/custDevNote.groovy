@@ -77,6 +77,7 @@ def mainPage(){
 def appButtonHandler(btn) {
     switch(btn) {
 	case "addNote":
+	    if(!custNote) break
 		qryDevice.each{
 			it.updateDataValue('customNote', custNote)
 		}

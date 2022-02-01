@@ -15,7 +15,7 @@
  *    ----          ---           ----
  */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 
 definition (
@@ -56,16 +56,19 @@ void logsOff(){
 def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
-	    	section("Main")
-		    {
+	    	section("Main"){
                 input "qryDevice", "capability.*", title: "Devices to Add Notes to:", multiple: true, required: false, submitOnChange: true
                 if(qryDevice){ 
 					input "custNote", "text", title: "Custom Note Text", required: false, submitOnChange: true
 					input "addNote", "button", title: "Update Note"
 					input "remNote", "button", title: "Remove Note"
-		}
+		        }
 				
 		    }
+            section("Reset Application Name", hideable: true, hidden: true){
+               input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
+               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+            }            
 	    } else {
 		    section("") {
 			    paragraph title: "Click Done", "Please click Done to install app before continuing"

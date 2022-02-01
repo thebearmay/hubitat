@@ -15,7 +15,7 @@
  *    ----          ---           ----
  */
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 
 
 definition (
@@ -60,7 +60,8 @@ def mainPage(){
                 input "qryDevice", "capability.*", title: "Devices to Add Notes to:", multiple: true, required: false, submitOnChange: true
                 if(qryDevice){ 
 					input "custNote", "text", title: "Custom Note Text", required: false, submitOnChange: true
-					input "addNote", "button", title: "Update Note"
+					if(custNote)
+                        input "addNote", "button", title: "Update Note"
 					input "remNote", "button", title: "Remove Note"
 		        }
 				

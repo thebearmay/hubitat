@@ -13,9 +13,10 @@
  *
  *    Date          Who           What
  *    ----          ---           ----
+ *    02Feb22	    thebearmay    Remove special characters from name 
  */
 
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.0.1'  }
 
 
 definition (
@@ -91,7 +92,7 @@ boolean checkName() {
 def toCamelCase(init) {
     if (init == null)
         return null;
-
+    init = init.replaceAll("[^a-zA-Z0-9]+","")
     String ret = ""
     List word = init.split(" ")
     if(word.size == 1)

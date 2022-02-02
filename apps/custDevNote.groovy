@@ -15,7 +15,7 @@
  *    ----          ---           ----
  */
 
-static String version()	{  return '0.0.5'  }
+static String version()	{  return '1.0.0'  }
 
 
 definition (
@@ -43,7 +43,7 @@ def installed() {
 def updated(){
 //	log.trace "updated()"
     if(!state?.isInstalled) { state?.isInstalled = true }
-	if(debugEnable) runIn(1800,logsOff)
+	if(debugEnabled) runIn(1800,logsOff)
 }
 
 def initialize(){
@@ -55,18 +55,21 @@ void logsOff(){
 
 def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
-      	if (app.getInstallationState() == 'COMPLETE') {   
-	    	section("Main"){
+        if (app.getInstallationState() == 'COMPLETE') {   
+            section("Main"){
                 input "qryDevice", "capability.*", title: "Devices to Add Notes to:", multiple: true, required: false, submitOnChange: true
                 if(qryDevice){ 
 					input "custNote", "text", title: "Custom Note Text", required: false, submitOnChange: true
-					if(custNote)
-                        input "addNote", "button", title: "Update Note"
-					input "remNote", "button", title: "Remove Note"
+                    input "noteName", "text", title: "Custom Note Name (no special characters)", required: false, submitOnChange:true
+                    if(noteName != null) checkName()
+					if(custNote && checkName)
+                        input "addNote", "button", title: "Update Note", width:4
+					input "remNote", "button", title: "Remove Note", width:4
+                    input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true
 		        }
 				
 		    }
-            section("Reset Application Name", hideable: true, hidden: true){
+            section("Change Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
                if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
             }            
@@ -78,17 +81,42 @@ def mainPage(){
     }
 }
 
+boolean checkName() {
+    if(noteName == null) app.updateSetting("noteName",[value:"customNote",type:"text"])
+    if(debugEnabled) log.debug toCamelCase(noteName)
+    app.updateSetting("noteName",[value:toCamelCase(noteName),type:"text"])
+    return true
+}
+
+def toCamelCase(init) {
+    if (init == null)
+        return null;
+
+    String ret = ""
+    List word = init.split(" ")
+    if(word.size == 1)
+        return init
+    word.each{
+        ret+=Character.toUpperCase(it.charAt(0))
+        ret+=it.substring(1).toLowerCase()        
+    }
+    ret="${Character.toLowerCase(ret.charAt(0))}${ret.substring(1)}"
+
+    if(debugEnabled) log.debug "toCamelCase return $ret"
+    return ret;
+}
+
 def appButtonHandler(btn) {
     switch(btn) {
 	case "addNote":
 	    if(!custNote) break
 		qryDevice.each{
-			it.updateDataValue('customNote', custNote)
+			it.updateDataValue(noteName, custNote)
 		}
 			break
 	case "remNote":
 		qryDevice.each{
-			it.removeDataValue('customNote')
+			it.removeDataValue(noteName)
 		}
 		break	
     default: 

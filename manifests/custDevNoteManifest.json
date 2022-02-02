@@ -1,0 +1,18 @@
+{
+  "packageName": "Custom Device Note",
+  "author": "Jean P. May, Jr.",
+  "version": "1.0.0",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-02-02",
+  "apps": [
+    {
+      "id": "8da03d79-4301-4997-afad-db48832fa2e6",
+      "name": "Custom Device Note",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/custDevNote.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ]
+}

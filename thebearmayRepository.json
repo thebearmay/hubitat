@@ -97,6 +97,13 @@
       "category": "Convenience",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubVarSyncManifest.json",
       "description": "Application allows the synchronization of hub variables across multiple hubs."
+    },
+    {
+      "id": "be3bd1e2-30c4-4b11-a276-5ea0c166f5f0",
+      "name": "Custom Device Note",
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/custDevNoteManifest.json",
+      "description": "Application allows for the addition of custom notes to devices in the Data section under the Device Details on the device page."
     }
   ]
 }

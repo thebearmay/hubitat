@@ -756,8 +756,8 @@ void getJvmHandler(resp, data) {
                 updateAttr("cpuPct",cpuWork.round(2),"%")
                 if(device.currentValue("jvmFree")) {
                     try { // requires >= 2.2.8.141
-                        devi.deleteCurrentState("jvmFree")
-                        devie.deleteCurrentState("jvmTotal")
+                        device.deleteCurrentState("jvmFree")
+                        device.deleteCurrentState("jvmTotal")
                         device.deleteCurrentState("jvmFreePct")
                     } catch (ignore) {
                         updateAttr("jvmFree","\0")

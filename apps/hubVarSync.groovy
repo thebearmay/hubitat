@@ -28,9 +28,10 @@
  *    31Jan22    thebearmay    Add option to request full resync from remote at startup (remote will wait 60 seconds before transmitting)
  *                             additional code cleanup
  *                             Change to Release Status - v1.0.0
+ *    08Feb22    thebearmay    Retry resync request if remote hub returns a web page instead of correct response (remote is rebooting)
  */
 
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.0.1'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -281,7 +282,10 @@ void getResp(resp, data) {
             atomicState.returnString =  "{\"status\":\"${resp.getStatus()}\"}"
     } catch (Exception ex) {
         atomicState.returnString = ex.message
-        log.error "getResp - $ex.message"
+        if(data['cmd'] == 'resync'  && resp.data.substring(0,3) == '<!d') //remote hub returned a web page (it is rebooting), resend sync request
+           resyncReqSend('remNotAvail')
+        else
+            log.error "getResp - $ex.message"
     } 
     atomicState.lastStatus = resp.getStatus()
 

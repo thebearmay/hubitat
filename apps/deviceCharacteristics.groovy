@@ -19,7 +19,7 @@
  *    2021-04-14  thebearmay    pull in last attribute state change
  *    2021-04-25  thebearmay    error when attribute has never been set
  *    2021-05-04  thebearmay    hub 2.2.7x changes
- *	  2021-07-28  thebearmay	add .properties expansion
+ *    2021-07-28  thebearmay	add .properties expansion
  *    2021-11-19  thebearmay    add report option ->v2.0.0
  *    2021-11-22  thebearmay    clean up last activity date on report and add commands
  *    2022-02-07  thebearmay    add Capabilities to the report

@@ -22,9 +22,10 @@
  *	  2021-07-28  thebearmay	add .properties expansion
  *    2021-11-19  thebearmay    add report option ->v2.0.0
  *    2021-11-22  thebearmay    clean up last activity date on report and add commands
+ *    2022-02-07  thebearmay    add Capabilities to the report
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '2.0.1'  }
+static String version()	{  return '2.0.3'  }
 
 
 definition (
@@ -182,7 +183,7 @@ def buildReport() {
      hh = hubitat.helper.HexUtils
 
     String html = "<style>div{overflow:auto;}th, td{text-align:left;border:solid 1px blue;vertical-align:top;}</style>"
-    html += "<table><tr><th>Name</th><th>Type</th><th>Status</th><th>Disabled</th><th>Controller</th><th>Attributes</th><th>Commands</th><th>Data</th><th>DNI</th><th>Last Activity</th></tr>"
+    html += "<table><tr><th>Name</th><th>Type</th><th>Status</th><th>Disabled</th><th>Controller</th><th>Capabilities</th><th>Attributes</th><th>Commands</th><th>Data</th><th>DNI</th><th>Last Activity</th></tr>"
     qdSorted = qryDevice.displayName.sort()
     for(i=0; i<qdSorted.size(); i++) {   
         qryDevice.each {
@@ -200,6 +201,11 @@ def buildReport() {
                 else
                     cType = "Other"
                 html += "<td>$cType</td>"
+                capString = ""
+                it.capabilities.each {
+                    capString+="$it<br />"
+                }
+                html += "<td>$capString</td>"
                 attrString = ""
                 it.currentStates.each{
                     tVal = it.value.replace('"','')

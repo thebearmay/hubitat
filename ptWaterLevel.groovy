@@ -17,12 +17,13 @@
  *    12Jan2022    thebearmay    Add computations based on observed values
  *    13Jan2022    thebearmay    Add html attribute
  *    14Jan2022    thebearmay    Option to use factory zero instead of observed
+ *    21Feb2022    thebearmay    Update values on hub restart
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.4"}
+static String version() {return "0.1.5"}
 
 metadata {
     definition (
@@ -69,7 +70,14 @@ def installed() {
 }
 
 def initialize(){
-
+    if (serverAddr != null){
+        if(tempPollRate == null){
+            device.updateSetting("tempPollRate",[value:300,type:"number"])
+            runIn(300,"getPollValues")
+        }else if(tempPollRate > 0){
+            runIn(tempPollRate,"getPollValues")
+        }
+    }
 }
 
 @SuppressWarnings('unused')

@@ -32,12 +32,17 @@ metadata {
         capability "Configuration"
         capability "Initialize"
 
+        attribute "numBanks", "number"
+        attribute "numOutlets", "number"
+        attribute "numInlets", "number"
+        attribute "uptime", "number" 
     }   
 }
 
 preferences {
-    input("serverAddr", "text", title:"IP address and path to Poll:", required: true, submitOnChange:true)
-    input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true)
+    input("serverAddr", "text", title:"IP address for PDU:", required: true, submitOnChange:true)
+    input("token", "text", title:"Personal Access Token:", required: true, submitOnChange:true)
+    //input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true)
 
     input("debugEnable", "bool", title: "Enable debug logging?")
 }
@@ -71,12 +76,53 @@ def updated(){
 @SuppressWarnings('unused')
 def configure() {
     if(debugEnable) log.debug "configure()"
-    getPollValues()
+    reqPduData()
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
+
+//{"numBanks": 3, "numOutlets": 36, "numInlets": 1, "inletPlug": "L21-30P", "outletPwrMeasurementsSupported": true, "outletSwitchingSupported": true, "enclosureSerialNumber": 1024122712, "modelNumber": "SP-3001CA-HA", "inletConfig": "standard", "formFactor": "0U", "controllerSerialNumber": 1360604425, "controllerFirmwareVersion": "1.0.3", "phase": "Single Phase", "controllerHardwareVersion": "1.0.0", "circuitBreakerProtection": true, "uptime": 19284619}
+void reqPduData() {
+    Map params = [
+        uri    : serverAddr,
+        Authorization: "Bearer $token"
+    ]
+    if (debugEnable) log.debug params
+    asynchttpGet("getPduData", params)
+}
+
+void getPduData(resp, data) {
+    try{
+        if (resp.getStatus() == 200){
+            if (debugEnable) log.info resp.data
+            pduData = resp.data
+            updateAttr("numBanks", pduData.numBanks)
+            updateAttr("numInlets", pduData.numInlets)
+            updateAttr("numOutLets", pduData.numOutlets)
+            
+            updateDataValue("inletPlug", pdu.inletPlug)
+            updateDataValue("outletPwrMeasurementsSupported", pdu.outletPwrMeasurementsSupported)
+            updateDataValue("outletSwitchingSupported", pdu.outletSwitchingSupported)
+            updateDataValue("enclosureSerialNumber", pdu.enclosureSerialNumber)
+            updateDataValue("modelNumber", pdu.modelNumber)
+            updateDataValue("inletConfig", pdu.inletConfig)
+            updateDataValue("formFactor", pdu.formFactor)
+            updateDataValue("controllerSerialNumber", pdu.controllerSerialNumber)
+            updateDataValue("controllerFirmwareVersion", pdu.controllerFirmwareVersion)
+            updateDataValue("phase", pdu.phase)
+            updateDataValue("controllerHardwareVersion", pdu.controllerHardwareVersion)
+            updateDataValue("circuitBreakerProtection", pdu.circuitBreakerProtection)            
+        } else {
+            if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching IP"
+        } 
+    } catch (Exception ex){
+        if (!warnSuppress) log.warn ex
+    }
+    
+}
+
 
 void getPollValues(){
 

@@ -87,6 +87,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 void reqPduData() {
     Map params = [
         uri    : serverAddr,
+        path: "/api/device",
         Authorization: "Bearer $token"
     ]
     if (debugEnable) log.debug params
@@ -113,7 +114,9 @@ void getPduData(resp, data) {
             updateDataValue("controllerFirmwareVersion", pdu.controllerFirmwareVersion)
             updateDataValue("phase", pdu.phase)
             updateDataValue("controllerHardwareVersion", pdu.controllerHardwareVersion)
-            updateDataValue("circuitBreakerProtection", pdu.circuitBreakerProtection)            
+            updateDataValue("circuitBreakerProtection", pdu.circuitBreakerProtection)
+            
+            createChildDev(pdu.numOutlets)
         } else {
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching IP"
         } 
@@ -122,6 +125,36 @@ void getPduData(resp, data) {
     }
     
 }
+
+void createChildDev(numDev){
+    if(debugEnabled) "Expecting $numDev child devices to be created"
+    outlets = reqOutlets()
+    if(debugEnabled) "Query returned ${outlets.size()} nodes"
+}
+
+def reqOutlets() {
+    Map params = [
+        uri    : serverAddr,
+        path: "/api/outlets",
+        Authorization: "Bearer $token"
+    ]
+    if (debugEnable) log.debug params
+    asynchttpGet("getPduData", params)
+}
+
+def getPduData(resp, data) {
+    try{
+        if (resp.getStatus() == 200){
+            if (debugEnable) log.info resp.data
+            dataIn = resp.data.toString()
+            return (HashMap) resp.JSON
+        } else {
+            if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching IP"
+        } 
+    } catch (Exception ex){
+        if (!warnSuppress) log.warn ex
+    }
+}   
 
 
 void getPollValues(){

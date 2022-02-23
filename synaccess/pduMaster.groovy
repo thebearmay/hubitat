@@ -97,7 +97,7 @@ void getPduData(resp, data) {
     try{
         if (resp.getStatus() == 200){
             if (debugEnable) log.info resp.data
-            pduData = resp.data
+            pduData = (HashMap) resp.JSON
             updateAttr("numBanks", pduData.numBanks)
             updateAttr("numInlets", pduData.numInlets)
             updateAttr("numOutLets", pduData.numOutlets)

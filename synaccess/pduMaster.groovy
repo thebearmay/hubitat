@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.2"}
+static String version() {return "0.0.3"}
 
 metadata {
     definition (
@@ -37,14 +37,17 @@ metadata {
         attribute "numBanks", "number"
         attribute "numOutlets", "number"
         attribute "numInlets", "number"
-        attribute "uptime", "number" 
+        attribute "pwrUsage", "JSON_OBJECT" 
+        attribute "pwrTS", "string"
     }   
 }
 
 preferences {
     input("serverAddr", "text", title:"IP address for PDU:", required: true, submitOnChange:true)
     input("token", "text", title:"Personal Access Token:", required: true, submitOnChange:true)
-    //input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true)
+    input("pwrPollEnabled", "bool", title: "Enable Power Consumption Polling", defaultValue: false, submitOnChange: true)
+    if(pwrPollEnabled) 
+        input("pollRate", "number", title: "Power Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true)
 
     input("debugEnabled", "bool", title: "Enable debug logging?")
     input("simulated", "bool", title: "Use Similated Data")
@@ -57,12 +60,12 @@ def installed() {
 }
 
 def initialize(){
-    if (serverAddr != null){
-        if(tempPollRate == null){
-            device.updateSetting("tempPollRate",[value:300,type:"number"])
-            runIn(300,"getPollValues")
-        }else if(tempPollRate > 0){
-            runIn(tempPollRate,"getPollValues")
+    if (serverAddr != null && pwrPollEnabled){
+        if(pollRate == null){
+            device.updateSetting("pollRate",[value:300,type:"number"])
+            runIn(300,"getPwrValues")
+        }else if(pollRate > 0){
+            runIn(pollRate,"getPwrValues")
         }
     }
 }
@@ -73,6 +76,11 @@ def updated(){
         log.debug "updated()"
         runIn(1800,logsOff)
     }
+    if(pwrPollEnabled) {
+        if (pollRate == null || pollRate < 1)
+            device.updateSetting("pollRate",[value:300,type:"number"])
+        runIn(pollRate, "getPwrValues")
+    } else unschedule()
 }
 
 @SuppressWarnings('unused')
@@ -176,6 +184,24 @@ def getOutletData(resp, data) {
         if (!warnSuppress) log.warn ex
     }
 
+}
+
+void getPwrValues(){
+    if(simulated) 
+        outlets = getOutletData ("a", "b")
+    else
+        outlets = reqOutlets()
+    String jStr = ""
+    totPower = 0
+    outlets.each{
+        jStr += "\"$it.outletName\":$it.currentRms,"
+        totPower+=it.currentRms        
+    }
+    jStr = "{$jStr\"Total\":$totPower}"
+    updateAttr("pwrUsage",jStr)
+    updateAttr("pwrTS", new Date())
+    
+    runIn(pollRate, "getPwrValues")
 }
 
 void powerMode(outletID, pMode) {

@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.3"}
+static String version() {return "0.0.4"}
 
 metadata {
     definition (
@@ -218,6 +218,19 @@ void powerMode(outletID, pMode) {
         
     }
 
+}
+
+void getState(netID, outletID) {
+    chd = getChildDevice(netID)
+    if(simulated) 
+        outlets = getOutletData ("a", "b")
+    else
+        outlets = reqOutlets()
+    outlets.each{
+        if(it.id == outletID) {
+            chd.updateAttr("switch",it.state.toLowerCase())
+        }
+    }
 }
 
 @SuppressWarnings('unused')

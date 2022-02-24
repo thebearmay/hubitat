@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.5"}
+static String version() {return "0.0.1"}
 
 metadata {
     definition (
@@ -44,7 +44,8 @@ preferences {
     input("token", "text", title:"Personal Access Token:", required: true, submitOnChange:true)
     //input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true)
 
-    input("debugEnable", "bool", title: "Enable debug logging?")
+    input("debugEnabled", "bool", title: "Enable debug logging?")
+    input("simulated", "bool", title: "Use Similated Data")
 }
 
 @SuppressWarnings('unused')
@@ -66,16 +67,15 @@ def initialize(){
 
 @SuppressWarnings('unused')
 def updated(){
-    if(debugEnable) {
+    if(debugEnabled) {
         log.debug "updated()"
         runIn(1800,logsOff)
     }
-    getPollValues()
 }
 
 @SuppressWarnings('unused')
 def configure() {
-    if(debugEnable) log.debug "configure()"
+    if(debugEnabled) log.debug "configure()"
     reqPduData()
 }
 
@@ -83,53 +83,68 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
-//{"numBanks": 3, "numOutlets": 36, "numInlets": 1, "inletPlug": "L21-30P", "outletPwrMeasurementsSupported": true, "outletSwitchingSupported": true, "enclosureSerialNumber": 1024122712, "modelNumber": "SP-3001CA-HA", "inletConfig": "standard", "formFactor": "0U", "controllerSerialNumber": 1360604425, "controllerFirmwareVersion": "1.0.3", "phase": "Single Phase", "controllerHardwareVersion": "1.0.0", "circuitBreakerProtection": true, "uptime": 19284619}
 void reqPduData() {
     Map params = [
         uri    : serverAddr,
         path: "/api/device",
         Authorization: "Bearer $token"
     ]
-    if (debugEnable) log.debug params
-    asynchttpGet("getPduData", params)
-}
-
-void getPduData(resp, data) {
-    try{
-        if (resp.getStatus() == 200){
-            if (debugEnable) log.info resp.data
-            pduData = (HashMap) resp.JSON
-            updateAttr("numBanks", pduData.numBanks)
-            updateAttr("numInlets", pduData.numInlets)
-            updateAttr("numOutLets", pduData.numOutlets)
-            
-            updateDataValue("inletPlug", pdu.inletPlug)
-            updateDataValue("outletPwrMeasurementsSupported", pdu.outletPwrMeasurementsSupported)
-            updateDataValue("outletSwitchingSupported", pdu.outletSwitchingSupported)
-            updateDataValue("enclosureSerialNumber", pdu.enclosureSerialNumber)
-            updateDataValue("modelNumber", pdu.modelNumber)
-            updateDataValue("inletConfig", pdu.inletConfig)
-            updateDataValue("formFactor", pdu.formFactor)
-            updateDataValue("controllerSerialNumber", pdu.controllerSerialNumber)
-            updateDataValue("controllerFirmwareVersion", pdu.controllerFirmwareVersion)
-            updateDataValue("phase", pdu.phase)
-            updateDataValue("controllerHardwareVersion", pdu.controllerHardwareVersion)
-            updateDataValue("circuitBreakerProtection", pdu.circuitBreakerProtection)
-            
-            createChildDev(pdu.numOutlets)
-        } else {
-            if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching IP"
-        } 
-    } catch (Exception ex){
-        if (!warnSuppress) log.warn ex
-    }
+    if (debugEnabled) log.debug params
+    if(simulated)
+        getPduData("a","b")
+    else
+        asynchttpGet("getPduData", params)
     
 }
 
+void getPduData(resp, data) {
+    if(simulated) {
+        simData = '{"numBanks": 3, "numOutlets": 2, "numInlets": 1, "inletPlug": "L21-30P", "outletPwrMeasurementsSupported": true, "outletSwitchingSupported": true, "enclosureSerialNumber": 1024122712, "modelNumber": "SP-3001CA-HA", "inletConfig": "standard", "formFactor": "0U", "controllerSerialNumber": 1360604425, "controllerFirmwareVersion": "1.0.3", "phase": "Single Phase", "controllerHardwareVersion": "1.0.0", "circuitBreakerProtection": true, "uptime": 19284619}'
+        def jSlurp = new JsonSlurper()
+        HashMap pduData = (HashMap)jSlurp.parseText((String) simData)
+        storeConfig(pduData)
+    } else {
+        try{
+            if (resp.getStatus() == 200){
+                if (debugEnabled) log.info resp.data
+                pduData = (HashMap) resp.JSON
+                storeConfig(pduData)
+            } else {
+                if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching IP"
+            } 
+        } catch (Exception ex){
+            if (!warnSuppress) log.warn ex
+        }
+    }
+}
+
+void storeConfig(pduData){
+    updateAttr("numBanks", pduData.numBanks)
+    updateAttr("numInlets", pduData.numInlets)
+    updateAttr("numOutlets", pduData.numOutlets)
+    
+    pduData.each {
+        if(it.key != "numBanks" && it.key != "numInlets" && it.key != "numOutlets" && it.key != "uptime") {
+            updateDataValue("$it.key", "$it.value")
+        }
+    }
+    createChildDev(pduData.numOutlets)
+   
+}
+
 void createChildDev(numDev){
-    if(debugEnabled) "Expecting $numDev child devices to be created"
-    outlets = reqOutlets()
-    if(debugEnabled) "Query returned ${outlets.size()} nodes"
+    if(debugEnabled) log.debug "Expecting $numDev child devices to be created"
+
+    if(simulated) 
+        outlets = getOutletData ("a", "b")
+    else
+        outlets = reqOutlets()
+    if(debugEnabled) log.debug "Query returned ${outlets.size()} nodes"
+    def i = 0
+    outlets.each {
+        i++
+        addChildDevice("thebearmay", "Synaccess Outlet", "${device.deviceNetworkId}:${i}", [name:"$it.id",label:"$it.outletName",isComponent:true])
+    }
 }
 
 def reqOutlets() {
@@ -138,63 +153,30 @@ def reqOutlets() {
         path: "/api/outlets",
         Authorization: "Bearer $token"
     ]
-    if (debugEnable) log.debug params
-    asynchttpGet("getPduData", params)
+    if (debugEnabled) log.debug params
+    asynchttpGet("getOutletData", params)
 }
 
-def getPduData(resp, data) {
+def getOutletData(resp, data) {
+    if(simulated) {
+        simData = '[{ "id": "1-286331153", "outletName": "Outlet 1", "pwrOnState": "PREV", "outletIndex": 1, "receptacle": "IEC 60320 C19", "currentRms": 1.1, "state": "ON", "bankId": "286331153", "customRebootTimeEnabled": false, "customRebootTime": 12, "rebootStatus": "none", "voltageDetection": true, "relayHealth": "OK"  },  { "id": "2-286331153", "outletName": "Outlet 2", "pwrOnState": "PREV", "outletIndex": 2, "receptacle": "IEC 60320 C19", "currentRms": 1.1, "state": "ON", "bankId": "286331153", "customRebootTimeEnabled": false, "customRebootTime": 12, "rebootStatus": "none", "voltageDetection": true, "relayHealth": "OK"  }]'
+        def jSlurp = new JsonSlurper()
+        return jSlurp.parseText((String) simData)
+    }
     try{
         if (resp.getStatus() == 200){
             if (debugEnable) log.info resp.data
-            dataIn = resp.data.toString()
-            return (HashMap) resp.JSON
-        } else {
+           return (HashMap) resp.JSON
+    } else {
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching IP"
         } 
     } catch (Exception ex){
         if (!warnSuppress) log.warn ex
     }
+
 }   
-
-
-void getPollValues(){
-
-    Map params = [
-        uri    : serverAddr,
-    ]
-    if (debugEnable) log.debug params
-    asynchttpGet("getPollData", params)
-
-    if (debugEnable) log.debug "tempPollRate: $tempPollRate"
-
-
-    if(tempPollRate == null){
-        device.updateSetting("tempPollRate",[value:300,type:"number"])
-        runIn(300,"getPollValues")
-    }else if(tempPollRate > 0){
-        runIn(tempPollRate,"getPollValues")
-    }
-}
-
-
-@SuppressWarnings('unused')
-void getPollData(resp, data){
-    try{
-        if (resp.getStatus() == 200){
-            if (debugEnable) log.info resp.data
-            dataIn = resp.data.toString()
- 
-        } else {
-            if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching IP"
-        } 
-    } catch (Exception ex){
-        if (!warnSuppress) log.warn ex
-    }
-}   
-
-
 
 @SuppressWarnings('unused')
 void logsOff(){
-     device.updateSetting("debugEnable",[value:"false",type:"bool"])
+     device.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }

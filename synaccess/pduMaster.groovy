@@ -1,6 +1,8 @@
 /*
  * Synaccess PDU Master 
  *
+ * API document: https://synaccess.com/support/webapi#table-of-contents
+ *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
  *
@@ -19,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -174,7 +176,23 @@ def getOutletData(resp, data) {
         if (!warnSuppress) log.warn ex
     }
 
-}   
+}
+
+void powerMode(outletID, pMode) {
+    if(debugEnabled) log.debug "powerMode $outletID $pMode"
+    
+    Map params = [
+        uri    : serverAddr,
+        path: "/api/outlets/$outletID",
+        Authorization: "Bearer token",
+        body: "{\"state\": \"$pMode\"}"
+    ]
+    if (debugEnabled) log.debug params
+    httpPut(params)  { res ->
+        
+    }
+
+}
 
 @SuppressWarnings('unused')
 void logsOff(){

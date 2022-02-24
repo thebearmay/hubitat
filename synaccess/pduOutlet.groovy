@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -56,10 +56,14 @@ def initialize(){
 
 }
 
-def on (){
+def on(){
+    parent.powerMode("${getDataValue('name')}","on")
+    updateAttr("switch", "on")
 }
 
 def off(){
+    parent.powerMode("${getDataValue('name')}","off")
+    updateAttr("switch", "off")
 }
 
 @SuppressWarnings('unused')

@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.3"}
+static String version() {return "0.0.4"}
 
 metadata {
     definition (
@@ -53,7 +53,7 @@ def installed() {
 }
 
 def initialize(){
-
+    parent.getState("${device.deviceNetworkId}","${getDataValue('name')}")
 }
 
 def on(){
@@ -78,6 +78,7 @@ def updated(){
 @SuppressWarnings('unused')
 def configure() {
     if(debugEnabled) log.debug "configure()"
+    intialize()
 
 }
 

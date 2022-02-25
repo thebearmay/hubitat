@@ -123,6 +123,10 @@ Boolean appendFile(fName,newData){
 }
 
 Boolean writeFile(String fName, String fData) {
+    now = new Date()
+    String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
+    updateAttr("debug",encodedString)
+    
 try {
 		def params = [
 			uri: 'http://127.0.0.1:8080',
@@ -131,19 +135,19 @@ try {
 				'folder': '/'
 			],
 			headers: [
-				'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryDto12QfPwfhTjOuS'
+				'Content-Type': "multipart/form-data; boundary=$encodedString"
 			],
-			body: """------WebKitFormBoundaryDto12QfPwfhTjOuS
+            body: """--${encodedString}
 Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
 Content-Type: text/plain
 
 ${fData}
 
-------WebKitFormBoundaryDto12QfPwfhTjOuS
+--${encodedString}
 Content-Disposition: form-data; name="folder"
 
 
-------WebKitFormBoundaryDto12QfPwfhTjOuS--""",
+--${encodedString}--""",
 			timeout: 300,
 			ignoreSSLIssues: true
 		]
@@ -152,7 +156,7 @@ Content-Disposition: form-data; name="folder"
 		return true
 	}
 	catch (e) {
-		errorLog "Error writing file $fName: ${e}"
+		log.error "Error writing file $fName: ${e}"
 	}
 	return false
 }

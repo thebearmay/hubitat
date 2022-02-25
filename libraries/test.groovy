@@ -146,7 +146,7 @@ try {
 			headers: [
 				'Content-Type': "multipart/form-data; boundary=$encodedString"
 			],
-            body: `--${encodedString}
+            body: "'''--${encodedString}
 Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
 Content-Type: text/plain
 
@@ -156,7 +156,7 @@ ${fData}
 Content-Disposition: form-data; name="folder"
 
 
---${encodedString}--`,
+--${encodedString}--'''",
 			timeout: 300,
 			ignoreSSLIssues: true
 		]

@@ -8,7 +8,7 @@ library (
     name: "localFileMethods",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/localFileMethods.groovy",
-    version: "0.0.2",
+    version: "0.0.5",
     documentationLink: ""
 )
 */
@@ -82,9 +82,11 @@ String readFile(fName){
     if(security) cookie = securityLogin().cookie
     uri = "http://${location.hub.localIP}:8080/local/${fName}"
 
+
     def params = [
         uri: uri,
         contentType: "text/html",
+        textParser: true,
         headers: [
 				"Cookie": cookie
             ]
@@ -93,7 +95,16 @@ String readFile(fName){
     try {
         httpGet(params) { resp ->
             if(resp!= null) {       
-               return resp.data
+              // return resp.data
+               int i = 0
+               String delim = ""
+               i = resp.data.read() 
+               while (i != -1){
+                   char c = (char) i
+                   delim+=c
+                   i = resp.data.read() 
+               } 
+               return delim
             }
             else {
                 log.error "Null Response"
@@ -104,8 +115,6 @@ String readFile(fName){
         return null;
     }
 }
-
-
 
 Boolean appendFile(fName,newData){
     try {

@@ -8,11 +8,10 @@ library (
     name: "localFileMethods",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/localFileMethods.groovy",
-    version: "0.0.1",
+    version: "0.0.2",
     documentationLink: ""
 )
 */
-
 HashMap securityLogin(){
     def result = false
     try{
@@ -85,7 +84,7 @@ String readFile(fName){
 
     def params = [
         uri: uri,
-        contentType: "text/html; charset=UTF-8",
+        contentType: "text/html",
         headers: [
 				"Cookie": cookie
             ]
@@ -93,9 +92,8 @@ String readFile(fName){
 
     try {
         httpGet(params) { resp ->
-            if(resp!= null) {
-               data = resp.getData();           
-               return data.toString()
+            if(resp!= null) {       
+               return resp.data
             }
             else {
                 log.error "Null Response"
@@ -111,7 +109,7 @@ String readFile(fName){
 
 Boolean appendFile(fName,newData){
     try {
-        fileData = readFile(fName)
+        fileData = (String) readFile(fName)
         fileData = fileData.substring(0,fileData.length()-1)
         return writeFile(fName,fileData+newData)
     } catch (exception){
@@ -124,19 +122,16 @@ Boolean appendFile(fName,newData){
     }
 }
 
-Boolean writeFile(fName, fData) {
-    if(security) cookie = securityLogin().cookie
-	try
-	{
+Boolean writeFile(String fName, String fData) {
+try {
 		def params = [
-			uri: "http://127.0.0.1:8080",
-			path: "/hub/fileManager/upload",
+			uri: 'http://127.0.0.1:8080',
+			path: '/hub/fileManager/upload',
 			query: [
-				"folder": "/"
+				'folder': '/'
 			],
 			headers: [
-				"Cookie": cookie,
-				"Content-Type": "multipart/form-data; boundary=----WebKitFormBoundaryDtoO2QfPwfhTjOuS"
+				'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryDtoO2QfPwfhTjOuS'
 			],
 			body: """------WebKitFormBoundaryDtoO2QfPwfhTjOuS
 Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
@@ -152,12 +147,45 @@ Content-Disposition: form-data; name="folder"
 			timeout: 300,
 			ignoreSSLIssues: true
 		]
-		httpPost(params) { resp ->	
+		httpPost(params) { resp ->
 		}
 		return true
 	}
 	catch (e) {
-		log.error "Error writing file $fName: ${e}"
+		errorLog "Error writing file $fName: ${e}"
 	}
 	return false
+}
+
+Boolean xferFile(fileIn, fileOut) {
+    fileBuffer = (String) readExtFile(fileIn)
+    lines = fileBuffer.split("\n")
+    cleaned = lines[0].replaceAll("[^\\x20-\\x7E]", "")
+    writeFile(fileOut, cleaned)
+    for (int i=1; i<lines.size(); i++){
+        cleaned = lines[i].replaceAll("[^\\x20-\\x7E]", "")
+        retStat = appendFile(fileOut, "\n$cleaned")
+    }
+    return retStat
+}
+
+String readExtFile(fName){
+    def params = [
+        uri: fName,
+        contentType: "text/html"
+    ]
+
+    try {
+        httpGet(params) { resp ->
+            if(resp!= null) {
+               return resp.data
+            }
+            else {
+                log.error "Null Response"
+            }
+        }
+    } catch (exception) {
+        log.error "Read Error: ${exception.message}"
+        return null;
+    }
 }

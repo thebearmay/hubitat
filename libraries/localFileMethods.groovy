@@ -131,19 +131,19 @@ try {
 				'folder': '/'
 			],
 			headers: [
-				'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryDtoO2QfPwfhTjOuS'
+				'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryDto12QfPwfhTjOuS'
 			],
-			body: """------WebKitFormBoundaryDtoO2QfPwfhTjOuS
+			body: """------WebKitFormBoundaryDto12QfPwfhTjOuS
 Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
 Content-Type: text/plain
 
 ${fData}
 
-------WebKitFormBoundaryDtoO2QfPwfhTjOuS
+------WebKitFormBoundaryDto12QfPwfhTjOuS
 Content-Disposition: form-data; name="folder"
 
 
-------WebKitFormBoundaryDtoO2QfPwfhTjOuS--""",
+------WebKitFormBoundaryDto12QfPwfhTjOuS--""",
 			timeout: 300,
 			ignoreSSLIssues: true
 		]
@@ -175,10 +175,11 @@ String readExtFile(fName){
             if(resp!= null) {
                int i = 0
                String delim = ""
+               i = resp.data.read() 
                while (i != -1){
-                   i = resp.data.read()    
                    char c = (char) i
                    delim+=c
+                   i = resp.data.read() 
                } 
                return delim
             }

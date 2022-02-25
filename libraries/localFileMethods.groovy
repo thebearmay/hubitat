@@ -159,33 +159,35 @@ Content-Disposition: form-data; name="folder"
 
 Boolean xferFile(fileIn, fileOut) {
     fileBuffer = (String) readExtFile(fileIn)
-    lines = fileBuffer.split("\n")
-    cleaned = lines[0].replaceAll("[^\\x20-\\x7E]", "")
-    writeFile(fileOut, cleaned)
-    for (int i=1; i<lines.size(); i++){
-        cleaned = lines[i].replaceAll("[^\\x20-\\x7E]", "")
-        retStat = appendFile(fileOut, "\n$cleaned")
-    }
+    retStat = writeFile(fileOut, fileBuffer)
     return retStat
 }
 
 String readExtFile(fName){
     def params = [
         uri: fName,
-        contentType: "text/html"
+        contentType: "text/html",
+        textParser: true
     ]
 
     try {
         httpGet(params) { resp ->
             if(resp!= null) {
-               return resp.data
+               int i = 0
+               String delim = ""
+               while (i != -1){
+                   i = resp.data.read()    
+                   char c = (char) i
+                   delim+=c
+               } 
+               return delim
             }
             else {
                 log.error "Null Response"
             }
         }
     } catch (exception) {
-        log.error "Read Error: ${exception.message}"
+        log.error "Read Ext Error: ${exception.message}"
         return null;
     }
 }

@@ -134,7 +134,6 @@ Boolean appendFile(fName,newData){
 Boolean writeFile(String fName, String fData) {
     now = new Date()
     String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
-    updateAttr("debug",encodedString)
     
 try {
 		def params = [

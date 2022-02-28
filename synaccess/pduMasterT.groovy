@@ -122,7 +122,7 @@ def sendMsg(message) {
 }
 
 def parse(message) {
-    if(message == "Goodbye!" || message == "Synaccess Telnet V6.2"){
+    if(message.indexOf("Goodbye!") != -1  || message == "Synaccess Telnet V6.2"){
         clearMsg()
         updateAttr("lastCommand","autoLogoff")
     } else if(device.currentValue("lastCommand") == "pshow" && message.indexOf('|') > 0) {

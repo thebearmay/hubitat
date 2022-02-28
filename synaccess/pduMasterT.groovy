@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.4"}
+static String version() {return "0.0.6"}
 
 metadata {
     definition (
@@ -128,9 +128,12 @@ def parse(message) {
         updateAttr("lastCommand","autoLogoff")
     } else if(device.currentValue("lastCommand") == "pshow" && message.indexOf('|') > 0) {
         outletParse = message.replace(' |', ',').split(',')
-        numOutlets = outletParse.size()/3
-        updateAttr("numOutlets", numOutlets)
+        if(device.currentValue("numOutlets") == null) {
+            numOutlets = outletParse.size()/3
+            updateAttr("numOutlets", numOutlets)
+        } else numOutlets = device.currentValue("numOutlets")
         jsonStr = "["
+        if(debugEnabled) "parse numOutlets = $numOutlets outletParse = $outletParse.size()"
         for (i = 0; i < numOutlets; i++){
             if(i>0) jsonStr+=","
             jsonStr+="{\"oNum\":\"${outletParse[i*3].toString().trim()}\",\"oName\":\"${outletParse[i*3+1].toString().trim()}\",\"oStatus\":\"${outletParse[i*3+2].toString().trim()}\"}"

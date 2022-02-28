@@ -33,10 +33,9 @@ metadata {
         capability "Initialize"
         capability "Outlet"
 
-        attribute "numBanks", "number"
-        attribute "numOutlets", "number"
-        attribute "numInlets", "number"
-        attribute "uptime", "number" 
+        command "refresh" 
+        command "reboot"
+        attribute "lastRefresh", "STRING"
     }   
 }
 
@@ -53,17 +52,29 @@ def installed() {
 }
 
 def initialize(){
+    runIn(2,"refresh")
+}
+
+def refresh(){
     parent.getState("${device.deviceNetworkId}","${getDataValue('name')}")
+    updateAttr("lastRefresh", new Date())
+}
+
+def reboot(){
+    parent.rebootOutlet("${getDataValue('name')}")
+    runIn(60,"refresh")
 }
 
 def on(){
     parent.powerMode("${getDataValue('name')}","on")
     updateAttr("switch", "on")
+    updateAttr("lastRefresh", new Date())
 }
 
 def off(){
     parent.powerMode("${getDataValue('name')}","off")
     updateAttr("switch", "off")
+    updateAttr("lastRefresh", new Date())
 }
 
 @SuppressWarnings('unused')
@@ -79,7 +90,6 @@ def updated(){
 def configure() {
     if(debugEnabled) log.debug "configure()"
     intialize()
-
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){

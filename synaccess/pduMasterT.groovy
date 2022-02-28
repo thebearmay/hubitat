@@ -1,5 +1,5 @@
 /*
- * Synaccess PDU Master using Telnet
+ * Synaccess PDU Master 
  *
  * API document: https://synaccess.com/support/webapi#table-of-contents
  *
@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.5"}
+static String version() {return "0.0.4"}
 
 metadata {
     definition (
@@ -44,6 +44,7 @@ metadata {
         
         command "masterPowerOff"
         command "masterPowerOn"
+        command "connectTelnet"
     }   
 }
 
@@ -122,7 +123,7 @@ def sendMsg(message) {
 }
 
 def parse(message) {
-    if(message.indexOf("Goodbye!") != -1  || message == "Synaccess Telnet V6.2"){
+    if(message.indexOf("Goodbye!") != -1 || message == "Synaccess Telnet V6.2"){
         clearMsg()
         updateAttr("lastCommand","autoLogoff")
     } else if(device.currentValue("lastCommand") == "pshow" && message.indexOf('|') > 0) {
@@ -203,6 +204,7 @@ void powerMode(outletID, pMode) {
     if(debugEnabled) log.debug "powerMode $outletID $pMode"
     oNum = outletID.substring(outletID.indexOf("-")+1)
     if(pMode == "on") v=1
+    else v=0
     connectTelnet()
     pauseExecution(100)    
     sendMsg("pset $oNum $v")    

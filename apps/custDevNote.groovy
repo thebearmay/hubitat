@@ -13,10 +13,11 @@
  *
  *    Date          Who           What
  *    ----          ---           ----
- *    01Mar2022     thebearmay    Add message for any hub mesh device a note is attached to (meshed devices won't retain note)
+ *    01Mar2022     thebearmay    1.0.1 - Add message for any hub mesh device a note is attached to (meshed devices won't retain note)
+ *                                1.0.2 - Use controllerType to determine Mesh status
  */
 
-static String version()	{  return '1.0.1'  }
+static String version()	{  return '1.0.2'  }
 
 
 definition (
@@ -117,7 +118,7 @@ def appButtonHandler(btn) {
         atomicState.meshedDeviceMsg = ""
 		qryDevice.each{
             it.updateDataValue(noteName, custNote)
-            if(it.driverType == "link") {
+            if(it.controllerType == "LNK") {
                 atomicState.meshedDeviceMsg+="<span style='background-color:red;font-weight:bold;color:white;'>$it is a Hub Mesh Device, note must be added to the <i>REAL</i> device to be retained</span><br>"
             }
 		}

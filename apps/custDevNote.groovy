@@ -121,7 +121,8 @@ def appButtonHandler(btn) {
                 atomicState.meshedDeviceMsg+="<span style='background-color:red;font-weight:bold;color:white;'>$it is a Hub Mesh Device, note must be added to the <i>REAL</i> device to be retained</span><br>"
             }
 		}
-			break
+        if(atomicState.meshedDeviceMsg == "") atomicState.meshedDeviceMsg = "<span style='background-color:green;font-weight:bold;color:white;'>Update Successful</span>"
+		break
 	case "remNote":
 		qryDevice.each{
 			it.removeDataValue(noteName)

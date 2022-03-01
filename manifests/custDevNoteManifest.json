@@ -1,10 +1,10 @@
 {
   "packageName": "Custom Device Note",
   "author": "Jean P. May, Jr.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2022-03-01",
-  "releaseNotes": "v1.0.1 - Display a message when a Hub Mesh device is updated - custom notes will not be retained",
+  "releaseNotes": "1.0.2 - use controllerType to determine Mesh status\n1.0.1 - Display a message when a Hub Mesh device is updated - custom notes will not be retained",
   "apps": [
     {
       "id": "8da03d79-4301-4997-afad-db48832fa2e6",

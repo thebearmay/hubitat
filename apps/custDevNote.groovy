@@ -13,7 +13,7 @@
  *
  *    Date          Who           What
  *    ----          ---           ----
- *    02Feb22	    thebearmay    Remove special characters from name 
+ *    01Mar2022     thebearmay    Add message for any hub mesh device a note is attached to (meshed devices won't retain note)
  */
 
 static String version()	{  return '1.0.1'  }
@@ -66,10 +66,13 @@ def mainPage(){
 					if(custNote && checkName)
                         input "addNote", "button", title: "Update Note", width:4
 					input "remNote", "button", title: "Remove Note", width:4
-                    input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true
+                    input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true                  
 		        }
 				
 		    }
+            section("Update Messages", hideable:true, hidden: false){
+                paragraph "$atomicState.meshedDeviceMsg"
+            }
             section("Change Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
                if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
@@ -92,7 +95,7 @@ boolean checkName() {
 def toCamelCase(init) {
     if (init == null)
         return null;
-    init = init.replaceAll("[^a-zA-Z0-9]+","")
+
     String ret = ""
     List word = init.split(" ")
     if(word.size == 1)
@@ -111,8 +114,12 @@ def appButtonHandler(btn) {
     switch(btn) {
 	case "addNote":
 	    if(!custNote) break
+        atomicState.meshedDeviceMsg = ""
 		qryDevice.each{
-			it.updateDataValue(noteName, custNote)
+            it.updateDataValue(noteName, custNote)
+            if(it.driverType == "link") {
+                atomicState.meshedDeviceMsg+="<span style='background-color:red;font-weight:bold;color:white;'>$it is a Hub Mesh Device, note must be added to the <i>REAL</i> device to be retained</span><br>"
+            }
 		}
 			break
 	case "remNote":

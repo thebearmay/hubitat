@@ -111,6 +111,13 @@
       "category": "Control",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/synPduManifest.json",
       "description": "Driver that supports the usage of a SynAccess PDU through the telnet interface.  Driver creates a child device for each outlet to enable individual power control."
+    },
+    {
+      "id": "a00635c2-21fe-41f5-bb8a-5cf146f0b129",
+      "name": "Device Data Item Display",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/devDatDManifest.json",
+      "description": "Provides a mechanism for displaying data item values across multiple devices."
     }
   ]
 }

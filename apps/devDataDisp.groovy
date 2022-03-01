@@ -23,7 +23,7 @@ definition (
 	name: 			"Device Data Display", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Display the capabilities, attributes, commands and device data for devices selected.",
+	description: 	"Display the data field values for devices selected.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devDataDisp.groovy",
 	oauth: 			false,

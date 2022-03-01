@@ -1,0 +1,24 @@
+{
+  "packageName": "SynAccess PDU Driver",
+  "author": "Jean P. May, Jr.",
+  "version": "1.0.0",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-03-01",
+  "releaseNotes": "v1.0.0 - Initial Release"
+  "drivers": [
+    {
+      "id": "5d918b81-4f92-474b-a3a2-90b1b3bdcb21",
+      "name": "Synaccess PDU Master Telnet",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/synaccess/pduMasterT.groovy",
+      "required": true
+    },
+    {
+      "id": "4ce74097-e0a7-4f27-8d5d-22aef17afbcd",
+      "name": "Synaccess Outlet",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/synaccess/pduOutlet.groovy",
+      "required": true
+    }
+  ]
+}

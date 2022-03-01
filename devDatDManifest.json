@@ -1,0 +1,18 @@
+{
+  "packageName": "Device Data Item Display",
+  "author": "Jean P. May, Jr.",
+  "version": "1.0.0",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-03-01",
+  "apps": [
+    {
+      "id": "c31b025b-b0c1-4d67-9443-e80d6c11eda5",
+      "name": "Device Data Display",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devDataDisp.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ]
+}

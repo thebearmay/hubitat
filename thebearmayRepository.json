@@ -104,6 +104,13 @@
       "category": "Convenience",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/custDevNoteManifest.json",
       "description": "Application allows for the addition of custom notes to devices in the Data section under the Device Details on the device page."
+    },
+    {
+      "id": "489588bc-e3e8-4245-910e-57d02f82fc69",
+      "name": "SynAccess PDU Driver",
+      "category": "Control",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/synPduManifest.json",
+      "description": "Driver that supports the usage of a SynAccess PDU through the telnet interface.  Driver creates a child device for each outlet to enable individual power control."
     }
   ]
 }

@@ -64,11 +64,12 @@ def mainPage(){
                 if(qryDevice){ 
 					input "custNote", "text", title: "Custom Note Text", required: false, submitOnChange: true
                     input "noteName", "text", title: "Custom Note Name (no special characters)", required: false, submitOnChange:true
-			if(noteName != null) checkName(){
+			if(noteName != null) 
+				checkName()
 			if(custNote && checkName)
                         	input "addNote", "button", title: "Update Note", width:4
 			input "remNote", "button", title: "Remove Note", width:4
-		    }
+		    
                     input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true                  
 		}
 				

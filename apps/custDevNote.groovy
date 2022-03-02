@@ -15,9 +15,10 @@
  *    ----          ---           ----
  *    01Mar2022     thebearmay    1.0.1 - Add message for any hub mesh device a note is attached to (meshed devices won't retain note)
  *                                1.0.2 - Use controllerType to determine Mesh status
+ *    02Mar2022     thebearmay    1.0.3 - Add warning message for missing note text
  */
 
-static String version()	{  return '1.0.2'  }
+static String version()	{  return '1.0.3'  }
 
 
 definition (
@@ -63,15 +64,16 @@ def mainPage(){
                 if(qryDevice){ 
 					input "custNote", "text", title: "Custom Note Text", required: false, submitOnChange: true
                     input "noteName", "text", title: "Custom Note Name (no special characters)", required: false, submitOnChange:true
-                    if(noteName != null) checkName()
-					if(custNote && checkName)
-                        input "addNote", "button", title: "Update Note", width:4
-					input "remNote", "button", title: "Remove Note", width:4
-                    input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true                  
-		        }
-				
+			if(noteName != null) checkName(){
+			if(custNote && checkName)
+                        	input "addNote", "button", title: "Update Note", width:4
+			input "remNote", "button", title: "Remove Note", width:4
 		    }
-            section("Update Messages", hideable:true, hidden: false){
+                    input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true                  
+		}
+				
+	   }
+           section("Update Messages", hideable:true, hidden: false){
                 paragraph "$atomicState.meshedDeviceMsg"
             }
             section("Change Application Name", hideable: true, hidden: true){
@@ -79,9 +81,9 @@ def mainPage(){
                if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
             }            
 	    } else {
-		    section("") {
-			    paragraph title: "Click Done", "Please click Done to install app before continuing"
-		    }
+		section("") {
+		   paragraph title: "Click Done", "Please click Done to install app before continuing"
+		}
 	    }
     }
 }
@@ -114,12 +116,15 @@ def toCamelCase(init) {
 def appButtonHandler(btn) {
     switch(btn) {
 	case "addNote":
-	    if(!custNote) break
-        atomicState.meshedDeviceMsg = ""
-		qryDevice.each{
+	    atomicState.meshedDeviceMsg = ""
+	    if(!custNote) {
+		atomicState.meshedDeviceMsg+="<span style='background-color:red;font-weight:bold;color:white;'>No note text available - please retry</span>"
+		break
+	    }
+	    qryDevice.each{
             it.updateDataValue(noteName, custNote)
             if(it.controllerType == "LNK") {
-                atomicState.meshedDeviceMsg+="<span style='background-color:red;font-weight:bold;color:white;'>$it is a Hub Mesh Device, note must be added to the <i>REAL</i> device to be retained</span><br>"
+                atomicState.meshedDeviceMsg+="<span style='background-color:orange;font-weight:bold;color:black;'>$it is a Hub Mesh Device, note must be added to the <i>REAL</i> device to be retained</span><br>"
             }
 		}
         if(atomicState.meshedDeviceMsg == "") atomicState.meshedDeviceMsg = "<span style='background-color:green;font-weight:bold;color:white;'>Update Successful</span>"

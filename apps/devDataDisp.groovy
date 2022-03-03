@@ -24,7 +24,7 @@ definition (
 	name: 			"Device Data Display", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Display the capabilities, attributes, commands and device data for devices selected.",
+	description: 	"Display selected items out of the device data area for one or more devices.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devDataDisp.groovy",
 	oauth: 			false,

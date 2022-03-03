@@ -92,7 +92,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.18"}
+static String version() {return "2.6.19"}
 
 metadata {
     definition (
@@ -317,8 +317,9 @@ def configure() {
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
+    aValue = aValue.toString()
     if(aValue.length() > 1024) {
-        log.error "Attribute value for $aKey exceeds 1024, current size = ${aValue.length}, truncating to 1024..."
+        log.error "Attribute value for $aKey exceeds 1024, current size = ${aValue.length()}, truncating to 1024..."
         aValue = aValue.substring(0,1023)
     }
     sendEvent(name:aKey, value:aValue, unit:aUnit)

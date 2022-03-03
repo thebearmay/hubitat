@@ -14,10 +14,9 @@
  *
  *    Date        Who           What
  *    ----        ---           ----
- *    03Mar2022   thebearmay    Add JSON and CSV download options
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.1.0'  }
+static String version()	{  return '1.0.0'  }
 
 
 definition (
@@ -64,15 +63,20 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main")
 		    {
+              section("Selection Criteria", hideable: true, hidden: true){
                 input "qryDevice", "capability.*", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
                 if (qryDevice != null) {
                     dataList = buildDataList()
                     input "varList", "enum", title: "Select data items to display", options: dataList, multiple: true, required: false, submitOnChange: true
-                    if(varList !=null)
-                        href "deviceData", title: "Display Data", required: false
-                        href "jsonDown", title: "Download JSON Data", required: false
-                        href "csvDown", title: "Download CSV Data", required: false
                 }
+              }
+              section(""){
+                  if(varList !=null) {
+                    href "deviceData", title: "Display Data", required: false
+                    href "jsonDown", title: "Download JSON Data", required: false
+                    href "csvDown", title: "Download CSV Data", required: false
+                  }
+              }
 		    }
 	    } else {
 		    section("") {

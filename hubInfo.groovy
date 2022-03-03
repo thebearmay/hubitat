@@ -86,12 +86,13 @@
  *    2021-12-27  thebearmay     169.254.x.x reboot option
  *    2022-01-17  thebearmay     allow reboot to be called without Hub Monitor parameter
  *    2022-01-21  thebearmay     add Mode and HSM Status as a pollable attribute
+ *    2022-03-03  thebearmay     look at attribute size each poll and enforce 1024 limit
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.17"}
+static String version() {return "2.6.18"}
 
 metadata {
     definition (
@@ -316,6 +317,10 @@ def configure() {
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
+    if(aValue.length() > 1024) {
+        log.error "Attribute value for $aKey exceeds 1024, current size = ${aValue.length}, truncating to 1024..."
+        aValue = aValue.substring(0,1023)
+    }
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 

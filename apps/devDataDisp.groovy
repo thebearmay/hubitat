@@ -14,16 +14,17 @@
  *
  *    Date        Who           What
  *    ----        ---           ----
+ *    03Mar2022   thebearmay    Add JSON and CSV download options
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.1.0'  }
 
 
 definition (
 	name: 			"Device Data Display", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Display the data field values for devices selected.",
+	description: 	"Display the capabilities, attributes, commands and device data for devices selected.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devDataDisp.groovy",
 	oauth: 			false,
@@ -34,6 +35,8 @@ definition (
 preferences {
    page name: "mainPage"
    page name: "deviceData"
+   page name: "jsonDown"
+   page name: "csvDown"
 
 }
 
@@ -67,6 +70,8 @@ def mainPage(){
                     input "varList", "enum", title: "Select data items to display", options: dataList, multiple: true, required: false, submitOnChange: true
                     if(varList !=null)
                         href "deviceData", title: "Display Data", required: false
+                        href "jsonDown", title: "Download JSON Data", required: false
+                        href "csvDown", title: "Download CSV Data", required: false
                 }
 		    }
 	    } else {
@@ -103,6 +108,45 @@ def deviceData(){
     }
 }
 
+def jsonDown(){
+    dynamicPage (name: "jsonDown", title: "", install: false, uninstall: false) {
+	  section("JSON Data"){
+        jData = "["
+        qryDevice.each{ x->
+            jData += "{\"$x.displayName\": {"
+            varList.each {
+                if(x.properties.data["$it"]) 
+                    jData += "\"$it\": \"${x.properties.data["$it"]}\","
+            }
+            jData = jData.substring(0,jData.length()-1)
+            jData += "}},"
+      }
+      jData = jData.substring(0,jData.length()-1)
+      jData += "]"
+      oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.json';a.href = 'data:text/json,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
+      oData +="<button onclick='download()'>Download JSON</button><div id='jData'>$jData</div>"
+      paragraph oData    
+    }
+  }
+}
+
+def csvDown(){
+    dynamicPage (name: "csvDown", title: "", install: false, uninstall: false) {
+      section("CSV Data"){
+        jData=""
+        qryDevice.each{ x->
+            jData += "\"$x.displayName\"\n"
+            varList.each {
+                if(x.properties.data["$it"]) 
+                    jData += ",\"$it\",\"${x.properties.data["$it"]}\"\n"
+            }
+      }
+      oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.csv';a.href = 'data:text/plain,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
+      oData +="<button onclick='download()'>Download CSV</button><div id='jData'>$jData</div>"
+      paragraph oData    
+    }
+  }
+}
 
 def appButtonHandler(btn) {
     switch(btn) {

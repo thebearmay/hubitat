@@ -14,9 +14,10 @@
  *
  *    Date        Who           What
  *    ----        ---           ----
+ *    03Mar2022   thebearmay    JSON/CSV download
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.1.0'  }
 
 
 definition (

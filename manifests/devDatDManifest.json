@@ -1,10 +1,10 @@
 {
   "packageName": "Device Data Item Display",
   "author": "Jean P. May, Jr.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2022-03-03",
-  "releaseNotes": "1.1.0 - Add JSON and CSV download options",
+  "releaseNotes": "1.2.0 - Add State Data option\n1.1.0 - Add JSON and CSV download options",
   "apps": [
     {
       "id": "c31b025b-b0c1-4d67-9443-e80d6c11eda5",

@@ -16,9 +16,11 @@
  *    ----        ---           ----
  *    03Mar2022   thebearmay    JSON/CSV download
  *    11Mar2022   thebearmay    Add State Data option
+ *                              Hub WriteFile option for JSON
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.2.0'  }
+import java.net.URLEncoder
+static String version()	{  return '1.2.1'  }
 
 
 definition (
@@ -135,7 +137,7 @@ def deviceData(){
 
 def jsonDown(){
     dynamicPage (name: "jsonDown", title: "", install: false, uninstall: false) {
-	  section("JSON Data"){
+	  section("<b><u>JSON Data</u></b>"){
         jData = "["
         qryDevice.each{ x->
             jData += "{\"$x.displayName\": {"
@@ -153,12 +155,22 @@ def jsonDown(){
             jData = jData.substring(0,jData.length()-1)
             jData += "}},"
       }
-      jData = jData.substring(0,jData.length()-1)
-      jData += "]"
-      oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.json';a.href = 'data:text/json,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
-      oData +="<button onclick='download()'>Download JSON</button><div id='jData'>$jData</div>"
-      paragraph oData    
-    }
+          jData = jData.substring(0,jData.length()-1)
+          jData += "]"
+          oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.json';a.href = 'data:text/json,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
+          oData +="<button onclick='download()'>Download JSON</button><div id='jData'><hr />$jData<hr /></div>"
+          paragraph oData  
+          input "lFileName", "string", title:"Hub File Name (optional)", submitOnChange: true
+          if(lFileName != null) {
+              atomicState.jData = jData
+              input "wFile", "button", title:"Write to Hub File", submitOnChange:true
+          }
+      }        
+        section("Hub Security", hideable: true, hidden: true){
+            input "username", "string", title:"Hub User ID", submitOnChange: true
+            input "password", "string", title:"Hub Password", submitOnChange: true
+        }
+
   }
 }
 
@@ -188,12 +200,91 @@ def csvDown(){
 
 def appButtonHandler(btn) {
     switch(btn) {
-          default: 
-              log.error "Undefined button $btn pushed"
-              break
+        case "wFile":
+            writeFile("$lFileName", "${atomicState.jData}")
+            break
+        default: 
+            log.error "Undefined button $btn pushed"
+            break
       }
 }
 
 def intialize() {
 
+}
+
+HashMap securityLogin(){
+    def result = false
+    try{
+        httpPost(
+				[
+					uri: "http://127.0.0.1:8080",
+					path: "/login",
+					query: 
+					[
+						loginRedirect: "/"
+					],
+					body:
+					[
+						username: username,
+						password: password,
+						submit: "Login"
+					],
+					textParser: true,
+					ignoreSSLIssues: true
+				]
+		)
+		{ resp ->
+//			log.debug resp.data?.text
+				if (resp.data?.text?.contains("The login information you supplied was incorrect."))
+					result = false
+				else {
+					cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0)
+					result = true
+		    	}
+		}
+    }catch (e){
+			log.error "Error logging in: ${e}"
+			result = false
+            cookie = null
+    }
+	return [result: result, cookie: cookie]
+}
+
+Boolean writeFile(String fName, String fData) {
+    now = new Date()
+    String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
+    
+try {
+		def params = [
+			uri: 'http://127.0.0.1:8080',
+			path: '/hub/fileManager/upload',
+			query: [
+				'folder': '/'
+			],
+			headers: [
+				'Content-Type': "multipart/form-data; boundary=$encodedString"
+			],
+            body: """--${encodedString}
+Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
+Content-Type: text/plain
+
+${fData}
+
+--${encodedString}
+Content-Disposition: form-data; name="folder"
+
+
+--${encodedString}--""",
+			timeout: 300,
+			ignoreSSLIssues: true
+		]
+		httpPost(params) { resp ->
+		}
+		return true
+	}
+	catch (e) {
+		log.error "Error writing file $fName: ${e}"
+	}
+	return false
 }

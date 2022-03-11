@@ -15,9 +15,10 @@
  *    Date        Who           What
  *    ----        ---           ----
  *    03Mar2022   thebearmay    JSON/CSV download
+ *    11Mar2022   thebearmay    Add State Data option
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '1.1.0'  }
+static String version()	{  return '1.2.0'  }
 
 
 definition (
@@ -69,10 +70,12 @@ def mainPage(){
                 if (qryDevice != null) {
                     dataList = buildDataList()
                     input "varList", "enum", title: "Select data items to display", options: dataList, multiple: true, required: false, submitOnChange: true
+                    stateList = buildStateList()
+                    input "stList", "enum", title: "Select states to display", options: stateList, multiple: true, required: false, submitOnChange: true
                 }
               }
               section(""){
-                  if(varList !=null) {
+                  if(varList !=null || stateList!= null) {
                     href "deviceData", title: "Display Data", required: false
                     href "jsonDown", title: "Download JSON Data", required: false
                     href "csvDown", title: "Download CSV Data", required: false
@@ -98,6 +101,18 @@ def buildDataList(){
     return dataList
 }
 
+def buildStateList() {
+    List stateList = []
+    qryDevice.each {
+        it.properties.currentStates.each {
+            stateList.add(it.name)
+        }
+    }
+    stateList = stateList.sort().unique()
+    return stateList    
+    
+}
+
 def deviceData(){
     dynamicPage (name: "deviceData", title: "", install: false, uninstall: false) {
 	  section("Device Data"){
@@ -106,6 +121,11 @@ def deviceData(){
               varOut = ""
               varList.each {
                   if(x.properties.data["$it"]) varOut+= "$it: ${x.properties.data["$it"]}<br>"
+              }
+              stList.each { s->
+                 x.properties.currentStates.each {
+                    if(it.name == s) varOut+= "$s: ${it.value}<br>"
+                 }
               }
               paragraph varOut
           }
@@ -123,6 +143,13 @@ def jsonDown(){
                 if(x.properties.data["$it"]) 
                     jData += "\"$it\": \"${x.properties.data["$it"]}\","
             }
+            stList.each { s->
+                x.properties.currentStates.each {
+                    if(it.name == s) 
+                    jData += "\"$s\": \"$it.value\","
+                    //varOut+= "$s: ${it.value}<br>"
+                }
+             }
             jData = jData.substring(0,jData.length()-1)
             jData += "}},"
       }
@@ -145,6 +172,12 @@ def csvDown(){
                 if(x.properties.data["$it"]) 
                     jData += ",\"$it\",\"${x.properties.data["$it"]}\"\n"
             }
+            stList.each { s->
+                x.properties.currentStates.each {
+                    if(it.name == s) 
+                    jData +=",\"$s\",\"$it.value\"\n"
+                }
+             }            
       }
       oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.csv';a.href = 'data:text/plain,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
       oData +="<button onclick='download()'>Download CSV</button><div id='jData'>$jData</div>"

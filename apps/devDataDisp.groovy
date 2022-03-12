@@ -17,10 +17,11 @@
  *    03Mar2022   thebearmay    JSON/CSV download
  *    11Mar2022   thebearmay    Add State Data option
  *                              Hub WriteFile option for JSON
+ *    12Mar2022   thebearmay    Make ID the key for JSON
  */
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.2.1'  }
+static String version()	{  return '1.2.2'  }
 
 
 definition (
@@ -140,7 +141,8 @@ def jsonDown(){
 	  section("<b><u>JSON Data</u></b>"){
         jData = "["
         qryDevice.each{ x->
-            jData += "{\"$x.displayName\": {"
+ //           jData += "{\"$x.displayName\": {"
+            jData +=  "{\"$x.id\": {\"displayName\": \"$x.displayName\","
             varList.each {
                 if(x.properties.data["$it"]) 
                     jData += "\"$it\": \"${x.properties.data["$it"]}\","
@@ -149,7 +151,6 @@ def jsonDown(){
                 x.properties.currentStates.each {
                     if(it.name == s) 
                     jData += "\"$s\": \"$it.value\","
-                    //varOut+= "$s: ${it.value}<br>"
                 }
              }
             jData = jData.substring(0,jData.length()-1)
@@ -158,7 +159,7 @@ def jsonDown(){
           jData = jData.substring(0,jData.length()-1)
           jData += "]"
           oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.json';a.href = 'data:text/json,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
-          oData +="<button onclick='download()'>Download JSON</button><div id='jData'><hr />$jData<hr /></div>"
+          oData +="<button onclick='download()'>Download JSON</button><hr /><div id='jData'>$jData</div><hr />"
           paragraph oData  
           input "lFileName", "string", title:"Hub File Name (optional)", submitOnChange: true
           if(lFileName != null) {
@@ -179,20 +180,20 @@ def csvDown(){
       section("CSV Data"){
         jData=""
         qryDevice.each{ x->
-            jData += "\"$x.displayName\"\n"
+            jData += "\"$x.id\",\"$x.displayName\"\n"
             varList.each {
                 if(x.properties.data["$it"]) 
-                    jData += ",\"$it\",\"${x.properties.data["$it"]}\"\n"
+                    jData += ",,\"$it\",\"${x.properties.data["$it"]}\"\n"
             }
             stList.each { s->
                 x.properties.currentStates.each {
                     if(it.name == s) 
-                    jData +=",\"$s\",\"$it.value\"\n"
+                    jData +=",,\"$s\",\"$it.value\"\n"
                 }
              }            
       }
       oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.csv';a.href = 'data:text/plain,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
-      oData +="<button onclick='download()'>Download CSV</button><div id='jData'>$jData</div>"
+      oData +="<button onclick='download()'>Download CSV</button><hr /><div id='jData'>$jData</div><hr />"
       paragraph oData    
     }
   }

@@ -89,7 +89,7 @@ void setVolume(volume) {
 
     state.updatingVolume = true
     
-    if(data.lync) {
+    if(device.properties.data.lync) {
         getParent.lyncSetVolume(volume)
         state.updatingVolume = false
         return
@@ -139,7 +139,7 @@ void off() {
 
 void mute() {
     def zone = state.ZoneNumber as byte
-    if(data.lync){
+    if(device.properties.data.lync){
         getParent().lyncMuteOn(zone)
         return
     }
@@ -150,7 +150,7 @@ void mute() {
 
 void unmute() {
     def zone = state.ZoneNumber as byte
-    if(data.lync){
+    if(device.properties.data.lync){
         getParent().lyncMuteOff(zone)
         return
     }

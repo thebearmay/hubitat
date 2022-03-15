@@ -80,8 +80,9 @@ void setVolume(volume) {
     }
 
     def zone = state.ZoneNumber as byte
-
-    def currentVolume = device.currentValue('volume')*60/100 as int
+    if(device.currentValue('volume'))
+        def currentVolume = device.currentValue('volume')*60/100 as int
+    else currentVolume = 0
 
     def desiredVolume = volume*60/100 as int
 
@@ -90,7 +91,7 @@ void setVolume(volume) {
     state.updatingVolume = true
     
     if(device.properties.data.lync) {
-        getParent.lyncSetVolume(volume)
+        getParent().lyncSetVolume((Integer)zone, (Integer)volume)
         state.updatingVolume = false
         return
     }

@@ -46,22 +46,6 @@ metadata {
         input name: 'port', type: 'number', title: 'IP Port', required: true, defaultValue: 10006, description: 'IP Port for Gateway'
         input name: 'lync6Zone', type: 'bool', title: 'Use Lync 6 Zone Codes', defaultValue: false, submitOnChange: true
         input name: 'lync12Zone', type: 'bool', title: 'Use Lync 12 Zone Codes', defaultValue: false, submitOnChange: true
-        if(lync6Zone) {
-            state.numInputs = 18
-            state.numZones = 6
-            state.useLyncCodes = true
-            device.updateSetting("lync12Zone",[value:"false",type:"bool"])
-        }else if (lync12Zone) {
-            state.numInputs = 18
-            state.numZones = 12
-            state.useLyncCodes = true
-            device.updateSetting("lync6Zone",[value:"false",type:"bool"])
-        }        
-        else {
-            state.numInputs = 6
-            state.numZones = 6
-            state.useLyncCodes = false
-        }
         for(int i=0; i<state.numInputs; i++){
             input name: "input${i+1}Name", type: 'text', title: "input ${i+1} Name", required: true, defaultValue: "input ${i+1}", description: "Name for input ${i+1}"
         }
@@ -75,7 +59,7 @@ void configure() {}
 void installed() {
     // Change to manual invocation due to different number of zones MCA vs. Lync
     //createZones()
-    state.numZones = 6
+    updateStates()
 }
 
 void updated() {
@@ -83,7 +67,27 @@ void updated() {
         log.debug "Preferences updated()"
         runIn(1800,logsOff)
     }
+    updateStates()
 }
+
+void updateStates(){
+       if(lync6Zone) {
+            state.numInputs = 18
+            state.numZones = 6
+            state.useLyncCodes = true
+            device.updateSetting("lync12Zone",[value:"false",type:"bool"])
+        } else if (lync12Zone) {
+            state.numInputs = 18
+            state.numZones = 12
+            state.useLyncCodes = true
+            device.updateSetting("lync6Zone",[value:"false",type:"bool"])
+        } else {
+            state.numInputs = 6
+            state.numZones = 6
+            state.useLyncCodes = false
+        }
+}
+
 
 void setLyncVolume(zone, level){
    //Lync uses 1..60  
@@ -214,6 +218,7 @@ void selectInput(byte zone, byte inputNum) {
 
 
 void createZones() {
+//    updateStates()
     for (i in 1..state.numZones)
     {
        cd = addChildDevice("htdmca66", "HTD MCA66 Amplifier Zone", "${device.deviceNetworkId}-ep${i}", [name: "${device.displayName} (Zone${i})", isComponent: true, lync:"$state.useLyncCodes"])

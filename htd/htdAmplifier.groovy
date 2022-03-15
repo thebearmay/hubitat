@@ -23,7 +23,7 @@
  *
  */
 import groovy.transform.Field
-
+//https://raw.githubusercontent.com/thebearmay/hubitat/main/htd/htdAmplifier.groovy
 metadata {
     definition(name: "HTD MCA66 Amplifier Interface", namespace: "htdmca66", author: "Jeff Mehlman") {
         command "sendTestMessage"
@@ -89,7 +89,7 @@ void updateStates(){
 }
 
 
-void setLyncVolume(zone, level){
+void lyncSetVolume(Integer zone, Integer level){
    //Lync uses 1..60  
     level = (level * 0.6).toInteger()
     

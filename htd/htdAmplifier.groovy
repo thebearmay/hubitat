@@ -153,14 +153,14 @@ void on(byte zone) {
     
     def msg = [2,0,zone,4,0x20] as byte[]
     if(state.useLyncCodes)
-        msg = [2,0,zone,4,0x55] as byte
+        msg = [2,0,zone,4,0x55] as byte[]
     sendMessage(msg)
 }
 
 void off(byte zone) {
     def msg = [2,0,zone,4,0x21] as byte[]
     if(state.useLyncCodes)
-        msg = [2,0,zone,4,0x56] as byte    
+        msg = [2,0,zone,4,0x56] as byte[] 
     sendMessage(msg)
 }
 

@@ -283,7 +283,8 @@ void receiveMessage(byte[] byte_message)
 
         // Command should be 0x05
         if (byte_message[3] != 0x05) {
-            log.warn "Unknown packet type - ${byte_message[3]}"
+            if(debugEnabled) log.debug "Unknown packet type - ${byte_message[3]}"
+            continue
         }
 
         def d1 = byte_message[4] as byte

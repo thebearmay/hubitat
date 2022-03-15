@@ -303,6 +303,7 @@ void receiveMessage(byte[] byte_message)
 
         // Put in state map for update
         def zoneStates = ['switch' : poweris, 'mute' : muteIs, 'volume' : volumePercentage, 'inputNumber' : input]
+        if(debubEnabled) log.debug "${device.deviceNetworkId}-ep${zone}<br>$zoneStates"
         getChildDevice("${device.deviceNetworkId}-ep${zone}").updateState(zoneStates)
 
 

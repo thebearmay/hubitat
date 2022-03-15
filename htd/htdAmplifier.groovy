@@ -207,8 +207,10 @@ void selectInput(byte zone, byte inputNum) {
     {
         if(!state.useLyncCodes)
             def msg = [0x02, 0x00, zone, 0x04, inputNum+2] as byte[]
-        else
+        else if(inputNum < 13)
             msg = [0x02, 0x00, zone, 0x04, inputNum+15] as byte[]
+        else
+            msg = [0x02, 0x00, zone, 0x04, inputNum+86] as byte[]
         sendMessage(msg)
     }
     else {

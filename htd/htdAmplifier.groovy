@@ -283,7 +283,7 @@ void receiveMessage(byte[] byte_message)
 
         zone = byte_message[i+2]
 
-        // Command should be 0x05 (Lync first packet is 0x06)
+        // Command should be 0x05 (Lync sometimes sends 0x06 -normally first packet, but not always)
         if (byte_message[3] != 0x05) {
             //if(debugEnabled) log.debug "Unknown packet type - ${byte_message[3]}"
             continue
@@ -309,7 +309,7 @@ void receiveMessage(byte[] byte_message)
         // Put in state map for update
         def zoneStates = ['switch' : poweris, 'mute' : muteIs, 'volume' : volumePercentage, 'inputNumber' : input]
         if(debugEnabled) log.debug "${device.deviceNetworkId}-ep${zone}<br>$zoneStates"
-        if(byte_message[3] == 0x05)
+        if(byte_message[3] == 0x05 && zone in 1..state.numZones)
             getChildDevice("${device.deviceNetworkId}-ep${zone}").updateState(zoneStates)
 
 

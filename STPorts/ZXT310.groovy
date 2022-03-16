@@ -336,7 +336,7 @@ def pushLearn() {
 	sendEvent(createEventMap("learningMode", learning, false))
 	sendRemoteStatusEvent(status, autoReset)
 }
-
+def pushButton()  { return "Button Pushed" }
 def pushButton1() { return pushButton(1) }
 def pushButton2() { return pushButton(2) }
 def pushButton3() { return pushButton(3) }

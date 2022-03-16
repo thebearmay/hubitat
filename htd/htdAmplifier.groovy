@@ -95,15 +95,15 @@ void lyncSetVolume(Integer zone, Integer level){
     level = (level * 0.6).toInteger()
     
     if(!state.useLyncCodes) {
-        log.error "Invalid Command for MCA"
+        log.error "Invalid Command for MCA (lSV)"
         return
     }
     if(zone < 1 || zone > state.numZones) {
-        log.error "Invalid Zone - $zone"
+        log.error "lSV Invalid Zone - $zone"
         return
     }
     if(level < 0 || level > 60) {
-        log.error "Invalid Level - $level"
+        log.error "lSV Invalid Level - $level"
         return
     }
 
@@ -203,7 +203,7 @@ void lyncMuteOff(byte zone){
 }
 
 void selectInput(byte zone, byte inputNum) {
-    def inputNumRange = 1..state.numZones
+    def inputNumRange = 1..state.numInputs
     if ( inputNumRange.contains(inputNum as int) )
     {
         if(!state.useLyncCodes)

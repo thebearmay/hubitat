@@ -90,6 +90,7 @@ void updateStates(){
 
 
 void lyncSetVolume(Integer zone, Integer level){
+    if(debugEnabled) log.debug "lSVol $zone $level"
    //Lync uses 1..60  
     level = (level * 0.6).toInteger()
     
@@ -108,13 +109,13 @@ void lyncSetVolume(Integer zone, Integer level){
 
     def lyncVolume = 0xC4 + level
     def msg = [0x02, 0x01, zone, 0x15, lyncVolume] as byte[]
-
+    if(debugEnabled) log.debug "lyncSetVolume $msg"
     sendMessage(msg)    
 }
 
 void volumeUp(zone) {
     if(state.useLyncCodes) {
-        log.error "Invalid Command for Lync"
+        log.error "Invalid VolUp Command for Lync"
         return
     }
     if (zone<1 || zone> 6)
@@ -133,7 +134,7 @@ void volumeUp(zone) {
 
 void volumeDown(zone) {
     if(state.useLyncCodes) {
-        log.error "Invalid Command for Lync"
+        log.error "Invalid VolDwn Command for Lync"
         return
     }
     if (zone<1 || zone>6)
@@ -172,7 +173,7 @@ void sendTestMessage() {
 
 void toggleMute(byte zone) {
     if(state.useLyncCodes) {
-        log.error "Invalid Command for Lync"
+        log.error "Invalid Command (TM) for Lync"
         return
     }
     def msg = [0x02,0x00,zone,0x04,0x22] as byte[]
@@ -182,7 +183,7 @@ void toggleMute(byte zone) {
 
 void lyncMuteOn(byte zone){
     if(!state.useLyncCodes) {
-        log.error "Invalid Command for MCA"
+        log.error "Invalid Command (LMOn) for MCA"
         return
     }
     def msg = [0x02,0x00,zone,0x04,0x1E] as byte[]
@@ -193,7 +194,7 @@ void lyncMuteOn(byte zone){
 
 void lyncMuteOff(byte zone){
     if(!state.useLyncCodes) {
-        log.error "Invalid Command for MCA"
+        log.error "Invalid Command (LMOff) for MCA"
         return
     }
     def msg = [0x02,0x00,zone,0x04,0x1F] as byte[]
@@ -211,6 +212,7 @@ void selectInput(byte zone, byte inputNum) {
             msg = [0x02, 0x00, zone, 0x04, inputNum+15] as byte[]
         else
             msg = [0x02, 0x00, zone, 0x04, inputNum+86] as byte[]
+        if(debugEnabled) log.debug "SelInput $zone $inputNum [$msg]"
         sendMessage(msg)
     }
     else {
@@ -275,15 +277,15 @@ void receiveMessage(byte[] byte_message)
         if(debugEnabled) log.debug "Decoding Packet #${i/PACKET_SIZE}"
         def header = [2, 0] as byte[]
         if (byte_message[i..i+1] != header) {
-            if(debugEnabled) log.debug "Invalid value"
+            if(debugEnabled) log.debug "parse Invalid packet value"
             continue
         }
 
         zone = byte_message[i+2]
 
-        // Command should be 0x05
+        // Command should be 0x05 (Lync first packet is 0x06)
         if (byte_message[3] != 0x05) {
-            if(debugEnabled) log.debug "Unknown packet type - ${byte_message[3]}"
+            //if(debugEnabled) log.debug "Unknown packet type - ${byte_message[3]}"
             continue
         }
 
@@ -306,7 +308,7 @@ void receiveMessage(byte[] byte_message)
 
         // Put in state map for update
         def zoneStates = ['switch' : poweris, 'mute' : muteIs, 'volume' : volumePercentage, 'inputNumber' : input]
-        if(debubEnabled) log.debug "${device.deviceNetworkId}-ep${zone}<br>$zoneStates"
+        if(debugEnabled) log.debug "${device.deviceNetworkId}-ep${zone}<br>$zoneStates"
         if(byte_message[3] == 0x05)
             getChildDevice("${device.deviceNetworkId}-ep${zone}").updateState(zoneStates)
 

@@ -63,11 +63,12 @@ int getZone() {
 void volumeUp() {
     def zone = state.ZoneNumber as int
     if(device.properties.data.lync){
-        if(device.currentValue('volume'))
+        if(device.currentValue('volume') != null)
             def currentVolume = device.currentValue('volume') as int
         else 
             currentVolume = 0
-        getParent().lyncSetVolume((Integer)zone, (Integer)currentVolume+1)
+        getParent().lyncSetVolume((Integer)zone, (Integer)currentVolume+2)
+        //2*.6 -> 1, 1*.6 seems to yield 0
     } else
         getParent().volumeUp(zone)
 }
@@ -75,11 +76,11 @@ void volumeUp() {
 void volumeDown() {
     def zone = state.ZoneNumber as int
     if(device.properties.data.lync){
-        if(device.currentValue('volume'))
+        if(device.currentValue('volume')!= null)
             def currentVolume = device.currentValue('volume') as int
         else 
-            currentVolume = 0
-        getParent().lyncSetVolume((Integer)zone, (Integer)currentVolume-1)        
+            currentVolume = 2
+        getParent().lyncSetVolume((Integer)zone, (Integer)currentVolume-2)  
     } else
         getParent().volumeDown(zone)
 }
@@ -92,7 +93,7 @@ void setVolume(volume) {
     }
 
     def zone = state.ZoneNumber as byte
-    if(device.currentValue('volume'))
+    if(device.currentValue('volume')!= null)
         def currentVolume = device.currentValue('volume')*60/100 as int
     else currentVolume = 0
 

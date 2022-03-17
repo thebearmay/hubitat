@@ -88,12 +88,13 @@
  *    2022-01-21  thebearmay     add Mode and HSM Status as a pollable attribute
  *    2022-03-03  thebearmay     look at attribute size each poll and enforce 1024 limit
  *    2022-03-09  thebearmay     fix lastUpdated not always updated
+ *    2022-03017  thebearmay     add zigbeeStatus
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.20"}
+static String version() {return "2.6.22"}
 
 metadata {
     definition (
@@ -493,13 +494,16 @@ void getPollValues(){
 	
     if (device.currentValue("zigbeeChannel") == "NA") { 
         //myHubData = parseHubData()
-        updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)
+        updateAttr("zigbeeChannel",location.hub.properties.data.zigbeeChannel)
     }
-    if(location.hub.properties.zigbeeChannel != null)
+
+
+    if(location.hub.properties.data.zigbeeChannel != null)
         updateAttr("zigbeeStatus", "enabled")
     else
         updateAttr("zigbeeStatus", "disabled")
-    
+        
+ 
     //verify localIP in case of change
     updateAttr("localIP", location.hub.localIP)
     

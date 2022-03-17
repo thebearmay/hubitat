@@ -32,9 +32,10 @@ metadata {
         command "volumeDown", [[name:"zone",type:"NUMBER", description:"Zone #1-6", constraints:["NUMBER"]]]
         command "createZones"
         command "deleteZones"
-        command "setLyncVolume", [[name:"zone",type:"NUMBER", description:"Lync ONLY Zone #1-12", constraints:["NUMBER"]],[name:"level",type:"NUMBER", description:"Lync ONLY 0-60", constraints:["NUMBER"]]]
+        command "lyncSetVolume", [[name:"zone",type:"NUMBER", description:"Lync ONLY Zone #1-12", constraints:["NUMBER"]],[name:"level",type:"NUMBER", description:"Lync ONLY 0-60", constraints:["NUMBER"]]]
         //command "lyncMuteOn", [[name:"zone",type:"NUMBER", description:"Lync ONLY Zone #1-12", constraints:["NUMBER"]]]
         //command "lyncMuteOff", [[name:"zone",type:"NUMBER", description:"Lync ONLY Zone #1-12", constraints:["NUMBER"]]]
+        command "simMessage", [[name:"packetString",type:"STRING",description:"Message String"]]
         
         capability "HealthCheck"
         //capability "AudioVolume"
@@ -154,14 +155,14 @@ void on(byte zone) {
     
     def msg = [2,0,zone,4,0x20] as byte[]
     if(state.useLyncCodes)
-        msg = [2,0,zone,4,0x55] as byte[]
+        msg = [2,0,zone,4,0x57] as byte[]
     sendMessage(msg)
 }
 
 void off(byte zone) {
     def msg = [2,0,zone,4,0x21] as byte[]
     if(state.useLyncCodes)
-        msg = [2,0,zone,4,0x56] as byte[] 
+        msg = [2,0,zone,4,0x58] as byte[] 
     sendMessage(msg)
 }
 
@@ -265,6 +266,27 @@ void sendMessage(byte[] byte_message) {
     //interfaces.rawSocket.close()
 }
 
+void simMessage(input) {
+    iToMsg= input.split(",")
+
+    if(debugEnabled)log.debug "$iToMsg"
+    int i=0
+    int[] preMsg = new int[iToMsg.size()]
+    iToMsg.each{
+        preMsg[i]=it.toInteger()
+        i++
+    }
+    if(debugEnabled)log.debug "$preMsg"
+    char[] msg = new char[iToMsg.size()]
+    i=0
+    preMsg.each{
+        msg[i]=(char)it
+        i++
+    }    
+    
+    receiveMessage(msg as byte[])
+}
+
 void receiveMessage(byte[] byte_message)
 {
     def PACKET_SIZE = 14 // all packets should be 14 bytes
@@ -272,24 +294,27 @@ void receiveMessage(byte[] byte_message)
     if(debugEnabled) log.debug "Received Message: ${byte_message}, length ${byte_message.length}"
 
     // iterate over packets
+    def header = [2, 0] as byte[]
     for (int i = 0; i < byte_message.length; i+=PACKET_SIZE)
     {
         if(debugEnabled) log.debug "Decoding Packet #${i/PACKET_SIZE}"
-        def header = [2, 0] as byte[]
-        if (byte_message[i..i+1] != header) {
-            if(debugEnabled) log.debug "parse Invalid packet value"
+        packet = byte_message[i..i+PACKET_SIZE-1]
+
+        if(debugEnabled)log.debug "$packet"
+        if (packet[0..1] != header) {
+            if(debugEnabled) log.debug "parse Invalid packet value - $packet"
             continue
         }
 
-        zone = byte_message[i+2]
+        zone = packet[2]
 
         // Command should be 0x05 (Lync sometimes sends 0x06 -normally first packet, but not always)
-        if (byte_message[3] != 0x05) {
-            //if(debugEnabled) log.debug "Unknown packet type - ${byte_message[3]}"
+        if (packet[3] != 0x05) {
+            if(debugEnabled) log.debug "Unknown packet type - $packet"
             continue
         }
 
-        def d1 = byte_message[4] as byte
+        def d1 = packet[4] as byte
         boolean powerOn = (d1 >> 7 & 0x01)
         def poweris = 'off'
         if(powerOn) poweris = 'on'
@@ -299,19 +324,20 @@ void receiveMessage(byte[] byte_message)
 
         if(!mute) muteIs = 'unmuted'
 
-        def input = byte_message[8]+1
-        def volume = byte_message[9]+60 as int
+        def input = packet[8]+1
+        def volume = packet[9]+60 as int
+        
 
         def volumePercentage = volume*100/60
 
-        if(debugEnabled) log.debug "Zone: ${zone}, power: ${powerOn}, mute = ${mute}, input = ${input}, volume = ${volume}"
+        if(debugEnabled)
+            log.debug "$packet<br>Zone: ${zone}, power: ${powerOn}, mute = ${mute}, input = ${input}, volume = ${volume}"
 
         // Put in state map for update
         def zoneStates = ['switch' : poweris, 'mute' : muteIs, 'volume' : volumePercentage, 'inputNumber' : input]
         if(debugEnabled) log.debug "${device.deviceNetworkId}-ep${zone}<br>$zoneStates"
-        if(byte_message[3] == 0x05 && zone in 1..state.numZones)
+        if(packet[3] == 0x05 && zone in 1..state.numZones)
             getChildDevice("${device.deviceNetworkId}-ep${zone}").updateState(zoneStates)
-
 
     }
 }

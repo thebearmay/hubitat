@@ -88,12 +88,13 @@
  *    2022-01-21  thebearmay     add Mode and HSM Status as a pollable attribute
  *    2022-03-03  thebearmay     look at attribute size each poll and enforce 1024 limit
  *    2022-03-09  thebearmay     fix lastUpdated not always updated
+ *    2022-03-17  thebearmay	 add zigbeeStatus
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.20"}
+static String version() {return "2.6.21"}
 
 metadata {
     definition (
@@ -155,6 +156,7 @@ metadata {
         attribute "currentHsmMode", "string"
         attribute "ntpServer", "string"
         attribute "ipSubnetsAllowed", "string"
+        attribute "zigbeeStatus", "string"
 
         command "hiaUpdate", ["string", "string"]
         command "reboot", ["string"]
@@ -293,8 +295,12 @@ def configure() {
     for(i=0;i<locProp.size();i++){
         updateAttr(locProp[i], location["${locProp[i]}"])
     }
-    if(!suppressData || location.hub.properties.data.zigbeeChannel != null)
+    if(!suppressData || location.hub.properties.data.zigbeeChannel != null){
         updateAttr("zigbeeChannel",location.hub.properties.data.zigbeeChannel)
+        updateAttr("zigbeeStatus", "enabled")
+    } else
+        updateAttr("zigbeeStatus", "disabled")
+    
     
     formatUptime()
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
@@ -489,6 +495,10 @@ void getPollValues(){
         //myHubData = parseHubData()
         updateAttr("zigbeeChannel",location.hub.properties.zigbeeChannel)
     }
+    if(location.hub.properties.zigbeeChannel != null)
+        updateAttr("zigbeeStatus", "enabled")
+    else
+        updateAttr("zigbeeStatus", "disabled")
     
     //verify localIP in case of change
     updateAttr("localIP", location.hub.localIP)

@@ -922,7 +922,7 @@ void restartCheck() {
 }
 
 String zwaveScrape(){
-    httpGet("http://192.168.1.50:8080/hub/zwaveInfo") { res ->
+    httpGet("http://127.0.0.1:8080/hub/zwaveInfo") { res ->
           dataC = res.data.toString().substring(196)
           if(dataC.indexOf("const zwaveStatus = 'false'")>-1)
               zwaveStatus="enabled"

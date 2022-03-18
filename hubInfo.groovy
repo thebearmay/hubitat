@@ -89,6 +89,7 @@
  *    2022-03-03  thebearmay     look at attribute size each poll and enforce 1024 limit
  *    2022-03-09  thebearmay     fix lastUpdated not always updated
  *    2022-03-17  thebearmay     add zigbeeStatus
+ *    2022-03-18  thebearmay     add zwaveStatus
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -157,6 +158,7 @@ metadata {
         attribute "ntpServer", "string"
         attribute "ipSubnetsAllowed", "string"
         attribute "zigbeeStatus", "string"
+        attribute "zwaveStatus", "string"
 
         command "hiaUpdate", ["string", "string"]
         command "reboot", ["string"]
@@ -301,7 +303,7 @@ def configure() {
         updateAttr("zigbeeStatus", "enabled")
     else
         updateAttr("zigbeeStatus", "disabled")
-    
+    updateAttr("zwaveStatus", zwaveScrape())
     
     formatUptime()
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
@@ -530,7 +532,9 @@ void getPollValues(){
         device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
         updateAttr("zwaveData",null)
     }
- 
+    //Zwave Status - enabled/disabled/unknown
+    updateAttr("zwaveStatus", zwaveScrape())
+    
     // get Temperature
     if(tempPollEnable) {
         Map params = [
@@ -916,6 +920,19 @@ void restartCheck() {
     SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(upDate))
 }
+
+String zwaveScrape(){
+    httpGet("http://192.168.1.50:8080/hub/zwaveInfo") { res ->
+          dataC = res.data.toString().substring(196)
+          if(dataC.indexOf("const zwaveStatus = 'false'")>-1)
+              zwaveStatus="enabled"
+          else if(dataC.indexOf("const zwaveStatus = 'true'")>-1)
+              zwaveStatus="disabled"
+          else
+              zwaveStatus="unknown"
+          return zwaveStatus
+    }
+} 
 
 @SuppressWarnings('unused')
 void updateCheck(){

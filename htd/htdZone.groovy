@@ -27,6 +27,9 @@ metadata {
     definition(name: "HTD MCA66 Amplifier Zone", namespace: "htdmca66", author: "Jeff Mehlman") {
         command "sendTestMessage"
         command "selectInput", [[name:"inputNum",type:"NUMBER", description:"Input Number", constraints:["NUMBER"]]]
+        command "setBass", [[name:"bass",type:"NUMBER", description:"Bass (-10..10)", constraints:["NUMBER"]]]
+        command "setTreble", [[name:"treble",type:"NUMBER", description:"Treble (-10..10)", constraints:["NUMBER"]]]
+        command "setBalance", [[name:"balance",type:"NUMBER", description:"Balance(-18..18)", constraints:["NUMBER"]]]
 
         capability "AudioVolume"
         capability "HealthCheck"
@@ -34,6 +37,10 @@ metadata {
 
         attribute "ZoneNumber", "number"
         attribute "ZoneName", "string"
+        attribute "bass", "number"
+        attribute "treble", "number"
+        attribute "balance", "number"
+       
     }
 
     preferences{
@@ -179,13 +186,25 @@ void selectInput(inputNum) {
     getParent().selectInput(zone, inputNum as byte)
 }
 
+void setBalance(balance){
+    getParent().setBalance(state.ZoneNumber as byte, balance as byte)
+}
+
+void setBass(bass){
+    getParent().setBass(state.ZoneNumber as byte, bass as byte)
+}
+
+void setTreble(treble){
+    getParent().setTreble(state.ZoneNumber as byte, treble as byte)
+}
+
 void updateState(statesMap) {
     if (state.updatingVolume == null)
     {
         state.updatingVolume = false
     }
 
-    if (state.updatingVolume == false) {
+    if (state.updatingVolume == false || device.properties.data.lync) {
         statesMap.each{entry -> sendEvent(name: entry.key, value: entry.value)
         state."${entry.key}" = entry.value
         }

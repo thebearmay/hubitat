@@ -29,9 +29,10 @@
  *                             additional code cleanup
  *                             Change to Release Status - v1.0.0
  *    08Feb22    thebearmay    Retry resync request if remote hub returns a web page instead of correct response (remote is rebooting)
- */
+ *    19Mar22    thebearmay    Handle arming instead of armed for HSM
+*/
 
-static String version()	{  return '1.0.1'  }
+static String version()	{  return '1.0.2'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -323,7 +324,10 @@ def hsmStat(){
     jsonData = (HashMap) request.JSON
     if(debugEnabled) log.debug "hsmStat ${jsonData.value}"
     if(hsmRec && location.hsmStatus != jsonData.value) {
-        sendLocationEvent(name: "hsmSetArm", value: jsonData.value.replace("armed","arm"), descriptionText:"Hub Variable Sync:v${version()}")
+        if(jsonData.value.indexOf('arming') > -1)
+            sendLocationEvent(name: "hsmSetArm", value: jsonData.value.replace("arming","arm"), descriptionText:"Hub Variable Sync:v${version()}")
+        else
+            sendLocationEvent(name: "hsmSetArm", value: jsonData.value.replace("armed","arm"), descriptionText:"Hub Variable Sync:v${version()}")
         jsonText = JsonOutput.toJson([armStatus:"$jsonData.value"])
     } else if(hsmRec && location.hsmStatus == jsonData.value) {
         jsonText = JsonOutput.toJson([armStatus:"$jsonData.value"])

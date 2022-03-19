@@ -239,6 +239,24 @@ void deleteZones() {
     }
 }
 
+void setBass(bass, zone){
+    if(bass < -10 || bass > 10) bass = 0
+    msg = [0x02, 0x00, zone, 0x18, bass] as byte[]
+    sendMessage(msg)
+}
+
+void setTreble(treble, zone){
+    if(treble< -10 || treble > 10) treble = 0    
+    msg = [0x02, 0x00, zone, 0x17, treble] as byte[]
+    sendMessage(msg)
+}
+
+void setBalance(balance, zone){
+    if(balance < -18 || balance > 18) balance = 0 
+    msg = [0x02, 0x00, zone, 0x16, balance] as byte[]
+    sendMessage(msg)    
+}
+
 /*******************
 **   Message API  **
 ********************/
@@ -292,7 +310,7 @@ void receiveMessage(byte[] byte_message)
     def PACKET_SIZE = 14 // all packets should be 14 bytes
 
     if(debugEnabled) log.debug "Received Message: ${byte_message}, length ${byte_message.length}"
-
+    if( byte_message.length % PACKET_SIZE != 0 ) return //non-standard
     // iterate over packets
     def header = [2, 0] as byte[]
     for (int i = 0; i < byte_message.length; i+=PACKET_SIZE)
@@ -308,9 +326,9 @@ void receiveMessage(byte[] byte_message)
 
         zone = packet[2]
 
-        // Command should be 0x05 (Lync sometimes sends 0x06 -normally first packet, but not always)
+        // Only interested in Command 0x05 
         if (packet[3] != 0x05) {
-            if(debugEnabled) log.debug "Unknown packet type - $packet"
+            if(debugEnabled) log.debug "Non-5 Packet Skipped - $packet"
             continue
         }
 
@@ -326,6 +344,9 @@ void receiveMessage(byte[] byte_message)
 
         def input = packet[8]+1
         def volume = packet[9]+60 as int
+        def treble = packet[10]
+        def bass = packet[11]
+        def balance = packet[12]
         
 
         def volumePercentage = volume*100/60
@@ -334,9 +355,9 @@ void receiveMessage(byte[] byte_message)
             log.debug "$packet<br>Zone: ${zone}, power: ${powerOn}, mute = ${mute}, input = ${input}, volume = ${volume}"
 
         // Put in state map for update
-        def zoneStates = ['switch' : poweris, 'mute' : muteIs, 'volume' : volumePercentage, 'inputNumber' : input]
+        def zoneStates = ['switch' : poweris, 'mute' : muteIs, 'volume' : volumePercentage, 'inputNumber' : input, 'bass' : bass, 'treble': treble, 'balance': balance]
         if(debugEnabled) log.debug "${device.deviceNetworkId}-ep${zone}<br>$zoneStates"
-        if(packet[3] == 0x05 && zone in 1..state.numZones)
+ ///       if(packet[3] == 0x05 && zone in 1..state.numZones)
             getChildDevice("${device.deviceNetworkId}-ep${zone}").updateState(zoneStates)
 
     }

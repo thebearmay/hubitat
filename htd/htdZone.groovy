@@ -27,9 +27,6 @@ metadata {
     definition(name: "HTD MCA66 Amplifier Zone", namespace: "htdmca66", author: "Jeff Mehlman") {
         command "sendTestMessage"
         command "selectInput", [[name:"inputNum",type:"NUMBER", description:"Input Number", constraints:["NUMBER"]]]
-        command "setBass", [[name:"bass",type:"NUMBER", description:"Bass (-10..10)", constraints:["NUMBER"]]]
-        command "setTreble", [[name:"treble",type:"NUMBER", description:"Treble (-10..10)", constraints:["NUMBER"]]]
-        command "setBalance", [[name:"balance",type:"NUMBER", description:"Balance(-18..18)", constraints:["NUMBER"]]]
 
         capability "AudioVolume"
         capability "HealthCheck"
@@ -40,7 +37,8 @@ metadata {
         attribute "bass", "number"
         attribute "treble", "number"
         attribute "balance", "number"
-       
+        attribute "volume", "number"
+        attribute "mute","string"
     }
 
     preferences{
@@ -52,6 +50,7 @@ void configure() {}
 
 void installed() {
     runIn(1, "off")
+    sendEvent(name:'volume',value:0)
 }
 
 void updated() {
@@ -74,8 +73,8 @@ void volumeUp() {
             def currentVolume = device.currentValue('volume') as int
         else 
             currentVolume = 0
-        getParent().lyncSetVolume((Integer)zone, (Integer)currentVolume+2)
-        //2*.6 -> 1, 1*.6 seems to yield 0
+        getParent().lyncSetVolume((Integer)zone, (Integer)currentVolume+5)
+        if(debugEnabled) "VolUp - lyncSetVolume($zone, ${currentVolume-5})"
     } else
         getParent().volumeUp(zone)
 }
@@ -86,8 +85,9 @@ void volumeDown() {
         if(device.currentValue('volume')!= null)
             def currentVolume = device.currentValue('volume') as int
         else 
-            currentVolume = 2
-        getParent().lyncSetVolume((Integer)zone, (Integer)currentVolume-2)  
+            currentVolume = 5
+        getParent().lyncSetVolume((Integer)zone, (Integer)currentVolume-5)
+        if(debugEnabled) "VolDwn - lyncSetVolume($zone, ${currentVolume-5})"
     } else
         getParent().volumeDown(zone)
 }
@@ -184,18 +184,6 @@ void selectInput(inputNum) {
     def zone = state.ZoneNumber as byte
 
     getParent().selectInput(zone, inputNum as byte)
-}
-
-void setBalance(balance){
-    getParent().setBalance(state.ZoneNumber as byte, balance as byte)
-}
-
-void setBass(bass){
-    getParent().setBass(state.ZoneNumber as byte, bass as byte)
-}
-
-void setTreble(treble){
-    getParent().setTreble(state.ZoneNumber as byte, treble as byte)
 }
 
 void updateState(statesMap) {

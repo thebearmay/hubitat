@@ -24,6 +24,7 @@
  */
 import groovy.transform.Field
 //https://raw.githubusercontent.com/thebearmay/hubitat/main/htd/htdAmplifier.groovy
+@Field iName =["input0Name","input1Name","input2Name","input3Name","input4Name","input5Name","input6Name","input7Name","input8Name","input9Name","input10Name","input11Name","input12Name"]
 metadata {
     definition(name: "HTD MCA66 Amplifier Interface", namespace: "htdmca66", author: "Jeff Mehlman") {
         command "sendTestMessage"
@@ -48,7 +49,7 @@ metadata {
         input name: 'lync6Zone', type: 'bool', title: 'Use Lync 6 Zone Codes', defaultValue: false, submitOnChange: true
         input name: 'lync12Zone', type: 'bool', title: 'Use Lync 12 Zone Codes', defaultValue: false, submitOnChange: true
         for(int i=0; i<state.numInputs; i++){
-            input name: "input${i+1}Name", type: 'text', title: "input ${i+1} Name", required: true, defaultValue: "input ${i+1}", description: "Name for input ${i+1}"
+            input name: iName[i+1], type: 'text', title: "input ${i+1} Name", required: true, defaultValue: "input ${i+1}",submitOnChange:true,description: "Name for input ${i+1}"
         }
         input name: 'debugEnabled', type: 'bool', title: 'Enable Debug Messages', defaultValue: false, submitOnChange: true
 
@@ -331,16 +332,21 @@ void receiveMessage(byte[] byte_message)
             if(debugEnabled) log.debug "Non-5 Packet Skipped - $packet"
             continue
         }
-
+        
         def d1 = packet[4] as byte
-        boolean powerOn = (d1 >> 7 & 0x01)
-        def poweris = 'off'
-        if(powerOn) poweris = 'on'
-
-        boolean mute = d1 >> 6 & 0x01
         def muteIs = 'muted'
-
-        if(!mute) muteIs = 'unmuted'
+        def poweris = 'off'
+        if (!state.useLyncCodes){
+            boolean powerOn = (d1 >> 7 & 0x01)      
+            if(powerOn) poweris = 'on'
+            boolean mute = d1 >> 6 & 0x01
+            if(!mute) muteIs = 'unmuted'
+        } else {
+            powerOn = (d1 & 0x01)            
+            if(powerOn) poweris = 'on'
+            mute = d1 >> 1 & 0x01
+            if(!mute) muteIs = 'unmuted'           
+        }
 
         def input = packet[8]+1
         def volume = packet[9]+60 as int
@@ -355,7 +361,7 @@ void receiveMessage(byte[] byte_message)
             log.debug "$packet<br>Zone: ${zone}, power: ${powerOn}, mute = ${mute}, input = ${input}, volume = ${volume}"
 
         // Put in state map for update
-        def zoneStates = ['switch' : poweris, 'mute' : muteIs, 'volume' : volumePercentage, 'inputNumber' : input, 'bass' : bass, 'treble': treble, 'balance': balance]
+        def zoneStates = ['switch' : poweris, 'mute' : muteIs, 'volume' : volumePercentage.toInteger(), 'inputNumber' : input, 'bass' : bass, 'treble': treble, 'balance': balance]
         if(debugEnabled) log.debug "${device.deviceNetworkId}-ep${zone}<br>$zoneStates"
  ///       if(packet[3] == 0x05 && zone in 1..state.numZones)
             getChildDevice("${device.deviceNetworkId}-ep${zone}").updateState(zoneStates)

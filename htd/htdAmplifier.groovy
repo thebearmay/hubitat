@@ -34,8 +34,8 @@ metadata {
         command "createZones"
         command "deleteZones"
         command "lyncSetVolume", [[name:"zone",type:"NUMBER", description:"Lync ONLY Zone #1-12", constraints:["NUMBER"]],[name:"level",type:"NUMBER", description:"Lync ONLY 0-60", constraints:["NUMBER"]]]
-        //command "lyncMuteOn", [[name:"zone",type:"NUMBER", description:"Lync ONLY Zone #1-12", constraints:["NUMBER"]]]
-        //command "lyncMuteOff", [[name:"zone",type:"NUMBER", description:"Lync ONLY Zone #1-12", constraints:["NUMBER"]]]
+        command "allZonesOn"
+        command "allZonesOff"
         command "simMessage", [[name:"packetString",type:"STRING",description:"Message String"]]
         
         capability "HealthCheck"
@@ -157,6 +157,16 @@ void on(byte zone) {
     def msg = [2,0,zone,4,0x20] as byte[]
     if(state.useLyncCodes)
         msg = [2,0,zone,4,0x57] as byte[]
+    sendMessage(msg)
+}
+
+void allZonesOn(){  
+    def msg = [2,0,0,4,0x55] as byte[] 
+    sendMessage(msg)
+}
+
+void allZonesOff(){ 
+    def msg = [2,0,0,4,0x56] as byte[] 
     sendMessage(msg)
 }
 

@@ -24,7 +24,7 @@
  */
 import groovy.transform.Field
 //https://raw.githubusercontent.com/thebearmay/hubitat/main/htd/htdAmplifier.groovy
-@Field iName =["input0Name","input1Name","input2Name","input3Name","input4Name","input5Name","input6Name","input7Name","input8Name","input9Name","input10Name","input11Name","input12Name"]
+@Field iName =["input0Name","input1Name","input2Name","input3Name","input4Name","input5Name","input6Name","input7Name","input8Name","input9Name","input10Name","input11Name","input12Name","input13Name","input14Name","input15Name","input16Name","input17Name","input18Name"]
 metadata {
     definition(name: "HTD MCA66 Amplifier Interface", namespace: "htdmca66", author: "Jeff Mehlman") {
         command "sendTestMessage"

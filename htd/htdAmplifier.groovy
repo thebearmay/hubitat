@@ -52,7 +52,7 @@ metadata {
             input name: iName[i+1], type: 'text', title: "input ${i+1} Name", required: true, defaultValue: "input ${i+1}",submitOnChange:true,description: "Name for input ${i+1}"
         }
         if(lync6Zone || lync12Zone)
-            input name: 'useGroupDev', type: 'bool', title: 'Create a Group Device', defaultValue: false, submitOnChange: true
+            input name: 'useGroupDev', type: 'bool', title: 'Create a Group and Preset Device', defaultValue: false, submitOnChange: true
         input name: 'debugEnabled', type: 'bool', title: 'Enable Debug Messages', defaultValue: false, submitOnChange: true
 
     }

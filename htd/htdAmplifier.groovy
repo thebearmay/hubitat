@@ -51,6 +51,8 @@ metadata {
         for(int i=0; i<state.numInputs; i++){
             input name: iName[i+1], type: 'text', title: "input ${i+1} Name", required: true, defaultValue: "input ${i+1}",submitOnChange:true,description: "Name for input ${i+1}"
         }
+        if(lync6Zone || lync12Zone)
+            input name: 'useGroupDev', type: 'bool', title: 'Create a Group Device', defaultValue: false, submitOnChange: true
         input name: 'debugEnabled', type: 'bool', title: 'Enable Debug Messages', defaultValue: false, submitOnChange: true
 
     }
@@ -70,6 +72,8 @@ void updated() {
         runIn(1800,logsOff)
     }
     updateStates()
+    if(useGroupDev) createGroupDev()
+    else deleteGroupDev()
 }
 
 void updateStates(){
@@ -240,6 +244,16 @@ void createZones() {
        cd = addChildDevice("htdmca66", "HTD MCA66 Amplifier Zone", "${device.deviceNetworkId}-ep${i}", [name: "${device.displayName} (Zone${i})", isComponent: true, lync:"$state.useLyncCodes"])
        cd.setZone(i)
     }
+}
+
+void createGroupDev(){
+    if(getChildDevice("${device.deviceNetworkId}-epGroup"))
+        return
+    cd = addChildDevice("htdmca66", "HTD Group Device", "${device.deviceNetworkId}-epGroup", [name:"${device.displayName} Group Device", isComponent: true, lync12: lync12Zone , lync6: lync6Zone])
+}
+
+void deleteGroupDev(){
+    deleteChildDevice("${device.deviceNetworkId}-epGroup")
 }
 
 void deleteZones() {

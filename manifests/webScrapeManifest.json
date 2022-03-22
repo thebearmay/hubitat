@@ -1,0 +1,16 @@
+{
+  "packageName": "Web Scraper Device",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.1",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-03-22",
+  "drivers": [
+    {
+      "id": "de75b78c-a026-4eb1-947a-3642e21ff047",
+      "name": "Web Scraper",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/webScraper.groovy",
+      "required": true
+    }
+  ]
+}

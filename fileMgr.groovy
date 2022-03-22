@@ -305,7 +305,7 @@ List<String> listFiles(){
                 //
             }
         }
-        log.debug fileList.sort()
+        if(debugEnabled) log.debug fileList.sort()
         return fileList.sort()
     } catch (e) {
         log.error e

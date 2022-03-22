@@ -14,7 +14,8 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
- *    21Mar2022    thebearmay    take the text file methods and place them into a simple to use device driver   
+ *    21Mar2022    thebearmay    take the text file methods and place them into a simple to use device driver
+ *    22Mar2022    thebearmay    add listFiles command
 */
 
 
@@ -27,7 +28,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -45,7 +46,8 @@ metadata {
         command "xferFile",[[name:"inputURL", type:"STRING", description:"Input URL"],[name:"fileName", type:"STRING", description:"File Manager Destination Name"]]
         command "appendFile",[[name:"fileName", type:"STRING", description:"File Manager Destination Name"],[name:"appendString", type:"STRING", description:"String to Append"]]
         command "readFile",[[name:"fileName", type:"STRING",description:"Local File to Read"]]
-        command "fileExists",[[name:"fileName", type:"STRING",description:"File to Look for"]]               
+        command "fileExists",[[name:"fileName", type:"STRING",description:"File to Look for"]]
+        command "listFiles"
 
 
 
@@ -281,6 +283,35 @@ String readExtFile(fName){
         return null;
     }
 }
+
+@SuppressWarnings('unused')
+List<String> listFiles(){
+    // Adapted from BptWorld's Community Post 89466/4
+    if(debugEnabled) log.debug "Getting list of files"
+    uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
+    def params = [
+        uri: uri
+    ]
+    try {
+        fileList = []
+        httpGet(params) { resp ->
+            if (resp != null){
+                if(logEnable) log.debug "Found the files"
+                def json = resp.data
+                for (rec in json.files) {
+                    fileList << rec.name
+                }
+            } else {
+                //
+            }
+        }
+        log.debug fileList.sort()
+        return fileList.sort()
+    } catch (e) {
+        log.error e
+    }
+}
+
 
 @SuppressWarnings('unused')
 void logsOff(){

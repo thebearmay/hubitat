@@ -118,6 +118,20 @@
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/devDatDManifest.json",
       "description": "Provides a mechanism for displaying data item values across multiple devices."
+    },
+    {
+      "id": "dba69af4-3215-4b19-a344-735488b348f0",
+      "name": "File Manager Device",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/fileMgrManifest.json",
+      "description": "Device Driver to allow reading, writing, and appending of text based files in Hubitat\\'s Local File Manager."
+    },
+    {
+      "id": "f26defed-d4a6-4c4a-a37c-eca001ccea7b",
+      "name": "Web Scraper Device",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/webScrapeManifest.json",
+      "description": "Scrapes a web site for a search string and returns data based on offset of the search.  Can be run as a one time or a periodic search"
     }
   ]
 }

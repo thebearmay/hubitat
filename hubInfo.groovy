@@ -162,7 +162,7 @@ metadata {
         attribute "zwaveStatus", "string"
 
         command "hiaUpdate", ["string"]
-        command "reboot", ["string"]
+        command "reboot"
     }   
 }
 

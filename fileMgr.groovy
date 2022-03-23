@@ -151,16 +151,18 @@ Boolean fileExists(fName){
     uri = "http://${location.hub.localIP}:8080/local/${fName}";
 
      def params = [
-        uri: uri
+        uri: uri          
     ]
 
     try {
         httpGet(params) { resp ->
             if (resp != null){
                 if(logResponses) log.info "File Exist: true"
+                updateAttr("fileExist","true")
                 return true;
             } else {
-                if(logResponses) log.info "File Exist: true"
+                if(logResponses) log.info "File Exist: false"
+		updateAttr("fileExist","false")
                 return false
             }
         }
@@ -218,9 +220,9 @@ String readFile(fName){
 }
 
 void removeAttr(){
-    if(location.hub.firmwareVersionString >= "2.2.8.141")
-        device.deleteCurrentState("fileContent")
-    else
+//    if(location.hub.firmwareVersionString >= "2.2.8.141")
+//        device.deleteCurrentState("fileContent")
+//    else
         updateAttr("fileContent", "expired")
 }
 
@@ -321,11 +323,15 @@ String readExtFile(fName){
 
 @SuppressWarnings('unused')
 List<String> listFiles(){
+        if(security) cookie = securityLogin().cookie
     // Adapted from BptWorld's Community Post 89466/4
     if(debugEnabled) log.debug "Getting list of files"
     uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
     def params = [
-        uri: uri
+        uri: uri,
+        headers: [
+				"Cookie": cookie
+            ]        
     ]
     try {
         fileList = []

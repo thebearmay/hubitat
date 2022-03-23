@@ -972,21 +972,9 @@ void updChkCallback(resp, data) {
 }
 
 @SuppressWarnings('unused')
-void hiaUpdate(htmlStr, auth) {
-	if(!warnSuppresss) log.warn "HIA - HubInfo version mismatch please upgrade HIA"
-	hiaUpdate(htmlStr)
-}
-
-@SuppressWarnings('unused')
 void hiaUpdate(htmlStr) {
 	updateAttr("html",htmlStr)
 }
-
-@SuppressWarnings('unused')
-void reboot(a ) {
-	reboot()
-}
-
 
 @SuppressWarnings('unused')
 void reboot() {

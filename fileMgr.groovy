@@ -16,6 +16,7 @@
  *    ----         ---           ----
  *    21Mar2022    thebearmay    take the text file methods and place them into a simple to use device driver
  *    22Mar2022    thebearmay    add listFiles command
+ *    23Mar2022    thebearmay    add a temporary fileContent attribute, copyFile and fileTrimTop commands 
 */
 
 
@@ -28,7 +29,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.2"}
+static String version() {return "0.1.0"}
 
 metadata {
     definition (
@@ -41,12 +42,27 @@ metadata {
         
       
         capability "Actuator"
+        
+        attribute "fileList", "string"
+        attribute "fileContents", "string"
  
-        command "writeFile",[[name:"fileName", type:"STRING", description:"File Manager Destination Name"],[name:"writeString", type:"STRING", description:"String to Store"]]
-        command "xferFile",[[name:"inputURL", type:"STRING", description:"Input URL"],[name:"fileName", type:"STRING", description:"File Manager Destination Name"]]
-        command "appendFile",[[name:"fileName", type:"STRING", description:"File Manager Destination Name"],[name:"appendString", type:"STRING", description:"String to Append"]]
+        command "writeFile",[[name:"fileName", type:"STRING", description:"File Manager Destination Name"],
+                             [name:"writeString", type:"STRING", description:"String to Store"]
+                            ]
+        command "xferFile",[[name:"inputURL", type:"STRING", description:"Input URL"],
+                            [name:"fileName", type:"STRING", description:"File Manager Destination Name"]
+                           ]
+        command "copyFile",[[name:"inputURL", type:"STRING", description:"File Manager Source Name"],
+                            [name:"fileName", type:"STRING", description:"File Manager Destination Name"]
+                           ]        
+        command "appendFile",[[name:"fileName", type:"STRING", description:"File Manager Destination Name"],
+                              [name:"appendString", type:"STRING", description:"String to Append"]
+                             ]
         command "readFile",[[name:"fileName", type:"STRING",description:"Local File to Read"]]
         command "fileExists",[[name:"fileName", type:"STRING",description:"File to Look for"]]
+        command "fileTrimTop",[[name:"fileName", type:"STRING",description:"File to Trim"],
+                               [name:"offset", type:"NUMBER",description:"Number of Characters to Remove from the Beginning of the File"]
+                              ]               
         command "listFiles"
 
 
@@ -62,6 +78,7 @@ preferences {
     }
     input("debugEnabled", "bool", title: "Enable debug logging?")
     input("logResponses", "bool", title: "Log Responses to Commands")
+    input("allowAttrib", "bool", title: "Allow a TEMPORARY attribute for File Contents\n<b>If you use this set Event and State History to 1</b>")
  
 }
 
@@ -78,6 +95,16 @@ def updated(){
         log.debug "updated()"
         runIn(1800,logsOff)
     }
+}
+
+Boolean fileTrimTop(fname, trimOffset){
+   fileData = readFile(fname)
+   return writeFile(fname, fileData.substring(trimOffset.toInteger(),fileData.length()-1))
+}
+
+Boolean copyFile(fnameIn, fnameOut){
+    fileData = readFile(fnameIn)
+    return writeFile(fnameOut, fileData.substring(0,fileData.length()-1))
 }
 
 
@@ -118,7 +145,6 @@ HashMap securityLogin(){
     }
 	return [result: result, cookie: cookie]
 }
-
 
 Boolean fileExists(fName){
 
@@ -175,6 +201,10 @@ String readFile(fName){
                    i = resp.data.read() 
                }
                if(logResponses) log.info "File Read Data: $delim"
+               if(allowAttrib) {
+                    updateAttr("fileContent", "$delim")
+                    runIn(30,"removeAttr")
+                }
                return delim
             }
             else {
@@ -187,7 +217,12 @@ String readFile(fName){
     }
 }
 
-
+void removeAttr(){
+    if(location.hub.firmwareVersionString >= "2.2.8.141")
+        device.deleteCurrentState("fileContent")
+    else
+        updateAttr("fileContent", "expired")
+}
 
 Boolean appendFile(fName,newData){
     try {
@@ -306,6 +341,7 @@ List<String> listFiles(){
             }
         }
         if(debugEnabled) log.debug fileList.sort()
+        updateAttr("fileList", fileList.sort())
         return fileList.sort()
     } catch (e) {
         log.error e

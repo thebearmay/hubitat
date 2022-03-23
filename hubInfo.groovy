@@ -90,12 +90,13 @@
  *    2022-03-09  thebearmay     fix lastUpdated not always updated
  *    2022-03-17  thebearmay     add zigbeeStatus
  *    2022-03-18  thebearmay     add zwaveStatus
+ *    2022-03-23  thebearmay     code cleanup
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.23"}
+static String version() {return "2.6.24"}
 
 metadata {
     definition (
@@ -206,7 +207,7 @@ def initialize(){
     if(!zwLocked)
         device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
 
-    runIn(30,configure)
+    runIn(45,"configure")
     restartCheck() //set Restart Time using uptime and current timeatamp
 }
 
@@ -452,7 +453,7 @@ String getModel(){
         String model = getHubVersion() // requires >=2.2.8.141
     } catch (ignore){
         try{
-            httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
+            httpGet("http://${location.hub.localIP}:8080/api/hubitat.xml") { res ->
                 model = res.data.device.modelName
             return model
             }        
@@ -480,7 +481,7 @@ void getPollValues(){
     if(security) {
         httpPost(
             [
-                uri: "http://127.0.0.1:8080",
+                uri: "http://${location.hub.localIP}:8080",
                 path: "/login",
                 query: [ loginRedirect: "/" ],
                 body: [
@@ -656,10 +657,13 @@ void getPollValues(){
     
     }
     //End Pollable Gets
+	
     if(!suppressData || location.hub.properties.data.zigbeeChannel != null)
-        updateAttr("zigbeeChannel",location.hub.properties.data.zigbeeChannel)    
+        updateAttr("zigbeeChannel",location.hub.properties.data.zigbeeChannel) 
+		
     updateAttr("uptime", location.hub.uptime)
     formatUptime()
+	
     if (attribEnable) formatAttrib()
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
 
@@ -910,7 +914,6 @@ String getUnitFromState(String attrName){
 }
 
 void restartCheck() {
- //   Long rsDate = Long.parseLong(device.currentValue('lastHubRestart'))
     if(debugEnable) log.debug "$rsDate"
     Long ut = now() - (location.hub.uptime.toLong()*1000)
     Date upDate = new Date(ut)
@@ -922,7 +925,7 @@ void restartCheck() {
 }
 
 String zwaveScrape(){
-    httpGet("http://127.0.0.1:8080/hub/zwaveInfo") { res ->
+    httpGet("http://${location.hub.localIP}:8080/hub/zwaveInfo") { res ->
           dataC = res.data.toString().substring(196)
           if(dataC.indexOf("const zwaveStatus = 'false'")>-1)
               zwaveStatus="enabled"
@@ -941,7 +944,7 @@ void updateCheck(){
         return
     }
     params = [
-            uri: "http://127.0.0.1:8080",
+            uri: "http://${location.hub.localIP}:8080",
             path:"/hub/cloud/checkForUpdate",
             timeout: 10
         ]
@@ -956,7 +959,6 @@ void updChkCallback(resp, data) {
            def jSlurp = new JsonSlurper()
            Map resMap = (Map)jSlurp.parseText((String)resp.data)
            updateAttr("hubUpdateStatus",resMap.status)
-           //updateAttr("hubUpdateResp", resMap)
            if(location.hub.firmwareVersionString >= "2.2.8.0" && device.currentValue("hubUpdateResp"))
                device.deleteCurrentState("hubUpdateResp")
            if(resMap.version)
@@ -971,30 +973,34 @@ void updChkCallback(resp, data) {
 
 @SuppressWarnings('unused')
 void hiaUpdate(htmlStr, auth) {
-    if(auth == '')
-        updateAttr("html",htmlStr)
-    else 
-        updateAttr("html", "Illegal attempt using $auth")
+	if(!warnSuppresss) log.warn "HIA - HubInfo version mismatch please upgrade HIA"
+	hiaUpdate(htmlStr)
 }
 
 @SuppressWarnings('unused')
-void reboot(a = "ignore") {
-    if (!aCheck(a)) {
-        log.warn "Attempt to reboot hub without proper authorization"
-        if(debubEnable) log.debug "Attempted Value:$a"
-        return
-    }
+void hiaUpdate(htmlStr) {
+	updateAttr("html",htmlStr)
+}
+
+@SuppressWarnings('unused')
+void reboot(a ) {
+	reboot()
+}
+
+
+@SuppressWarnings('unused')
+void reboot() {
     if(!allowReboot){
-        log.warn "Reboot was requested, but allowReboot was set to false"
+        log.error "Reboot was requested, but allowReboot was set to false"
         return
     }
-    log.info "Hub Reboot requested - auth = $a"
+    log.info "Hub Reboot requested"
     // start - Modified from dman2306 Rebooter app
     String cookie=(String)null
     if(security) {
         httpPost(
             [
-                uri: "http://127.0.0.1:8080",
+                uri: "http://${location.hub.localIP}:8080",
                 path: "/login",
                 query: [ loginRedirect: "/" ],
                 body: [
@@ -1007,7 +1013,7 @@ void reboot(a = "ignore") {
     }
 	httpPost(
 		[
-			uri: "http://127.0.0.1:8080",
+			uri: "http://${location.hub.localIP}:8080",
 			path: "/hub/reboot",
 			headers:[
 				"Cookie": cookie
@@ -1015,19 +1021,6 @@ void reboot(a = "ignore") {
 		]
 	) {		resp ->	} 
     // end - Modified from dman2306 Rebooter app
-}
-
-@SuppressWarnings('unused')
-Boolean aCheck(a){
-    if (a=="ignore") return true
-    try{
-        httpGet("http://127.0.0.1:8080/api/hubitat.xml") { res ->
-            b = res.data.device.UDN.toString()
-            b = b.substring(b.indexOf(":")+1,b.length())
-            if(a==b) return true
-            else return false
-            }        
-    } catch(ignore) {}
 }
 
 @SuppressWarnings('unused')

@@ -161,7 +161,7 @@ metadata {
         attribute "zigbeeStatus", "string"
         attribute "zwaveStatus", "string"
 
-        command "hiaUpdate", ["string", "string"]
+        command "hiaUpdate", ["string"]
         command "reboot", ["string"]
     }   
 }

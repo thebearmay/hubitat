@@ -17,6 +17,7 @@
  *    21Mar2022    thebearmay    take the text file methods and place them into a simple to use device driver
  *    22Mar2022    thebearmay    add listFiles command
  *    23Mar2022    thebearmay    add a temporary fileContent attribute, copyFile and fileTrimTop commands 
+ *    23Mar2022    thebearmay	 fix hub security bug
 */
 
 
@@ -29,7 +30,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.0"}
+static String version() {return "0.1.1"}
 
 metadata {
     definition (

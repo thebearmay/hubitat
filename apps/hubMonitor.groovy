@@ -16,10 +16,11 @@
  *                                    0.1.2 add debugging logic
  *    2021-11-02        thebearmay    add monitoring for hubUpdateStatus
  *    2021-12-27        thebearmay    169.254.x.x reboot option
- *    2021-12-28        thebearmay    bug fix 
+ *    2021-12-28        thebearmay    bug fix
+ *    2022-03-23        thebearmay    remove the second auth requirement to reboot
  */
 
-static String version()	{  return '1.0.7'  }
+static String version()	{  return '1.0.8'  }
 
 
 definition (
@@ -130,15 +131,15 @@ def refreshDevice(evt = null){
                 log.debug "${it.currentValue('locationName')} Free Memory reported: ${it.currentValue("freeMemory")} Alert Level: ${settings["minMem$numHub"]}"
                 if(settings["ip$numHub"])log.debug "${it.currentValue('locationName')} IP reported: ${it.currentValue("localIP")} Previous Value: ${settings["ip$numHub"]}"
             }
-            if(it.currentValue("temperature",true).toFloat() >= settings["maxTemp$numHub"].toFloat() && it.currentValue("temperature",true) != null ){
+            if(it.currentValue("temperature",true)?.toFloat() >= settings["maxTemp$numHub"]?.toFloat() && it.currentValue("temperature",true) != null ){
                 notifyStr = "Hub Monitor Temperature Warning on ${it.currentValue('locationName')} - ${it.currentValue("temperature",true)}°"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("dbSize",true).toInteger() >= settings["maxDb$numHub"].toInteger() && it.currentValue("dbSize",true) != null ){
+            if(it.currentValue("dbSize",true)?.toInteger() >= settings["maxDb$numHub"]?.toInteger() && it.currentValue("dbSize",true) != null ){
                 notifyStr = "Hub Monitor DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize",true)}"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("freeMemory",true).toInteger() <= settings["minMem$numHub"].toInteger() && it.currentValue("freeMemory",true) != null ){
+            if(it.currentValue("freeMemory",true)?.toInteger() <= settings["minMem$numHub"]?.toInteger() && it.currentValue("freeMemory",true) != null ){
                 notifyStr = "Hub Monitor Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
                 sendNotification(notifyStr)
             }
@@ -173,9 +174,7 @@ void rebootHub(data){
         if(it.currentValue('localIP',true) == data.ipAddress) {
             try{
                 httpGet("http://${data.ipAddress}:8080/api/hubitat.xml") { res ->
-                    String b = res.data.device.UDN.toString()
-                    b = b.substring(b.indexOf(":")+1,b.length())
-                    it.reboot(b)
+                    it.reboot()
                 }        
             } catch(ignore) {}
         }

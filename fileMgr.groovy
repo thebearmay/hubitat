@@ -16,8 +16,8 @@
  *    ----         ---           ----
  *    21Mar2022    thebearmay    take the text file methods and place them into a simple to use device driver
  *    22Mar2022    thebearmay    add listFiles command
- *    23Mar2022    thebearmay    add a temporary fileContent attribute, copyFile and fileTrimTop commands 
- *    23Mar2022    thebearmay	 fix hub security bug
+ *    23Mar2022    thebearmay    add a temporary fileContent attribute, copyFile and fileTrimTop commands
+ *    25Mar2022    thebearmay    add callback option for non-child application usage (input( "x", "capability.*"...))
 */
 
 
@@ -30,7 +30,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.1"}
+static String version() {return "0.2.0"}
 
 metadata {
     definition (
@@ -98,17 +98,7 @@ def updated(){
     }
 }
 
-Boolean fileTrimTop(fname, trimOffset){
-   fileData = readFile(fname)
-   return writeFile(fname, fileData.substring(trimOffset.toInteger(),fileData.length()-1))
-}
-
-Boolean copyFile(fnameIn, fnameOut){
-    fileData = readFile(fnameIn)
-    return writeFile(fnameOut, fileData.substring(0,fileData.length()-1))
-}
-
-
+@SuppressWarnings('unused')
 HashMap securityLogin(){
     def result = false
     try{
@@ -147,6 +137,34 @@ HashMap securityLogin(){
 	return [result: result, cookie: cookie]
 }
 
+@SuppressWarnings('unused')
+def fileTrimTop(fname, trimOffset, Closure closure) {
+    closure(fileTrimTop(fname, trimOffset))
+}
+
+@SuppressWarnings('unused')
+Boolean fileTrimTop(fname, trimOffset){
+   fileData = readFile(fname)
+   return writeFile(fname, fileData.substring(trimOffset.toInteger(),fileData.length()-1))
+}
+
+@SuppressWarnings('unused')
+def copyFile(fnameIn, fnameOut, Closure closure) {
+    closure(copyFile(fnameIn, fnameOut))
+}
+
+@SuppressWarnings('unused')
+Boolean copyFile(fnameIn, fnameOut){
+    fileData = readFile(fnameIn)
+    return writeFile(fnameOut, fileData.substring(0,fileData.length()-1))
+}
+
+@SuppressWarnings('unused')
+def fileExists(fName, Closure closure) {
+    closure(fileExists(fName))
+}
+
+@SuppressWarnings('unused')
 Boolean fileExists(fName){
 
     uri = "http://${location.hub.localIP}:8080/local/${fName}";
@@ -159,11 +177,10 @@ Boolean fileExists(fName){
         httpGet(params) { resp ->
             if (resp != null){
                 if(logResponses) log.info "File Exist: true"
-                updateAttr("fileExist","true")
+                updateAttr("exist","true")
                 return true;
             } else {
-                if(logResponses) log.info "File Exist: false"
-		updateAttr("fileExist","false")
+                if(logResponses) log.info "File Exist: true"
                 return false
             }
         }
@@ -178,6 +195,12 @@ Boolean fileExists(fName){
 
 }
 
+@SuppressWarnings('unused')
+def readFile(fName, Closure closure) {
+    closure(readFile(fName))
+}
+
+@SuppressWarnings('unused')
 String readFile(fName){
     if(security) cookie = securityLogin().cookie
     uri = "http://${location.hub.localIP}:8080/local/${fName}"
@@ -220,13 +243,12 @@ String readFile(fName){
     }
 }
 
-void removeAttr(){
-//    if(location.hub.firmwareVersionString >= "2.2.8.141")
-//        device.deleteCurrentState("fileContent")
-//    else
-        updateAttr("fileContent", "expired")
+@SuppressWarnings('unused')
+def appendFile(fName,newData,Closure closure) {
+    closure(appendFile(fName,newData))
 }
 
+@SuppressWarnings('unused')
 Boolean appendFile(fName,newData){
     try {
         fileData = (String) readFile(fName)
@@ -246,6 +268,12 @@ Boolean appendFile(fName,newData){
     }
 }
 
+@SuppressWarnings('unused')
+def writeFile(String fName, String fData, Closure closure) {
+    closure(writeFile(fName, fData))
+}
+
+@SuppressWarnings('unused')
 Boolean writeFile(String fName, String fData) {
     now = new Date()
     String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
@@ -284,6 +312,12 @@ Content-Disposition: form-data; name="folder"
 	return false
 }
 
+@SuppressWarnings('unused')
+def xferFile(fileIn, fileOut, Closure closure) {
+    closure(xferFile(fileIn, fileOut))
+}
+
+@SuppressWarnings('unused')
 Boolean xferFile(fileIn, fileOut) {
     fileBuffer = (String) readExtFile(fileIn)
     retStat = writeFile(fileOut, fileBuffer)
@@ -291,6 +325,12 @@ Boolean xferFile(fileIn, fileOut) {
     return retStat
 }
 
+@SuppressWarnings('unused')
+def readExtFile(fName, Closure closure) {
+    closure(readExtFile(fName))
+}
+
+@SuppressWarnings('unused')
 String readExtFile(fName){
     def params = [
         uri: fName,
@@ -320,6 +360,11 @@ String readExtFile(fName){
         log.error "Read Ext Error: ${exception.message}"
         return null;
     }
+}
+
+@SuppressWarnings('unused')
+def listFiles(Closure closure) {
+    closure(listFiles())
 }
 
 @SuppressWarnings('unused')
@@ -355,6 +400,13 @@ List<String> listFiles(){
     }
 }
 
+@SuppressWarnings('unused')
+void removeAttr(){
+    if(location.hub.firmwareVersionString >= "2.2.8.141")
+        device.deleteCurrentState("fileContent")
+    else
+        updateAttr("fileContent", "expired")
+}
 
 @SuppressWarnings('unused')
 void logsOff(){

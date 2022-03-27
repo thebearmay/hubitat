@@ -15,11 +15,12 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    22Mar2022    thebearmay    original code  
+ *    27Mar2022    thebearmay    allow scraping of Hub UI with Security
 */
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -37,6 +38,7 @@ metadata {
         attribute "lastURL", "STRING"
         attribute "lastSearch", "STRING"
         attribute "offsets", "STRING"
+        attribute "lastRun", "STRING"
  
         command "scrape",[[name:"inputURL*", type:"STRING", description:"Input URL"],
                           [name:"searchStr*", type:"STRING", description:"String to look for"],
@@ -50,6 +52,12 @@ metadata {
 preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?")
     input("pollRate", "number", title: "Poll Rate in minutes (0 = No Polling)", defaultValue:0)
+    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
+    if (security) { 
+        input("username", "string", title: "Hub Security Username", required: false)
+        input("password", "password", title: "Hub Security Password", required: false)
+    }
+    
  
 }
 
@@ -90,6 +98,7 @@ void scrape (url, searchStr, beg=0, end=1){
     dataRet = readExtFile(url).toString()
     if(debugEnabled) "${dataRet.length()} characters returned"
     found = dataRet.indexOf(searchStr)
+    updateAttr("lastRun", new Date().toString())
     if(found == -1) {
         updateAttr("successful","false")
         updateAttr("textReturned","null")
@@ -110,10 +119,27 @@ void scrape (url, searchStr, beg=0, end=1){
 }
 
 String readExtFile(fName){
+     String cookie=(String)null
+    if(security) {
+        httpPost(
+            [
+                uri: "http://${location.hub.localIP}:8080",
+                path: "/login",
+                query: [ loginRedirect: "/" ],
+                body: [
+                    username: username,
+                    password: password,
+                    submit: "Login"
+                ]
+            ]
+        ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
+    }
+   
     def params = [
         uri: fName,
         contentType: "text/html",
-        textParser: true
+        textParser: true,
+        headers: ["Cookie": cookie]                   
     ]
 
     try {

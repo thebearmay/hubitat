@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.6.24",
+  "version": "2.6.25",
   "minimumHEVersion": "2.2.5.130",
-  "dateReleased": "2022-03-23",
-  "releaseNotes": "2.6.24- code cleanup, increase 1st poll delay to 45 seconds\n2.6.23 - add zwaveStatus\n2.6.22 - add zigbeeStatus\n2.6.20 - lastupdated was out of sync\n2.6.19 - Limit attribute size to 1024\n2.6.17 - add currentMode and currentHsmMode attributes\n2.6.16 - Allow reboot without Hub Monitor parameter\n2.6.15 - Add option for reboot request from Hub Monitor if IP = 169.254.x.x\n2.6.14 - zigbee channel bug\n2.6.12/13 - Add option to suppress data attribute if zigbee null, HE API changes\n2.6.11 - add option to pull additional subnets information\n2.6.10 - remove the hub update response attribute - release notes push it past the 1024 size limit\n2.6.9. - add ntpServer\n2.6.8 - add hubUpdateVersion and hubUpdateResp\n2.6.6/2.6.7 - add hubUpdateStatus to alert when FW update is available\n2.6.5 - force a DB read for html builds\n2.6.4 - suppress temperature event if negative\n2.6.3 - move localIP into the poll cycle\n2.6.2 - simplify unit retrieval\n2.6.1 - report correct ZWave SDK\n2.6.0 - adds Hub Information Aggregation integration",
+  "dateReleased": "2022-03-27",
+  "releaseNotes": "2.6.25 - fix cookie for zwaveStatus\n2.6.24- code cleanup, increase 1st poll delay to 45 seconds\n2.6.23 - add zwaveStatus\n2.6.22 - add zigbeeStatus\n2.6.20 - lastupdated was out of sync\n2.6.19 - Limit attribute size to 1024\n2.6.17 - add currentMode and currentHsmMode attributes\n2.6.16 - Allow reboot without Hub Monitor parameter\n2.6.15 - Add option for reboot request from Hub Monitor if IP = 169.254.x.x\n2.6.14 - zigbee channel bug\n2.6.12/13 - Add option to suppress data attribute if zigbee null, HE API changes\n2.6.11 - add option to pull additional subnets information\n2.6.10 - remove the hub update response attribute - release notes push it past the 1024 size limit\n2.6.9. - add ntpServer\n2.6.8 - add hubUpdateVersion and hubUpdateResp\n2.6.6/2.6.7 - add hubUpdateStatus to alert when FW update is available\n2.6.5 - force a DB read for html builds\n2.6.4 - suppress temperature event if negative\n2.6.3 - move localIP into the poll cycle\n2.6.2 - simplify unit retrieval\n2.6.1 - report correct ZWave SDK\n2.6.0 - adds Hub Information Aggregation integration",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

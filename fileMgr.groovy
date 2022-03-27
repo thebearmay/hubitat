@@ -18,6 +18,7 @@
  *    22Mar2022    thebearmay    add listFiles command
  *    23Mar2022    thebearmay    add a temporary fileContent attribute, copyFile and fileTrimTop commands
  *    25Mar2022    thebearmay    add callback option for non-child application usage (input( "x", "capability.*"...))
+ *    27Mar2022    thebearmay    allow hub w/security to be external file source
 */
 
 
@@ -30,7 +31,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.2.0"}
+static String version() {return "0.2.1"}
 
 metadata {
     definition (
@@ -332,10 +333,15 @@ def readExtFile(fName, Closure closure) {
 
 @SuppressWarnings('unused')
 String readExtFile(fName){
+    if(security) cookie = securityLogin().cookie    
     def params = [
         uri: fName,
         contentType: "text/html",
-        textParser: true
+        textParser: true,
+        headers: [
+				"Cookie": cookie
+            ]
+        
     ]
 
     try {

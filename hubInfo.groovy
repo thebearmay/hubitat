@@ -92,12 +92,13 @@
  *    2022-03-18  thebearmay     add zwaveStatus
  *    2022-03-23  thebearmay     code cleanup
  *    2022-03-27  thebearmay     fix zwaveStatus with hub security
+ *    2022-03-28  thebearmay     add a try..catch around the zwaveStatus
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.25"}
+static String version() {return "2.6.26"}
 
 metadata {
     definition (
@@ -927,29 +928,30 @@ void restartCheck() {
 
 String zwaveScrape(){
     String cookie=(String)null
-    if(security) {
-        httpPost(
-            [
-                uri: "http://${location.hub.localIP}:8080",
-                path: "/login",
-                query: [ loginRedirect: "/" ],
-                body: [
-                    username: username,
-                    password: password,
-                    submit: "Login"
+    try{
+        if(security) {
+            httpPost(
+                [
+                    uri: "http://${location.hub.localIP}:8080",
+                    path: "/login",
+                    query: [ loginRedirect: "/" ],
+                    body: [
+                        username: username,
+                        password: password,
+                        submit: "Login"
+                    ]
                 ]
-            ]
-        ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
-    }
-    httpGet(
-        [
+            ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
+        }
+        httpGet(
+            [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/zwaveInfo",
                 headers: ["Cookie": cookie]           
-        ])
+            ])
 
     //httpGet("http://${location.hub.localIP}:8080/hub/zwaveInfo") 
-    { res ->
+        { res ->
           dataC = res.data.toString().substring(196)
           if(dataC.indexOf("const zwaveStatus = 'false'")>-1)
               zwaveStatus="enabled"
@@ -958,6 +960,9 @@ String zwaveScrape(){
           else
               zwaveStatus="unknown"
           return zwaveStatus
+        }
+    }catch (ex) {
+        log.error ex
     }
 } 
 

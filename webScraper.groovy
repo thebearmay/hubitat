@@ -104,14 +104,14 @@ void scrape (url, searchStr, beg=0, end=1){
         updateAttr("textReturned","null")
         if(pollRate > 0) 
             runIn(pollRate*60, "scrape")
-        if(debugEnabled) log.deubg "Not Found"
+        if(debugEnabled) log.debug "Not Found"
         return
     }
     updateAttr("successful", "true")
     int begin = found+beg
     int ending = found+end
     updateAttr("textReturned",dataRet.substring(begin,ending))
-    if(debugEnabled) "Found at $found"
+    if(debugEnabled) log.debug "Found at $found"
     if(pollRate > 0) 
         runIn(pollRate*60, "scrape")
     return

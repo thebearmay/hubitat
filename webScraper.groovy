@@ -16,11 +16,12 @@
  *    ----         ---           ----
  *    22Mar2022    thebearmay    original code  
  *    27Mar2022    thebearmay    allow scraping of Hub UI with Security
+ *    31Mar2022    thebearmay    option to show raw source
 */
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.2"}
+static String version() {return "0.0.3"}
 
 metadata {
     definition (
@@ -52,13 +53,12 @@ metadata {
 preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?")
     input("pollRate", "number", title: "Poll Rate in minutes (0 = No Polling)", defaultValue:0)
+    input("showSrc", "bool", title: "Show Raw Source", defaultValue: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
         input("password", "password", title: "Hub Security Password", required: false)
     }
-    
- 
 }
 
 @SuppressWarnings('unused')
@@ -89,6 +89,13 @@ void scrape() {
 
 void scrape (url, searchStr, beg=0, end=1){
     if(debugEnabled) log.debug "$url, /$searchStr/, $beg, $end"
+    if(url == null){
+        url = device.currentValue("lastURL",true)
+        searchStr = device.currentValue("lastSearch",true)
+        List offset = device.currentValue("offsets", true).evaluate()
+        beg = offset(1)
+        end = offset(2)
+    }
     updateAttr("lastURL", url)
     updateAttr("lastSearch",searchStr)
     ofList = [beg, end]
@@ -97,6 +104,11 @@ void scrape (url, searchStr, beg=0, end=1){
     updateAttr("textReturned","null")
     dataRet = readExtFile(url).toString()
     if(debugEnabled) "${dataRet.length()} characters returned"
+    if(showSrc) {
+        writeFile("scrapeWork.txt","$dataRet")
+        updateAttr("temporary", "<script> window.open('http://${location.hub.localIP}:8080/local/scrapeWork.txt')</script>")
+        runIn(5,"wipeFile")
+    }
     found = dataRet.indexOf(searchStr)
     updateAttr("lastRun", new Date().toString())
     if(found == -1) {
@@ -104,14 +116,14 @@ void scrape (url, searchStr, beg=0, end=1){
         updateAttr("textReturned","null")
         if(pollRate > 0) 
             runIn(pollRate*60, "scrape")
-        if(debugEnabled) log.debug "Not Found"
+        if(debugEnabled) log.deubg "Not Found"
         return
     }
     updateAttr("successful", "true")
     int begin = found+beg
     int ending = found+end
     updateAttr("textReturned",dataRet.substring(begin,ending))
-    if(debugEnabled) log.debug "Found at $found"
+    if(debugEnabled) "Found at $found"
     if(pollRate > 0) 
         runIn(pollRate*60, "scrape")
     return
@@ -168,6 +180,50 @@ String readExtFile(fName){
     }
 }
 
+@SuppressWarnings('unused')
+Boolean writeFile(String fName, String fData) {
+    now = new Date()
+    String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
+    
+try {
+		def params = [
+			uri: "http://${location.hub.localIP}:8080",
+			path: '/hub/fileManager/upload',
+			query: [
+				'folder': '/'
+			],
+			headers: [
+				'Content-Type': "multipart/form-data; boundary=$encodedString"
+			],
+            body: """--${encodedString}
+Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
+Content-Type: text/plain
+
+${fData}
+
+--${encodedString}
+Content-Disposition: form-data; name="folder"
+
+
+--${encodedString}--""",
+			timeout: 300,
+			ignoreSSLIssues: true
+		]
+		httpPost(params) { resp ->
+		}
+		return true
+	}
+	catch (e) {
+		log.error "Error writing file $fName: ${e}"
+	}
+	return false
+}
+              
+@SuppressWarnings('unused')
+void wipeFile(){              
+        writeFile("scrapeWork.txt","")
+}
+              
 @SuppressWarnings('unused')
 void logsOff(){
      device.updateSetting("debugEnabled",[value:"false",type:"bool"])

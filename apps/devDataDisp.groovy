@@ -256,6 +256,13 @@ def intialize() {
 
 }
 
+void uninstalled(){
+    if(getChildDevice("ddd${app.id}-01")){
+        unsubscribe()
+        deleteChildDevice("ddd${app.id}-01")
+    }          
+}
+
 HashMap securityLogin(){
     def result = false
     try{

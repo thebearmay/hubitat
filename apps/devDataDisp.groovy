@@ -18,10 +18,11 @@
  *    11Mar2022   thebearmay    Add State Data option
  *                              Hub WriteFile option for JSON
  *    12Mar2022   thebearmay    Make ID the key for JSON
+ *    01Apr2022   thebearmay    add optional tile device
  */
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.2.2'  }
+static String version()	{  return '1.3.0'  }
 
 
 definition (
@@ -119,6 +120,7 @@ def buildStateList() {
 def deviceData(){
     dynamicPage (name: "deviceData", title: "", install: false, uninstall: false) {
 	  section("Device Data"){
+          qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
           qryDevice.each{ x->
               paragraph "<p style='font-weight:bold;text-decoration:underline'>$x.displayName</p>"
               varOut = ""
@@ -131,15 +133,54 @@ def deviceData(){
                  }
               }
               paragraph varOut
-          }
+            }
+            input "createChild", "bool", title: "Create a child device for dashboard use", required: false, submitOnChange: true
+            if (createChild) {
+                if(getChildDevice("ddd${app.id}-01"))
+                     return
+                childDev = createChildDev()
+                refreshDevice()
+                subscribe(qryDevice, "refreshDevice", [filterEvents:true])
+            } else if(getChildDevice("ddd${app.id}-01")){
+                unsubscribe()
+                deleteChildDevice("ddd${app.id}-01")
+            }          
        }
     }
+}
+
+def refreshDevice(evt=null){
+    qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
+    html = "<div id='devDataDisp'>"
+    qryDevice.each{ x->
+        varOut= "<p style='font-weight:bold;text-decoration:underline'>$x.displayName</p>"
+        varList.each {
+            if(x.properties.data["$it"]) varOut+= "<p>$it: ${x.properties.data["$it"]}</p>"
+        }
+        stList.each { s->
+            x.properties.currentStates.each {
+                if(it.name == s) varOut+= "<p>$s: ${it.value}</p>"
+            }
+        }
+        html+=varOut
+    }
+    html+="</div>"
+    chd = getChildDevice("ddd${app.id}-01")
+    chd.sendEvent(name:"html",value:html)
+}
+
+def createChildDev(){
+    if(getChildDevice("ddd${app.id}-01"))
+        return
+    cd = addChildDevice("thebearmay", "Generic HTML Device", "ddd${app.id}-01", [name:"${app.label} Tile Device"])
+    return cd
 }
 
 def jsonDown(){
     dynamicPage (name: "jsonDown", title: "", install: false, uninstall: false) {
 	  section("<b><u>JSON Data</u></b>"){
         jData = "["
+        qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
         qryDevice.each{ x->
  //           jData += "{\"$x.displayName\": {"
             jData +=  "{\"$x.id\": {\"displayName\": \"$x.displayName\","
@@ -179,6 +220,7 @@ def csvDown(){
     dynamicPage (name: "csvDown", title: "", install: false, uninstall: false) {
       section("CSV Data"){
         jData=""
+        qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
         qryDevice.each{ x->
             jData += "\"$x.id\",\"$x.displayName\"\n"
             varList.each {

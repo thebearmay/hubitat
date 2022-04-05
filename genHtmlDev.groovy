@@ -33,6 +33,12 @@ metadata {
 		attribute "html2", "string"
 		attribute "html3", "string"
 		attribute "html4", "string"
+		attribute "html5", "string"
+		attribute "html6", "string"
+		attribute "html7", "string"
+		attribute "html8", "string"
+		attribute "html9", "string"
+		attribute "html10", "string"	    
     }   
 }
 

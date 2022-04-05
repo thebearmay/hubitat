@@ -19,10 +19,11 @@
  *                              Hub WriteFile option for JSON
  *    12Mar2022   thebearmay    Make ID the key for JSON
  *    01Apr2022   thebearmay    add optional tile device
+ *    05Apr2022   thebearmay    split html > 1024
  */
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.3.0'  }
+static String version()	{  return '1.3.1'  }
 
 
 definition (
@@ -150,8 +151,10 @@ def deviceData(){
 }
 
 def refreshDevice(evt=null){
+	inx = 0
+	html = []
     qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
-    html = "<div id='devDataDisp'>"
+    html[inx] = "<div id='devDataDisp'>"
     qryDevice.each{ x->
         varOut= "<p style='font-weight:bold;text-decoration:underline'>$x.displayName</p>"
         varList.each {
@@ -162,11 +165,23 @@ def refreshDevice(evt=null){
                 if(it.name == s) varOut+= "<p>$s: ${it.value}</p>"
             }
         }
-        html+=varOut
+		if(varOut.length() + html[inx].length() + 6 > 1024){
+			html[inx]+="</div>"
+			inx++
+			html[inx] = "<div id='devDataDisp'>"
+		}
+		html[inx]+=varOut
     }
-    html+="</div>"
-    chd = getChildDevice("ddd${app.id}-01")
-    chd.sendEvent(name:"html",value:html)
+    html[inx]+="</div>"
+	
+	chd = getChildDevice("ddd${app.id}-01")
+	chd.sendEvent(name:"html",value:html[0].toString())
+	if(inx > 0) {
+		for (int i = 1;i <= inx; i++){
+			chd.sendEvent(name:"html$i+1",value:html[i].toString())
+		}
+	}
+		
 }
 
 def createChildDev(){

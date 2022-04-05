@@ -15,9 +15,10 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    2021-08-03  thebearmay	 Original version 0.0.1
+ *    2022-04-05  thebearmay     add additional html attributes
  */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 metadata {
     definition (
@@ -29,7 +30,9 @@ metadata {
         capability "Actuator"
 		
 		attribute "html", "string"
-
+		attribute "html2", "string"
+		attribute "html3", "string"
+		attribute "html4", "string"
     }   
 }
 

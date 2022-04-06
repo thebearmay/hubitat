@@ -32,6 +32,7 @@
 *    2021-11-20  thebearmay    Add option to only display time
 *    2021-11-22  thebearmay    make date time format a selectable option
 *    2021-12-07  thebearmay    add "none" as a date time format
+*    2022-04-06  thebearmay    fix max message state coming back as string
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
@@ -109,18 +110,18 @@ metadata {
 			}
 
 	// V2.0.3 When new msgLimit less than prior(state) msgLimit adjust message and state values	
-		if (state.lastLimit>settings.msgLimit)
+		if (state.lastLimit.toInteger()>settings.msgLimit.toInteger())
 			{
 			wkTile=device.currentValue("last5")
-			msgFilled=state.msgCount
+			msgFilled=state.msgCount.toInteger()
 			if (debugEnable) log.debug "Shinking tile count lastLimit ${state.lastLimit} newLimit ${settings.msgLimit} msgCount ${msgFilled}"
 			int i = wkTile.lastIndexOf('<br />');
-			while (i != -1 && msgFilled > settings.msgLimit)
+			while (i != -1 && msgFilled > settings.msgLimit.toInteger())
 				{
 				wkTile = wkTile.substring(0, i) + '</span>';
 				msgFilled--
 				i = wkTile.lastIndexOf('<br />');
-				if (debugEnable) log.debug "looping on shink msgCount ${msgFilled}"
+				if (debugEnable) log.debug "looping on shrink msgCount ${msgFilled}"
 				}
 			state.msgCount=msgFilled
 			sendEvent(name:"last5", value:wkTile)
@@ -161,7 +162,7 @@ void deviceNotification(notification){
     }
 
 	//	insert new message at beginning	of last5 string
-		msgFilled = state.msgCount
+		msgFilled = state.msgCount.toInteger()
 		if (msgFilled>0)
 			wkTile=device.currentValue("last5").replace('<span class="last5">','<span class="last5">' + notification + '<br />')
 		else
@@ -169,7 +170,7 @@ void deviceNotification(notification){
 
 	//	when msg count exceeds limit, purge last message
 		if (debugEnable) log.debug "deviceNotification2 msgFilled: ${msgFilled} msgLimit: ${settings.msgLimit}" 
-		if (msgFilled < settings.msgLimit)
+		if (msgFilled < settings.msgLimit.toInteger())
 			msgFilled++
 		else
 			{

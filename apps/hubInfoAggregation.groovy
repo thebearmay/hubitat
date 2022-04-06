@@ -217,7 +217,7 @@ def refreshDevice(evt = null){
     String htmlStr = buildTable()
     if(htmlStr.size() > 1024){
         writeFile("hia${app.id}.html",htmlStr)
-        htmlStr="iframe<src='http:${location.hub.localIP}:8080/local/hia${app.id}.html'></iframe>"
+        htmlStr="<iframe<src='http:${location.hub.localIP}:8080/local/hia${app.id}.html'></iframe>"
     //if(htmlStr.size() > 1024) htmlStr="<b>Attribute Size Exceeded - ${htmlStr.size()} Characters</b>"
     }
     if(createChild){

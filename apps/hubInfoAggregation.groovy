@@ -15,9 +15,10 @@
  *    2021-11-02	thebearmay    Add hubUpdateStatus check
  *    2021-12-07        thebearmay    getMacAddress() retired from API
  *    2022-03-23        thebearmay    remove auth for HIA-HI
+ *    2022-04-06	thebearmay    allow attribute > 1024 using local file space
  */
 
-static String version()	{  return '1.0.3'  }
+static String version()	{  return '1.0.4'  }
 
 
 definition (
@@ -93,7 +94,15 @@ def mainPage(){
                         paragraph "Invalid Device Selected"
                 }
 		    }
+            section("Change Application Name", hideable: true, hidden: true){
+               input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
+               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+            }  
 	    } else {
+            section("Change Application Name", hideable: true, hidden: true){
+               input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
+               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+            }  
 		    section("") {
 			    paragraph title: "Click Done", "Please click Done to install app before continuing"
 		    }
@@ -195,7 +204,7 @@ String buildTable() {
 }
 
 def addDevice() {
-    if(!this.getChildDevice("hiad001"))
+    if(!this.getChildDevice("hia${app.id}"))
         addChildDevice("thebearmay","Hub Information Aggregation Device","hiad001")
 }
 
@@ -205,10 +214,13 @@ def removeDevice(){
 }
 
 def refreshDevice(evt = null){
-    String htmlStr = buildTable()
-    if(htmlStr.size() > 1024) htmlStr="<b>Attribute Size Exceeded - ${htmlStr.size()} Characters</b>"
+    String htmlStr = buildTable(){
+        writeFile("hia${app.id}.html",htmlStr)
+        htmlStr="iframe<src='http:${location.hub.localIP}:8080/local/hia${app.id}.html'></iframe>"
+    //if(htmlStr.size() > 1024) htmlStr="<b>Attribute Size Exceeded - ${htmlStr.size()} Characters</b>"
+    }
     if(createChild){
-        dev = getChildDevice("hiad001")
+        dev = getChildDevice("hia${app.id}")
         dev.sendEvent(name:"html",value:htmlStr)
     }
     if(overwrite){
@@ -252,6 +264,45 @@ void sendNotification(notifyStr){
     notifyDevice.each { 
       it.deviceNotification(notifyStr)  
     }   
+}
+
+@SuppressWarnings('unused')
+Boolean writeFile(String fName, String fData) {
+    now = new Date()
+    String encodedString = "thebearmay$now".bytes.encodeBase64().toString(); 
+    
+try {
+		def params = [
+			uri: 'http://127.0.0.1:8080',
+			path: '/hub/fileManager/upload',
+			query: [
+				'folder': '/'
+			],
+			headers: [
+				'Content-Type': "multipart/form-data; boundary=$encodedString;text/html; charset=utf-8"
+			],
+            body: """--${encodedString}
+Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
+Content-Type: text/plain
+
+${fData}
+
+--${encodedString}
+Content-Disposition: form-data; name="folder"
+
+
+--${encodedString}--""",
+			timeout: 300,
+			ignoreSSLIssues: true
+		]
+		httpPost(params) { resp ->
+		}
+		return true
+	}
+	catch (e) {
+		log.error "Error writing file $fName: ${e}"
+	}
+	return false
 }
 
 def appButtonHandler(btn) {

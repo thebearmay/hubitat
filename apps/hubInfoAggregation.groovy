@@ -15,10 +15,9 @@
  *    2021-11-02	thebearmay    Add hubUpdateStatus check
  *    2021-12-07        thebearmay    getMacAddress() retired from API
  *    2022-03-23        thebearmay    remove auth for HIA-HI
- *    2022-04-06	thebearmay    allow attribute > 1024 using local file space
  */
 
-static String version()	{  return '1.0.4'  }
+static String version()	{  return '1.0.3'  }
 
 
 definition (
@@ -217,7 +216,7 @@ def refreshDevice(evt = null){
     String htmlStr = buildTable()
     if(htmlStr.size() > 1024){
         writeFile("hia${app.id}.html",htmlStr)
-        htmlStr="<iframe<src='http:${location.hub.localIP}:8080/local/hia${app.id}.html'></iframe>"
+        htmlStr="<iframe src='http://${location.hub.localIP}:8080/local/hia${app.id}.html' style='width:100%;height:100%'></iframe>"
     //if(htmlStr.size() > 1024) htmlStr="<b>Attribute Size Exceeded - ${htmlStr.size()} Characters</b>"
     }
     if(createChild){

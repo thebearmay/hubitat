@@ -98,7 +98,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.27"}
+static String version() {return "2.6.28"}
 
 metadata {
     definition (

@@ -93,12 +93,13 @@
  *    2022-03-23  thebearmay     code cleanup
  *    2022-03-27  thebearmay     fix zwaveStatus with hub security
  *    2022-03-28  thebearmay     add a try..catch around the zwaveStatus
+ *    2022-04-06  thebearmay     add security login for update check
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.26"}
+static String version() {return "2.6.27"}
 
 metadata {
     definition (

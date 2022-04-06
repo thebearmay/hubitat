@@ -93,13 +93,12 @@
  *    2022-03-23  thebearmay     code cleanup
  *    2022-03-27  thebearmay     fix zwaveStatus with hub security
  *    2022-03-28  thebearmay     add a try..catch around the zwaveStatus
- *    2022-04-06  thebearmay     add security login for update check
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.27"}
+static String version() {return "2.6.26"}
 
 metadata {
     definition (
@@ -479,23 +478,10 @@ boolean isCompatible(Integer minLevel) { //check to see if the hub version meets
 }
 
 void getPollValues(){
-    // start - Modified from dman2306 Rebooter app
+
     String cookie=(String)null
-    if(security) {
-        httpPost(
-            [
-                uri: "http://${location.hub.localIP}:8080",
-                path: "/login",
-                query: [ loginRedirect: "/" ],
-                body: [
-                    username: username,
-                    password: password,
-                    submit: "Login"
-                ]
-            ]
-        ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
-    }
-    // End - Modified from dman2306 Rebooter app
+    if(security) cookie = hubSecurity()
+
     // repoll zigbee channel if invalid
 	
     if (device.currentValue("zigbeeChannel") == "NA") { 
@@ -930,20 +916,7 @@ void restartCheck() {
 String zwaveScrape(){
     String cookie=(String)null
     try{
-        if(security) {
-            httpPost(
-                [
-                    uri: "http://${location.hub.localIP}:8080",
-                    path: "/login",
-                    query: [ loginRedirect: "/" ],
-                    body: [
-                        username: username,
-                        password: password,
-                        submit: "Login"
-                    ]
-                ]
-            ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
-        }
+		if(security) cookie = hubSecurity()
         httpGet(
             [
                 uri    : "http://${location.hub.localIP}:8080",
@@ -969,6 +942,7 @@ String zwaveScrape(){
 
 @SuppressWarnings('unused')
 void updateCheck(){
+	if(security) cookie = hubSecurity()
     if(fwUpdatePollRate == 0) {
         unschedule("updateCheck")
         return
@@ -976,7 +950,10 @@ void updateCheck(){
     params = [
             uri: "http://${location.hub.localIP}:8080",
             path:"/hub/cloud/checkForUpdate",
-            timeout: 10
+            timeout: 10,
+			headers:[
+				"Cookie": cookie
+			]
         ]
    asynchttpGet("updChkCallback", params)
    runIn(fwUpdatePollRate,"updateCheck")
@@ -1015,20 +992,7 @@ void reboot() {
     log.info "Hub Reboot requested"
     // start - Modified from dman2306 Rebooter app
     String cookie=(String)null
-    if(security) {
-        httpPost(
-            [
-                uri: "http://${location.hub.localIP}:8080",
-                path: "/login",
-                query: [ loginRedirect: "/" ],
-                body: [
-                    username: username,
-                    password: password,
-                    submit: "Login"
-                ]
-            ]
-        ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
-    }
+    if(security) cookie = hubSecurity()
 	httpPost(
 		[
 			uri: "http://${location.hub.localIP}:8080",
@@ -1039,6 +1003,25 @@ void reboot() {
 		]
 	) {		resp ->	} 
     // end - Modified from dman2306 Rebooter app
+}
+
+@SuppressWarnings('unused')
+String hubSecurity(){
+	httpPost(
+		[
+		uri: "http://${location.hub.localIP}:8080",
+		path: "/login",
+		query: [ loginRedirect: "/" ],
+		body: [
+			username: username,
+			password: password,
+			submit: "Login"
+			]
+		]
+	) { resp -> 
+		cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) 
+		return cookie
+	}
 }
 
 @SuppressWarnings('unused')

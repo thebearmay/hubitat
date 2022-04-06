@@ -20,10 +20,11 @@
  *    12Mar2022   thebearmay    Make ID the key for JSON
  *    01Apr2022   thebearmay    add optional tile device
  *    05Apr2022   thebearmay    split html > 1024
+ *    06Apr2022   thebearmay    allow multiple instances via rename
  */
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.3.1'  }
+static String version()	{  return '1.3.2'  }
 
 
 definition (
@@ -86,6 +87,10 @@ def mainPage(){
                     href "csvDown", title: "Download CSV Data", required: false
                   }
               }
+              section("Change Application Name", hideable: true, hidden: true){
+               input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
+               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+              }   
 		    }
 	    } else {
 		    section("") {

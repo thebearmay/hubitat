@@ -18,7 +18,7 @@
  *    2022-04-06        thebearmay    use local file space for attribute over 1024
  */
 
-static String version()	{  return '1.0.3'  }
+static String version()	{  return '1.0.4'  }
 
 
 definition (

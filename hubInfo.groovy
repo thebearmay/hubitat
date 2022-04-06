@@ -98,7 +98,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.26"}
+static String version() {return "2.6.27"}
 
 metadata {
     definition (
@@ -480,7 +480,8 @@ boolean isCompatible(Integer minLevel) { //check to see if the hub version meets
 void getPollValues(){
 
     String cookie=(String)null
-    if(security) cookie = hubSecurity()
+    if(security) cookie = getCookie()
+    if(debugEnable) log.debug "Cookie = $cookie"
 
     // repoll zigbee channel if invalid
 	
@@ -916,7 +917,7 @@ void restartCheck() {
 String zwaveScrape(){
     String cookie=(String)null
     try{
-		if(security) cookie = hubSecurity()
+		if(security) cookie = getCookie()
         httpGet(
             [
                 uri    : "http://${location.hub.localIP}:8080",
@@ -942,7 +943,7 @@ String zwaveScrape(){
 
 @SuppressWarnings('unused')
 void updateCheck(){
-	if(security) cookie = hubSecurity()
+	if(security) cookie = getCookie()
     if(fwUpdatePollRate == 0) {
         unschedule("updateCheck")
         return
@@ -992,7 +993,7 @@ void reboot() {
     log.info "Hub Reboot requested"
     // start - Modified from dman2306 Rebooter app
     String cookie=(String)null
-    if(security) cookie = hubSecurity()
+    if(security) cookie = getCookie()
 	httpPost(
 		[
 			uri: "http://${location.hub.localIP}:8080",
@@ -1006,7 +1007,7 @@ void reboot() {
 }
 
 @SuppressWarnings('unused')
-String hubSecurity(){
+String getCookie(){
 	httpPost(
 		[
 		uri: "http://${location.hub.localIP}:8080",
@@ -1020,8 +1021,11 @@ String hubSecurity(){
 		]
 	) { resp -> 
 		cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) 
-		return cookie
+        if(debugEnable)
+            log.debug "$cookie"
 	}
+    return "$cookie"
+
 }
 
 @SuppressWarnings('unused')

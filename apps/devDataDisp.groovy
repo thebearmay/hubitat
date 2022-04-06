@@ -176,9 +176,11 @@ def refreshDevice(evt=null){
 	
 	chd = getChildDevice("ddd${app.id}-01")
 	chd.sendEvent(name:"html",value:html[0].toString())
+    if(debugEnabled) log.debug "inx = $inx"
 	if(inx > 0) {
 		for (int i = 1;i <= inx; i++){
-			chd.sendEvent(name:"html$i+1",value:html[i].toString())
+            if(debugEnabled) log.debug "i=$i"
+            chd.sendEvent(name:"html${i+1}",value:html[i].toString())
 		}
 	}
 		

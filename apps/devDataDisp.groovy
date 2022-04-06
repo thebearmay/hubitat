@@ -93,6 +93,10 @@ def mainPage(){
               }   
 		    }
 	    } else {
+              section("Change Application Name", hideable: true, hidden: true){
+               input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
+               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+              }   
 		    section("") {
 			    paragraph title: "Click Done", "Please click Done to install app before continuing"
 		    }

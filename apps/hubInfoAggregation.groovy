@@ -12,12 +12,13 @@
  *     Date              Who           Description
  *    ===========       ===========   =====================================================
  *    2021-09-11        thebearmay    Change alerts to include HIA and require values, Add IP change to the alerts, default alert values, move to release status
- *    2021-11-02	thebearmay    Add hubUpdateStatus check
+ *    2021-11-02	    thebearmay    Add hubUpdateStatus check
  *    2021-12-07        thebearmay    getMacAddress() retired from API
  *    2022-03-23        thebearmay    remove auth for HIA-HI
+ *    2022-04-06        thebearmay    use local file space to allow tiles over 1024
  */
 
-static String version()	{  return '1.0.3'  }
+static String version()	{  return '1.0.5'  }
 
 
 definition (
@@ -204,7 +205,7 @@ String buildTable() {
 
 def addDevice() {
     if(!this.getChildDevice("hia${app.id}"))
-        addChildDevice("thebearmay","Hub Information Aggregation Device","hiad001")
+    addChildDevice("thebearmay","Hub Information Aggregation Device","hia${app.id}")
 }
 
 def removeDevice(){

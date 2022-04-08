@@ -88,7 +88,8 @@ String readFile(fName){
         contentType: "text/html",
         textParser: true,
         headers: [
-				"Cookie": cookie
+				"Cookie": cookie,
+                "Accept": "application/octet-stream"
             ]
     ]
 

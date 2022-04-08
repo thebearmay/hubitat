@@ -19,8 +19,8 @@
  *    23Mar2022    thebearmay    add a temporary fileContent attribute, copyFile and fileTrimTop commands
  *    25Mar2022    thebearmay    add callback option for non-child application usage (input( "x", "capability.*"...))
  *    27Mar2022    thebearmay    allow hub w/security to be external file source
+ *    08Apr2022    thebearmay    ensure correct encoding returned for extended characters
 */
-
 
 import java.net.URLEncoder
 
@@ -31,7 +31,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.2.1"}
+static String version() {return "0.2.2"}
 
 metadata {
     definition (
@@ -51,6 +51,9 @@ metadata {
         command "writeFile",[[name:"fileName", type:"STRING", description:"File Manager Destination Name"],
                              [name:"writeString", type:"STRING", description:"String to Store"]
                             ]
+        command "writeFileAsHex",[[name:"fileName", type:"STRING", description:"File Manager Hex Encoded Destination Name"],
+                             [name:"writeString", type:"STRING", description:"String to Store"]
+                            ]
         command "xferFile",[[name:"inputURL", type:"STRING", description:"Input URL"],
                             [name:"fileName", type:"STRING", description:"File Manager Destination Name"]
                            ]
@@ -61,6 +64,7 @@ metadata {
                               [name:"appendString", type:"STRING", description:"String to Append"]
                              ]
         command "readFile",[[name:"fileName", type:"STRING",description:"Local File to Read"]]
+        command "readFileAsHex",[[name:"fileName", type:"STRING",description:"Local Hex Encoded File to Read"]]
         command "fileExists",[[name:"fileName", type:"STRING",description:"File to Look for"]]
         command "fileTrimTop",[[name:"fileName", type:"STRING",description:"File to Trim"],
                                [name:"offset", type:"NUMBER",description:"Number of Characters to Remove from the Beginning of the File"]
@@ -212,7 +216,8 @@ String readFile(fName){
         contentType: "text/html",
         textParser: true,
         headers: [
-				"Cookie": cookie
+				"Cookie": cookie,
+                "Accept": "application/octet-stream"
             ]
     ]
 
@@ -270,6 +275,33 @@ Boolean appendFile(fName,newData){
 }
 
 @SuppressWarnings('unused')
+def writeFileAsHex(String fName, String fData, Closure closure) {
+    closure(writeFileAsHex(fName, fData))
+}
+
+@SuppressWarnings('unused')
+Boolean writeFileAsHex(String fName, String fData) {
+    byte[] bStr = fData.getBytes()
+    if(debubEnabled) log.debug "$bStr"
+    String hexStr = hubitat.helper.HexUtils.byteArrayToHexString(bStr)
+    return writeFile(fName, hexStr)
+}
+
+@SuppressWarnings('unused')
+def readFileAsHex(fName, Closure closure) {
+    closure(readFileAsHex(fName))
+}
+
+@SuppressWarnings('unused')
+String readFileAsHex(String fName) {
+    String dataRet = readFile(fName)
+    byte[] bStr = hubitat.helper.HexUtils.hexStringToByteArray(dataRet)
+    String retStr = new String(bStr)
+    if(debugEnabled) log.debug "$retStr"
+    return retStr
+}
+
+@SuppressWarnings('unused')
 def writeFile(String fName, String fData, Closure closure) {
     closure(writeFile(fName, fData))
 }
@@ -277,7 +309,7 @@ def writeFile(String fName, String fData, Closure closure) {
 @SuppressWarnings('unused')
 Boolean writeFile(String fName, String fData) {
     now = new Date()
-    String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
+    String encodedString = "thebearmay$now".bytes.encodeBase64().toString(); 
     
 try {
 		def params = [
@@ -287,7 +319,7 @@ try {
 				'folder': '/'
 			],
 			headers: [
-				'Content-Type': "multipart/form-data; boundary=$encodedString"
+				'Content-Type': "multipart/form-data; boundary=$encodedString;text/html; charset=utf-8"
 			],
             body: """--${encodedString}
 Content-Disposition: form-data; name="uploadFile"; filename="${fName}"

@@ -48,7 +48,7 @@ preferences {
 
 @SuppressWarnings('unused')
 def installed() {
-    log.trace "${device.displayLabel} v${version} installed()"
+    log.trace "${device.displayName} v${version()} installed()"
     initialize()
 }
 

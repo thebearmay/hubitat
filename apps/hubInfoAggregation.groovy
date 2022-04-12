@@ -16,9 +16,10 @@
  *    2021-12-07        thebearmay    getMacAddress() retired from API
  *    2022-03-23        thebearmay    remove auth for HIA-HI
  *    2022-04-06        thebearmay    use local file space to allow tiles over 1024
+ *    2022-04-12        thebearmay    typo in memory warning
  */
 
-static String version()	{  return '1.0.5'  }
+static String version()	{  return '1.0.6'  }
 
 
 definition (
@@ -242,7 +243,7 @@ def refreshDevice(evt = null){
                 sendNotification(notifyStr)
             }
             if(it.currentValue("freeMemory",true) <= settings["minMem$numHub"]){
-                notifyStr = "HIA Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem",true)}"
+                notifyStr = "HIA Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMemory",true)}"
                 sendNotification(notifyStr)
             }
             if(it.currentValue("localIP",true) != settings["ip$numHub"] && settings["ip$numHub"]) {

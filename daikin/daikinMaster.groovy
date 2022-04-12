@@ -76,6 +76,9 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 }
 
 String getAuth() {
+    if(serverPath == null)
+        device.updateSetting("serverPath",[value:"https://integrator-api.daikinskyport.com",type:"string"])
+    	
     def bodyText = JsonOutput.toJson([email:"$regEmail", integratorToken:"$token"])
     Map requestParams =
 	[

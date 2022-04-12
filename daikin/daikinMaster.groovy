@@ -50,6 +50,7 @@ preferences {
 def installed() {
     log.trace "${device.displayName} v${version()} installed()"
     initialize()
+    createChildDevices()
 }
 
 def initialize(){
@@ -67,7 +68,6 @@ def updated(){
 @SuppressWarnings('unused')
 def configure() {
     if(debugEnabled) log.debug "configure()"
-    createChildDevices()
 
 }
 
@@ -78,8 +78,8 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 String getAuth() {
     if(serverPath == null)
         device.updateSetting("serverPath",[value:"https://integrator-api.daikinskyport.com",type:"string"])
-    	
-    def bodyText = JsonOutput.toJson([email:"$regEmail", integratorToken:"$token"])
+    
+    def bodyText = JsonOutput.toJson([email:regEmail, integratorToken:token])
     Map requestParams =
 	[
         uri:  "$serverPath/v1/token",

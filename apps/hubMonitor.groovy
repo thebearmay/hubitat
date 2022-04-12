@@ -18,9 +18,10 @@
  *    2021-12-27        thebearmay    169.254.x.x reboot option
  *    2021-12-28        thebearmay    bug fix
  *    2022-03-23        thebearmay    remove the second auth requirement to reboot
+ *    2022-04-12        thebearmay    typo in memory warning
  */
 
-static String version()	{  return '1.0.8'  }
+static String version()	{  return '1.0.9'  }
 
 
 definition (
@@ -140,7 +141,7 @@ def refreshDevice(evt = null){
                 sendNotification(notifyStr)
             }
             if(it.currentValue("freeMemory",true)?.toInteger() <= settings["minMem$numHub"]?.toInteger() && it.currentValue("freeMemory",true) != null ){
-                notifyStr = "Hub Monitor Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMem")}"
+                notifyStr = "Hub Monitor Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMemory")}"
                 sendNotification(notifyStr)
             }
             if((it.currentValue("localIP",true) != settings["ip$numHub"] && settings["ip$numHub"]) || (it.currentValue("localIP",true).startsWith("169.254") && settings["ip$numHub"])) {

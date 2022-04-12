@@ -50,7 +50,6 @@ preferences {
 def installed() {
     log.trace "${device.displayLabel} v${version} installed()"
     initialize()
-    createChildDevices()
 }
 
 def initialize(){
@@ -68,6 +67,7 @@ def updated(){
 @SuppressWarnings('unused')
 def configure() {
     if(debugEnabled) log.debug "configure()"
+    createChildDevices()
 
 }
 

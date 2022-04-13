@@ -19,6 +19,8 @@
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+import groovy.transform.Field
 
 @SuppressWarnings('unused')
 static String version() {return "0.0.1"}
@@ -40,8 +42,15 @@ metadata {
 
 preferences {
     input("serverPath", "text", title:"Daikin Server Path:", required: true, submitOnChange:true, defaultValue: "https://integrator-api.daikinskyport.com")
-    input("token", "text", title:"Daikin Integrator Token:", required: true, submitOnChange:true)
+    input("tokenPath", "text", title:"Local File Name for Daikin Integrator Token:", required: true, submitOnChange:true)
+
     input("regEmail", "text", title:"Email registered with Daiken:", required: true, submitOnChange:true)
+    
+    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
+    if (security) { 
+        input("username", "string", title: "Hub Security Username", required: false)
+        input("password", "password", title: "Hub Security Password", required: false)
+    }
 
     input("debugEnabled", "bool", title: "Enable debug logging?")
 }
@@ -50,7 +59,6 @@ preferences {
 def installed() {
     log.trace "${device.displayName} v${version()} installed()"
     initialize()
-    createChildDevices()
 }
 
 def initialize(){
@@ -63,11 +71,16 @@ def updated(){
         log.debug "updated()"
         runIn(1800,logsOff)
     }
+    if(tokenPath) {
+        state.intToken = readFile("$tokenPath")
+        if(debugEnabled) log.debug "token: $state.intToken\n retrieved from $tokenPath"
+    }
 }
 
 @SuppressWarnings('unused')
 def configure() {
     if(debugEnabled) log.debug "configure()"
+    createChildDevices()
 
 }
 
@@ -79,25 +92,30 @@ String getAuth() {
     if(serverPath == null)
         device.updateSetting("serverPath",[value:"https://integrator-api.daikinskyport.com",type:"string"])
     
-    def bodyText = JsonOutput.toJson([email:regEmail, integratorToken:token])
+    if(debugEnabled) log.debug "getAuth $regEmail\n$state.intToken"
+    
+    String bodyText = "{\nemail:\"$regEmail\", \nintegratorToken:\"$state.intToken\"\n}" //JsonOutput.toJson([email:regEmail, integratorToken:state.intToken])
+    
     Map requestParams =
 	[
         uri:  "$serverPath/v1/token",
         requestContentType: 'application/json',
 		contentType: 'application/json',
         headers: [
-            "x-api-key": "$token",
+            "x-api-key": "$state.intToken"
         ],
         body: "$bodyText"
 	]
 
     authKey=""
     if(debugEnabled) log.debug "$requestParams"
+    
     httpPost(requestParams) { resp ->
         jsonData = (HashMap) resp.JSON
         authKey = jsonData.accessToken
     }
-    return authKey                                 
+    return authKey       
+
 }
     
 HashMap getDeviceList(){
@@ -119,7 +137,7 @@ HashMap sendGet(command){
         requestContentType: 'application/json',
 		contentType: 'application/json',
         headers: [
-            "x-api-key": "$token",
+            "x-api-key": "$state.intToken",
             "Authorization" : "Bearer $authToken"
         ]
 	]
@@ -173,11 +191,11 @@ void sendPut(command, bodyMap){
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
-        uri:  "$remoteAPI$command?access_token=$token",
+        uri:  "$remoteAPI$command?access_token=$state.intToken",
         requestContentType: 'application/json',
 		contentType: 'application/json',
         headers: [
-            "x-api-key": "$token",
+            "x-api-key": "$state.intToken",
             "Authorization" : "Bearer $authToken"
         ],
         body: "$bodyText"
@@ -189,6 +207,89 @@ void sendPut(command, bodyMap){
     }
 }
 
+@SuppressWarnings('unused')
+String readFile(fName){
+    if(debugEnabled) log.debug "readFile($fName)"
+    if(security) cookie = securityLogin().cookie
+    uri = "http://${location.hub.localIP}:8080/local/${fName}"
+
+
+    def params = [
+        uri: uri,
+        contentType: "text/html",
+        textParser: true,
+        headers: [
+				"Cookie": cookie,
+                "Accept": "application/octet-stream"
+            ]
+    ]
+
+    try {
+        httpGet(params) { resp ->
+            if(resp!= null) {       
+               int i = 0
+               String delim = ""
+               i = resp.data.read() 
+               while (i != -1){
+                   char c = (char) i
+                   delim+=c
+                   i = resp.data.read() 
+               }
+               if(logResponses) log.info "File Read Data: $delim"
+               if(allowAttrib) {
+                    updateAttr("fileContent", "$delim")
+                    runIn(30,"removeAttr")
+                }
+               return delim
+            }
+            else {
+                log.error "Null Response"
+            }
+        }
+    } catch (exception) {
+        log.error "Read Error: ${exception.message}"
+        return null;
+    }
+}
+
+@SuppressWarnings('unused')
+HashMap securityLogin(){
+    def result = false
+    try{
+        httpPost(
+				[
+					uri: "http://127.0.0.1:8080",
+					path: "/login",
+					query: 
+					[
+						loginRedirect: "/"
+					],
+					body:
+					[
+						username: username,
+						password: password,
+						submit: "Login"
+					],
+					textParser: true,
+					ignoreSSLIssues: true
+				]
+		)
+		{ resp ->
+//			log.debug resp.data?.text
+				if (resp.data?.text?.contains("The login information you supplied was incorrect."))
+					result = false
+				else {
+					cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0)
+					result = true
+		    	}
+		}
+    }catch (e){
+			log.error "Error logging in: ${e}"
+			result = false
+            cookie = null
+    }
+	return [result: result, cookie: cookie]
+}
 
 
 @SuppressWarnings('unused')

@@ -1,7 +1,7 @@
 /*
  * Daikin One Open Master 
  *
- * API document: https://synaccess.com/support/webapi#table-of-contents
+ * API document: https://www.daikinone.com/openapi/documentation/
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -43,6 +43,7 @@ metadata {
 preferences {
     input("serverPath", "text", title:"Daikin Server Path:", required: true, submitOnChange:true, defaultValue: "https://integrator-api.daikinskyport.com")
     input("tokenPath", "text", title:"Local File Name for Daikin Integrator Token:", required: true, submitOnChange:true)
+    input("apiKey", "text", title:"Daikin API Key:", required: true, submitOnChange: true)
 
     input("regEmail", "text", title:"Email registered with Daiken:", required: true, submitOnChange:true)
     
@@ -94,16 +95,17 @@ String getAuth() {
     
     if(debugEnabled) log.debug "getAuth $regEmail\n$state.intToken"
     
-    String bodyText = "{\nemail:\"$regEmail\", \nintegratorToken:\"$state.intToken\"\n}" //JsonOutput.toJson([email:regEmail, integratorToken:state.intToken])
+    String bodyText = JsonOutput.toJson([email:regEmail, integratorToken:state.intToken])//"{\"email\":\"$regEmail\", \"integratorToken\":\"$state.intToken\"}" //
     
     Map requestParams =
 	[
         uri:  "$serverPath/v1/token",
-        requestContentType: 'application/json',
-		contentType: 'application/json',
+//        requestContentType: 'application/json',
+//		contentType: 'application/json',
         headers: [
-            "x-api-key": "$state.intToken"
-        ],
+            'x-api-key': "$apiKey",
+            'Content Type': 'application/json'
+        ], 
         body: "$bodyText"
 	]
 
@@ -137,13 +139,13 @@ HashMap sendGet(command){
         requestContentType: 'application/json',
 		contentType: 'application/json',
         headers: [
-            "x-api-key": "$state.intToken",
+            "x-api-key": "$apiKey",
             "Authorization" : "Bearer $authToken"
         ]
 	]
 
     if(debugEnabled) log.debug "get parameters $requestParams"
-    httpGet(requestParams) { resp ->
+    httpGett(requestParams) { resp ->
         jsonData = (HashMap) resp.JSON
     }
     if(debugEnabled) log.debug "get JSON $jsonData"
@@ -195,7 +197,7 @@ void sendPut(command, bodyMap){
         requestContentType: 'application/json',
 		contentType: 'application/json',
         headers: [
-            "x-api-key": "$state.intToken",
+            "x-api-key": "$apiKey",
             "Authorization" : "Bearer $authToken"
         ],
         body: "$bodyText"

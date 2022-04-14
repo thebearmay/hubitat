@@ -143,7 +143,7 @@ HashMap sendGet(command){
 	]
 
     if(debugEnabled) log.debug "get parameters $requestParams"
-    httpGett(requestParams) { resp ->
+    httpGet(requestParams) { resp ->
         jsonData = (HashMap) resp.JSON
     }
     if(debugEnabled) log.debug "get JSON $jsonData"

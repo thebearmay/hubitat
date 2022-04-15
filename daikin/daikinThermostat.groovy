@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.4"}
 
 metadata {
     definition (
@@ -34,24 +34,21 @@ metadata {
         capability "Configuration"
         capability "Initialize"
         
-        attribute "equipmentStatus","number"
-        attribute "mode","number"
-        attribute "modeLimit","number"
-        attribute "modeEmHeatAvailable","number"
+        attribute "equipmentStatus","number" //???HE - thermostatOperatingState ENUM ["heating", "pending cool", "pending heat", "vent economizer", "idle", "cooling", "fan only"]        
+        attribute "thermostatMode","string" // HE - thermostatMode ENUM ["auto", "off", "heat", "emergency heat", "cool"]
         attribute "fan","number"
-        attribute "fanCirculate","number"
+        attribute "thermostatFanMode","string" // HE- thermostatFanMode ENUM ["on", "circulate", "auto"]
         attribute "fanCirculateSpeed","number"
-        attribute "heatSetpoint","number"
-        attribute "coolSetpoint","number"
+        attribute "heatSetpoint","number"//HE - heatingSetpoint
+        attribute "coolSetpoint","number"//HE - coolingSetpoint
+        attribute "thermostatSetpoint", "number" //HE
         attribute "setpointDelta","number"
         attribute "setpointMinimum","number"
         attribute "setpointMaximum","number"
-        attribute "tempIndoor","number"
-        attribute "humIndoor","number"
+        attribute "temperature","number" //HE - temperature
         attribute "tempOutdoor","number"
-        attribute "humOutdoor","number"
-        attribute "scheduleEnabled","string"
-        attribute "geofencingEnabled","string"
+        attribute "humidity", "number"
+        attribute "humidOutdoor", "number"
         
 //        command "setEquipmentStatus", [[name:"equipStatus", type:"ENUM", constraints:["No Selection","1: cool","2: overcool for dehum","3: heat","4: fan","5: idle","6: waiting to cool","7: waiting to heat","8: aux humidifier","9: aux dehumidifier"]]]
         command "setMode",[[name:"mode", type:"ENUM", constraints:["No Selection","0: off","1: heat","2: cool","3: auto","4: emergency heat"]]]
@@ -62,7 +59,26 @@ metadata {
         command "setHeatPoint", [[name:"heatPoint", type: "number"]]
         command "setCoolPoint", [[name:"coolPoint", type: "number"]]
         command "useThermostatSchedule", [[name:"thermoSchedule", type:"ENUM", constraints:["No Selection","true", "false"]]]
-                                  
+/* HE Commands
+auto()
+cool()
+emergencyHeat()
+fanAuto()
+fanCirculate()
+fanOn()
+heat()
+off()
+setCoolingSetpoint(temperature)
+temperature required (NUMBER) - Cooling setpoint in degrees
+setHeatingSetpoint(temperature)
+temperature required (NUMBER) - Heating setpoint in degrees
+setSchedule(JSON_OBJECT) (Deprecated)
+JSON_OBJECT (JSON_OBJECT) - JSON_OBJECT (Deprecated)
+setThermostatFanMode(fanmode)
+fanmode required (ENUM) - Fan mode to set
+setThermostatMode(thermostatmode)
+thermostatmode required (ENUM) - Thermostat mode to set
+*/
                                   
     }   
 }

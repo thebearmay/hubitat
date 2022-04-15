@@ -1,7 +1,7 @@
 /*
  * Daikin One Open Master 
  *
- *
+ * 
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -66,7 +66,7 @@ def updated(){
         log.debug "updated()"
         runIn(1800,"logsOff")
     } else 
-        unschedule("debugEnabled")
+        unschedule("logsOff")
 
 }
 
@@ -93,7 +93,6 @@ String getAuth() {
     Map requestParams =
 	[
         uri:  "$serverPath/users/auth/login",
-
         headers: [
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -155,15 +154,17 @@ void createChildDevices(){
     HashMap devMap = getDeviceList()
     if(debugEnabled) log.debug "Dev List $devMap"
     //[{"id":"<UUID of the device>","locationId":"<UUID of location>","name":"<name of device>","model":"ONEPLUS","firmwareVersion":"1.4.5","createdDate":1563568617,"hasOwner":true,"hasWrite":true}]
-    devMap.devices.each {
-        if(debugEnabled) "add child device ${it.id}"
+//    devMap.each {
+        it = devMap
+        if(debugEnabled) log.debug "${it.properties}"
+        if(debugEnabled) log.debug "add child device ${it.id}"
         devDetail = getDevDetail("$it.id")        
-        dev = addChildDevice("thebearmay", "Daikin Thermostat", "${it.id}", [name:"$it.name",label:"$it.name",model:"$it.model", firmware:"$it.firmwareVersion", isComponent:true])
-        updateChild("$it.id")
-    }
+        dev = addChildDevice("thebearmay", "Daikin Thermostat", "${it.id}", [name:"$it.name",label:"$it.name",model:"$it.model", firmware:"$it.firmwareVersion", isComponent:false])
+        updateChild("$it.id", "C")
+//    }
 }
 
-void updateChild(id) {
+void updateChild(id, cOrF) {
  /*
 "tempSPMin":10,
 "tempSPMax":32,
@@ -188,39 +189,49 @@ void updateChild(id) {
 “fanCirculate”: 0=off, 1=always on, 2=schedule, manual fan control
 */
     modeStr=["off","heat","cool","auto","emergency heat"]
-    circStr=["off","on","auto"]
-    
+    circStr=["auto","on","circulate"]
+  
     devDetail = getDevDetail("$id")
     dev = getChildDevice("$id")
+    degUnit = "°C"
+    if(cOrF == "F") {
+        devDetail.tempDeltaMin = celsiusToFahrenheit(devDetail.tempDeltaMin.toFloat()).toFloat().round(1)
+        devDetail.tempSPMin = celsiusToFahrenheit(devDetail.tempSPMin.toFloat()).toFloat().round(1)
+        devDetail.hspSched = celsiusToFahrenheit(devDetail.hspSched.toFloat()).toFloat().round(1)
+        devDetail.cspSched = celsiusToFahrenheit(devDetail.cspSched.toFloat()).toFloat().round(1)
+        devDetail.tempSPMax = celsiusToFahrenheit(devDetail.tempSPMax.toFloat()).toFloat().round(1)
+        devDetail.tempIndoor = celsiusToFahrenheit(devDetail.tempIndoor.toFloat()).toFloat().round(1)
+        devDetail.tempOutdoor = celsiusToFahrenheit(devDetail.tempOutdoor.toFloat()).toFloat().round(1)
+        degUnit = "°F"
+    }
     dev.updateAttr("thermostatMode",modeStr[devDetail.mode.toInteger()])
     dev.updateAttr("fan",devDetail.fan)
     dev.updateAttr("thermostatFanMode",circStr[devDetail.fanCirculate.toInteger()])
     dev.updateAttr("fanCirculateSpeed",devDetail.fanCirculateSpeed)
-    dev.updateAttr("setpointDelta",devDetail.tempDeltaMin)
-    dev.updateAttr("setpointMinimum",devDetail.tempSPMin)
-    dev.updateAttr("heatSetPoint",devDetail.hspSched)
-    dev.updateAttr("coolSetPoint",devDetail.cspSched)
-    if(devDetail.mode == 3) 
-        dev.updateAttr("thermostatSetpoint",devDetail.hspSched)
-    else if(devDetail.mode == 4)
-        dev.updateAttr("thermostatSetpoint",devDetail.cspSched)
-    dev.updateAttr("setpointMaximum",devDetail.tempSPMax)
-    dev.updateAttr("temperature",devDetail.tempIndoor)
-    dev.updateAttr("tempOutdoor",devDetail.tempOutdoor)
-    dev.updateAttr("humidity",devDetail.humIndoor)
-    dev.updateAttr("tempOutdoor",devDetail.humOutdoor)    
-
+    dev.updateAttr("setpointDelta",devDetail.tempDeltaMin,degUnit)
+    dev.updateAttr("setpointMinimum",devDetail.tempSPMin,degUnit)
+    dev.updateAttr("heatingSetpoint",devDetail.hspSched,degUnit)
+    dev.updateAttr("coolingSetpoint",devDetail.cspSched,degUnit)
+    if(devDetail.mode == 1) 
+        dev.updateAttr("thermostatSetpoint",devDetail.hspSched,degUnit)
+    else if(devDetail.mode == 2)
+        dev.updateAttr("thermostatSetpoint",devDetail.cspSched,degUnit)
+    dev.updateAttr("setpointMaximum",devDetail.tempSPMax,degUnit)
+    dev.updateAttr("temperature",devDetail.tempIndoor,degUnit)
+    dev.updateAttr("tempOutdoor",devDetail.tempOutdoor,degUnit)
+    dev.updateAttr("humidity",devDetail.humIndoor,"%")
+    dev.updateAttr("tempOutdoor",devDetail.humOutdoor,"%") 
 }
 
 void sendPut(command, bodyMap){
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
-        uri:  "$remoteAPI$command?access_token=$state.intToken",
+        uri:  "$serverPath$command",
         requestContentType: 'application/json',
 		contentType: 'application/json',
         headers: [
-            "x-api-key": "$apiKey",
+            'Accept': 'application/json',
             "Authorization" : "Bearer $authToken"
         ],
         body: "$bodyText"
@@ -232,6 +243,13 @@ void sendPut(command, bodyMap){
     }
 }
 
+@SuppressWarnings('unused')
+void uninstalled(){
+    devlist = getChildDevices()
+    devlist.each{
+       deleteChildDevice(it.deviceNetworkId)
+    }
+}
 
 @SuppressWarnings('unused')
 void logsOff(){

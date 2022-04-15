@@ -1,7 +1,7 @@
 /*
  * Daikin One Open Master 
  *
- * API document: https://www.daikinone.com/openapi/documentation/
+ *
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -23,7 +23,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -36,22 +36,16 @@ metadata {
         capability "Configuration"
         capability "Initialize"
 
+        attribute "locationMap", "string"
 
     }   
 }
 
 preferences {
-    input("serverPath", "text", title:"Daikin Server Path:", required: true, submitOnChange:true, defaultValue: "https://integrator-api.daikinskyport.com")
-    input("tokenPath", "text", title:"Local File Name for Daikin Integrator Token:", required: true, submitOnChange:true)
-    input("apiKey", "text", title:"Daikin API Key:", required: true, submitOnChange: true)
+    input("serverPath", "text", title:"Daikin Server Path:", required: true, submitOnChange:true, defaultValue: "https://api.daikinskyport.com")
 
-    input("regEmail", "text", title:"Email registered with Daiken:", required: true, submitOnChange:true)
-    
-    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
-    if (security) { 
-        input("username", "string", title: "Hub Security Username", required: false)
-        input("password", "password", title: "Hub Security Password", required: false)
-    }
+    input("daiEmail", "text", title:"Email registered with Daiken:", required: true, submitOnChange:true)
+    input("daiPwd", "password", title:"Daikin Password:", required: true, submitOnChange: true)
 
     input("debugEnabled", "bool", title: "Enable debug logging?")
 }
@@ -70,17 +64,16 @@ def initialize(){
 def updated(){
     if(debugEnabled) {
         log.debug "updated()"
-        runIn(1800,logsOff)
-    }
-    if(tokenPath) {
-        state.intToken = readFile("$tokenPath")
-        if(debugEnabled) log.debug "token: $state.intToken\n retrieved from $tokenPath"
-    }
+        runIn(1800,"logsOff")
+    } else 
+        unschedule("debugEnabled")
+
 }
 
 @SuppressWarnings('unused')
 def configure() {
     if(debugEnabled) log.debug "configure()"
+    getLocations()
     createChildDevices()
 
 }
@@ -91,20 +84,19 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 
 String getAuth() {
     if(serverPath == null)
-        device.updateSetting("serverPath",[value:"https://integrator-api.daikinskyport.com",type:"string"])
+        device.updateSetting("serverPath",[value:"https://api.daikinskyport.com",type:"string"])
     
-    if(debugEnabled) log.debug "getAuth $regEmail\n$state.intToken"
+    if(debugEnabled) log.debug "getAuth $daiEmail:$daiPwd"
     
-    String bodyText = JsonOutput.toJson([email:regEmail, integratorToken:state.intToken])//"{\"email\":\"$regEmail\", \"integratorToken\":\"$state.intToken\"}" //
+    String bodyText = JsonOutput.toJson([email:daiEmail, password:daiPwd])
     
     Map requestParams =
 	[
-        uri:  "$serverPath/v1/token",
-//        requestContentType: 'application/json',
-//		contentType: 'application/json',
+        uri:  "$serverPath/users/auth/login",
+
         headers: [
-            'x-api-key': "$apiKey",
-            'Content Type': 'application/json'
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         ], 
         body: "$bodyText"
 	]
@@ -113,7 +105,8 @@ String getAuth() {
     if(debugEnabled) log.debug "$requestParams"
     
     httpPost(requestParams) { resp ->
-        jsonData = (HashMap) resp.JSON
+        if(debugEnabled) log.debug "$resp.properties"
+        jsonData = (HashMap) resp.data
         authKey = jsonData.accessToken
     }
     return authKey       
@@ -121,32 +114,36 @@ String getAuth() {
 }
     
 HashMap getDeviceList(){
-    HashMap devMap = sendGet("/v1/devices")
+    HashMap devMap = sendGet("/devices")
     return devMap
 }
 
 HashMap getDevDetail(id) {
-    HashMap devDetail = sendGet("/v1/devices/$id")
+    HashMap devDetail = sendGet("/deviceData/$id")
     return devDetail
+}
+
+void getLocations() {
+    HashMap locData = sendGet("/locations")
+    updateAttr("locationMap","$locData")
 }
 
 HashMap sendGet(command){
     authToken = getAuth()
-    if(debugEnabled) log.debug "sendGet token:$authToken"
+    if(debugEnabled) log.debug "sendGet token:$authToken API: $apiKey"
     Map requestParams =
 	[
         uri:  "$serverPath$command",
-        requestContentType: 'application/json',
-		contentType: 'application/json',
         headers: [
-            "x-api-key": "$apiKey",
+            'Accept': 'application/json',
             "Authorization" : "Bearer $authToken"
         ]
 	]
 
     if(debugEnabled) log.debug "get parameters $requestParams"
-    httpGett(requestParams) { resp ->
-        jsonData = (HashMap) resp.JSON
+    httpGet(requestParams) { resp ->
+        if(debugEnabled) log.debug "$resp.properties"
+        jsonData = (HashMap) resp.data
     }
     if(debugEnabled) log.debug "get JSON $jsonData"
     return jsonData
@@ -156,36 +153,62 @@ HashMap sendGet(command){
 void createChildDevices(){
     if(debugEnabled) log.debug "Create Child Devices"
     HashMap devMap = getDeviceList()
+    if(debugEnabled) log.debug "Dev List $devMap"
+    //[{"id":"<UUID of the device>","locationId":"<UUID of location>","name":"<name of device>","model":"ONEPLUS","firmwareVersion":"1.4.5","createdDate":1563568617,"hasOwner":true,"hasWrite":true}]
     devMap.devices.each {
         if(debugEnabled) "add child device ${it.id}"
         devDetail = getDevDetail("$it.id")        
-        dev = addChildDevice("thebearmay", "Daikin Thermostat", "DaikenChild:${it.id}", [name:"$it.id",label:"$it.name",model:"$it.model", firmware:"$it.firmware", isComponent:true])
+        dev = addChildDevice("thebearmay", "Daikin Thermostat", "${it.id}", [name:"$it.name",label:"$it.name",model:"$it.model", firmware:"$it.firmwareVersion", isComponent:true])
         updateChild("$it.id")
-
     }
 }
 
 void updateChild(id) {
+ /*
+"tempSPMin":10,
+"tempSPMax":32,
+"tempDeltaMin":2.2,
+"tempOutdoor":29,
+"tempIndoor":24.9,
+"mode":3,
+"fanCirculateSpeed":0,
+"fanCirculate":0,
+"fan":false,
+"hspSched":20,
+
+“mode”: 2 is cool, 3 is auto, 1 is heat, 0 is off, emergency heat is 4
+“tempIndoor”: in C
+“tempOutdoor”: in C
+“humIndoor”: in %
+“humOutdoor”: in %
+“weatherDay[1-5]TempC”: forecast of the temps for days 1-5 (ex. weatherDay1TempC)
+“weatherDay[1-5]Icon”: tstorms, partlycloudy, (these are all I have right now)
+“weatherDay[1-5]Cond”: text description of conditions
+“weatherDay[1-5]Hum”: humidity forecast
+“fanCirculate”: 0=off, 1=always on, 2=schedule, manual fan control
+*/
+    modeStr=["off","heat","cool","auto","emergency heat"]
+    circStr=["off","on","auto"]
+    
     devDetail = getDevDetail("$id")
-    dev = getChildDevice("DaikenChild:${id}")
-    dev.updateAttr("equipmentStatus",devDetail.equipmentStatus)
-    dev.updateAttr("mode",devDetail.mode)
-    dev.updateAttr("modeLimit",devDetail.modeLimit)
-    dev.updateAttr("modeEmHeatAvailable",devDetail.modeEmHeatAvailable)
+    dev = getChildDevice("$id")
+    dev.updateAttr("thermostatMode",modeStr[devDetail.mode.toInteger()])
     dev.updateAttr("fan",devDetail.fan)
-    dev.updateAttr("fanCirculate",devDetail.fanCirculate)
+    dev.updateAttr("thermostatFanMode",circStr[devDetail.fanCirculate.toInteger()])
     dev.updateAttr("fanCirculateSpeed",devDetail.fanCirculateSpeed)
-    dev.updateAttr("heatSetpoint",devDetail.heatSetpoint)
-    dev.updateAttr("coolSetpoint",devDetail.coolSetpoint)
-    dev.updateAttr("setpointDelta",devDetail.setpointDelta)
-    dev.updateAttr("setpointMinimum",devDetail.setpointMinimum)
-    dev.updateAttr("setpointMaximum",devDetail.setpointMaximum)
-    dev.updateAttr("tempIndoor",devDetail.tempIndoor)
-    dev.updateAttr("humIndoor",devDetail.humIndoor)
+    dev.updateAttr("setpointDelta",devDetail.tempDeltaMin)
+    dev.updateAttr("setpointMinimum",devDetail.tempSPMin)
+    dev.updateAttr("heatSetPoint",devDetail.hspSched)
+    dev.updateAttr("coolSetPoint",devDetail.cspSched)
+    if(devDetail.mode == 3) 
+        dev.updateAttr("thermostatSetpoint",devDetail.hspSched)
+    else if(devDetail.mode == 4)
+        dev.updateAttr("thermostatSetpoint",devDetail.cspSched)
+    dev.updateAttr("setpointMaximum",devDetail.tempSPMax)
+    dev.updateAttr("temperature",devDetail.tempIndoor)
     dev.updateAttr("tempOutdoor",devDetail.tempOutdoor)
-    dev.updateAttr("humOutdoor",devDetail.humOutdoor)
-    dev.updateAttr("scheduleEnabled",devDetail.scheduleEnabled)
-    dev.updateAttr("geofencingEnabled",devDetail.geofencingEnabled)
+    dev.updateAttr("humidity",devDetail.humIndoor)
+    dev.updateAttr("tempOutdoor",devDetail.humOutdoor)    
 
 }
 
@@ -207,90 +230,6 @@ void sendPut(command, bodyMap){
     if(debugEnabled) log.debug "$requestParams"
     httpPut(requestParams) {resp ->
     }
-}
-
-@SuppressWarnings('unused')
-String readFile(fName){
-    if(debugEnabled) log.debug "readFile($fName)"
-    if(security) cookie = securityLogin().cookie
-    uri = "http://${location.hub.localIP}:8080/local/${fName}"
-
-
-    def params = [
-        uri: uri,
-        contentType: "text/html",
-        textParser: true,
-        headers: [
-				"Cookie": cookie,
-                "Accept": "application/octet-stream"
-            ]
-    ]
-
-    try {
-        httpGet(params) { resp ->
-            if(resp!= null) {       
-               int i = 0
-               String delim = ""
-               i = resp.data.read() 
-               while (i != -1){
-                   char c = (char) i
-                   delim+=c
-                   i = resp.data.read() 
-               }
-               if(logResponses) log.info "File Read Data: $delim"
-               if(allowAttrib) {
-                    updateAttr("fileContent", "$delim")
-                    runIn(30,"removeAttr")
-                }
-               return delim
-            }
-            else {
-                log.error "Null Response"
-            }
-        }
-    } catch (exception) {
-        log.error "Read Error: ${exception.message}"
-        return null;
-    }
-}
-
-@SuppressWarnings('unused')
-HashMap securityLogin(){
-    def result = false
-    try{
-        httpPost(
-				[
-					uri: "http://127.0.0.1:8080",
-					path: "/login",
-					query: 
-					[
-						loginRedirect: "/"
-					],
-					body:
-					[
-						username: username,
-						password: password,
-						submit: "Login"
-					],
-					textParser: true,
-					ignoreSSLIssues: true
-				]
-		)
-		{ resp ->
-//			log.debug resp.data?.text
-				if (resp.data?.text?.contains("The login information you supplied was incorrect."))
-					result = false
-				else {
-					cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0)
-					result = true
-		    	}
-		}
-    }catch (e){
-			log.error "Error logging in: ${e}"
-			result = false
-            cookie = null
-    }
-	return [result: result, cookie: cookie]
 }
 
 

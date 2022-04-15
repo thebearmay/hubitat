@@ -33,58 +33,36 @@ metadata {
         capability "Actuator"
         capability "Configuration"
         capability "Initialize"
+        capability "Thermostat"
+        capability "ThermostatCoolingSetpoint"
+        capability "ThermostatFanMode"
+        capability "ThermostatHeatingSetpoint"
+        capability "ThermostatMode"
+        capability "ThermostatOperatingState"
+        capability "ThermostatSetpoint"
         
         attribute "equipmentStatus","number" //???HE - thermostatOperatingState ENUM ["heating", "pending cool", "pending heat", "vent economizer", "idle", "cooling", "fan only"]        
-        attribute "thermostatMode","string" // HE - thermostatMode ENUM ["auto", "off", "heat", "emergency heat", "cool"]
         attribute "fan","number"
-        attribute "thermostatFanMode","string" // HE- thermostatFanMode ENUM ["on", "circulate", "auto"]
         attribute "fanCirculateSpeed","number"
-        attribute "heatSetpoint","number"//HE - heatingSetpoint
-        attribute "coolSetpoint","number"//HE - coolingSetpoint
-        attribute "thermostatSetpoint", "number" //HE
         attribute "setpointDelta","number"
         attribute "setpointMinimum","number"
         attribute "setpointMaximum","number"
-        attribute "temperature","number" //HE - temperature
         attribute "tempOutdoor","number"
         attribute "humidity", "number"
         attribute "humidOutdoor", "number"
+
         
-//        command "setEquipmentStatus", [[name:"equipStatus", type:"ENUM", constraints:["No Selection","1: cool","2: overcool for dehum","3: heat","4: fan","5: idle","6: waiting to cool","7: waiting to heat","8: aux humidifier","9: aux dehumidifier"]]]
-        command "setMode",[[name:"mode", type:"ENUM", constraints:["No Selection","0: off","1: heat","2: cool","3: auto","4: emergency heat"]]]
-//        command "setModeLimit",[[name:"modeLimit", type:"ENUM", constraints:["No Selection","0: none","1: all","2: heat only","3: cool only"]]]
-//        command "setFan",[[name:"fan", type:"ENUM", constraints:["No Selection","0: auto","1: on"]]]
-        command "setFanCirculate",[[name:"fanCirculate", type:"ENUM", constraints:["No Selection","0: off","1: always on","2: on a schedule"]]]
-        command "setFanSpeed", [[name:"fanSpeed", type:"ENUM", constraints:["No Selection","0: low","1: medium","2: high"]]]
-        command "setHeatPoint", [[name:"heatPoint", type: "number"]]
-        command "setCoolPoint", [[name:"coolPoint", type: "number"]]
-        command "useThermostatSchedule", [[name:"thermoSchedule", type:"ENUM", constraints:["No Selection","true", "false"]]]
-/* HE Commands
-auto()
-cool()
-emergencyHeat()
-fanAuto()
-fanCirculate()
-fanOn()
-heat()
-off()
-setCoolingSetpoint(temperature)
-temperature required (NUMBER) - Cooling setpoint in degrees
-setHeatingSetpoint(temperature)
-temperature required (NUMBER) - Heating setpoint in degrees
-setSchedule(JSON_OBJECT) (Deprecated)
-JSON_OBJECT (JSON_OBJECT) - JSON_OBJECT (Deprecated)
-setThermostatFanMode(fanmode)
-fanmode required (ENUM) - Fan mode to set
-setThermostatMode(thermostatmode)
-thermostatmode required (ENUM) - Thermostat mode to set
-*/
+        command "refresh"
+
+
                                   
     }   
 }
 
 preferences {
-    input("debugEnabled", "bool", title: "Enable debug logging?")
+    input("debugEnabled", "bool", title: "Enable debug logging?", defaultValue:false)
+    input("useFahrenheit", "bool", title: "Use Fahrenheit", defaultValue:false)
+    input("pollRate", "number", title: "Thermostat Polling Rate (minutes)\nZero for no polling:", defaultValue:5)
 }
 
 @SuppressWarnings('unused')
@@ -94,7 +72,7 @@ def installed() {
 }
 
 def initialize(){
-
+   updated()    
 }
 
 @SuppressWarnings('unused')
@@ -103,6 +81,12 @@ def updated(){
         log.debug "updated()"
         runIn(1800,logsOff)
     }
+    if(pollRate == null)
+        device.updateSetting("pollRate",[value:5,type:"number"])
+    if(pollRate > 0){
+        runIn(pollRate*60,"refresh")
+    } else
+        unschedule("refresh")
 }
 
 @SuppressWarnings('unused')
@@ -115,22 +99,92 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
-void setMode(tMode){
+void refresh() {
+    if(useFahrenheit) cOrF = "F"
+    else  cOrF = "C"
+    parent.updateChild(device.deviceNetworkId, cOrF)
+    if(pollRate > 0)
+        runIn(pollRate*60,"refresh")
 }
 
-void setFanCirculate(sel) {
+void auto(){
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[mode:3])
+    updateAttr("thermostatMode","auto")
 }
 
-void setFanSpeed(sel) {
+void cool(){
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[mode:2])
+    updateAttr("thermostatMode","cool")
 }
 
-void setHeatPoint(temp) {
+void emergencyHeat(){
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[mode:4])
+    updateAttr("thermostatMode","emergency heat")
 }
 
-void setCoolPoint(temp) {
+void fanAuto(){
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[fanCirculate:0])
+    updateAttr("thermostatFanMode","auto")
 }
 
-void useThermostatSchedule(tOrF) {
+void fanCirculate(){
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[fanCirculate:2])
+    updateAttr("thermostatFanMode","circulate")
+}
+
+void fanOn(){
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[fanCirculate:1])
+    updateAttr("thermostatFanMode","on")
+}
+
+void heat(){
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[mode:1])
+    updateAttr("thermostatMode","heat")
+}
+
+void off(){
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[mode:0])
+    updateAttr("thermostatMode","emergency heat")
+}
+
+void setCoolingSetpoint(temp){
+    if(useFahrenheit) {
+        temp = fahrenheitToCelsius(temp).toFloat().round(1)
+        cOrF = "°F"
+    } else cOrF = "°C"
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[cspSched:temp])
+    updateAttr("thermostatSetPoint",temp,cOrF)
+    updateAttr("coolingSetPoint",temp,cOrF)                   
+}
+
+void setHeatingSetpoint(temp){
+    if(useFahrenheit) {
+        temp = fahrenheitToCelsius(temp).toFloat().round(1)
+        cOrF = "°F"
+    } else cOrF = "°C"
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[hspSched:temp])
+    updateAttr("thermostatSetPoint",temp,cOrF)
+    updateAttr("heatingSetPoint",temp,cOrF)   
+}
+
+void setThermostatFanMode(fanmode){
+    if(fanmode=="on") 
+       fanOn()
+    else if (fanmode == "circulate")
+       fanCirculate()
+    else
+       fanAuto()    
+}
+
+void setThermostatMode(tmode){
+    if(tmode == "auto")
+        auto()
+    else if(tmode == "heat")
+        heat()
+    else if(tmode == "cool")
+        cool()
+    else
+        emergencyHeat()
 }
 
 @SuppressWarnings('unused')

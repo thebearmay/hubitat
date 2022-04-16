@@ -220,7 +220,7 @@ void updateChild(id, cOrF) {
     dev.updateAttr("temperature",devDetail.tempIndoor,degUnit)
     dev.updateAttr("tempOutdoor",devDetail.tempOutdoor,degUnit)
     dev.updateAttr("humidity",devDetail.humIndoor,"%")
-    dev.updateAttr("tempOutdoor",devDetail.humOutdoor,"%") 
+    dev.updateAttr("humidOutdoor",devDetail.humOutdoor,"%") 
 }
 
 void sendPut(command, bodyMap){

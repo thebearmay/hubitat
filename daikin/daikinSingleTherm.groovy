@@ -183,6 +183,11 @@ void getInitialAttributes(){
 	
 	if(debugEnabled) log.debug "${devMap.properties}"
 	if(debugEnabled) log.debug "get device properties ${devMap.id}"
+    if(devMap.id == null) {
+        log.error "Thermostat not Found"
+        return
+    }
+    
 	devDetail = getDevDetail("$devMap.id")
 	
     device.updateDataValue("daiID", "${devMap.id}")
@@ -199,6 +204,11 @@ void updateThermostat() {
 	id = device.properties.data["daiID"]
 	if(debugEnabled) log.debug "Using ID:$id"
 	
+    if(id == null) {
+        log.error "Thermostat has not been properly configured"
+        return
+    }
+    
     devDetail = getDevDetail("$id")
     degUnit = "°C"
     if(useFahrenheit) {

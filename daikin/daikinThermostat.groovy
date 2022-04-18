@@ -1,7 +1,7 @@
 /*
- * Daikin Thermostat 
+ * Daikin Thermostat - for use as a child device of the Daikin Master
+ * 
  *
- * API document: https://synaccess.com/support/webapi#table-of-contents
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -152,7 +152,7 @@ void setCoolingSetpoint(temp){
         temp = fahrenheitToCelsius(temp).toFloat().round(1)
         cOrF = "°F"
     } else cOrF = "°C"
-    parent.sendPut("/deviceData/${device.deviceNetworkId}",[cspSched:temp])
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[cspHome:temp])
     updateAttr("thermostatSetPoint",temp,cOrF)
     updateAttr("coolingSetPoint",temp,cOrF)                   
 }
@@ -162,7 +162,7 @@ void setHeatingSetpoint(temp){
         temp = fahrenheitToCelsius(temp).toFloat().round(1)
         cOrF = "°F"
     } else cOrF = "°C"
-    parent.sendPut("/deviceData/${device.deviceNetworkId}",[hspSched:temp])
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[hspHome:temp])
     updateAttr("thermostatSetPoint",temp,cOrF)
     updateAttr("heatingSetPoint",temp,cOrF)   
 }

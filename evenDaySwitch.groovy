@@ -40,7 +40,7 @@ metadata {
 
 preferences {
     input("onWhenEven", "bool", title: "Turn switch on when even day of the year", defaultValue: true)
-    input("autoToggleOn", "bool", title: "Reverse the daily even-odd switch behavior \nwhen previous day = 365 and current day = 1", defaultValue:true)
+    input("autoToggleOn", "bool", title: "Reverse the daily even-odd switch behavior \nwhen previous previous interation returns same value", defaultValue:true)
     input("useWeeks", "bool", title: "Use weeks instead of days for switch", defaultValue:false)
 
 }
@@ -92,9 +92,14 @@ void dailyProcessing(){
 }
 
 void weekProcessing(){
+    weekPrev = device.currentValue("weekOfYear")?.toInteger() //will be null on device creation 
     dateNow = new Date()
     weekOfYear = dateNow.getAt(Calendar.WEEK_OF_YEAR)
     sendEvent(name:"weekOfYear", value:weekOfYear)
+    if(weekOfYear == 1 && weekPrev == 53 && autoToggleOn) {
+        if(onWhenEven) device.updateSetting("autoToggleOn",[value:"false",type:"bool"])
+        else device.updateSetting("autoToggleOn",[value:"true",type:"bool"])
+    }
 	if(weekOfYear % 2 == 0) {
 	   sendEvent(name:"evenOdd", value:"even")
 	   if(onWhenEven) on()

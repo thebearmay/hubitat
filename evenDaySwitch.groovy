@@ -10,10 +10,11 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *  Change History:
- *	Date		Who		Description
+ *	Date		Who		        Description
  *	----------	-------------	----------------------------------------------------------------------------
- *	2021-06-07	thebearmay	Original Code
- *	2021-06-08	thebearmay	Code Cleanup, add license, etc.
+ *	2021-06-07	thebearmay	    Original Code
+ *	2021-06-08	thebearmay	    Code Cleanup, add license, etc.
+ *  2022-04-18  thebearmay      add week option
  *
 */
 
@@ -33,14 +34,16 @@ metadata {
         
         attribute "evenOdd", "string"
         attribute "dayOfYear", "number"
+        attribute "weekOfYear", "number"
     }   
 }
 
 preferences {
     input("onWhenEven", "bool", title: "Turn switch on when even day of the year", defaultValue: true)
-    input("autoToggleOn", "bool", title: "Reverse the even-odd switch behavior \nwhen previous day = 365 and current day = 1", defaultValue:true)
-}
+    input("autoToggleOn", "bool", title: "Reverse the daily even-odd switch behavior \nwhen previous day = 365 and current day = 1", defaultValue:true)
+    input("useWeeks", "bool", title: "Use weeks instead of days for switch", defaultValue:false)
 
+}
 def installed() {
     initialize()
 }
@@ -56,11 +59,23 @@ def initialize() {
     dayProcessing()
 }
 
-void dayProcessing(){
+void dayProcessing() {
+    if(useWeeks) {
+        dateNow = new Date()
+	    dayOfYear = dateNow[Calendar.DAY_OF_YEAR]
+	    sendEvent(name:"dayOfYear", value: dayOfYear)
+        weekProcessing()
+    } else
+        dailyProcessing()
+}  
+    
+void dailyProcessing(){
     dayPrev = device.currentValue("dayOfYear")?.toInteger() //will be null on device creation
     dateNow = new Date()
 	dayOfYear = dateNow[Calendar.DAY_OF_YEAR]
 	sendEvent(name:"dayOfYear", value: dayOfYear)
+    weekOfYear = dateNow.getAt(Calendar.WEEK_OF_YEAR)
+    sendEvent(name:"weekOfYear", value:weekOfYear)
     if(dayOfYear == 1 && dayPrev == 365 && autoToggleOn) {
         if(onWhenEven) device.updateSetting("autoToggleOn",[value:"false",type:"bool"])
         else device.updateSetting("autoToggleOn",[value:"true",type:"bool"])
@@ -74,6 +89,21 @@ void dayProcessing(){
 	   if(onWhenEven) off()
 	   else on()
 	}
+}
+
+void weekProcessing(){
+    dateNow = new Date()
+    weekOfYear = dateNow.getAt(Calendar.WEEK_OF_YEAR)
+    sendEvent(name:"weekOfYear", value:weekOfYear)
+	if(weekOfYear % 2 == 0) {
+	   sendEvent(name:"evenOdd", value:"even")
+	   if(onWhenEven) on()
+	   else off()
+	} else {
+	   sendEvent(name:"evenOdd", value:"odd")
+	   if(onWhenEven) off()
+	   else on()
+	}    
 }
 
 def updated(){

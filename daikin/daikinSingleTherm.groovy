@@ -24,7 +24,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -241,6 +241,8 @@ void updateThermostat() {
 }
 
 void sendPut(command, bodyMap){
+    authToken = getAuth()
+    if(debugEnabled) log.debug "sendPut cmd: $command body: $bodyMap authToken:$authToken "
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[

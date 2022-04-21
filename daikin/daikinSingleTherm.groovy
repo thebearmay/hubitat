@@ -54,7 +54,7 @@ metadata {
         attribute "tempOutdoor","number"
         attribute "humidity", "number"
         attribute "humidOutdoor", "number"
-        attribute "locationMap", "string"
+        //attribute "locationMap", "string"
         
         command "refresh"
 
@@ -151,7 +151,7 @@ HashMap getDevDetail(id) {
 
 void getLocations() {
     HashMap locData = sendGet("/locations")
-    updateAttr("locationMap","$locData")
+    //updateAttr("locationMap","$locData")
 }
 
 HashMap sendGet(command){

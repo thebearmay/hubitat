@@ -24,7 +24,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.2"}
+static String version() {return "0.0.4"}
 
 metadata {
     definition (
@@ -317,19 +317,19 @@ void setCoolingSetpoint(temp){
         temp = fahrenheitToCelsius(temp).toFloat().round(1)
         cOrF = "°F"
     } else cOrF = "°C"
-    sendPut("/deviceData/${device.properties.data["daiID"]}",[cspHome:temp])
-    updateAttr("thermostatSetPoint",temp,cOrF)
-    updateAttr("coolingSetPoint",temp,cOrF)                   
+    sendPut("/deviceData/${device.properties.data["daiID"]}",[cspHome:temp.toInteger()])
+    updateAttr("thermostatSetpoint",temp,cOrF)
+    updateAttr("coolingSetpoint",temp,cOrF)                   
 }
 
 void setHeatingSetpoint(temp){
     if(useFahrenheit) {
-        temp = fahrenheitToCelsius(temp).toFloat().round(1)
+        temp = fahrenheitToCelsius(temp)
         cOrF = "°F"
     } else cOrF = "°C"
-    sendPut("/deviceData/${device.properties.data["daiID"]}",[hspHome:temp])
-    updateAttr("thermostatSetPoint",temp,cOrF)
-    updateAttr("heatingSetPoint",temp,cOrF)   
+    sendPut("/deviceData/${device.properties.data["daiID"]}",[hspHome:temp.toInteger()])
+    updateAttr("thermostatSetpoint",temp,cOrF)
+    updateAttr("heatingSetpoint",temp,cOrF)   
 }
 
 void setThermostatFanMode(fanmode){

@@ -1,0 +1,16 @@
+{
+  "packageName": "Daikin Thermostat",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.5",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-04-22",
+  "drivers": [
+    {
+      "id": "80fd07e5-9eba-4358-a678-e0a94a1d4102",
+      "name": "Daikin Single Thermostat",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/daikin/daikinSingleTherm.groovy",
+      "required": true
+    }
+  ]
+}

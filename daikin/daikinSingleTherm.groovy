@@ -24,7 +24,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.5"}
+static String version() {return "0.0.6"}
 
 metadata {
     definition (
@@ -212,13 +212,13 @@ void updateThermostat() {
     devDetail = getDevDetail("$id")
     degUnit = "°C"
     if(useFahrenheit) {
-        devDetail.tempDeltaMin = celsiusToFahrenheit(devDetail.tempDeltaMin.toFloat()).toInteger()
-        devDetail.tempSPMin = celsiusToFahrenheit(devDetail.tempSPMin.toFloat()).toInteger()
-        devDetail.hspHome = celsiusToFahrenheit(devDetail.hspHome.toFloat()).toInteger()
-        devDetail.cspHome = celsiusToFahrenheit(devDetail.cspHome.toFloat()).toInteger()
-        devDetail.tempSPMax = celsiusToFahrenheit(devDetail.tempSPMax.toFloat()).toInteger()
-        devDetail.tempIndoor = celsiusToFahrenheit(devDetail.tempIndoor.toFloat()).toInteger()
-        devDetail.tempOutdoor = celsiusToFahrenheit(devDetail.tempOutdoor.toFloat()).toInteger()
+        devDetail.tempDeltaMin = celsiusToFahrenheit(devDetail.tempDeltaMin.toFloat()).toFloat().round(0)
+        devDetail.tempSPMin = celsiusToFahrenheit(devDetail.tempSPMin.toFloat()).toFloat().round(0)
+        devDetail.hspHome = celsiusToFahrenheit(devDetail.hspHome.toFloat()).toFloat().round(0)
+        devDetail.cspHome = celsiusToFahrenheit(devDetail.cspHome.toFloat()).toFloat().round(0)
+        devDetail.tempSPMax = celsiusToFahrenheit(devDetail.tempSPMax.toFloat()).toFloat().round(0)
+        devDetail.tempIndoor = celsiusToFahrenheit(devDetail.tempIndoor.toFloat()).toFloat().round(0)
+        devDetail.tempOutdoor = celsiusToFahrenheit(devDetail.tempOutdoor.toFloat()).toFloat().round(0)
         degUnit = "°F"
     }
     updateAttr("thermostatMode",modeStr[devDetail.mode.toInteger()])
@@ -313,34 +313,59 @@ void off(){
 }
 
 void setCoolingSetpoint(temp){
+    if(device.currentValue("setpointMaximum")!= null && temp > device.currentValue("setpointMaximum")) temp = device.currentValue("setpointMaximum")
+    if(device.currentValue("setpointMinimum")!= null && temp < device.currentValue("setpointMinimum")) temp = device.currentValue("setpointMinimum")    
+    if(useFahrenheit){
+        hold = temp
+        temp = fahrenheitToCelsius(temp).toFloat().round(1)
+        temp = checkForAdj(hold, temp)
+    } else
+        temp = normalizeTemp(temp)
+    updateAttr("nTemp", temp)
+    sendPut("/deviceData/${device.properties.data["daiID"]}",[cspHome:temp])
     if(useFahrenheit) {
+        temp = celsiusToFahrenheit(temp).toInteger()
         cOrF = "°F"
         updateAttr("thermostatSetpoint",temp,cOrF)
         updateAttr("coolingSetpoint",temp,cOrF) 
-        temp = fahrenheitToCelsius(temp).toFloat().round(1)
     } else {
         cOrF = "°C"
         updateAttr("thermostatSetpoint",temp,cOrF)
         updateAttr("coolingSetpoint",temp,cOrF)
     }
-    sendPut("/deviceData/${device.properties.data["daiID"]}",[cspHome:temp.toInteger()])
 }
 
-
 void setHeatingSetpoint(temp){
+    if(device.currentValue("setpointMaximum")!= null && temp > device.currentValue("setpointMaximum")) temp = device.currentValue("setpointMaximum")
+    if(device.currentValue("setpointMinimum")!= null && temp < device.currentValue("setpointMinimum")) temp = device.currentValue("setpointMinimum")    
+    if(useFahrenheit){  
+        hold = temp
+        temp = fahrenheitToCelsius(temp).toFloat().round(1)
+        temp = checkForAdj(hold, temp)
+    } else    
+        temp = normalizeTemp(temp)
+    sendPut("/deviceData/${device.properties.data["daiID"]}",[hspHome:temp])
     if(useFahrenheit) {
+        temp = celsiusToFahrenheit(temp).toInteger()
         cOrF = "°F"
         updateAttr("thermostatSetpoint",temp,cOrF)
         updateAttr("heatingSetpoint",temp,cOrF) 
-        temp = fahrenheitToCelsius(temp)
-
     } else {
         cOrF = "°C"
         updateAttr("thermostatSetpoint",temp,cOrF)
         updateAttr("heatingSetpoint",temp,cOrF)
     }
-    sendPut("/deviceData/${device.properties.data["daiID"]}",[hspHome:temp.toInteger()])
-  
+}
+
+Float normalizeTemp(temp) { //limits to x.5 or x.0
+    Float nTemp =  ((int) (temp*2 + 0.5))/2.0
+}
+
+Float checkForAdj(hold, temp) {
+    temp = normalizeTemp(temp)
+    if(celsiusToFahrenheit(temp) < hold)
+        temp += 0.5
+    return temp
 }
 
 void setThermostatFanMode(fanmode){

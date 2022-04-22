@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.4"}
+static String version() {return "0.0.5"}
 
 metadata {
     definition (
@@ -149,7 +149,7 @@ void off(){
 
 void setCoolingSetpoint(temp){
     if(useFahrenheit) {
-        temp = fahrenheitToCelsius(temp).toFloat().round(1)
+        temp = fahrenheitToCelsius(temp).toFloat().round(0)
         cOrF = "°F"
     } else cOrF = "°C"
     parent.sendPut("/deviceData/${device.deviceNetworkId}",[cspHome:temp])
@@ -159,7 +159,7 @@ void setCoolingSetpoint(temp){
 
 void setHeatingSetpoint(temp){
     if(useFahrenheit) {
-        temp = fahrenheitToCelsius(temp).toFloat().round(1)
+        temp = fahrenheitToCelsius(temp).toFloat().round(0)
         cOrF = "°F"
     } else cOrF = "°C"
     parent.sendPut("/deviceData/${device.deviceNetworkId}",[hspHome:temp])

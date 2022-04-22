@@ -24,7 +24,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.4"}
+static String version() {return "0.0.5"}
 
 metadata {
     definition (
@@ -194,7 +194,7 @@ void getInitialAttributes(){
     device.updateDataValue("daiName", "${devMap.name}")
     device.updateDataValue("firmware", "${devMap.firmwareVersion}")
 
-	updateThermostat(location.temperatureScale)
+	updateThermostat()
 }
 
 void updateThermostat() {
@@ -212,13 +212,13 @@ void updateThermostat() {
     devDetail = getDevDetail("$id")
     degUnit = "°C"
     if(useFahrenheit) {
-        devDetail.tempDeltaMin = celsiusToFahrenheit(devDetail.tempDeltaMin.toFloat()).toFloat().round(0)
-        devDetail.tempSPMin = celsiusToFahrenheit(devDetail.tempSPMin.toFloat()).toFloat().round(0)
-        devDetail.hspHome = celsiusToFahrenheit(devDetail.hspHome.toFloat()).toFloat().round(0)
-        devDetail.cspHome = celsiusToFahrenheit(devDetail.cspHome.toFloat()).toFloat().round(0)
-        devDetail.tempSPMax = celsiusToFahrenheit(devDetail.tempSPMax.toFloat()).toFloat().round(0)
-        devDetail.tempIndoor = celsiusToFahrenheit(devDetail.tempIndoor.toFloat()).toFloat().round(0)
-        devDetail.tempOutdoor = celsiusToFahrenheit(devDetail.tempOutdoor.toFloat()).toFloat().round(0)
+        devDetail.tempDeltaMin = celsiusToFahrenheit(devDetail.tempDeltaMin.toFloat()).toInteger()
+        devDetail.tempSPMin = celsiusToFahrenheit(devDetail.tempSPMin.toFloat()).toInteger()
+        devDetail.hspHome = celsiusToFahrenheit(devDetail.hspHome.toFloat()).toInteger()
+        devDetail.cspHome = celsiusToFahrenheit(devDetail.cspHome.toFloat()).toInteger()
+        devDetail.tempSPMax = celsiusToFahrenheit(devDetail.tempSPMax.toFloat()).toInteger()
+        devDetail.tempIndoor = celsiusToFahrenheit(devDetail.tempIndoor.toFloat()).toInteger()
+        devDetail.tempOutdoor = celsiusToFahrenheit(devDetail.tempOutdoor.toFloat()).toInteger()
         degUnit = "°F"
     }
     updateAttr("thermostatMode",modeStr[devDetail.mode.toInteger()])
@@ -314,22 +314,33 @@ void off(){
 
 void setCoolingSetpoint(temp){
     if(useFahrenheit) {
-        temp = fahrenheitToCelsius(temp).toFloat().round(1)
         cOrF = "°F"
-    } else cOrF = "°C"
+        updateAttr("thermostatSetpoint",temp,cOrF)
+        updateAttr("coolingSetpoint",temp,cOrF) 
+        temp = fahrenheitToCelsius(temp).toFloat().round(1)
+    } else {
+        cOrF = "°C"
+        updateAttr("thermostatSetpoint",temp,cOrF)
+        updateAttr("coolingSetpoint",temp,cOrF)
+    }
     sendPut("/deviceData/${device.properties.data["daiID"]}",[cspHome:temp.toInteger()])
-    updateAttr("thermostatSetpoint",temp,cOrF)
-    updateAttr("coolingSetpoint",temp,cOrF)                   
 }
+
 
 void setHeatingSetpoint(temp){
     if(useFahrenheit) {
-        temp = fahrenheitToCelsius(temp)
         cOrF = "°F"
-    } else cOrF = "°C"
+        updateAttr("thermostatSetpoint",temp,cOrF)
+        updateAttr("heatingSetpoint",temp,cOrF) 
+        temp = fahrenheitToCelsius(temp)
+
+    } else {
+        cOrF = "°C"
+        updateAttr("thermostatSetpoint",temp,cOrF)
+        updateAttr("heatingSetpoint",temp,cOrF)
+    }
     sendPut("/deviceData/${device.properties.data["daiID"]}",[hspHome:temp.toInteger()])
-    updateAttr("thermostatSetpoint",temp,cOrF)
-    updateAttr("heatingSetpoint",temp,cOrF)   
+  
 }
 
 void setThermostatFanMode(fanmode){

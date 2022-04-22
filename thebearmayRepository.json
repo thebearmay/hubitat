@@ -132,6 +132,13 @@
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/webScrapeManifest.json",
       "description": "Scrapes a web site for a search string and returns data based on offset of the search.  Can be run as a one time or a periodic search"
+    },
+    {
+      "id": "faa4f184-0453-4617-a13f-32c15695481f",
+      "name": "Daikin Thermostat",
+      "category": "Integrations",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/daiThermManifest.json",
+      "description": "Device driver for the Daikin Thermostat."
     }
   ]
 }

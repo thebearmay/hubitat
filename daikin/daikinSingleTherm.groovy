@@ -218,8 +218,8 @@ void updateThermostat() {
         devDetail.hspHome = celsiusToFahrenheit(devDetail.hspHome.toFloat()).toFloat().round(0)
         devDetail.cspHome = celsiusToFahrenheit(devDetail.cspHome.toFloat()).toFloat().round(0)
         devDetail.tempSPMax = celsiusToFahrenheit(devDetail.tempSPMax.toFloat()).toFloat().round(0)
-        devDetail.tempIndoor = celsiusToFahrenheit(devDetail.tempIndoor.toFloat()).toFloat().round(0)
-        devDetail.tempOutdoor = celsiusToFahrenheit(devDetail.tempOutdoor.toFloat()).toFloat().round(0)
+        devDetail.tempIndoor = celsiusToFahrenheit(devDetail.tempIndoor.toFloat()).toFloat().round(1)
+        devDetail.tempOutdoor = celsiusToFahrenheit(devDetail.tempOutdoor.toFloat()).toFloat().round(1)
         degUnit = "°F"
     }
     updateAttr("thermostatMode",modeStr[devDetail.mode.toInteger()])

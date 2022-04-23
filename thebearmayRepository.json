@@ -138,7 +138,7 @@
       "name": "Daikin Thermostat",
       "category": "Integrations",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/daiThermManifest.json",
-      "description": "Device driver for the Daikin Thermostat."
+      "description": "Device driver for the Daikin OnePlus Thermostat."
     }
   ]
 }

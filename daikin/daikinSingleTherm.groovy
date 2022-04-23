@@ -17,6 +17,7 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    18Apr2022    thebearmay    Initial Creation
+ *    22Apr2022    thebearmay    enforce the Celsius x.5/x.0 degree requirement and resultant rounding issues 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -24,7 +25,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.6"}
+static String version() {return "0.0.7"}
 
 metadata {
     definition (
@@ -313,6 +314,7 @@ void off(){
 }
 
 void setCoolingSetpoint(temp){
+    if(debugEnabled) log.debug "setCSP $temp"
     if(device.currentValue("setpointMaximum")!= null && temp > device.currentValue("setpointMaximum")) temp = device.currentValue("setpointMaximum")
     if(device.currentValue("setpointMinimum")!= null && temp < device.currentValue("setpointMinimum")) temp = device.currentValue("setpointMinimum")    
     if(useFahrenheit){
@@ -324,7 +326,7 @@ void setCoolingSetpoint(temp){
     updateAttr("nTemp", temp)
     sendPut("/deviceData/${device.properties.data["daiID"]}",[cspHome:temp])
     if(useFahrenheit) {
-        temp = celsiusToFahrenheit(temp).toInteger()
+        temp = celsiusToFahrenheit(temp).toFloat().round(0).toInteger()
         cOrF = "°F"
         updateAttr("thermostatSetpoint",temp,cOrF)
         updateAttr("coolingSetpoint",temp,cOrF) 
@@ -336,6 +338,7 @@ void setCoolingSetpoint(temp){
 }
 
 void setHeatingSetpoint(temp){
+    if(debugEnabled) log.debug "setHSP $temp"
     if(device.currentValue("setpointMaximum")!= null && temp > device.currentValue("setpointMaximum")) temp = device.currentValue("setpointMaximum")
     if(device.currentValue("setpointMinimum")!= null && temp < device.currentValue("setpointMinimum")) temp = device.currentValue("setpointMinimum")    
     if(useFahrenheit){  
@@ -346,7 +349,7 @@ void setHeatingSetpoint(temp){
         temp = normalizeTemp(temp)
     sendPut("/deviceData/${device.properties.data["daiID"]}",[hspHome:temp])
     if(useFahrenheit) {
-        temp = celsiusToFahrenheit(temp).toInteger()
+        temp = celsiusToFahrenheit(temp).toFloat().round(0)
         cOrF = "°F"
         updateAttr("thermostatSetpoint",temp,cOrF)
         updateAttr("heatingSetpoint",temp,cOrF) 
@@ -363,7 +366,7 @@ Float normalizeTemp(temp) { //limits to x.5 or x.0
 
 Float checkForAdj(hold, temp) {
     temp = normalizeTemp(temp)
-    if(celsiusToFahrenheit(temp) < hold)
+    if(celsiusToFahrenheit(temp).toFloat().round(0) < hold)
         temp += 0.5
     return temp
 }

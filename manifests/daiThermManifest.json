@@ -3,7 +3,7 @@
   "author": "Jean P. May, Jr.",
   "version": "0.0.7",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-04-22",
+  "dateReleased": "2022-04-23",
   "releaseNotes":"v0.0.7 - enforce the Celsius 0.5 degree increments for setpoints",
   "drivers": [
     {

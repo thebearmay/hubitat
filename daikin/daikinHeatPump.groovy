@@ -24,7 +24,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.0"}
+static String version() {return "0.0.1"}
 
 metadata {
     definition (
@@ -116,6 +116,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 void checkConnection(){
     if(debugEnabled) log.debug "Check Connection"
     wsOpen()
+    wsSend("{\"m2m:rqp\":{\"op\":2,\"to\":\"/[0]/MNAE/1/UnitProfile/la\",\"fr\":\"/\",\"rqi\":\"123xy\"}}")
     /*
         daikinUrlError = "/[0]/MNAE/"
         daikinUrlBase = "/[0]/MNCSE-node/"

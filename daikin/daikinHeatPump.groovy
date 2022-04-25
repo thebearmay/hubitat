@@ -1,6 +1,6 @@
 /*
  * Daikin Altherma Heatpump 
- * STILL A WORK IN PROGRESS - NOT READY FOR LIVE
+ *
  * 
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -31,7 +31,8 @@ metadata {
         name: "Daikin Altherma Heat Pump", 
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
-        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/daikin/daikinHeatPump.groovy"
+        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/daikin/daikinHeatPump.groovy",
+        description: "Daikin Altherma websocket interface - EXPLORATORY CODE"
     ) {
         capability "Actuator"
         capability "Configuration"
@@ -113,6 +114,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 }
 
 void checkConnection(){
+    if(debugEnabled) log.debug "Check Connection"
     wsOpen()
     /*
         daikinUrlError = "/[0]/MNAE/"
@@ -129,14 +131,17 @@ void checkConnection(){
 }
 
 void wsOpen(){
+    if(debugEnabled) log.debug "Opening connection ws://$serverPath/mca"
     interfaces.webSocket.connect("ws://$serverPath/mca")
 }
 
 void wsClose(){
+    if(debugEnabled) log.debug "Closing connection"
     interfaces.webSocket.close()
 }
 
 void wsSend(String message){
+    if(debugEnabled) log.debug "Sending: $message"
     interfaces.webSocket.sendMessage(message)
 }
 
@@ -432,6 +437,9 @@ void setThermostatMode(tmode){
 /***************************
  * End Thermostat Methods **
  **************************/
+
+
+
 
 @SuppressWarnings('unused')
 void logsOff(){

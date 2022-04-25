@@ -1,5 +1,5 @@
 /*
- * Daikin Single Thermostat 
+ * Daikin One+ Single Thermostat 
  *
  * 
  *
@@ -17,7 +17,8 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    18Apr2022    thebearmay    Initial Creation
- *    22Apr2022    thebearmay    enforce the Celsius x.5/x.0 degree requirement and resultant rounding issues 
+ *    22Apr2022    thebearmay    enforce the Celsius x.5/x.0 degree requirement and resultant rounding issues
+ *    25Apr2022    thebearmay    add attribute geofencingAway
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -25,11 +26,11 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.7"}
+static String version() {return "0.0.8"}
 
 metadata {
     definition (
-        name: "Daikin Single Thermostat", 
+        name: "Daikin OnePlus Single Thermostat", 
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
         importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/daikin/daikinSingleTherm.groovy"
@@ -55,6 +56,7 @@ metadata {
         attribute "tempOutdoor","number"
         attribute "humidity", "number"
         attribute "humidOutdoor", "number"
+        attribute "geofencingAway", "string"
         //attribute "locationMap", "string"
         
         command "refresh"
@@ -238,7 +240,8 @@ void updateThermostat() {
     updateAttr("temperature",devDetail.tempIndoor,degUnit)
     updateAttr("tempOutdoor",devDetail.tempOutdoor,degUnit)
     updateAttr("humidity",devDetail.humIndoor,"%")
-    updateAttr("humidOutdoor",devDetail.humOutdoor,"%") 
+    updateAttr("humidOutdoor",devDetail.humOutdoor,"%")
+    updateAttr("geofencingAway",devDetail.geofencingAway)
 }
 
 void sendPut(command, bodyMap){

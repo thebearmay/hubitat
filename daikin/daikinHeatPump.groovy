@@ -60,7 +60,11 @@ metadata {
         
         command "refresh"
 */
-        command "checkConnection"
+        attribute "webSocketStatus", "string"
+        command "connect"
+        command "send", [[type:"string", description:"(String)Message to Send"]]
+        command "close"
+        command "testMessage"
 
     }   
 }
@@ -113,10 +117,9 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
-void checkConnection(){
-    if(debugEnabled) log.debug "Check Connection"
-    wsOpen()
-    wsSend("{\"m2m:rqp\":{\"op\":2,\"to\":\"/[0]/MNAE/1/UnitProfile/la\",\"fr\":\"/\",\"rqi\":\"123xy\"}}")
+void testMessage(){
+    if(debugEnabled) log.debug "Sending preformatted message"
+    send("{\"m2m:rqp\":{\"op\":2,\"to\":\"/[0]/MNAE/1/UnitProfile/la\",\"fr\":\"/\",\"rqi\":\"123xy\"}}")
     /*
         daikinUrlError = "/[0]/MNAE/"
         daikinUrlBase = "/[0]/MNCSE-node/"
@@ -131,28 +134,35 @@ void checkConnection(){
     */   
 }
 
-void wsOpen(){
+void connect(){
     if(debugEnabled) log.debug "Opening connection ws://$serverPath/mca"
-    interfaces.webSocket.connect("ws://$serverPath/mca")
+    interfaces.webSocket.connect("ws://$serverPath/mca", byteInterface:false)
+    //interfaces.webSocket.connect("wss://ws.postman-echo.com/raw")
 }
 
-void wsClose(){
+void close(){
     if(debugEnabled) log.debug "Closing connection"
     interfaces.webSocket.close()
+    
 }
 
-void wsSend(String message){
+void send(String message){
     if(debugEnabled) log.debug "Sending: $message"
-    interfaces.webSocket.sendMessage(message)
+    interfaces.webSocket.sendMessage("$message")
+    
 }
 
-void webSocketStatus(String message){
-    if(debugEnabled) "webSocketStatus: $message"
+def webSocketStatus(message){
+    if(debugEnabled) log.debug "webSocketStatus: $message"
+    if(message.indexOf("status") > -1) updateAttr("webSocketStatus",message.substring(8))
+    else log.error "webSocketStatus: $message"
 }
 
-void parse(String message){
-    if(debugEnabled) "parse: $message"
+def parse(message){
+    if(debugEnabled) log.debug "parse: $message"
 }
+
+/* Old thermostat code */
 
 String getAuth() {
     if(serverPath == null)
@@ -438,9 +448,6 @@ void setThermostatMode(tmode){
 /***************************
  * End Thermostat Methods **
  **************************/
-
-
-
 
 @SuppressWarnings('unused')
 void logsOff(){

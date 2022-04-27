@@ -19,6 +19,7 @@
  *    18Apr2022    thebearmay    Initial Creation
  *    22Apr2022    thebearmay    enforce the Celsius x.5/x.0 degree requirement and resultant rounding issues
  *    25Apr2022    thebearmay    add attribute geofencingAway
+ *    26Apr2022    thebearmay    fan speed enum values 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -26,7 +27,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.8"}
+static String version() {return "0.0.9"}
 
 metadata {
     definition (
@@ -49,7 +50,7 @@ metadata {
         
         attribute "equipmentStatus","number" //???HE - thermostatOperatingState ENUM ["heating", "pending cool", "pending heat", "vent economizer", "idle", "cooling", "fan only"]        
         attribute "fan","number"
-        attribute "fanCirculateSpeed","number"
+        attribute "fanCirculateSpeed","string"
         attribute "setpointDelta","number"
         attribute "setpointMinimum","number"
         attribute "setpointMaximum","number"
@@ -204,6 +205,7 @@ void updateThermostat() {
 
     modeStr=["off","heat","cool","auto","emergency heat"]
     circStr=["auto","on","circulate"]
+    fanSpd=["low","medium","high"]
 	id = device.properties.data["daiID"]
 	if(debugEnabled) log.debug "Using ID:$id"
 	
@@ -227,7 +229,7 @@ void updateThermostat() {
     updateAttr("thermostatMode",modeStr[devDetail.mode.toInteger()])
     updateAttr("fan",devDetail.fan)
     updateAttr("thermostatFanMode",circStr[devDetail.fanCirculate.toInteger()])
-    updateAttr("fanCirculateSpeed",devDetail.fanCirculateSpeed)
+    updateAttr("fanCirculateSpeed",fanSpd[devDetail.fanCirculateSpeed.toInteger()])
     updateAttr("setpointDelta",devDetail.tempDeltaMin,degUnit)
     updateAttr("setpointMinimum",devDetail.tempSPMin,degUnit)
     updateAttr("heatingSetpoint",devDetail.hspHome,degUnit)

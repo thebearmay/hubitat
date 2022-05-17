@@ -93,12 +93,13 @@
  *    2022-03-23  thebearmay     code cleanup
  *    2022-03-27  thebearmay     fix zwaveStatus with hub security
  *    2022-03-28  thebearmay     add a try..catch around the zwaveStatus
+ *    2022-05-17  thebearmay     enforce 1 decimal place for temperature
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.28"}
+static String version() {return "2.6.29"}
 
 metadata {
     definition (
@@ -683,12 +684,12 @@ void getTempHandler(resp, data) {
             if(tempWork > 0) {
                 if(debugEnable) log.debug tempWork
                 if (location.temperatureScale == "F")
-                    updateAttr("temperature",celsiusToFahrenheit(tempWork),"°F")
+                    updateAttr("temperature",String.format("%.1f", celsiusToFahrenheit(tempWork)),"°F")
                 else
-                    updateAttr("temperature",tempWork,"°C")
+                    updateAttr("temperature",String.format("%.1f",tempWork),"°C")
 
-                updateAttr("temperatureF",celsiusToFahrenheit(tempWork)+ " °F")
-                updateAttr("temperatureC",tempWork+ " °C")
+                updateAttr("temperatureF",String.format("%.1f",celsiusToFahrenheit(tempWork))+ " °F")
+                updateAttr("temperatureC",String.format("%.1f",tempWork)+ " °C")
             }
         }
     } catch(ignored) {

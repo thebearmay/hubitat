@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.1.0"}
 
 metadata {
     definition (
@@ -93,7 +93,7 @@ void setVariables(jsonData){
         if(it.key != "mapUrl")
             updateAttr("$it.key", "$it.value")
         else 
-            updateAttr("$it.key", "<a href='$it.value'>Click to Display Map</a>")
+            updateAttr("$it.key", "<a href='$it.value' target='_blank'>Click to Display Map</a>")
     }
     updateAttr("lastUpdTS", new Date())
     hubDist = dist(jsonData.longitude.toDouble(), jsonData.latitude.toDouble(), this.location.longitude.toDouble(), this.location.latitude.toDouble()) 

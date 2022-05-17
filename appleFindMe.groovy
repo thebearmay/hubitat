@@ -28,7 +28,7 @@ metadata {
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
         description: "Recieves data from the Node Red Apple FindMe nodes, Apple account information is stored in NR",
-        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/appleFindMe.groovy"
+        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/xxxx.groovy"
     ) {
  
         capability "Actuator"
@@ -43,6 +43,8 @@ metadata {
         attribute "name", "string"
         attribute "updateReqTS", "string"
         attribute "lastUpdTS", "string"
+        attribute "metersFromHub", "number"
+        attribute "feetFromHub", "number"
  
         command "reqUpd"
         command "updFromNr",[[name:"updateStr",type:"string"]]
@@ -94,8 +96,20 @@ void setVariables(jsonData){
             updateAttr("$it.key", "<a href='$it.value'>Click to Display Map</a>")
     }
     updateAttr("lastUpdTS", new Date())
+    hubDist = dist(jsonData.longitude.toDouble(), jsonData.latitude.toDouble(), this.location.longitude.toDouble(), this.location.latitude.toDouble()) 
+    updateAttr("metersFromHub", hubDist.round(2))
+    updateAttr("feetFromHub", (hubDist*3.28084).round(2))
 }
-    
+
+double dist(long1, lat1, long2, lat2) {
+  R = 6371; // Radius of the earth in km
+  dLat = java.lang.Math.toRadians(lat2-lat1) 
+  dLon = java.lang.Math.toRadians(long2-long1) 
+  a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Math.toRadians(lat1)) * Math.cos(java.lang.Math.toRadians(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2)
+  c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  d = R * c; // Distance in km
+  return d*1000;    
+}
           
 @SuppressWarnings('unused')
 void logsOff(){

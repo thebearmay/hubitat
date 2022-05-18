@@ -14,13 +14,15 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
+ *    17May22      thebearmay    Original Code
+ *    18May22      thebearmay    Add PresenceSensor capability
 */
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.0"}
+static String version() {return "0.1.5"}
 
 metadata {
     definition (
@@ -33,6 +35,7 @@ metadata {
  
         capability "Actuator"
         capability "Initialize"
+        capability "PresenceSensor"
         
         attribute "longitude", "number"
         attribute "latitude", "number"
@@ -53,6 +56,8 @@ metadata {
 
 preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?")
+    input("presenceRadius", "number", title: "GeoFence Radius", defaultValue:150)
+    input("radiusMeasure", "enum", title:"GeoFence Measurement Unit", options:["meters","feet"], defaultValue:"meters")
 }
 
 @SuppressWarnings('unused')
@@ -99,6 +104,19 @@ void setVariables(jsonData){
     hubDist = dist(jsonData.longitude.toDouble(), jsonData.latitude.toDouble(), this.location.longitude.toDouble(), this.location.latitude.toDouble()) 
     updateAttr("metersFromHub", hubDist.round(2))
     updateAttr("feetFromHub", (hubDist*3.28084).round(2))
+    
+    if(radiusMeasure == null) device.updateSetting("radiusMeasure",[value:"meters",type:"text"])
+    if(presenceRadius == null) device.updateSetting("presenceRadius",[value:150,type:"number"])
+    if(radiusMeasure == "meters")
+        rDist = hubDist
+    else
+        rDist = hubDist*3.28084
+       
+    if(rDist <= presenceRadius) 
+        updateAttr("presence","present")
+    else
+        updateAttr("presence","not present")
+    
 }
 
 double dist(long1, lat1, long2, lat2) {

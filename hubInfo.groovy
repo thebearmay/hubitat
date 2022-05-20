@@ -94,12 +94,13 @@
  *    2022-03-27  thebearmay     fix zwaveStatus with hub security
  *    2022-03-28  thebearmay     add a try..catch around the zwaveStatus
  *    2022-05-17  thebearmay     enforce 1 decimal place for temperature
+ *    2022-05-20  thebearmay     remove a check/force remove for hubUpdateResp 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.29"}
+static String version() {return "2.6.30"}
 
 metadata {
     definition (
@@ -968,8 +969,6 @@ void updChkCallback(resp, data) {
            def jSlurp = new JsonSlurper()
            Map resMap = (Map)jSlurp.parseText((String)resp.data)
            updateAttr("hubUpdateStatus",resMap.status)
-           if(location.hub.firmwareVersionString >= "2.2.8.0" && device.currentValue("hubUpdateResp"))
-               device.deleteCurrentState("hubUpdateResp")
            if(resMap.version)
 		        updateAttr("hubUpdateVersion",resMap.version)
            else updateAttr("hubUpdateVersion",location.hub.firmwareVersionString)

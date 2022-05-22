@@ -30,7 +30,7 @@ metadata {
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
         description: "Recieves data from the Node Red Apple FindMe nodes, Apple account information is stored in NR",
-        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/xxxx.groovy"
+        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/appleFindMe.groovy"
     ) {
  
         capability "Actuator"

@@ -16,13 +16,14 @@
  *    ----         ---           ----
  *    17May22      thebearmay    Original Code
  *    18May22      thebearmay    Add PresenceSensor capability
+ *    24May22      thebearmay    attribute type JSON should be string
 */
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.5"}
+static String version() {return "0.1.6"}
 
 metadata {
     definition (
@@ -41,7 +42,7 @@ metadata {
         attribute "latitude", "number"
         attribute "deviceId", "string"
         attribute "deviceName", "string"
-        attribute "currAddr", "JSON"
+        attribute "currAddr", "string"
         attribute "mapUrl", "string"
         attribute "name", "string"
         attribute "updateReqTS", "string"

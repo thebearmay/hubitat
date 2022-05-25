@@ -77,7 +77,7 @@ def mainPage(){
                       oData +="<div style='width:5em;float:left;text-align:right'>${String.format('%,.0f',it.size.toDouble())}</div>"
                       oData +="<div style='width:10em;float:left;text-align:right'>$dDate</div></div>"
                       paragraph oData
-                      href "fileDisp", title: "View" , description: "", params:["fName": "${it.name}"], width:2
+                      href "fileDisp", title: "View" , description: "", params:["fName": "${it.name}"], width:2, style:"font-size:smaller;"
                   }
 
                   paragraph "<hr />"

@@ -139,6 +139,13 @@
       "category": "Integrations",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/daiThermManifest.json",
       "description": "Device driver for the Daikin OnePlus Thermostat."
+    },
+    {
+      "id": "4e5e5aa6-2495-4826-b4d5-43543b30922d",
+      "name": "File Manager for Extended Character Sets",
+      "category": "Integrations",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/fmExtManifest.json",
+      "description": "Provides File Manager support for text files containing extended character sets."
     }
   ]
 }

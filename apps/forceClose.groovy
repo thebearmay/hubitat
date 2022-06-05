@@ -69,7 +69,7 @@ def mainPage(){
                 } else {
                     removeDevice()
                 }				
-                if (qryDevice != null || qryDevide2 != null) href "deviceCharacteristics", title: "Send Close-Inactive Event", required: false
+                if (qryDevice != null || qryDevice2 != null) href "deviceCharacteristics", title: "Send Close-Inactive Event", required: false
 		    }
 	    } else {
 		    section("") {

@@ -132,6 +132,7 @@ def appButtonHandler(btn) {
                 itemKey = "$it.key".substring(2)
                 itemValue = "$it.value"
                 qryDevice.updateDataValue(itemKey, itemValue)
+                app.removeSetting("$it.key")
             }
 		}
         if(qryDevice.controllerType == "LNK") {

@@ -60,6 +60,11 @@ def mainPage(){
             section("Main"){
                 app.removeSetting("noteName")
                 app.removeSetting("custNote")
+                settings.each{
+                    if("$it.key".indexOf("dv") == 0) {
+                        app.removeSetting("$it.key")
+                    }
+                }
                 input "qryDevice", "capability.*", title: "Device to Update Data Items:", multiple: false, required: false, submitOnChange: true
                 if(qryDevice){ 
                     qryDevice.properties.data.each{

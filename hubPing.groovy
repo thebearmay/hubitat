@@ -34,9 +34,10 @@
  *    2021-08-28  thebearmay	 Attributes can't be bool
  *    2021-10-11  thebearmay	 Restrict to one instance running at a time
  *    2021-11-05  thebearmay     Add Text Logging option
+ *    2022-06-07  thebearmay     Add preference to reduce number of attributes returned.
  */
 
-static String version()	{  return '2.1.10'  }
+static String version()	{  return '2.1.11'  }
 
 metadata {
     definition (
@@ -58,7 +59,7 @@ metadata {
         attribute "min", "number"
         attribute "mdev", "number"
         attribute "pingStats", "string"
-	      attribute "responseReady", "string"
+	    attribute "responseReady", "string"
         attribute "lastIpAddress", "string"
         
         
@@ -69,12 +70,13 @@ metadata {
 }
 
 preferences {
-    input("debugEnable", "bool", title: "Enable debug logging?")
-    input("numPings", "number", title: "Number of pings to issue", defaultValue:3, required:true, submitOnChange:true, range: "1..5")
-    input("pingPeriod", "number", title: "Ping Repeat in Seconds\n Zero to disable", defaultValue: 0, required:true, submitOnChange: true)
-    input("useOldMethod", "bool", title: "Use HTTP endpoint to issue request")
-    input("textLoggingEnabled", "bool", title: "Enable Text Logging", defaultValue:false)
-    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
+    input("debugEnable", "bool", title: "Enable debug logging?", width:4)
+    input("numPings", "number", title: "Number of pings to issue", defaultValue:3, required:true, submitOnChange:true, range: "1..5", width:4)
+    input("pingPeriod", "number", title: "Ping Repeat in Seconds\n Zero to disable", defaultValue: 0, required:true, submitOnChange: true, width:4)
+    input("useOldMethod", "bool", title: "Use HTTP endpoint to issue request", width:4)
+    input("textLoggingEnabled", "bool", title: "Enable Text Logging", defaultValue:false, width:4)
+    input("presenceOnly", "bool", title: "Only report presence attribute", , width:4)
+    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
         input("password", "password", title: "Hub Security Password", required: false)
@@ -133,24 +135,28 @@ def sendPing(ipAddress){
         if (location.hub.firmwareVersionString > "2.2.6.140" && !useOldMethod){
             if(textLoggingEnabled) log.debug "Hub internal ping method selected"
             updateAttr("responseReady",false)
-            updateAttr("pingReturn","Pinging $ipAddress") 
+            if(!presenceOnly)
+                updateAttr("pingReturn","Pinging $ipAddress") 
             hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ipAddress, numPings.toInteger())
             int pTran = pingData.packetsTransmitted.toInteger()
             if (pTran == 0){ // 2.2.7.121 bug returns all zeroes on not found
                 pingData.packetsTransmitted = numPings
                 pingData.packetLoss = 100
             }
-            updateAttr("percentLoss", pingData.packetLoss,"%")
+            if(!presenceOnly)                
+                updateAttr("percentLoss", pingData.packetLoss,"%")
             String pingStats = "Transmitted: ${pingData.packetsTransmitted}, Received: ${pingData.packetsReceived}, %Lost: ${pingData.packetLoss}"
             if(textLoggingEnabled) log.debug "Ping Stats: $pingStats"
-            updateAttr("pingStats", pingStats) 
-            updateAttr("min",pingData.rttMin,"ms")
-            updateAttr("avg",pingData.rttAvg,"ms")
-            updateAttr("max",pingData.rttMax,"ms")
+            if(!presenceOnly){
+                updateAttr("pingStats", pingStats) 
+                updateAttr("min",pingData.rttMin,"ms")
+                updateAttr("avg",pingData.rttAvg,"ms")
+                updateAttr("max",pingData.rttMax,"ms")
             //mdev not returned, calculate using min, max and avg (accuracy decreases proportionally to the number of pings)
-            Double mdev = ((pingData.rttAvg - pingData.rttMin) + (pingData.rttMax - pingData.rttAvg))/2
-            updateAttr("mdev",mdev.round(3))
-            updateAttr("pingReturn",pingData)
+                Double mdev = ((pingData.rttAvg - pingData.rttMin) + (pingData.rttMax - pingData.rttAvg))/2
+                updateAttr("mdev",mdev.round(3))
+                updateAttr("pingReturn",pingData)
+            }
             if (pingData.packetLoss < 100) {
                 if(textLoggingEnabled) log.debug "Presence set to 'present' for $ipAddress"
                 updateAttr("presence","present")
@@ -223,12 +229,14 @@ def extractValues(strWork) {
     if(debubEnable)log.debug startInx
     if (startInx == -1){
         if(textLoggingEnabled) log.debug "Invalid response received from endpoint"
-        updateAttr("percentLoss",100,"%")
-        updateAttr("pingStats"," ") 
-        updateAttr("min"," ")
-        updateAttr("avg"," ")
-        updateAttr("max"," ")
-        updateAttr("mdev"," ")
+        if(!presenceOnly){
+            updateAttr("percentLoss",100,"%")
+            updateAttr("pingStats"," ") 
+            updateAttr("min"," ")
+            updateAttr("avg"," ")
+            updateAttr("max"," ")
+            updateAttr("mdev"," ")
+        }
         percentLoss = 100
     } else {
         startInx -=3
@@ -237,16 +245,19 @@ def extractValues(strWork) {
             percentLoss = strWork.substring(1,3).toInteger()
         } else
             percentLoss = strWork.substring(0,3).toInteger()
-        updateAttr("percentLoss",percentLoss,"%")
+        if(!presenceOnly)
+            updateAttr("percentLoss",percentLoss,"%")
         
         startInx = strWork.indexOf("=")
         pingStats= strWork.substring(startInx+2,strWork.length()-4).tokenize("/")
         if(textLoggingEnabled) log.debug "Ping Stats: $pingStats"
-        updateAttr("pingStats",pingStats) 
-        updateAttr("min",pingStats[0]," ms")
-        updateAttr("avg",pingStats[1]," ms")
-        updateAttr("max",pingStats[2]," ms")
-        updateAttr("mdev",pingStats[3], " ms")
+        if(!presenceOnly){
+            updateAttr("pingStats",pingStats) 
+            updateAttr("min",pingStats[0]," ms")
+            updateAttr("avg",pingStats[1]," ms")
+            updateAttr("max",pingStats[2]," ms")
+            updateAttr("mdev",pingStats[3], " ms")
+        }
     }
     if (percentLoss < 100 ) {
         updateAttr("presence","present")
@@ -268,6 +279,16 @@ def updated(){
 	if(debugEnable) log.trace "updated()"
     if(!(pingPeriod > 0)) unschedule()
 	if(debugEnable) runIn(1800,logsOff)
+    updateAttr("percentLoss"," ")
+    updateAttr("pingStats"," ") 
+    updateAttr("min"," ")
+    updateAttr("avg"," ")
+    updateAttr("max"," ")
+    updateAttr("mdev"," ")
+    updateAttr("pingReturn"," ")
+    updateAttr("responseReady","false")
+    updateAttr("pingReturn"," ")
+    if (device.currentValue("presence") == null) updateAttr("presence","not present")       
 }
 
 void logsOff(){

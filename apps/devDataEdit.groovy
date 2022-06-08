@@ -13,9 +13,10 @@
  *
  *    Date          Who           What
  *    ----          ---           ----
+ *    08Jun2022    thebearmay    clear state when selected device changes
  */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 
 definition (
@@ -60,7 +61,7 @@ def mainPage(){
             section("Main"){
                 app.removeSetting("noteName")
                 app.removeSetting("custNote")
-                if(state.updFlag){
+                if(state.updFlag || state.lastDev != qryDevice?.displayName){
                     settings.each{
                         if("$it.key".indexOf("dv") == 0) {
                             app.removeSetting("$it.key")
@@ -69,6 +70,8 @@ def mainPage(){
                     state.updFlag = false
                 }
                 input "qryDevice", "capability.*", title: "Device to Update Data Items:", multiple: false, required: false, submitOnChange: true
+
+                state.lastDev = qryDevice?.displayName
                 if(qryDevice){ 
                     qryDevice.properties.data.each{
                         input "dv$it.key", "text",title:"<b>$it.key</b>", defaultValue: "$it.value", submitOnChange:true

@@ -15,7 +15,7 @@
  *    ----          ---           ----
  */
 
-static String version()	{  return '0.0.0'  }
+static String version()	{  return '0.0.1'  }
 
 
 definition (
@@ -60,10 +60,13 @@ def mainPage(){
             section("Main"){
                 app.removeSetting("noteName")
                 app.removeSetting("custNote")
-                settings.each{
-                    if("$it.key".indexOf("dv") == 0) {
-                        app.removeSetting("$it.key")
+                if(state.updFlag){
+                    settings.each{
+                        if("$it.key".indexOf("dv") == 0) {
+                            app.removeSetting("$it.key")
+                        }
                     }
+                    state.updFlag = false
                 }
                 input "qryDevice", "capability.*", title: "Device to Update Data Items:", multiple: false, required: false, submitOnChange: true
                 if(qryDevice){ 
@@ -137,9 +140,9 @@ def appButtonHandler(btn) {
                 itemKey = "$it.key".substring(2)
                 itemValue = "$it.value"
                 qryDevice.updateDataValue(itemKey, itemValue)
-                app.removeSetting("$it.key")
             }
 		}
+        state.updFlag = true
         if(qryDevice.controllerType == "LNK") {
             atomicState.meshedDeviceMsg="<span style='background-color:red;font-weight:bold;color:white;'>$qryDevice is a Hub Mesh Device, notes must be updated on the <i>REAL</i> device to be retained</span><br>"
         } else 

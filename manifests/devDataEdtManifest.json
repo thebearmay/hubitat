@@ -1,0 +1,18 @@
+{
+  "packageName": "Device Data Editor",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.2",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-06-10",
+  "apps": [
+    {
+      "id": "69e55b05-cecf-4261-94fd-d0d6705100a0",
+      "name": "Device Data Edit",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devDataEdit.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ]
+}

@@ -310,7 +310,7 @@ def configure() {
         updateAttr("zigbeeStatus", "enabled")
     else
         updateAttr("zigbeeStatus", "disabled")
-    updateAttr("zwaveStatus", zwaveScrape())
+//    updateAttr("zwaveStatus", zwaveScrape())
     
     formatUptime()
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
@@ -933,15 +933,15 @@ void getHub2(resp, data){
             if (debugEnable) log.info resp.data
             def jSlurp = new JsonSlurper()
             Map h2Data = (Map)jSlurp.parseText((String)resp.data)
-            hubAlerts = [:]
+            hubAlerts = []
             h2Data.alerts.each{
                 if(it.value == "true"){
                     if("$it.key".indexOf('Database') > -1)
-                        hubAlerts.put(hubDatabaseSize:"true")
+                        hubAlerts.add("hubDatabaseSize")
                     else if("$it.key".indexOf('Load') > -1)
-                        hubAlerts.put(hubLoad:"true")
+                        hubAlerts.add("hubLoad")
                     else
-                        hubAlerts.put(it.key,"$it.value")
+                        hubAlerts.add(it.key)
                 }
             }
             updateAttr("hubAlerts",hubAlerts)

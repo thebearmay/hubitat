@@ -19,9 +19,10 @@
  *    2021-12-28        thebearmay    bug fix
  *    2022-03-23        thebearmay    remove the second auth requirement to reboot
  *    2022-04-12        thebearmay    typo in memory warning
+ *    2022-06-10        thebearmay    pull in hubAlerts attribute
  */
 
-static String version()	{  return '1.0.9'  }
+static String version()	{  return '1.0.10'  }
 
 
 definition (
@@ -163,7 +164,11 @@ def refreshDevice(evt = null){
                 notifyStr = "Hub Update Status for ${it.currentValue('locationName')} has changed to ${it.currentValue("hubUpdateStatus",true)}"
                 sendNotification(notifyStr)
 		        app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus',true), type:"string"])
-            }            
+            }
+            if(it.currentValue("hubAlerts",true)?.length() > 2) {
+                notifyStr = "Hub Monitor - ${it.currentValue('locationName')} has raised alerts for: ${it.currentValue("hubAlerts",true)} "
+                sendNotification(notifyStr)
+            }
             numHub++
          }
     

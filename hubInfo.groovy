@@ -94,13 +94,14 @@
  *    2022-03-27  thebearmay     fix zwaveStatus with hub security
  *    2022-03-28  thebearmay     add a try..catch around the zwaveStatus
  *    2022-05-17  thebearmay     enforce 1 decimal place for temperature
- *    2022-05-20  thebearmay     remove a check/force remove for hubUpdateResp 
+ *    2022-05-20  thebearmay     remove a check/force remove for hubUpdateResp
+ *    2022-06-10  thebearmay     add hubAlerts, change source for zwaveStatus
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.30"}
+static String version() {return "2.6.31"}
 
 metadata {
     definition (
@@ -164,6 +165,7 @@ metadata {
         attribute "ipSubnetsAllowed", "string"
         attribute "zigbeeStatus", "string"
         attribute "zwaveStatus", "string"
+        attribute "hubAlerts", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -525,12 +527,21 @@ void getPollValues(){
         device.updateSetting("checkZwVersion",[value:"false",type:"bool"])
         updateAttr("zwaveData",null)
     }
-    //Zwave Status - enabled/disabled/unknown
-    updateAttr("zwaveStatus", zwaveScrape())
+    //Zwave Status - enabled/disabled & hubAlerts
+//    updateAttr("zwaveStatus", zwaveScrape())
+        Map params =
+        [
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub2/hubData",
+                headers: ["Cookie": cookie]           
+        ]
+    
+        if(debugEnable)log.debug params
+        asynchttpGet("getHub2", params)
     
     // get Temperature
     if(tempPollEnable) {
-        Map params = [
+        params = [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/internalTempCelsius",
                 headers: ["Cookie": cookie]
@@ -541,7 +552,7 @@ void getPollValues(){
 
     // get Free Memory
     if(freeMemPollEnabled) {
-        Map params = [
+        params = [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/freeOSMemory",
                 headers: ["Cookie": cookie]
@@ -552,7 +563,6 @@ void getPollValues(){
     
     // get Free JVM & CPU
     if(cpuPollEnabled) {
-        Map params
         if (location.hub.firmwareVersionString <= "2.2.5.131") {
             params = [
                     uri    : "http://${location.hub.localIP}:8080",
@@ -572,7 +582,7 @@ void getPollValues(){
 
     //Get DB size
     if(dbPollEnabled) {
-        Map params = [
+        params = [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/databaseSize",
                 headers: ["Cookie": cookie]
@@ -584,7 +594,7 @@ void getPollValues(){
 
     //get Public IP 
     if(publicIPEnable) {
-        Map params =
+        params =
         [
             uri:  "https://ifconfig.co/",
             headers: [ 
@@ -599,7 +609,7 @@ void getPollValues(){
  
     //Max State Days
     if(evtStateDaysEnable) {
-        Map params =
+        params =
         [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/maxDeviceStateAgeDays",
@@ -625,7 +635,7 @@ void getPollValues(){
     
     // NTP Server
     if(ntpCkEnable){
-        Map params =
+        params =
         [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/advanced/ntpServer",
@@ -637,7 +647,7 @@ void getPollValues(){
     }
     // Additional Subnets 
     if(subnetEnable) {
-        Map params =
+        params =
         [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub/allowSubnets",
@@ -916,6 +926,38 @@ void restartCheck() {
     updateAttr("lastHubRestartFormatted",sdf.format(upDate))
 }
 
+@SuppressWarnings('unused')
+void getHub2(resp, data){
+    try{
+        if (resp.getStatus() == 200){
+            if (debugEnable) log.info resp.data
+            def jSlurp = new JsonSlurper()
+            Map h2Data = (Map)jSlurp.parseText((String)resp.data)
+            hubAlerts = [:]
+            h2Data.alerts.each{
+                if(it.value == "true"){
+                    if("$it.key".indexOf('Database') > -1)
+                        hubAlerts.put(hubDatabaseSize:"true")
+                    else if("$it.key".indexOf('Load') > -1)
+                        hubAlerts.put(hubLoad:"true")
+                    else
+                        hubAlerts.put(it.key,"$it.value")
+                }
+            }
+            updateAttr("hubAlerts",hubAlerts)
+            if(h2Data.baseModel.zwaveStatus == "false") 
+                updateAttr("zwaveStatus","enabled")
+            else
+                updateAttr("zwaveStatus","disabled")
+        } else {
+            if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
+        } 
+    } catch (Exception ex){
+        if (!warnSuppress) log.warn ex
+    }
+}
+
+/*
 String zwaveScrape(){
     String cookie=(String)null
     try{
@@ -942,6 +984,7 @@ String zwaveScrape(){
         log.error ex
     }
 } 
+*/
 
 @SuppressWarnings('unused')
 void updateCheck(){

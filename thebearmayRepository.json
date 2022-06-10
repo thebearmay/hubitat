@@ -146,6 +146,13 @@
       "category": "Integrations",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/fmExtManifest.json",
       "description": "Provides File Manager support for text files containing extended character sets."
+    },
+    {
+      "id": "5666d457-3fe4-4b56-aff7-b0b42a18e6c7",
+      "name": "Device Data Editor",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/devDataEdtManifest.json",
+      "description": "Quick Editor for the items in the Data area on the Device Page.  Also permits the addition of new items into the data section."
     }
   ]
 }

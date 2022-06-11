@@ -101,7 +101,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.31"}
+static String version() {return "2.6.32"}
 
 metadata {
     definition (
@@ -935,12 +935,12 @@ void getHub2(resp, data){
             Map h2Data = (Map)jSlurp.parseText((String)resp.data)
             hubAlerts = []
             h2Data.alerts.each{
-                if(it.value == "true"){
+                if(it.value == true){
                     if("$it.key".indexOf('Database') > -1)
                         hubAlerts.add("hubDatabaseSize")
                     else if("$it.key".indexOf('Load') > -1)
                         hubAlerts.add("hubLoad")
-                    else
+                    else if("$it.key" != "runAlerts")
                         hubAlerts.add(it.key)
                 }
             }

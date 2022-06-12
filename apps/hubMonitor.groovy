@@ -22,7 +22,7 @@
  *    2022-06-10        thebearmay    pull in hubAlerts attribute
  */
 
-static String version()	{  return '1.0.10'  }
+static String version()	{  return '1.0.11'  }
 
 
 definition (
@@ -117,6 +117,7 @@ def hubAlerts(){
               }
               input "trackUpdStat$numHub", "bool", title:"Alert on Hub Update Status Change", required:true, submitOnChange:true, width:6
               if(settings["trackUpdStat$numHub"]) app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus'), type:"string"])
+              input "hub2Alerts$numHub", "bool", title:"Alert on HE UI alerts", required:true, submitOnChange:true, width:6
               numHub++
           }
       }
@@ -165,7 +166,7 @@ def refreshDevice(evt = null){
                 sendNotification(notifyStr)
 		        app.updateSetting("updStat$numHub",[value: it.currentValue('hubUpdateStatus',true), type:"string"])
             }
-            if(it.currentValue("hubAlerts",true)?.length() > 2) {
+            if(settings["hub2Alerts$numHub"] && it.currentValue("hubAlerts",true)?.length() > 2) {
                 notifyStr = "Hub Monitor - ${it.currentValue('locationName')} has raised alerts for: ${it.currentValue("hubAlerts",true)} "
                 sendNotification(notifyStr)
             }

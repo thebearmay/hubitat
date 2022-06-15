@@ -14,9 +14,10 @@
  *    Date          Who           What
  *    ----          ---           ----
  *    08Jun2022    thebearmay    clear state when selected device changes
+ *    15Jun2022    thebearmay    add the ability to remove a note
  */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 
 definition (
@@ -58,7 +59,7 @@ void logsOff(){
 def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
         if (app.getInstallationState() == 'COMPLETE') {   
-            section("Main"){
+            section("Main <p style='text-align:right;font-size:small'>Device Data Edit v${version()}</p>"){
                 app.removeSetting("noteName")
                 app.removeSetting("custNote")
                 if(state.updFlag || state.lastDev != qryDevice?.displayName){
@@ -81,7 +82,7 @@ def mainPage(){
                 if(atomicState.meshedDeviceMsg != null)
                     paragraph "$atomicState.meshedDeviceMsg"
                 
-                href "addNote", title: "Add new data note", required: false
+                href "addNote", title: "Add/Remove data note", required: false
                 input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true  
             }
             
@@ -103,14 +104,17 @@ def addNote(){
             input "custNote", "text", title: "Custom Note Text", required: false, submitOnChange: true
             input "noteName", "text", title: "Custom Note Name (no special characters)", required: false, submitOnChange:true
             if(noteName != null) checkName()
-            if(custNote  && checkName )
-                input "addNote", "button", title: "Update Note", width:4            
+            if(custNote  && checkName() ){
+                input "addNote", "button", title: "Update Note", width:4
+                input "remNote", "button", title: "Remove Note", width:4
+            } else if (checkName()) 
+                input "remNote", "button", title: "Remove Note", width:4
         }
     }
 }
 
 boolean checkName() {
-    if(noteName == null) app.updateSetting("noteName",[value:"customNote",type:"text"])
+    if(noteName == null) return false
     if(debugEnabled) log.debug toCamelCase(noteName)
     app.updateSetting("noteName",[value:toCamelCase(noteName),type:"text"])
     return true
@@ -157,9 +161,13 @@ def appButtonHandler(btn) {
 		qryDevice.updateDataValue(noteName, custNote)
 
         if(qryDevice.controllerType == "LNK") {
-            atomicState.meshedDeviceMsg="<span style='background-color:red;font-weight:bold;color:white;'>$it is a Hub Mesh Device, note must be added to the <i>REAL</i> device to be retained</span><br>"
+            atomicState.meshedDeviceMsg="<span style='background-color:red;font-weight:bold;color:white;'>$qryDevice is a Hub Mesh Device, note must be added to the <i>REAL</i> device to be retained</span><br>"
 		} else
             atomicState.meshedDeviceMsg = "<span style='background-color:green;font-weight:bold;color:white;'>Update Successful</span>"
+		break
+	case "remNote":
+        if(!noteName) break
+		qryDevice.removeDataValue(noteName)
 		break        
     default: 
 		log.error "Undefined button $btn pushed"

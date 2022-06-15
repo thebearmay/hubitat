@@ -1,9 +1,10 @@
 {
   "packageName": "Device Data Editor",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-06-10",
+  "dateReleased": "2022-06-15",
+  "releaseNotes": "0.0.3 - add the ability to remove a note ",
   "apps": [
     {
       "id": "69e55b05-cecf-4261-94fd-d0d6705100a0",

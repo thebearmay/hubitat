@@ -1,5 +1,5 @@
 /*
- * Device Data Display
+ * Device Data Item Display
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -24,11 +24,11 @@
  */
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.3.2'  }
+static String version()	{  return '1.3.3'  }
 
 
 definition (
-	name: 			"Device Data Display", 
+	name: 			"Device Data Item Display", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
 	description: 	"Display selected items out of the device data area for one or more devices.",

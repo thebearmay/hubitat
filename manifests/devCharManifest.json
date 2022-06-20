@@ -3,7 +3,7 @@
   "author": "Jean P. May, Jr.",
   "version": "2.0.4",
   "minimumHEVersion": "2.2.7.119",
-  "dateReleased": "2021-11-22",
+  "dateReleased": "2022-06-20",
   "releaseNotes": "2.04 - embedded section error",
   "apps": [
     {

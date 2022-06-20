@@ -18,10 +18,11 @@
  *    2021-04-30    thebearmay    Add alternate code names
  *    2021-05-04    thebearmay    2.2.7.x changes
  *    2021-12-28    thebearmay    return State as a map
+ *    2022-06-20    thebearmay    remove embedded sections
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.2.1'  }
+static String version()	{  return '0.2.2'  }
 
 
 definition (
@@ -109,9 +110,11 @@ def lockHandler(evt){
 def lockHistory(){
     dynamicPage (name: "lockHistory", title: "", install: false, uninstall: false) {
         section("Lock History"){          
-            dispTable = buildTable()
-            section ("Lock Details", hideable: true, hidden: false) {  
-                paragraph  "$dispTable"
+          dispTable = buildTable()
+          paragraph  "$dispTable"  
+        }
+ 
+        section ("Lock Details", hideable: true, hidden: false) {  
                 input  "codeRec", "bool", title:"Last Code Records", defaultValue: true, submitOnChange:true
                 input  "unlockRec", "bool", title:"Unlock Records", defaultValue: true, submitOnChange: true
                 input  "lockRec", "bool", title:"Lock Records", defaultValue: true, submitOnChange: true
@@ -121,7 +124,7 @@ def lockHistory(){
             section (""){    
                 href "mainPage", title: "Return", required: false
             }
-      }
+      
     }
 }
 
@@ -137,8 +140,9 @@ String buildTable(){
         if(codeRec) evtList+=qryDevice[i].statesSince("lastCodeName",Date.parse("yyyy-MM-dd hh:mm", qryDate),[max:100])
         if(unlockRec || lockRec) evtList+=qryDevice[i].statesSince("lock",Date.parse("yyyy-MM-dd hh:mm", qryDate),[max:100])
         evtList.each {        
+      //      paragraph it.toString()
             stateParts = parseState(it.toString())
-
+ 
             pDate=stateParts["date"]
             p4Trim = stateParts["value"].trim()
 
@@ -186,8 +190,9 @@ def altName(){
     dynamicPage (name: "altName", title: "", install: false, uninstall: false) {
         section("Alternate Names"){   
             dispTable = buildNames()
-            section ("Alternate Names Details", hideable: false, hidden: false) { 
                 paragraph dispTable
+        }            
+        section ("Alternate Names Details", hideable: false, hidden: false) { 
                 input "slotNum", "number", title: "Slot Number:", submitOnChange:true
                 input "slotName", "string", title: "Name to Display:", submitOnChange:true
                 if(slotName && slotNum) input "saveName", "button", title:"Save"
@@ -196,7 +201,6 @@ def altName(){
             section (""){   
                 href "mainPage", title: "Return", required: false
             }
-      }
     }
 }
 

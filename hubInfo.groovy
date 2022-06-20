@@ -1055,7 +1055,7 @@ String getCookie(){
     try{
   	  httpPost(
 		[
-		uri: "http://${location.hub.localIP}:8080",
+		uri: "http://127.0.0.1:8080",
 		path: "/login",
 		query: [ loginRedirect: "/" ],
 		body: [

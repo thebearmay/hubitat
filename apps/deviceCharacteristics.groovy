@@ -23,9 +23,10 @@
  *    2021-11-19  thebearmay    add report option ->v2.0.0
  *    2021-11-22  thebearmay    clean up last activity date on report and add commands
  *    2022-02-07  thebearmay    add Capabilities to the report
+ *    2022-06-20  thebearmay    embedded section error
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '2.0.3'  }
+static String version()	{  return '2.0.4'  }
 
 
 definition (
@@ -86,7 +87,7 @@ def mainPage(){
 
 def deviceCharacteristics(){
     dynamicPage (name: "deviceCharacteristics", title: "", install: false, uninstall: false) {
-	  section("Device Characteristics"){
+//	  section("Device Characteristics"){
           def strWork = ""
           for(i=0;i<qryDevice.size();i++){
             if (qryDevice[i].label) qryName= qryDevice[i].label
@@ -158,7 +159,7 @@ def deviceCharacteristics(){
 				paragraph propStr
 			}			
           }
-       }
+       //}
     }
 }
 

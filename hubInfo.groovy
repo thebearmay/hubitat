@@ -96,12 +96,13 @@
  *    2022-05-17  thebearmay     enforce 1 decimal place for temperature
  *    2022-05-20  thebearmay     remove a check/force remove for hubUpdateResp
  *    2022-06-10  thebearmay     add hubAlerts, change source for zwaveStatus
+ *    2022-06-20  thebearmay     trap login error
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.32"}
+static String version() {return "2.6.33"}
 
 metadata {
     definition (
@@ -1051,7 +1052,8 @@ void reboot() {
 
 @SuppressWarnings('unused')
 String getCookie(){
-	httpPost(
+    try{
+  	  httpPost(
 		[
 		uri: "http://${location.hub.localIP}:8080",
 		path: "/login",
@@ -1062,11 +1064,14 @@ String getCookie(){
 			submit: "Login"
 			]
 		]
-	) { resp -> 
+	  ) { resp -> 
 		cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) 
         if(debugEnable)
             log.debug "$cookie"
-	}
+	  }
+    } catch (e){
+        cookie = ""
+    }
     return "$cookie"
 
 }

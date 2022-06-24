@@ -97,12 +97,13 @@
  *    2022-05-20  thebearmay     remove a check/force remove for hubUpdateResp
  *    2022-06-10  thebearmay     add hubAlerts, change source for zwaveStatus
  *    2022-06-20  thebearmay     trap login error
+ *    2022-06-24  thebearmay     add hubMesh data
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.33"}
+static String version() {return "2.6.34"}
 
 metadata {
     definition (
@@ -167,6 +168,8 @@ metadata {
         attribute "zigbeeStatus", "string"
         attribute "zwaveStatus", "string"
         attribute "hubAlerts", "string"
+        attribute "hubMeshData", "string"
+        attribute "hubMeshCount", "number"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -189,6 +192,7 @@ preferences {
     input("zwLocked", "bool", title: "Never Run ZWave Version Update", defaultValue:false, submitOnChange: true)
     input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true)
     input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true)
+    input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true) 
     input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true)
     input("allowReboot","bool", title: "Allow Hub to be rebooted", defaultValue: false, submitOnChange: true)
@@ -280,6 +284,10 @@ def updated(){
         }
         if(!subnetEnable){
             device.deleteCurrentState("ipSubnetsAllowed")
+        }
+        if(!hubMeshPoll){
+            device.deleteCurrentState("hubMeshData")
+            device.deleteCurrentState("hubMeshCount")
         }
         device.deleteCurrentState("hubUpdateResp")
 	}
@@ -659,6 +667,20 @@ void getPollValues(){
         asynchttpGet("getSubnets", params)    
     
     }
+    
+    //HubMesh Data
+    if(hubMeshPoll) {
+        params =
+        [
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub2/hubMeshJson",
+                headers: ["Cookie": cookie]           
+        ]
+    
+        if(debugEnable)log.debug params
+        asynchttpGet("getHubMesh", params)
+    }
+    
     //End Pollable Gets
 	
     if(!suppressData || location.hub.properties.data.zigbeeChannel != null)
@@ -957,6 +979,38 @@ void getHub2(resp, data){
         if (!warnSuppress) log.warn ex
     }
 }
+
+@SuppressWarnings('unused')
+void getHubMesh(resp, data){
+    try{
+        if (resp.getStatus() == 200){
+            if (debugEnable) log.info resp.data
+            def jSlurp = new JsonSlurper()
+            Map h2Data = (Map)jSlurp.parseText((String)resp.data)
+            i=0
+            subMap2=[:]
+            jStr="["
+            h2Data.hubList.each{
+                if(i>0) jStr+=","
+                jStr+="{\"hubName\":\"$it.name\","
+                jStr+="\"active\":\"$it.active\","
+                jStr+="\"offline\":\"$it.offline\","
+                jStr+="\"ipAddress\":\"$it.ipAddress\","
+                jStr+="\"meshProtocol\":\"$h2Data.hubMeshProtocol\"}"
+                i++
+            }
+            jStr+="]"
+            updateAttr("hubMeshData", jStr)
+            updateAttr("hubMeshCount",i)
+
+        } else {
+            if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
+        } 
+    } catch (Exception ex){
+        if (!warnSuppress) log.warn ex
+    }
+}
+
 
 /*
 String zwaveScrape(){

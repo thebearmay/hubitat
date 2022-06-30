@@ -98,12 +98,13 @@
  *    2022-06-10  thebearmay     add hubAlerts, change source for zwaveStatus
  *    2022-06-20  thebearmay     trap login error
  *    2022-06-24  thebearmay     add hubMesh data
+ *    2022-06-30  thebearmay     add shutdown command
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.34"}
+static String version() {return "2.6.35"}
 
 metadata {
     definition (
@@ -173,6 +174,7 @@ metadata {
 
         command "hiaUpdate", ["string"]
         command "reboot"
+        command "shutdown"
     }   
 }
 
@@ -195,7 +197,7 @@ preferences {
     input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true) 
     input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true)
-    input("allowReboot","bool", title: "Allow Hub to be rebooted", defaultValue: false, submitOnChange: true)
+    input("allowReboot","bool", title: "Allow Hub to be shutdown or rebooted", defaultValue: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -1096,6 +1098,28 @@ void reboot() {
 		[
 			uri: "http://${location.hub.localIP}:8080",
 			path: "/hub/reboot",
+			headers:[
+				"Cookie": cookie
+			]
+		]
+	) {		resp ->	} 
+    // end - Modified from dman2306 Rebooter app
+}
+
+@SuppressWarnings('unused')
+void shutdown() {
+    if(!allowReboot){
+        log.error "Shutdown was requested, but allowReboot/Shutdown was set to false"
+        return
+    }
+    log.info "Hub Reboot requested"
+    // start - Modified from dman2306 Rebooter app
+    String cookie=(String)null
+    if(security) cookie = getCookie()
+	httpPost(
+		[
+			uri: "http://${location.hub.localIP}:8080",
+			path: "/hub/shutdown",
 			headers:[
 				"Cookie": cookie
 			]

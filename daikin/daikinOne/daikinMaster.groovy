@@ -30,7 +30,7 @@ metadata {
         name: "Daikin One Master", 
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
-        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/daikin/daikinMaster.groovy"
+        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/daikin/daikinOne/daikinMaster.groovy"
     ) {
         capability "Actuator"
         capability "Configuration"

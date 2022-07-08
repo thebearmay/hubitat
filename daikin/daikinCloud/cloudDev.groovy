@@ -34,7 +34,7 @@ metadata {
         capability "Configuration"
         capability "Initialize"
         
-        command "updState",[["jsonString"]]
+        command "updState",[[name:"stateStr", type:"STRING", description:"JSON string containing state updates"]]
         
         attribute "temporary", "string"
 

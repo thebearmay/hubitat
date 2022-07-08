@@ -218,6 +218,8 @@ void getResp(resp, data) {
                     state.dknAccessToken = jsonData.access_token
                     state.dknRefreshToken = jsonData.refresh_token
                     state.dknTokenTimeStamp = new Date()
+                    // Now get the device list
+                    apiGet("devices",[])
                 }
             } else 
                 atomicState.returnString =  "{\"status\":\"${resp.getStatus()}\"}"
@@ -228,7 +230,75 @@ void getResp(resp, data) {
 }
 // End App Authorization
          
+// Begin API
 
+void apiGet (command, bodyMap){
+    def bodyText = JsonOutput.toJson(bodyMap)
+	Map requestParams =
+	[
+        uri:  "https://dkncloudna.com/api/v1/open/$command",
+        requestContentType: 'application/json',
+		contentType: 'application/json',
+        Authorization: "Bearer $state.dknAccessToken",
+        body: "$bodyText"
+	]
+
+    if(debugEnabled) log.debug "$requestParams"
+    asynchttpGet("getApi", requestParams, [cmd:"${command}"]) 
+}
+
+void getApi(resp, data){
+    try {
+        if(debugEnabled) log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
+        if(resp.getStatus() == 200 || resp.getStatus() == 207){
+            if(resp.data){
+                if(data.cmd == "devices"){
+                    jsonData = (HashMap) resp.JSON
+                    state.siteId = jsonData._id
+                    state.siteName = jsonData.name 
+                    unitTran = ['C', 'F']
+                    state.siteUnit = unitTran[jsonData.Units.toInteger()]
+                    jsonData.devices.each{
+                        createChildDev(it.name, it.mac)
+                    }
+                } else if(data.cmd.indexOf("$state.siteId")!= -1) {
+                    mac = data.cmd.substring(data.cmd.lastIndexOf("/")+1)
+                    macStrip = mac.replace(":","")
+                    cd = getChildDevice("${device.deviceNetworkId}-${macStrip}")
+                    cd.updState("${resp.JSON}")
+                }
+            }
+        }
+    } catch (Exception e) {
+        log.error "getApi - $e.message"        
+    }
+}
+                   
+
+void apiPut (command, bodyMap){
+    def bodyText = JsonOutput.toJson(bodyMap)
+	Map requestParams =
+	[
+        uri:  "https://dkncloudna.com/api/v1/open/$command",
+        requestContentType: 'application/json',
+		contentType: 'application/json',
+        Authorization: "Bearer $state.dknAccessToken",
+        body: "$bodyText"
+	]
+
+    if(debugEnabled) log.debug "$requestParams"
+    httpPut("getApi", requestParams, [cmd:"${command}"]) {resp -> 
+        
+    }
+}
+
+// End API
+
+void createChildDev(name, mac){
+    macStrip = mac.replace(":","")
+    cd = addChildDevice("thebearmay", "Daikin Cloud Device", "${device.deviceNetworkId}-$macStrip", [name: "${name}", isComponent: true, mac:"$mac", label:"dcd$name"])
+    apiGet("${state.siteId}/${cd.properties.data["${mac}"]}")
+}
 
 void appButtonHandler(btn) {
     switch(btn) {

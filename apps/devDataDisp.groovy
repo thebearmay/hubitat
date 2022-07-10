@@ -27,7 +27,7 @@
 
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.3.3'  }
+static String version()	{  return '1.3.4'  }
 
 
 definition (

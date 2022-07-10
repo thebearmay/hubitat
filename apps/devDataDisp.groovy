@@ -22,6 +22,7 @@
  *    05Apr2022   thebearmay    split html > 1024
  *    06Apr2022   thebearmay    allow multiple instances via rename
  *    20Jun2022   thebearmay    embedded section correction
+ *    10Jul2022   jtp10181      CSV changes
 */
 
 import java.text.SimpleDateFormat
@@ -134,7 +135,7 @@ def deviceData(){
 	  section("Device Data"){
           qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
           qryDevice.each{ x->
-              paragraph "<p style='font-weight:bold;text-decoration:underline'>$x.displayName</p>"
+              paragraph "<span style='font-weight:bold;text-decoration:underline'>$x.displayName</span> ($x.name)"
               varOut = ""
               varList.each {
                   if(x.properties.data["$it"]) varOut+= "$it: ${x.properties.data["$it"]}<br>"
@@ -247,20 +248,23 @@ def jsonDown(){
 def csvDown(){
     dynamicPage (name: "csvDown", title: "", install: false, uninstall: false) {
       section("CSV Data"){
-        jData=""
+        jData="\"id\",\"displayName\",\"name\""
+        varList.each { jData += ",\"$it\"" }
+        stList.each { jData += ",\"$it\"" }
+        jData += "\n"  
+
         qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
         qryDevice.each{ x->
-            jData += "\"$x.id\",\"$x.displayName\"\n"
+            jData += "\"$x.id\",\"$x.displayName\",\"$x.name\""
             varList.each {
-                if(x.properties.data["$it"]) 
-                    jData += ",,\"$it\",\"${x.properties.data["$it"]}\"\n"
+                jData += (x.properties.data["$it"] ? ",\"${x.properties.data["$it"]}\"" : ",")
             }
             stList.each { s->
                 x.properties.currentStates.each {
-                    if(it.name == s) 
-                    jData +=",,\"$s\",\"$it.value\"\n"
+                    jData += (it.name == s ? ",\"$it.value\"" : ",")
                 }
-             }            
+            }
+            jData += "\n"
       }
       oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.csv';a.href = 'data:text/plain,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
       oData +="<button onclick='download()'>Download CSV</button><hr /><div id='jData'>$jData</div><hr />"

@@ -367,6 +367,7 @@ void setHeatingSetpoint(temp){
 
 Float normalizeTemp(temp) { //limits to x.5 or x.0
     Float nTemp =  ((int) (temp*2 + 0.5))/2.0
+    return nTemp	
 }
 
 Float checkForAdj(hold, temp) {

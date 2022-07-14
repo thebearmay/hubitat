@@ -28,7 +28,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Daikin DKN Cloud interface - handles all communication with the Daikin Cloud.",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubVarSync.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/daikin/daikinCloud/dknCloudApp.groovy",
 	oauth: 			true,
     iconUrl:        "",
     iconX2Url:      ""

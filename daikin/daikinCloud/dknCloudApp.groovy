@@ -124,10 +124,11 @@ of the system administrator of the DKN Cloud NA ecosystem.</u></b></p>
 
 def dknCredentials(){
     dynamicPage (name: "dknCredentials", title: "", install: false, uninstall: false, nextPage:"mainPage") {
-        section("Application Credentials", hideable: false, hidden: false){  
+        section("<span style='text-decoration:underline;font-weight:bold'>Application Credentials</span>", hideable: false, hidden: false){  
             input "dknUserName", "text", title: "Daikin User Name:" 
             input "dknPassword", "password", title: "Daikin Password:" 
-            input "dknAppName", "text", title: "Daikin Registered App Name:"
+            input "dknAppName", "text", title: "App Name Registered with Daikin:"
+            paragraph "<span style='text-decoration:underline;font-weight:bold'>These come from the Daikin DKN Administrator</span>"
             input "dknCode", "text", title: "Daikin Client Code:"
             input "dknClientId", "text", title: "Daikin Client ID:"
             input "dknClientSecret", "text", title: "Daikin Client Secret:"
@@ -279,7 +280,7 @@ void apiPut (command, bodyMap){
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
-        uri:  "https://dkncloudna.com/api/v1/open/$command",
+        uri:  "https://dkncloudna.com/api/v1/open/${state.siteId}/$command",
         requestContentType: 'application/json',
 		contentType: 'application/json',
         Authorization: "Bearer $state.dknAccessToken",
@@ -287,7 +288,19 @@ void apiPut (command, bodyMap){
 	]
 
     if(debugEnabled) log.debug "$requestParams"
-    httpPut("getApi", requestParams, [cmd:"${command}"]) {resp -> 
+    httpPut(requestParams, [cmd:"${command}",bMap:bodyMap]) {resp -> 
+        if (resp.getStatus() == 401){
+            tokenRefresh()
+            pauseExecution(500)
+            apiPut(data.cmd, data.bMap)
+        } else if (resp.getStatus == 400) {
+            log.error "${resp.JSON}"        
+        }else {
+            mac = data.cmd.substring(0,17)
+            macStrip = mac.replace(":","")
+            cd = getChildDevice("${device.deviceNetworkId}-${macStrip}")
+            cd.updState("${resp.JSON}")
+        }
         
     }
 }
@@ -316,5 +329,8 @@ void intialize() {
 }
 
 void uninstalled(){
-
+    chdList = getChildDevices()
+    chdList.each{
+        deleteChildDevice(it.getDeviceNetworkId())
+    }
 }

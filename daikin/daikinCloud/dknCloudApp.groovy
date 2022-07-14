@@ -309,7 +309,7 @@ void apiPut (command, bodyMap){
 
 void createChildDev(name, mac){
     macStrip = mac.replace(":","")
-    cd = addChildDevice("thebearmay", "Daikin Cloud Device", "${device.deviceNetworkId}-$macStrip", [name: "${name}", isComponent: true, mac:"$mac", label:"dcd$name"])
+    cd = addChildDevice("thebearmay", "Daikin Cloud Device", "${device.deviceNetworkId}-$macStrip", [name: "${name}", isComponent: false, mac:"$mac", label:"dcd$name"])
     apiGet("${state.siteId}/${cd.properties.data["${mac}"]}")
 }
 

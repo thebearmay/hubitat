@@ -29,6 +29,7 @@ definition (
 	description: 	"Daikin DKN Cloud interface - handles all communication with the Daikin Cloud.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/daikin/daikinCloud/dknCloudApp.groovy",
+	installOnOpen: 		true,
 	oauth: 			true,
     iconUrl:        "",
     iconX2Url:      ""

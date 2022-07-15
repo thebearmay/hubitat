@@ -29,7 +29,7 @@ definition (
 	description: 	"Daikin DKN Cloud interface - handles all communication with the Daikin Cloud.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/daikin/daikinCloud/dknCloudApp.groovy",
-	installOnOpen: 		true,
+    	installOnOpen:  true,
 	oauth: 			true,
     iconUrl:        "",
     iconX2Url:      ""
@@ -141,7 +141,9 @@ def dknCredentials(){
 
 //Begin App Authorization 
 def authRequest() {
-    log.error "Unexpected endpoint access: ${request.data}"
+    log.warn "Unexpected endpoint access: ${request.data}"
+    jsonText = JsonOutput.toJson([value: "AuthReq: Acknowledged"])
+    render contentType:'application/json', data: "$jsonText", status:200
 }
 
 void intialAuth(){
@@ -310,7 +312,7 @@ void apiPut (command, bodyMap){
 
 void createChildDev(name, mac){
     macStrip = mac.replace(":","")
-    cd = addChildDevice("thebearmay", "Daikin Cloud Device", "${device.deviceNetworkId}-$macStrip", [name: "${name}", isComponent: false, mac:"$mac", label:"dcd$name"])
+    cd = addChildDevice("thebearmay", "Daikin Cloud Device", "${device.deviceNetworkId}-$macStrip", [name: "${name}", isComponent: true, mac:"$mac", label:"dcd$name"])
     apiGet("${state.siteId}/${cd.properties.data["${mac}"]}")
 }
 

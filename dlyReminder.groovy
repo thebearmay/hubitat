@@ -139,7 +139,10 @@ void processFile(){
         } else if (!tOnly && datePart > today) {
             dailyMessage = "$noteDate $notePart"
             procFlag = false
-        }            
+        } else if (tOnly && datePart > today) {
+            dailyMessage = "$noteDate Nothing for Today"
+            proceFlag = false
+        }
     }
     this.setGlobalVar("$varOut", "$dailyMessage")
 }

@@ -14,14 +14,18 @@
  *
  *    Date        Who           What
  *    ----        ---           ----
+ *    26Jul2022   thebearmay    additional verifications
 */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.1.1'  }
 
 import java.text.SimpleDateFormat
+import java.util.Date
 import groovy.transform.Field
 
-@Field sdfList = ["yyyyMMdd","dd/MM/yyyy","MM/dd/yyyy"]
+@Field sdfList = ["yyyyMMdd","ddMMYYYY","MMddyyyy","dd/MM/yyyy","MM/dd/yyyy"]
+@Field sdfList2 = ["dd MMM", "ddMMM", "MMM dd", "ddMMMyyyy", "MM/dd", "dd/MM","[None]"]
+
 
 definition (
 	name: 			"Daily Reminder", 
@@ -37,7 +41,8 @@ definition (
 ) 
 
 preferences {
-   page name: "mainPage"
+    page name: "mainPage"
+    page name: "options"
 }
 
 
@@ -64,8 +69,8 @@ void logsOff(){
 def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') { 
-	    	section("Main") {
-                input "fileIn", "text", title: "Input File", submitOnChange:true, required:false, defaultValue:"yourFileName.txt"
+            section("<b><u>Main Page</u></b><br /><small>v${version()}</small>") {
+                input "fileIn", "text", title: "<b>Input File</b>", submitOnChange:true, required:false, defaultValue:"yourFileName.txt", width:4
                 
                 if(fileExists("$fileIn")) {
                     paragraph "<span style='color:white;background-color:green'>&nbspInput File Present&nbsp</span>"
@@ -74,29 +79,32 @@ def mainPage(){
                     paragraph "<span style='color:black;background-color:red'>&nbspInput File Not Present&nbsp</span>"
                     s1 = false
                 }
-                input "varOut", "text", title: "Variable to update:", submitOnChange:true, required:false, defaultValue:"varName"
+                input "varOut", "text", title: "<b>Variable to update:</b>", submitOnChange:true, required:false, defaultValue:"varName", width:4
+                input "noVarOut", "bool", title: "<b>Run without a Hub Variable</b>", submitOnChange:true, required:false, defaultValue:false, width:4
                 removeAllInUseGlobalVar()
-                if(varOut != null && variableExists("$varOut")){
-                    paragraph "<span style='color:white;background-color:green'>&nbsp;Variable Present&nbsp;</span>"
+                if((varOut != null && variableExists("$varOut")) || noVarOut){
+                    paragraph "<span style='color:white;background-color:green'>&nbsp;Variable Present or Overriden&nbsp;</span>"
                     s2 = true                  
                 } else{
                     paragraph "<span style='color:black;background-color:red'>&nbsp;Variable Not Present&nbsp;</span>"
                     s2= false
                 }
                 
-                input "dateFmt", "enum", title: "Date format used in file:", submitOnChange:true, required:false, options:sdfList
+                input "dateFmt", "enum", title: "<b>Date format used in file:</b>", submitOnChange:true, required:false, options:sdfList, width:4
                 
-                input "tOnly", "bool", title:"Today's events only:", submitOnChange:true, required:false, defaultValue:false
-                if(s1 && s2)
-                    input "loadFile", "button", title:"Load File and Start Daily Processing"
+                input "tOnly", "bool", title:"<b>Today's events only</b>", submitOnChange:true, required:false, defaultValue:false, width:4
+                href "options", title:"Additional Options", width:4
+                
+                if(s1 && s2 && dateFmt != null)
+                input "loadFile", "button", title:"Load File and Start Daily Processing", backgroundColor:"light-gray",textColor:"green",borderColor:"black"
 
-                input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
+                input("security", "bool", title: "<b>Hub Security Enabled?</b>", defaultValue: false, submitOnChange: true)
                 if (security) { 
-                    input("username", "string", title: "Hub Security Username", required: false)
-                    input("password", "password", title: "Hub Security Password", required: false)
+                    input("username", "string", title: "<b>Hub Security Username</b>", required: false)
+                    input("password", "password", title: "<b>Hub Security Password</b>", required: false)
                 }
                 
-				input "debugEnabled", "bool", title:"Enable Debug Logging:", submitOnChange:true, required:false, defaultValue:false
+				input "debugEnabled", "bool", title:"<b>Enable Debug Logging?</b>", submitOnChange:true, required:false, defaultValue:false
                 if(debugEnabled) {
                     unschedule()
                     runIn(1800,logsOff)
@@ -116,6 +124,20 @@ def mainPage(){
     }
 }
 
+def options(){
+    dynamicPage (name: "options", title: "", install: false, uninstall: false) {
+        section("<u><b>Options</b></u>"){
+            input "dateFmt2", "enum", title: "<b>Date format to prepend note:</b>", submitOnChange:true, required:false, options:sdfList2, defaultValue:"dd MMM", width:4
+            input "swDev", "capability.switch", title:"<b>Optional switch to turn on, on the event date</b>", submitOnChange:true, required:false
+            input "notifDev", "capability.notification", title:"<b>Optional notification device(s)</b>", submitOnChange:true, required:false, multiple:true
+            if(notifDev) {
+                input "notifTime", "time", title:"<b>Time to send Notification</b>", submitOnChange:true, require:false, defaultValue:"07:00", width:4
+            }
+           
+        }
+    }
+}
+
 void processFile(){
     String fContent=readFile(fileIn)
     List fRecs=fContent.split("\n")
@@ -123,19 +145,25 @@ void processFile(){
     sdf = new SimpleDateFormat("$dateFmt")
     dailyMessage = "<span style='color:black;background-color:red'>&nbsp;No future events to display&nbsp;</span>"
     boolean procFlag = true
+    if(swDev) swDev.off()
     fRecs.each {
         if(!procFlag) return
         if(debugEnabled) log.debug(it)
         
         int firstSpace = it.indexOf(' ')
         datePart = (new SimpleDateFormat("yyyyMMdd")).format(sdf.parse(it.substring(0,firstSpace)))
-        noteDate = (new SimpleDateFormat("dd MMM")).format(sdf.parse(it.substring(0,firstSpace)))
+        if(dateFmt2 && dateFmt2 != "[None]")
+            noteDate = (new SimpleDateFormat(dateFmt2)).format(sdf.parse(it.substring(0,firstSpace)))
+        else
+            noteDate = ""
+                       
         notePart = it.substring(firstSpace+1)
-        //if(debugEnabled) 
-        log.debug "$datePart $notePart"
+        if(debugEnabled) log.debug "$datePart $notePart"
         if(datePart == today) {
             dailyMessage = "$noteDate $notePart"
             procFlag = false
+            if(swDev) swDev.on()
+            if(notifDev) schedNotify(dailyMessage)
         } else if (!tOnly && datePart > today) {
             dailyMessage = "$noteDate $notePart"
             procFlag = false
@@ -144,13 +172,30 @@ void processFile(){
             proceFlag = false
         }
     }
-    this.setGlobalVar("$varOut", "$dailyMessage")
+    if(!noVarOut) this.setGlobalVar("$varOut", "$dailyMessage")
+}
+
+void schedNotify(msg) {
+    if(debugEnabled) log.debug "Schedule $msg"
+    //Extract the time from the preference setting and append to the current date
+    String wDateStr = "${(new SimpleDateFormat('yyyy-MM-dd')).format(new Date())}T${notifTime.substring(notifTime.indexOf('T')+1)}"
+    //Subtract current date/time from notification date/time to determine runin offset
+    long notifSec = (((new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")).parse(wDateStr)).getTime()-((new Date()).getTime()))/1000;
+    runIn(notifSec, "sendNotif", [data:msg])
+}
+
+void sendNotif(msg){
+    if(msg == null) msg = data.msg
+    notifDev.each { 
+        if(debugEnabled) log.debug "Sending notification to $it, text: $msg"
+        it.deviceNotification(msg)  
+    }
 }
 
 void appButtonHandler(btn) {
     switch(btn) {
         case "loadFile":
-            log.debug "loadFile Called"
+            if(debugEnabled) log.debug "loadFile Called"
             processFile()
             schedule("0 5 0 ? * * *", "processFile")
             break            

@@ -9,7 +9,7 @@
       "id": "7e008c92-2159-4488-bb34-3f0f638df558",
       "name": "Daily Reminder",
       "namespace": "thebearmay",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/dlyReminder.groovy",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/dlyReminder.groovy",
       "required": true,
       "oauth": false,
       "primary": false

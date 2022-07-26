@@ -16,7 +16,7 @@
  *    ----        ---           ----
 */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.1.0'  }
 
 import java.text.SimpleDateFormat
 import groovy.transform.Field

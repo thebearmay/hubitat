@@ -153,6 +153,13 @@
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/devDataEdtManifest.json",
       "description": "Quick Editor for the items in the Data area on the Device Page.  Also permits the addition of new items into the data section."
+    },
+    {
+      "id": "20ec27d1-afff-4736-be9f-837e0913c7a2",
+      "name": "Daily Reminder",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/dlyReminderManifest.json",
+      "description": "App uses a simple text file as input to generate daily reminder notices."
     }
   ]
 }

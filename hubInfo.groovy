@@ -99,12 +99,13 @@
  *    2022-06-20  thebearmay     trap login error
  *    2022-06-24  thebearmay     add hubMesh data
  *    2022-06-30  thebearmay     add shutdown command
+ *    2022-08-11  thebearmay     add attribute update logging
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.35"}
+static String version() {return "2.6.36"}
 
 metadata {
     definition (
@@ -197,6 +198,7 @@ preferences {
     input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true) 
     input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true)
+    input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true)
     input("allowReboot","bool", title: "Allow Hub to be shutdown or rebooted", defaultValue: false, submitOnChange: true)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
@@ -351,6 +353,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
         aValue = aValue.substring(0,1023)
     }
     sendEvent(name:aKey, value:aValue, unit:aUnit)
+    if(attrLogging) log.info "$aKey : $aValue$aUnit"
 }
 
 void formatUptime(){

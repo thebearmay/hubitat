@@ -100,12 +100,13 @@
  *    2022-06-24  thebearmay     add hubMesh data
  *    2022-06-30  thebearmay     add shutdown command
  *    2022-08-11  thebearmay     add attribute update logging
+ *    2022-08-15  thebearmay     add zigbeeStatus2 from the hub2 data
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.36"}
+static String version() {return "2.6.37"}
 
 metadata {
     definition (
@@ -168,6 +169,7 @@ metadata {
         attribute "ntpServer", "string"
         attribute "ipSubnetsAllowed", "string"
         attribute "zigbeeStatus", "string"
+        attribute "zigbeeStatus2", "string"
         attribute "zwaveStatus", "string"
         attribute "hubAlerts", "string"
         attribute "hubMeshData", "string"
@@ -961,6 +963,7 @@ void getHub2(resp, data){
             if (debugEnable) log.info resp.data
             def jSlurp = new JsonSlurper()
             Map h2Data = (Map)jSlurp.parseText((String)resp.data)
+            if (debugEnable) log.info h2Data
             hubAlerts = []
             h2Data.alerts.each{
                 if(it.value == true){
@@ -977,6 +980,13 @@ void getHub2(resp, data){
                 updateAttr("zwaveStatus","enabled")
             else
                 updateAttr("zwaveStatus","disabled")
+            if(h2Data.baseModel.zigbeeStatus == "false"){
+                updateAttr("zigbeeStatus2", "enabled")
+                if (device.currentValue("zigbeeStatus", true) != "enabled") log.warning "Zigbee Status has opposing values - may have crashed."
+            } else {
+                updateAttr("zigbeeStatus2", "disabled")
+                if (device.currentValue("zigbeeStatus", true) != "disabled") log.warning "Zigbee Status has opposing values - may have crashed."
+            }
         } else {
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
         } 
@@ -1015,36 +1025,6 @@ void getHubMesh(resp, data){
         if (!warnSuppress) log.warn ex
     }
 }
-
-
-/*
-String zwaveScrape(){
-    String cookie=(String)null
-    try{
-		if(security) cookie = getCookie()
-        httpGet(
-            [
-                uri    : "http://${location.hub.localIP}:8080",
-                path   : "/hub/zwaveInfo",
-                headers: ["Cookie": cookie]           
-            ])
-
-    //httpGet("http://${location.hub.localIP}:8080/hub/zwaveInfo") 
-        { res ->
-          dataC = res.data.toString().substring(196)
-          if(dataC.indexOf("const zwaveStatus = 'false'")>-1)
-              zwaveStatus="enabled"
-          else if(dataC.indexOf("const zwaveStatus = 'true'")>-1)
-              zwaveStatus="disabled"
-          else
-              zwaveStatus="unknown"
-          return zwaveStatus
-        }
-    }catch (ex) {
-        log.error ex
-    }
-} 
-*/
 
 @SuppressWarnings('unused')
 void updateCheck(){

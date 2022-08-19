@@ -179,7 +179,7 @@ metadata {
         command "hiaUpdate", ["string"]
         command "reboot"
         command "shutdown"
-        command "altHtml"
+        //command "altHtml"
     }   
 }
 

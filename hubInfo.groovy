@@ -101,12 +101,13 @@
  *    2022-06-30  thebearmay     add shutdown command
  *    2022-08-11  thebearmay     add attribute update logging
  *    2022-08-15  thebearmay     add zigbeeStatus2 from the hub2 data
+ *    2022-08-19  thebearmay     allow for a user defined HTML attribute using a file template
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.38"}
+static String version() {return "2.6.39"}
 
 metadata {
     definition (
@@ -178,6 +179,7 @@ metadata {
         command "hiaUpdate", ["string"]
         command "reboot"
         command "shutdown"
+        command "altHtml"
     }   
 }
 
@@ -199,6 +201,7 @@ preferences {
     input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true)
     input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true) 
     input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
+    input("alternateHtml", "string", title: "Template file for alternate HTML attribute", submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true)
     input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true)
     input("allowReboot","bool", title: "Allow Hub to be shutdown or rebooted", defaultValue: false, submitOnChange: true)
@@ -375,6 +378,10 @@ void formatUptime(){
 
 void formatAttrib(){
     if(debugEnable) log.debug "formatAttrib"
+    if(alternateHtml){
+        altHtml()
+        return
+    }
     String attrStr = "<style>td{text-align:left;}</style><table id='hubInfoTable'>"
     
     attrStr += addToAttr("Name","name")
@@ -1133,6 +1140,82 @@ String getCookie(){
     }
     return "$cookie"
 
+}
+void altHtml(){
+    String fContents = readFile(alternateHtml)
+    List fRecs=fContents.split("\n")
+    String html = ""
+    fRecs.each {
+        int vCount = it.count("<%")
+        if(debugEnable) log.debug "variables found: $vCount"
+        if(vCount > 0){
+            recSplit = it.split("<%")
+            if(debugEnable) log.debug "$recSplit"
+            recSplit.each {
+                if(it.indexOf("%>") == -1)
+                    html+= it
+                else {
+                    vName = it.substring(0,it.indexOf('%>'))
+                    if(debugEnable) log.debug "${it.indexOf("5>")}<br>$it<br>${it.substring(0,it.indexOf("%>"))}"
+                    if(vName == "date()")
+                        aVal = new Date()
+                    else {
+                        aVal = device.currentValue("$vName",true)
+                        String attrUnit = getUnitFromState("$vName")
+                        if (attrUnit != null) aVal+=" $attrUnit"
+                    }
+                    html+= aVal
+                    if(it.indexOf("%>")+2 != it.length()) {
+                        if(debugEnable) log.debug "${it.substring(it.indexOf("%>")+2)}"
+                        html+=it.substring(it.indexOf("%>")+2)
+                    }
+                }                 
+            }
+        }
+        else html += it
+    }
+    if (debugEnable) log.debug html
+    updateAttr("html", html)
+}
+
+@SuppressWarnings('unused')
+String readFile(fName){
+    if(security) cookie = getCookie()
+    uri = "http://${location.hub.localIP}:8080/local/${fName}"
+
+
+    def params = [
+        uri: uri,
+        contentType: "text/html",
+        textParser: true,
+        headers: [
+				"Cookie": cookie,
+                "Accept": "application/octet-stream"
+            ]
+    ]
+
+    try {
+        httpGet(params) { resp ->
+            if(resp!= null) {       
+               int i = 0
+               String delim = ""
+               i = resp.data.read() 
+               while (i != -1){
+                   char c = (char) i
+                   delim+=c
+                   i = resp.data.read() 
+               }
+               if(debugEnabled) log.info "File Read Data: $delim"
+               return delim
+            }
+            else {
+                log.error "Null Response"
+            }
+        }
+    } catch (exception) {
+        log.error "Read Error: ${exception.message}"
+        return null;
+    }
 }
 
 @SuppressWarnings('unused')

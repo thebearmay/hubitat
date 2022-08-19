@@ -106,7 +106,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.37"}
+static String version() {return "2.6.38"}
 
 metadata {
     definition (
@@ -437,8 +437,7 @@ void formatAttrib(){
 String combineAttr(String name, List<String> keys){
     if(enableDebug) log.debug "adding $name, $keys.length"
 
-    String retResult = '<tr><td align="left">'
-    retResult += name + '</td><td align="left">'
+    String retResult = "<tr><td>$name</td><td>"
     
     String keyResult = ""
     for (i = 0;i < keys.size(); i++) {
@@ -454,8 +453,7 @@ String combineAttr(String name, List<String> keys){
 
 String addToAttr(String name, String key, String convert = "none") {
     if(enableDebug) log.debug "adding $name, $key"
-    String retResult = '<tr><td>'
-    retResult += name + '</td><td>'
+    String retResult = "<tr><td>$name</td><td>"
 
     String attrUnit = getUnitFromState(key)
     if (attrUnit == null) attrUnit =""

@@ -108,7 +108,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.0"}
+static String version() {return "2.7.1"}
 
 metadata {
     definition (
@@ -1177,7 +1177,7 @@ Boolean xferFile(fileIn, fileOut) {
 
 @SuppressWarnings('unused')
 String readExtFile(fName){
-    if(security) cookie = securityLogin().cookie    
+    if(security) cookie = geCookie()    
     def params = [
         uri: fName,
         contentType: "text/html",

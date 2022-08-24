@@ -102,12 +102,13 @@
  *    2022-08-11  thebearmay     add attribute update logging
  *    2022-08-15  thebearmay     add zigbeeStatus2 from the hub2 data
  *    2022-08-19  thebearmay     allow for a user defined HTML attribute using a file template
+ *    2022-08-24  thebearmay     switch all HTML attribute processing to the template
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.6.39"}
+static String version() {return "2.7.0"}
 
 metadata {
     definition (
@@ -195,13 +196,13 @@ preferences {
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
         input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true, width:4)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true)
+    input("alternateHtml", "string", title: "Template file for HTML attribute", submitOnChange: true, defaultValue: "hubInfoTemplate.res")
     input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", defaultValue: false, submitOnChange: true)
     input("zwLocked", "bool", title: "Never Run ZWave Version Update", defaultValue:false, submitOnChange: true)
     input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true)
     input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true)
     input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true) 
     input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
-    input("alternateHtml", "string", title: "Template file for alternate HTML attribute", submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true)
     input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true)
     input("allowReboot","bool", title: "Allow Hub to be shutdown or rebooted", defaultValue: false, submitOnChange: true)
@@ -216,6 +217,7 @@ preferences {
 @SuppressWarnings('unused')
 def installed() {
     log.trace "installed()"
+    xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
     initialize()
 }
 
@@ -249,7 +251,7 @@ def updated(){
     }
     if(warnSuppress == null) device.updateSetting("warnSuppress",[value:"false",type:"bool"])
     if (attribEnable)
-        formatAttrib()
+        altHtml()
     else if(location.hub.firmwareVersionString < "2.2.8.141")
         sendEvent(name: "html", value: "<table></table>", isChanged: true)
 		
@@ -300,6 +302,11 @@ def updated(){
         }
         device.deleteCurrentState("hubUpdateResp")
 	}
+    
+    if(attribEnable && fileExists("$alternateHtml") != true){
+        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+        device.updateSetting("alternateHtml",[value:"hubInfoTemplate.res",type:"string"])
+    }
 				
 }
 
@@ -328,13 +335,12 @@ def configure() {
         updateAttr("zigbeeStatus", "enabled")
     else
         updateAttr("zigbeeStatus", "disabled")
-//    updateAttr("zwaveStatus", zwaveScrape())
     
     formatUptime()
     updateAttr("hubVersion", location.hub.firmwareVersionString) //retained for backwards compatibility
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
-    //updateAttr("macAddr", getMacAddress())
+
     if(device.currentValue("macAddr")){
         if(location.hub.firmwareVersionString >= "2.2.8.0") 
             device.deleteCurrentState("macAddr")
@@ -345,7 +351,7 @@ def configure() {
     updateAttr("lastUpdated", now())
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) 
         getPollValues()
-    if (attribEnable) formatAttrib()
+    if (attribEnable) altHtml()
     if(fwUpdatePollRate == null) 
         device.updateSetting("fwUpdatePollRate",[value:6000,type:"number"])
     if(fwUpdatePollRate > 0 ) updateCheck()
@@ -374,105 +380,6 @@ void formatUptime(){
     } catch(ignore) {
         updateAttr("formattedUptime", "")
     }
-}
-
-void formatAttrib(){
-    if(debugEnable) log.debug "formatAttrib"
-    if(alternateHtml){
-        altHtml()
-        return
-    }
-    String attrStr = "<style>td{text-align:left;}</style><table id='hubInfoTable'>"
-    
-    attrStr += addToAttr("Name","name")
-
-     if(!device.currentValue("hubModel"))
-         updateAttr("hubModel",getModel())
-     List combineH = ["hubModel", "hubVersion"]
-     attrStr += combineAttr("Version", combineH)
-    
-    if(publicIPEnable) {
-        List combine = ["localIP", "publicIP"]
-        attrStr += combineAttr("IP Local/Public", combine)
-    } else
-        attrStr += addToAttr("IP Addr","localIP")
-    
-    if(freeMemPollEnabled)
-           attrStr += addToAttr("Free Mem","freeMemory","int")
-    
-    if(cpuPollEnabled) {
- 
-        if(device.currentValue("cpu5Min")){
-            List combine = ["cpu5Min", "cpuPct"]
-            attrStr += combineAttr("CPU Load/Load%", combine)
-        }
-        if(location.hub.firmwareVersionString <= "2.2.8.0"){
-            List combineA = ["jvmTotal", "jvmFree", "jvmFreePct"]
-            attrStr += combineAttr("JVM Tot/Free/%", combineA)
-        }
-    }
-
-    if(device.currentValue("dbSize")) attrStr +=addToAttr("DB Size","dbSize")
-    if(evtStateDaysEnable){
-        List combine = ["maxEvtDays", "maxStateDays"]
-        attrStr += combineAttr("Max Evt/State Days", combine)
-    }
-
-    attrStr += addToAttr("Last Restart","lastHubRestartFormatted")
-    attrStr += addToAttr("Uptime","formattedUptime")
-
-    if(tempPollEnable) {
-        String tempAttrib = location.temperatureScale=="C" ? "temperatureC" : "temperatureF"
-        attrStr += addToAttr("Temperature",tempAttrib)
-    }
-    if(!suppressData)
-        attrStr += addToAttr("ZB Channel","zigbeeChannel")
-    
-    if (device.currentValue("zwaveVersion")){
-        List combine = ["zwaveVersion","zwaveSDKVersion"]
-        attrStr += combineAttr("ZW Radio/SDK", combine)   
-    }
-    
-    attrStr += "</table>"
-
-    if (debugEnable) log.debug "after calls attr string = $attrStr"
-    updateAttr("html", attrStr)
-    //updateAttr("htmlLength",attrStr.length())
-    if (attrStr.length() > 1024) updateAttr("html", "Max Attribute Size Exceeded: ${attrStr.length()}")
-}
-
-String combineAttr(String name, List<String> keys){
-    if(enableDebug) log.debug "adding $name, $keys.length"
-
-    String retResult = "<tr><td>$name</td><td>"
-    
-    String keyResult = ""
-    for (i = 0;i < keys.size(); i++) {
-        keyResult+= device.currentValue(keys[i],true)
-        String attrUnit = getUnitFromState(keys[i])
-        if (attrUnit != null) keyResult+=" "+attrUnit
-        if (i < keys.size() - 1) keyResult+= " / "
-    }
-            
-    retResult += keyResult+'</td></tr>'
-    return retResult
-}
-
-String addToAttr(String name, String key, String convert = "none") {
-    if(enableDebug) log.debug "adding $name, $key"
-    String retResult = "<tr><td>$name</td><td>"
-
-    String attrUnit = getUnitFromState(key)
-    if (attrUnit == null) attrUnit =""
-
-    def curVal = device.currentValue(key,true)
-    if(curVal){
-        if (convert == "int"){
-            retResult += curVal.toInteger().toString()+" "+attrUnit
-        } else retResult += curVal.toString() + " "+attrUnit
-    }
-    retResult += '</td></tr>'
-    return retResult
 }
 
 String getModel(){
@@ -511,7 +418,6 @@ void getPollValues(){
     // repoll zigbee channel if invalid
 	
     if (device.currentValue("zigbeeChannel") == "NA") { 
-        //myHubData = parseHubData()
         updateAttr("zigbeeChannel",location.hub.properties.data.zigbeeChannel)
     }
 
@@ -549,7 +455,6 @@ void getPollValues(){
         updateAttr("zwaveData",null)
     }
     //Zwave Status - enabled/disabled & hubAlerts
-//    updateAttr("zwaveStatus", zwaveScrape())
         Map params =
         [
                 uri    : "http://${location.hub.localIP}:8080",
@@ -701,7 +606,8 @@ void getPollValues(){
     updateAttr("uptime", location.hub.uptime)
     formatUptime()
 	
-    if (attribEnable) formatAttrib()
+    if (attribEnable) altHtml()
+    
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
 
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) {
@@ -712,7 +618,7 @@ void getPollValues(){
             runIn(tempPollRate,"getPollValues")
         }
     }
-    updateAttr("lastUpdated", now())
+    updateAttr("lastUpdated", new Date().getTime().toLong())
 }
 
 @SuppressWarnings('unused')
@@ -786,7 +692,7 @@ void getJvmHandler(resp, data) {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             jvmWork = resp.data.toString()
         }
-        if (attribEnable) runIn(5,formatAttrib) //allow for events to register before updating - thebearmay 210308
+        if (attribEnable) runIn(5,"altHtml") //allow for events to register before updating - thebearmay 210308
     } catch(ignored) {
         def respStatus = resp.getStatus()
         if (!warnSuppress) log.warn "getJvm httpResp = $respStatus but returned invalid data, will retry next cycle"    
@@ -952,7 +858,7 @@ String getUnitFromState(String attrName){
 
 void restartCheck() {
     if(debugEnable) log.debug "$rsDate"
-    Long ut = now() - (location.hub.uptime.toLong()*1000)
+    Long ut = new Date().getTime().toLong() - (location.hub.uptime.toLong()*1000)
     Date upDate = new Date(ut)
     if(debugEnable) log.debug "RS: $rsDate  UT:$ut  upTime Date: $upDate   upTime: ${location.hub.uptime}"
     
@@ -1142,7 +1048,11 @@ String getCookie(){
 
 }
 void altHtml(){
-    String fContents = readFile(alternateHtml)
+    if(alternateHtml == null || fileExists("$alternateHtml") == false){
+        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+        device.updateSetting("alternateHtml",[value:"hubInfoTemplate.res", type:"string"])
+    }
+    String fContents = readFile("$alternateHtml")
     List fRecs=fContents.split("\n")
     String html = ""
     fRecs.each {
@@ -1157,8 +1067,10 @@ void altHtml(){
                 else {
                     vName = it.substring(0,it.indexOf('%>'))
                     if(debugEnable) log.debug "${it.indexOf("5>")}<br>$it<br>${it.substring(0,it.indexOf("%>"))}"
-                    if(vName == "date()")
+                    if(vName == "date()" || vName == "@date")
                         aVal = new Date()
+                    else if (vName == "@version")
+                        aVal = version()
                     else {
                         aVal = device.currentValue("$vName",true)
                         String attrUnit = getUnitFromState("$vName")
@@ -1182,7 +1094,6 @@ void altHtml(){
 String readFile(fName){
     if(security) cookie = getCookie()
     uri = "http://${location.hub.localIP}:8080/local/${fName}"
-
 
     def params = [
         uri: uri,
@@ -1215,6 +1126,118 @@ String readFile(fName){
     } catch (exception) {
         log.error "Read Error: ${exception.message}"
         return null;
+    }
+}
+@SuppressWarnings('unused')
+Boolean writeFile(String fName, String fData) {
+    now = new Date()
+    String encodedString = "thebearmay$now".bytes.encodeBase64().toString(); 
+    
+try {
+		def params = [
+			uri: 'http://127.0.0.1:8080',
+			path: '/hub/fileManager/upload',
+			query: [
+				'folder': '/'
+			],
+			headers: [
+				'Content-Type': "multipart/form-data; boundary=$encodedString;text/html; charset=utf-8"
+			],
+            body: """--${encodedString}
+Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
+Content-Type: text/plain
+
+${fData}
+
+--${encodedString}
+Content-Disposition: form-data; name="folder"
+
+
+--${encodedString}--""",
+			timeout: 300,
+			ignoreSSLIssues: true
+		]
+		httpPost(params) { resp ->
+		}
+		return true
+	}
+	catch (e) {
+		log.error "Error writing file $fName: ${e}"
+	}
+	return false
+}
+
+@SuppressWarnings('unused')
+Boolean xferFile(fileIn, fileOut) {
+    fileBuffer = (String) readExtFile(fileIn)
+    retStat = writeFile(fileOut, fileBuffer)
+    if(logResponses) log.info "File xFer Status: $retStat"
+    return retStat
+}
+
+@SuppressWarnings('unused')
+String readExtFile(fName){
+    if(security) cookie = securityLogin().cookie    
+    def params = [
+        uri: fName,
+        contentType: "text/html",
+        textParser: true,
+        headers: [
+				"Cookie": cookie
+            ]        
+    ]
+
+    try {
+        httpGet(params) { resp ->
+            if(resp!= null) {
+               int i = 0
+               String delim = ""
+               i = resp.data.read() 
+               while (i != -1){
+                   char c = (char) i
+                   delim+=c
+                   i = resp.data.read() 
+               } 
+               if(debugEnable) log.info "Read External File result: delim"
+               return delim
+            }
+            else {
+                log.error "Read External - Null Response"
+            }
+        }
+    } catch (exception) {
+        log.error "Read Ext Error: ${exception.message}"
+        return null;
+    }
+}
+
+@SuppressWarnings('unused')
+Boolean fileExists(fName){
+    if(fName == null) return false
+    uri = "http://${location.hub.localIP}:8080/local/${fName}";
+
+     def params = [
+        uri: uri          
+    ]
+
+    try {
+        httpGet(params) { resp ->
+            if (resp != null){
+                if(debugEnable) log.debug "File Exist: true"
+                updateAttr("exist","true")
+                return true;
+            } else {
+                if(debugEnable) log.debug "File Exist: true"
+                return false
+            }
+        }
+    } catch (exception){
+        if (exception.message == "status code: 404, reason phrase: Not Found"){
+            if(debugEnable) log.debug "File Exist: false"
+        } else {
+            log.error "Find file $fName :: Connection Exception: ${exception.message}"
+        }
+        return false
     }
 }
 

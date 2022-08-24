@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.6.39",
+  "version": "2.7.0",
   "minimumHEVersion": "2.2.5.130",
-  "dateReleased": "2021-08-19",
-  "releaseNotes": "2.6.39 - allow for a user defined HTML attribute using a file template\n2.6.37 - add zigbeeStatus2\n2.6.36 - add attribute logging \n2.6.35 - add shutdown command\n2.6.34 - add hubMeshData and hubMeshCount\n2.6.33 - trap login error\n2.6.31/32 - add hubAlerts attribute\n2.6.30 - eliminate a check for hubUpdateResp currentValue\n2.6.29 - enforce 1 decimal place for temperature\n2.6.28 - add security login for update check\n2.6.26 - add a try..catch for zwaveStatus\n2.6.25 - fix cookie for zwaveStatus\n2.6.24- code cleanup, increase 1st poll delay to 45 seconds\n2.6.23 - add zwaveStatus\n2.6.22 - add zigbeeStatus",
+  "dateReleased": "2021-08-24",
+  "releaseNotes": "2.7.0 - switch creation of the html attribute to using a file template stored on the hub, code cleanup",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

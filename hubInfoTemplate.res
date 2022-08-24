@@ -1,4 +1,4 @@
-<style>td{align:left}</style><table>
+<style>td{align:left}</style><table id='hubInfoTable'>
 <tr><td>Name</td><td><%name%></td></tr>
 <tr><td>Version</td><td><%hubModel%> / <%firmwareVersionString%></td></tr>
 <tr><td>IP Addr</td><td><%localIP%></td></tr>

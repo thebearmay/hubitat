@@ -1177,7 +1177,7 @@ Boolean xferFile(fileIn, fileOut) {
 
 @SuppressWarnings('unused')
 String readExtFile(fName){
-    if(security) cookie = geCookie()    
+    if(security) cookie = getCookie()    
     def params = [
         uri: fName,
         contentType: "text/html",

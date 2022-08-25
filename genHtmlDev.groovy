@@ -30,6 +30,7 @@ metadata {
         capability "Actuator"
 		
 		attribute "html", "string"
+	    	attribute "html1", "string"
 		attribute "html2", "string"
 		attribute "html3", "string"
 		attribute "html4", "string"

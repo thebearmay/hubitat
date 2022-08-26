@@ -104,12 +104,12 @@ def templateSelect(){
 }
 
 void altHtml(evt) {
-    log.debug "Event $evt.properties"
+    //log.debug "Event $evt.properties"
     //updateSettings("lastUpdate${evt.deviceId}", value:new Date().getTime())
     qryDevice.each{
         if(it.deviceId == evt.deviceId) dev=it
     }
-    log.debug "${settings["template${evt.deviceId}"]}"
+    //log.debug "${settings["template${evt.deviceId}"]}"
     
     String fContents = readFile("${settings["template${evt.deviceId}"]}")
     List fRecs=fContents.split("\n")
@@ -150,7 +150,7 @@ void altHtml(evt) {
     if (debugEnable) log.debug html
     chd = getChildDevice("ttdm${app.id}")
     slotNum = settings["slot${evt.deviceId}"]
-    log.debug "html$slotNum\n$html"
+    //log.debug "html$slotNum\n$html"
     chd.sendEvent(name:"html$slotNum", value:html)
 }
 

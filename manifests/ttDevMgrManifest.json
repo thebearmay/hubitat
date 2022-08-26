@@ -1,0 +1,27 @@
+{
+  "packageName": "Tile Template Device Manager",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.2",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-08-26",
+  "apps": [
+    {
+      "id": "45d36b99-8d66-4c2d-9ba9-ffa61ba1e749",
+      "name": "Tile Template Device Manager",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttDevMgr.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ],
+  "drivers": [
+    {
+      "id": "2c04c302-75fb-4068-8148-74641b0e7efe",
+      "name": "Generic HTML Device",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/genHtmlDev.groovy",
+      "required": true
+    }
+  ]
+}

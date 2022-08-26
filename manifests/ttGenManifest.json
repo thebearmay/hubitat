@@ -1,0 +1,18 @@
+{
+  "packageName": "Tile Template Generator",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.2",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-08-26",
+  "apps": [
+    {
+      "id": "8a74fcd8-35e4-4d1c-a826-9fb99e710831",
+      "name": "Tile Template Generator",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttGenerator.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ]
+}

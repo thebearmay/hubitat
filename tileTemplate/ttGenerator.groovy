@@ -10,10 +10,11 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *     Date              Who           Description
- *    ===========       ===========   =====================================================
+ *    ===========       ===========   =============================================================
+ *    2022-08-26        thebearmay    add a check for saveAs not null before displaying save button
  */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 
 definition (
@@ -22,7 +23,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Allows for the creation of a custom tile template for any device.",
 	category: 		"Utility",
-	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttGenerator.groovy",
+	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxxx.groovy",
     installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",
@@ -135,10 +136,12 @@ def templatePreview(){
           paragraph "<div style='overflow:auto'>$htmlWork<p style='font-size:xx-small'>${htmlWork.size()} characters</p></div>"
           paragraph "<textarea cols='70' rows='15'>${retMap.template}</textarea>"
           input "saveAs", "text", title: "Enter Name for Template", multiple: false, required: false, submitOnChange: true, width:4
-          input "saveTemplate", "button", title:"Save Template"
-          if(state.saveReq == true) {
-              writeFile("$saveAs","${retMap.template}")
-              state.saveReq = false
+          if(saveAs != null) {
+              input "saveTemplate", "button", title:"Save Template"
+              if(state.saveReq == true) {
+                  writeFile("$saveAs","${retMap.template}")
+                  state.saveReq = false
+              }
           }
       }
     }

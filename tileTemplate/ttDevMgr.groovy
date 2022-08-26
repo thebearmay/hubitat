@@ -11,9 +11,10 @@
  *
  *     Date              Who           Description
  *    ===========       ===========   =====================================================
- */
+ *    2022-08-26        thebearmay    add @name to pull display name
+*/
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 
 definition (
@@ -22,7 +23,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Use a template file to generate an HTML element for any device.",
 	category: 		"Utility",
-	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttDevMgr.groovy",
+	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxxx.groovy",
     installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",
@@ -129,6 +130,8 @@ void altHtml(evt) {
                         aVal = new Date()
                     else if (vName == "@version")
                         aVal = version()
+                    else if (vName == "@name")
+                        aVal = dev.properties.displayName
                     else {
                         aVal = dev.currentValue("$vName",true)
                         String attrUnit = dev.currentState("vName")?.unit

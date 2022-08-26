@@ -175,5 +175,5 @@
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/ttDevMgrManifest.json",
       "description": "Manages the merging of data from a device driver, and an assigned template to create an HTML output attribute that can be used on the Dashboard."
     }
-  ]
+  ] 
 }

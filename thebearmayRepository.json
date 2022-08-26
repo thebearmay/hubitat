@@ -160,6 +160,20 @@
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/dlyReminderManifest.json",
       "description": "App uses a simple text file as input to generate daily reminder notices."
+    },
+    {
+      "id": "979423db-2189-470d-a65a-89a661c620c7",
+      "name": "Tile Template Generator",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/ttGenManifest.json",
+      "description": "Creates a template file based on a device driver's exposed attributes. Templates can be used to create dashboard tiles using Tile Template Device Manager."
+    },
+    {
+      "id": "96fae9d6-e7a1-4814-a801-b95c91187f82",
+      "name": "Tile Template Device Manager",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/ttDevMgrManifest.json",
+      "description": "Manages the merging of data from a device driver, and an assigned template to create an HTML output attribute that can be used on the Dashboard."
     }
   ]
 }

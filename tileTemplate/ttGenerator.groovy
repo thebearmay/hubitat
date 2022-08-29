@@ -134,7 +134,7 @@ def templatePreview(){
           retMap = buildTable()
           htmlWork = retMap.preview
           paragraph "<div style='overflow:auto'>$htmlWork<p style='font-size:xx-small'>${htmlWork.size()} characters</p></div>"
-          paragraph "<textarea cols='70' rows='15'>${retMap.template}</textarea>"
+          paragraph "<textarea disabled='true' cols='70' rows='15'>${retMap.template}</textarea>"
           input "saveAs", "text", title: "Enter Name for Template", multiple: false, required: false, submitOnChange: true, width:4
           if(saveAs != null) {
               input "saveTemplate", "button", title:"Save Template"

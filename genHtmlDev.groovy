@@ -16,9 +16,10 @@
  *    ----        ---            ----
  *    2021-08-03  thebearmay	 Original version 0.0.1
  *    2022-04-05  thebearmay     add additional html attributes
+ *    2022-0629   thebearmay     Add refreshSlot command
  */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 metadata {
     definition (
@@ -29,8 +30,7 @@ metadata {
 	) {
         capability "Actuator"
 		
-		attribute "html", "string"
-	    	attribute "html1", "string"
+		attribute "html1", "string"
 		attribute "html2", "string"
 		attribute "html3", "string"
 		attribute "html4", "string"
@@ -39,7 +39,9 @@ metadata {
 		attribute "html7", "string"
 		attribute "html8", "string"
 		attribute "html9", "string"
-		attribute "html10", "string"	    
+		attribute "html10", "string"
+        
+        command "refreshSlot", [[name:"slotNumber*", type:"NUMBER", range:"1..10", description:"HTML attribute number to refresh"]]
     }   
 }
 
@@ -54,6 +56,12 @@ def installed() {
 def updated(){
     log.trace "updated()"
     if(debugEnable) runIn(1800,logsOff)
+}
+
+void refreshSlot(sNum){
+    if(sNum < 1 || sNum > 10) return
+    sendEvent(name:"html$sNum", value:".")
+    if(parent) parent.refreshSlot(sNum.toLong())
 }
 
 void logsOff(){

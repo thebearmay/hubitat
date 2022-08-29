@@ -12,9 +12,10 @@
  *     Date              Who           Description
  *    ===========       ===========   =====================================================
  *    2022-08-26        thebearmay    add @name to pull display name
+ *    2022-08-29        thebearmay    populate attribute on save, add refreshSlot from child
 */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 
 definition (
@@ -96,7 +97,11 @@ def templateSelect(){
           qryDevice.each{
               input "template${it.deviceId}", "string", title: "<b>Template for $it</b>", required: false, width:5, submitOnUpdate:true
               input "slot${it.deviceId}","number", title:"<b>Slot Number</b>", required: false, width:5, defaultValue:i, submitOnUpdate:true
-              if(settings["template${it.deviceId}"] != null && settings["slot${it.deviceId}"] != null) subscribe(it, "altHtml", [filterEvents:true])
+              if(settings["template${it.deviceId}"] != null && settings["slot${it.deviceId}"] != null) {
+                  subscribe(it, "altHtml", [filterEvents:true])
+                  //log.debug "${it.deviceId}"
+                  altHtml([deviceId:it.deviceId])
+              }
               i++
           }
       }
@@ -104,8 +109,8 @@ def templateSelect(){
 }
 
 void altHtml(evt) {
-    //log.debug "Event $evt.properties"
-    //updateSettings("lastUpdate${evt.deviceId}", value:new Date().getTime())
+    //log.debug "Device Id ${evt.deviceId}"
+
     qryDevice.each{
         if(it.deviceId == evt.deviceId) dev=it
     }
@@ -152,6 +157,18 @@ void altHtml(evt) {
     slotNum = settings["slot${evt.deviceId}"]
     //log.debug "html$slotNum\n$html"
     chd.sendEvent(name:"html$slotNum", value:html)
+}
+
+void refreshSlot(sNum) {
+    settings.each {
+        if(it.key.indexOf("slot") > -1){
+            //log.debug "${it.key} ${it.value} $sNum" 
+            if(it.value == sNum){
+                //log.debug "${it.key.substring(4).toLong()}"
+                altHtml([deviceId:it.key.substring(4).toLong()])
+            }
+        }
+    }
 }
 
 @SuppressWarnings('unused')

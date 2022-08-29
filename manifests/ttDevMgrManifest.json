@@ -1,9 +1,10 @@
 {
   "packageName": "Tile Template Device Manager",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-08-26",
+  "dateReleased": "2022-08-29",
+  "releaseNotes": "0.0.3 - force HTML attribute refresh on save of template assign, add child refreshSlot command",
   "apps": [
     {
       "id": "45d36b99-8d66-4c2d-9ba9-ffa61ba1e749",

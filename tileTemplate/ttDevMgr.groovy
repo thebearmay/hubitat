@@ -25,7 +25,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Use a template file to generate an HTML element for any device.",
 	category: 		"Utility",
-	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxxx.groovy",
+	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttDevMgr.groovy",
     installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",

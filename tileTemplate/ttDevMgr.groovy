@@ -13,9 +13,10 @@
  *    ===========       ===========   =====================================================
  *    2022-08-26        thebearmay    add @name to pull display name
  *    2022-08-29        thebearmay    populate attribute on save, add refreshSlot from child
+ *    2022-08-30        thebearmay    add file list for templates
 */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 
 definition (
@@ -76,7 +77,12 @@ def mainPage(){
                 }
                 if(!this.getChildDevice("ttdm${app.id}"))
                     addChildDevice("thebearmay","Generic HTML Device","ttdm${app.id}", [name: "HTML Tile Device${app.id}", isComponent: true, label:"HTML Tile Device${app.id}"])                
-             }
+                input "security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4
+                if (security) { 
+                    input("username", "string", title: "Hub Security Username", required: false)
+                    input("password", "password", title: "Hub Security Password", required: false)
+                }
+            }
              section("Change Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
                if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
@@ -94,8 +100,9 @@ def templateSelect(){
 	  section(""){
           unsubscribe()
           int i = 1
+          List<String> fList = listFiles()
           qryDevice.each{
-              input "template${it.deviceId}", "string", title: "<b>Template for $it</b>", required: false, width:5, submitOnUpdate:true
+              input "template${it.deviceId}", "enum", title: "<b>Template for $it</b>", required: false, width:5, submitOnUpdate:true, options:fList
               input "slot${it.deviceId}","number", title:"<b>Slot Number</b>", required: false, width:5, defaultValue:i, submitOnUpdate:true
               if(settings["template${it.deviceId}"] != null && settings["slot${it.deviceId}"] != null) {
                   subscribe(it, "altHtml", [filterEvents:true])
@@ -207,6 +214,38 @@ String readFile(fName){
     } catch (exception) {
         log.error "Read Error: ${exception.message}"
         return null;
+    }
+}
+
+@SuppressWarnings('unused')
+List<String> listFiles(){
+    if(security) cookie = getCookie()
+    // Adapted from BptWorld's Community Post 89466/4
+    if(debugEnabled) log.debug "Getting list of files"
+    uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
+    def params = [
+        uri: uri,
+        headers: [
+				"Cookie": cookie
+            ]        
+    ]
+    try {
+        fileList = []
+        httpGet(params) { resp ->
+            if (resp != null){
+                if(logEnable) log.debug "Found the files"
+                def json = resp.data
+                for (rec in json.files) {
+                    fileList << rec.name
+                }
+            } else {
+                //
+            }
+        }
+        if(debugEnabled) log.debug fileList.sort()
+        return fileList.sort()
+    } catch (e) {
+        log.error e
     }
 }
 

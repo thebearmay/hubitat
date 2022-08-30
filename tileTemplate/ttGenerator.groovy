@@ -12,9 +12,10 @@
  *     Date              Who           Description
  *    ===========       ===========   =============================================================
  *    2022-08-26        thebearmay    add a check for saveAs not null before displaying save button
+ *    2022-08-30        thebearmay    add option to generate multi-device templates
  */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 
 definition (
@@ -23,7 +24,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Allows for the creation of a custom tile template for any device.",
 	category: 		"Utility",
-	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxxx.groovy",
+	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttGenerator.groovy",
     installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",
@@ -61,8 +62,9 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main") {
                 state.saveReq = false
-                input "qryDevice", "capability.*", title: "Devices of Interest:", multiple: false, required: true, submitOnChange: true
-                if (qryDevice != null){        
+                input "qryDevice", "capability.*", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
+                log.debug "$qryDevice"
+                if (qryDevice){        
                         href "attrSelect", title: "Select Attributes", required: true
                         href "attrRepl", title: "Alternate Text for Attributes", required: false
                         href "templatePreview", title: "Show Template", required: false
@@ -93,10 +95,16 @@ def attrSelect(){
     dynamicPage (name: "attrSelect", title: "Attribute Selection", install: false, uninstall: false) {
 	  section(""){
           String strWork = ""
-          dev = qryDevice
+          //log.debug "$qryDevice ${qryDevice.size()}"
           def attrList=[]
-          dev.supportedAttributes.each{
-              attrList.add(it.toString())
+          qryDevice.each { dev ->
+              dev.supportedAttributes.each{
+                  if(qryDevice.size() == 1){
+                      attrList.add(it.toString())
+                  }else{                     
+                      attrList.add("${dev.id}:$it")
+                  }
+              }
           }
           sortedList=attrList.sort()
           sortedList.each{
@@ -112,16 +120,21 @@ def attrRepl(){
     dynamicPage (name: "attrRepl", title: "Alternate Attribute Descriptions", install: false, uninstall: false) {
 	  section(""){
           String strWork = ""
-          dev = qryDevice
           def attrList=[]
-          dev.supportedAttributes.each{
-              attrList.add(it.toString())
-          }
+
+          qryDevice.each{ dev->
+            dev.supportedAttributes.each{
+                if(qryDevice.size() == 1) {
+                    if(settings["$it"]) attrList.add(it.toString())
+                } else {
+                    if(settings["${dev.id}:$it"]) attrList.add("${dev.id}:$it")
+                }
+            }
+          }          
           sortedList=attrList.sort()
           sortedList.each{
             input "repl$it", "string", title: "$it", required: false
           }
-
 
           paragraph "<p>$strWork</p>"          
       }
@@ -148,28 +161,53 @@ def templatePreview(){
 }
 
 HashMap buildTable() {
-        String htmlWork = '<table>\n'
-        templateWork = htmlWork
-        def attrList=[]
-        qryDevice.supportedAttributes.each{
-            if(settings["$it"]) attrList.add(it.toString())
-        }
-        sortedList=attrList.sort()
-        //log.debug "$sortedList"
-        sortedList.each{
-            replacement = "repl$it"
-            if(settings["$replacement"]) {
-                htmlWork+="<tr><th>${settings[replacement]}</th>"
-                templateWork += "<tr><th>${settings[replacement]}</th>"
+    String htmlWork = '<table>\n'
+    templateWork = htmlWork
+    def attrList=[]
+    qryDevice.each{ dev->
+        dev.supportedAttributes.each{
+            if(qryDevice.size() == 1) {
+                if(settings["$it"]) attrList.add(it.toString())
             } else {
-                htmlWork+="<tr><th>$it</th>"
-                templateWork += "<tr><th>$it</th>"
+                if(settings["${dev.id}:$it"]) attrList.add("${dev.id}:$it")
             }
-            htmlWork += '<td>'+qryDevice.currentValue("$it",true)+'</td></tr>'
-            templateWork += "<td><%$it%></td></tr>\n"
         }
-        htmlWork+='</table>'
-        templateWork+='</table>\n'
+    }
+    sortedList=attrList.sort()
+        log.debug "$sortedList"
+    sortedList.each{
+        replacement = "repl$it"
+        if(settings["$replacement"]) {
+            htmlWork+="<tr><th>${settings[replacement]}</th>"
+            templateWork += "<tr><th>${settings[replacement]}</th>"
+        } else {
+            htmlWork+="<tr><th>$it</th>"
+            templateWork += "<tr><th>$it</th>"
+        }
+        if(qryDevice.size() == 1){
+            dev = qryDevice[0]
+            aVal = dev.currentValue("$it",true)
+            String attrUnit = dev.currentState("$it")?.unit
+            if (attrUnit != null) aVal+=" $attrUnit"            
+            htmlWork += "<td>$aVal</td></tr>"
+        }else {
+            //log.debug "$it"
+            devId = it.substring(0,it.indexOf(":")).toLong()
+            qryDevice.each{ qDev->
+                //log.debug "${qDev.id} $devId"
+                if(qDev.id.toLong() == devId) dev=qDev
+            }
+            vName = it.substring(it.indexOf(":")+1)
+            aVal = dev.currentValue("$vName",true)
+            String attrUnit = dev.currentState("$vName")?.unit
+            if (attrUnit != null) aVal+=" $attrUnit"            
+            htmlWork += "<td>$aVal</td></tr>"
+                
+        }
+        templateWork += "<td><%$it%></td></tr>\n"
+    }
+    htmlWork+='</table>'
+    templateWork+='</table>\n'
     return [preview:htmlWork, template:templateWork]
 }
 

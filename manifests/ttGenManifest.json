@@ -1,9 +1,10 @@
 {
   "packageName": "Tile Template Generator",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-08-26",
+  "dateReleased": "2022-08-30",
+  "releaseNotes": "0.0.3 - add capability to generate multi-device templates",
   "apps": [
     {
       "id": "8a74fcd8-35e4-4d1c-a826-9fb99e710831",

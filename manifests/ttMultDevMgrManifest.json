@@ -1,0 +1,27 @@
+{
+  "packageName": "Tile Multi-Device Template Manager",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.2",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-08-26",
+  "apps": [
+    {
+      "id": "a8bf2ba9-caba-4222-a6b8-cde4c4c87848",
+      "name": "Tile Multi-Device Template Manager",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttMultiDevMgr.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ],
+  "drivers": [
+    {
+      "id": "d8102292-500f-45f1-aea7-3aaac333043a",
+      "name": "Generic HTML Device",
+      "namespace": "thebearmay",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/genHtmlDev.groovy",
+      "required": true
+    }
+  ]
+}

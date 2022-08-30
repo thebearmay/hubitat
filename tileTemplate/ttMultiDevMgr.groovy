@@ -1,4 +1,4 @@
-/* Tile Template Multi-Device Manager
+/* Tile Multi-Device Template Manager
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -11,19 +11,19 @@
  *
  *     Date              Who           Description
  *    ===========       ===========   =====================================================
- *    
+ *    2022-08-30        thebearmay    add file list and template checking
 */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 
 definition (
-	name: 			"Tile Template Multi-Device Manager", 
+	name: 			"Tile Multi-Device Template Manager", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
 	description: 	"Use a template file to generate an HTML element for multiple named devices.",
 	category: 		"Utility",
-	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxxx.groovy",
+	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttMultiDevMgr.groovy",
     installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",
@@ -58,13 +58,24 @@ def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main") {
-                state.saveReq = false
-                input "templateName", "string", title: "<b>Template to Process</b>", required: false, width:5, submitOnUpdate:true
-                if(templateName != null) {
-                    devList = templateScan()
-                    paragraph "The following devices are required for this template: $devList"
+                state.validTemplate = false
+                List<String> fList = listFiles()
+                input "templateName", "enum", title: "<b>Template to Process</b>", required: true, width:5, submitOnUpdate:true, options:fList
+                input "templateCheck", "button", title:"Check Template"
+                if(templateName != null && state?.tCheck == true) {
+                    List devList = templateScan()
+                    if (devList.size > 0){
+                        devListE = []
+                        devList.each {
+                            devListE.add("<a href='http://${location.hub.localIP}:8080/device/edit/$it' target='_blank'>$it</a>")                                     
+                        }
+                        state.validTemplate = true
+                    } else devListE = 'No devices found <b>**Invalid Template**</b>'
+                    paragraph "The following devices are required for this template: $devListE"
+                    state.tCheck = false
                 }
-                input "qryDevice", "capability.*", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
+                if (state.validTemplate)
+                    input "qryDevice", "capability.*", title: "Devices of Interest:", multiple: true, required: false, submitOnChange: true
                 if(qryDevice) {
                     unsubscribe()
                     qryDevice.each{
@@ -72,6 +83,7 @@ def mainPage(){
                     }
                     href "previewTemplate", title: "Template Preview", required: false
                 }
+
                 input "clearSettings", "button", title: "Clear previous settings"
                 if(state?.clearAll == true) {
                     unsubscribe()
@@ -107,6 +119,7 @@ def previewTemplate(){
 }
 
 List templateScan() {
+    if(templateName == null) return []
     String fContents = readFile("$templateName")
     List fRecs=fContents.split("\n")
     List devList =[]
@@ -116,7 +129,9 @@ List templateScan() {
             recSplit = it.split("<%")
             recSplit.each {
                 if(it.indexOf("%>") > -1){
-                    if(it.indexOf(":") > -1){ //format of <%devId:attribute%>
+                    vEnd = it.indexOf("%>")
+//                    log.debug "${it.indexOf(":")}"
+                    if(it.indexOf(":") > -1 && it.indexOf(":") < vEnd){ //format of <%devId:attribute%>
                         devList.add(it.substring(0,it.indexOf(":")).toLong())
                     }
                 }
@@ -140,7 +155,9 @@ String altHtml(evt = "") {
                 if(it.indexOf("%>") == -1)
                     html+= it
                 else {
-                    if(it.indexOf(":") > -1){ //format of <%devId:attribute%>
+                    vEnd = it.indexOf("%>")
+                    if(it.indexOf(":") > -1 && it.indexOf(":") < vEnd){
+//                    if(it.indexOf(":") > -1){ //format of <%devId:attribute%>
                         devId = it.substring(0,it.indexOf(":")).toLong()
                         qryDevice.each{
                             if(it.deviceId == devId) dev=it
@@ -154,9 +171,9 @@ String altHtml(evt = "") {
                         aVal = new Date()
                     else if (vName == "@version")
                         aVal = version()
-                    else if (vName == "@name")// requires a format of <%devId:attribute%>
+                    else if (vName == "@name" && dev != null)// requires a format of <%devId:attribute%>
                         aVal = dev.properties.displayName
-                    else {
+                    else if(dev != null) {
                         aVal = dev.currentValue("$vName",true)
                         String attrUnit = dev.currentState("vName")?.unit
                         if (attrUnit != null) aVal+=" $attrUnit"
@@ -221,6 +238,38 @@ String readFile(fName){
 }
 
 @SuppressWarnings('unused')
+List<String> listFiles(){
+    if(security) cookie = getCookie()
+    // Adapted from BptWorld's Community Post 89466/4
+    if(debugEnabled) log.debug "Getting list of files"
+    uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
+    def params = [
+        uri: uri,
+        headers: [
+				"Cookie": cookie
+            ]        
+    ]
+    try {
+        fileList = []
+        httpGet(params) { resp ->
+            if (resp != null){
+                if(logEnable) log.debug "Found the files"
+                def json = resp.data
+                for (rec in json.files) {
+                    fileList << rec.name
+                }
+            } else {
+                //
+            }
+        }
+        if(debugEnabled) log.debug fileList.sort()
+        return fileList.sort()
+    } catch (e) {
+        log.error e
+    }
+}
+
+@SuppressWarnings('unused')
 String getCookie(){
     try{
   	  httpPost(
@@ -251,9 +300,8 @@ def appButtonHandler(btn) {
         case "clearSettings":
             state.clearAll = true
             break
-        case "saveTemplate":
-            if(saveAs == null) break
-            state.saveReq = true
+        case "templateCheck":
+            state.tCheck = true
             break
         default: 
             log.error "Undefined button $btn pushed"

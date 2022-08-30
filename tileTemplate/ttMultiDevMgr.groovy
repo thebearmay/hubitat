@@ -95,7 +95,12 @@ def mainPage(){
                     state.clearAll = false
                 }
                 if(!this.getChildDevice("ttdm${app.id}"))
-                    addChildDevice("thebearmay","Generic HTML Device","ttdm${app.id}", [name: "HTML Tile Device${app.id}", isComponent: true, label:"HTML Tile Device${app.id}"])                
+                    addChildDevice("thebearmay","Generic HTML Device","ttdm${app.id}", [name: "HTML Tile Device${app.id}", isComponent: true, label:"HTML Tile Device${app.id}"]) 
+                input "security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4
+                if (security) { 
+                    input("username", "string", title: "Hub Security Username", required: false)
+                    input("password", "password", title: "Hub Security Password", required: false)
+                }
              }
              section("Change Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()

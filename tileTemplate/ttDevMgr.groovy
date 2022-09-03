@@ -146,7 +146,7 @@ void altHtml(evt) {
                         aVal = dev.properties.displayName
                     else {
                         aVal = dev.currentValue("$vName",true)
-                        String attrUnit = dev.currentState("vName")?.unit
+                        String attrUnit = dev.currentState("$vName")?.unit
                         if (attrUnit != null) aVal+=" $attrUnit"
                     }
                     html+= aVal

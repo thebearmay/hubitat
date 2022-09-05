@@ -14,9 +14,10 @@
  *    2022-08-26        thebearmay    add @name to pull display name
  *    2022-08-29        thebearmay    populate attribute on save, add refreshSlot from child
  *    2022-08-30        thebearmay    add file list for templates
+ *    2022-09-05        thebearmay    add @room
 */
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 
 
 definition (
@@ -144,6 +145,8 @@ void altHtml(evt) {
                         aVal = version()
                     else if (vName == "@name")
                         aVal = dev.properties.displayName
+                    else if (vName == "@room")
+                        aVal = dev.properties.roomName
                     else {
                         aVal = dev.currentValue("$vName",true)
                         String attrUnit = dev.currentState("$vName")?.unit

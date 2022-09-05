@@ -12,9 +12,10 @@
  *     Date              Who           Description
  *    ===========       ===========   =====================================================
  *    2022-08-30        thebearmay    add file list and template checking
+ *    2022-09-05        thebearmay    add @room
 */
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 
 
 definition (
@@ -178,6 +179,8 @@ String altHtml(evt = "") {
                         aVal = version()
                     else if (vName == "@name" && dev != null)// requires a format of <%devId:attribute%>
                         aVal = dev.properties.displayName
+                    else if (vName == "@room" && dev != null)
+                        aVal = dev.properties.roomName
                     else if(dev != null) {
                         aVal = dev.currentValue("$vName",true)
                         String attrUnit = dev.currentState("vName")?.unit

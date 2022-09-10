@@ -63,7 +63,7 @@ metadata {
 		input("debugEnable", "bool", title: "Enable debug logging?")
 		input("sdfPref", "enum", title: "Date/Time Format", options:sdfList, defaultValue:"ddMMMyyyy HH:mm")
 		input("leadingDate", "bool", title:"Use leading date instead of trailing")
-		input("msgLimit", "number", title:"Number of messages from 5 to 20",defaultValue:5, range:5..20)
+		input("msgLimit", "number", title:"Number of messages from 1 to 20",defaultValue:5, range:1..20)
 		input("create5H", "bool", title: "Create horizontal message tile?")
 
 	}

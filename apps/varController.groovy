@@ -44,7 +44,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main")
 		    {
-                input "qryDevice", "device.VariableControllerDevice", title: "Select Controller Device:", multiple: true, required: false, submitOnChange: true
+                input "qryDevice", "device.VariableControllerDevice", title: "Select Controller Device:", multiple: false, required: false, submitOnChange: true
                 if (qryDevice != null) 
                     ccSubscribe()
                 else 

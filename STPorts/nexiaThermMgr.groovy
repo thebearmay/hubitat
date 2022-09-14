@@ -36,7 +36,7 @@ preferences {
 
 def getChildNamespace() { "trentfoley" }
 def getChildName() { "Nexia Thermostat" }
-def getServerUrl() { "https://www.mynexia.com" }
+def getServerUrl() { "https://www.tranehome.com/login" }
 
 def installed() {
     log.debug("installed()")

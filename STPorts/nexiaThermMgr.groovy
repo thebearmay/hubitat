@@ -14,6 +14,11 @@
  *
  *    Author: Trent Foley
  *    Date: 2016-01-19
+ * ** Modifications **
+ *  Date        Who          Description
+ *  __________  __________   ____________________________________________________________________
+ *  2022-09-14  thebearmay   port over to Hubitat
+ *  
  */
 definition(
     name: "Nexia Thermostat Manager",

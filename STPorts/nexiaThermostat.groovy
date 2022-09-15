@@ -97,7 +97,7 @@ def poll() {
             sendEvent(name: "thermostatSetpoint", value: data.thermostatSetpoint, unit: "F")
             sendEvent(name: "thermostatMode", value: data.thermostatMode)
             sendEvent(name: "thermostatFanMode", value: data.thermostatFanMode)
-            sendEvent(name: "thermostatOperatingState", value: data.thermostatOperatingState)
+            //sendEvent(name: "thermostatOperatingState", value: data.thermostatOperatingState)
             sendEvent(name: "humidity", value: data.humidity, unit: "%")
             sendEvent(name: "activeMode", value: data.activeMode)
             sendEvent(name: "outdoorTemperature", value: data.outdoorTemperature, unit: "F")

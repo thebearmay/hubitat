@@ -181,6 +181,13 @@
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/ttMultDevMgrManifest.json",
       "description": "Manages the merging of data from multiple device drivers, and an assigned template to create an HTML output attribute that can be used on the Dashboard."
+    },
+    {
+      "id": "f16a5566-4388-4431-bef1-cefb079cb7c1",
+      "name": "Nexia Thermostat Manager",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/nexiaThermManifest.json",
+      "description": "Port of the ST Nexia Thermostat Manager.  Known work with the XL850 and XL824 Thermostat; may work with any thermostat running off of the TraneHome.com cloud."
     }
   ]
 }

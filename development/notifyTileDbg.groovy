@@ -205,7 +205,7 @@ void deviceNotification(notification){
 		state.msgCount = msgFilled
     if (settings.create5H){
 			sendEvent(name:"last5H", value: " ** "+wkTile.replaceAll("<br />"," ** ")+" ** ")
-      if (debugEnable) log.debug "last5H = ${wkTile.replaceAll('<br />',' ** ')+' ** ')"
+	    if (debugEnable) log.debug "last5H = ${wkTile.replaceAll('<br />',' ** ')+' ** ')}"
     }
 	}    
 

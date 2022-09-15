@@ -1,0 +1,27 @@
+{
+  "packageName": "Nexia Thermostat Manager",
+  "author": "Jean P. May, Jr.",
+  "version": "0.0.2",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-09-15",
+  "apps": [
+    {
+      "id": "3c64d650-ba04-47b3-a3c7-2b3d45742629",
+      "name": "Nexia Thermostat Manager",
+      "namespace": "trentfoley",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/STPorts/nexiaThermMgr.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ],
+  "drivers": [
+    {
+      "id": "1bb8632c-121d-437e-8290-024e49d44ccb",
+      "name": "Nexia Thermostat",
+      "namespace": "trentfoley",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/STPorts/nexiaThermostat.groovy",
+      "required": true
+    }
+  ]
+}

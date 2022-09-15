@@ -25,22 +25,66 @@ metadata {
         attribute "activeMode", "string"
         attribute "outdoorTemperature", "number"
     }
+}
+
+preferences {
+    input "pollInterval", "enum", title:"Enter Poll Cycle", options:['1 Minute','5 Minutes','10 Minutes','15 Minutes','30 Minutes','1 Hour','3 Hours'], submitOnChange:true
+    input "debugEnabled", "bool", title: "Enable debug logging?"
+
+}
+
+def updated() {
+    if(debugEnabled) log.debug "update $pollInterval"
+    unschedule()
+    if(debugEnabled) runIn(1800,"logsOff")
+    switch(pollInterval){
+        case "1 Minute":
+			runEvery1Minute("poll")
+            break
+        case "5 Minutes":
+			runEvery5Minutes("poll")
+            break
+        case "10 Minutes":
+			runEvery10Minutes("poll")
+            break
+        case "15 Minutes":
+			runEvery15Minutes("poll")
+            break
+        case "30 Minutes":
+			runEvery30Minutes("poll")
+            break
+        case "1 Hour":
+			runEvery1Hour("poll")
+            break
+        case "3 Hours":
+			runEvery3Hours("poll")
+            break	
+		default:
+			log.error "Invalid Interval Selected $pollInterval"
+			break
+    }
+            
+}
+def initialize(){
+    poll()
+}
 
 // parse events into attributes
 def parse(String description) {
-    log.debug "parse('${description}')"
+    if(debugEnabled) log.debug "parse('${description}')"
 }
 
 // Implementation of capability.refresh
 def refresh() {
-    log.debug "refresh()"
+    if(debugEnabled) log.debug "refresh()"
     poll()
 }
 
 // Implementation of capability.polling
 def poll() {
-    log.debug "poll()"
+    if(debugEnabled) log.debug "poll()"
     def data = parent.pollChild(this)
+    if(debugEnabled) log.debug "$data"
 
     if(data) {
         sendEvent(name: "temperature", value: data.temperature, unit: "F")
@@ -49,7 +93,7 @@ def poll() {
             sendEvent(name: "thermostatSetpoint", value: data.thermostatSetpoint, unit: "F")
             sendEvent(name: "thermostatMode", value: data.thermostatMode)
             sendEvent(name: "thermostatFanMode", value: data.thermostatFanMode)
-            sendEvent(name: "thermostatOperatingState", value: data.thermostatOperatingState)
+            //sendEvent(name: "thermostatOperatingState", value: data.thermostatOperatingState)
             sendEvent(name: "humidity", value: data.humidity, unit: "%")
             sendEvent(name: "activeMode", value: data.activeMode)
             sendEvent(name: "outdoorTemperature", value: data.outdoorTemperature, unit: "F")
@@ -59,9 +103,9 @@ def poll() {
 }
 
 def setTemperature(degreesF) {
-    log.debug "setTemperature(${degreesF})"
+    if(debugEnabled) log.debug "setTemperature(${degreesF})"
     def delta = degreesF - device.currentValue("temperature")
-    log.debug "Determined delta to be ${delta}"
+    if(debugEnabled) log.debug "Determined delta to be ${delta}"
 
     if (device.currentValue("activeMode") == "cool") {
         setCoolingSetpoint(device.currentValue("coolingSetpoint") + delta)
@@ -72,7 +116,7 @@ def setTemperature(degreesF) {
 
 // Implementation of capability.thermostat
 def setHeatingSetpoint(degreesF) {
-    log.debug "setHeatingSetpoint(${degreesF})"
+    if(debugEnabled) log.debug "setHeatingSetpoint(${degreesF})"
     sendEvent(name: "heatingSetpoint", value: degreesF, unit: "F")
     sendEvent(name: "thermostatSetpoint", value: degreesF, unit: "F")
     parent.setHeatingSetpoint(this, degreesF)
@@ -80,7 +124,7 @@ def setHeatingSetpoint(degreesF) {
 
 // Implementation of capability.thermostat
 def setCoolingSetpoint(degreesF) {
-    log.debug "setCoolingSetpoint(${degreesF})"
+    if(debugEnabled) log.debug "setCoolingSetpoint(${degreesF})"
     sendEvent(name: "coolingSetpoint", value: degreesF, unit: "F")
     sendEvent(name: "thermostatSetpoint", value: degreesF, unit: "F")
     parent.setCoolingSetpoint(this, degreesF)
@@ -89,7 +133,7 @@ def setCoolingSetpoint(degreesF) {
 // Implementation of capability.thermostat
 // Valid values are: "auto" "emergency heat" "heat" "off" "cool"
 def setThermostatMode(String mode) {
-    log.debug "setThermostatMode(${mode})"
+    if(debugEnabled) log.debug "setThermostatMode(${mode})"
     sendEvent(name: "thermostatMode", value: mode)
     parent.setThermostatMode(this, mode)
 }
@@ -112,7 +156,7 @@ def auto() { setThermostatMode("auto") }
 // Implementation of capability.thermostat
 // Valid values are: "auto" "on" "circulate"
 def setThermostatFanMode(String fanMode) {
-    log.debug "setThermostatFanMode(${fanMode})"
+    if(debugEnabled) log.debug "setThermostatFanMode(${fanMode})"
     sendEvent(name: "thermostatFanMode", value: fanMode)
     parent.setThermostatFanMode(this, fanMode)
 }
@@ -125,3 +169,7 @@ def fanAuto() { setThermostatFanMode("auto") }
 
 // Implementation of capability.thermostat
 def fanCirculate() { setThermostatFanMode("circulate") }
+
+void logsOff(){
+    device.updateSetting("debugEnabled",[value:"false",type:"bool"])
+}

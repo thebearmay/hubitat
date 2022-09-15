@@ -33,10 +33,11 @@
 *    2021-11-22  thebearmay    make date time format a selectable option
 *    2021-12-07  thebearmay    add "none" as a date time format
 *    2022-04-06  thebearmay    fix max message state coming back as string
+*    2022-09-15  thebearmay    issue with clean install
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
-static String version()	{  return '2.0.8'  }
+static String version()	{  return '2.0.9'  }
 
 @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "None"]
 
@@ -63,14 +64,14 @@ metadata {
 		input("debugEnable", "bool", title: "Enable debug logging?")
 		input("sdfPref", "enum", title: "Date/Time Format", options:sdfList, defaultValue:"ddMMMyyyy HH:mm")
 		input("leadingDate", "bool", title:"Use leading date instead of trailing")
-		input("msgLimit", "number", title:"Number of messages from 1 to 20",defaultValue:5, range:1..20)
+		input("msgLimit", "number", title:"Number of messages from 5 to 20",defaultValue:5, range:5..20)
 		input("create5H", "bool", title: "Create horizontal message tile?")
 
 	}
 
 	void installed() {
 		if (debugEnable) log.trace "installed()"
-		state.lastLimit=5
+		state.lastLimit=0
 		configure()
 	}
 
@@ -109,8 +110,9 @@ metadata {
 				}
 			}
 
+        if(msgLimit == null) device.updateSetting("msgLimit",[value:5,type:"number"])
 	// V2.0.3 When new msgLimit less than prior(state) msgLimit adjust message and state values	
-		if (state.lastLimit.toInteger()>settings.msgLimit.toInteger())
+		if (state?.lastLimit.toInteger()>settings.msgLimit.toInteger())
 			{
 			wkTile=device.currentValue("last5")
 			msgFilled=state.msgCount.toInteger()
@@ -133,7 +135,8 @@ metadata {
 	}
 
 	void configure() {
-		if (debugEnable) log.trace "configure()"
+		log.trace "configure()"
+        if(msgLimit == null) device.updateSetting("msgLimit",[value:5,type:"number"])
 		sendEvent(name:"last5", value:'<span class="last5"></span>')
 		sendEvent(name:"last5H", value:'<span class="last5"></span>')
 		state.msgCount=0
@@ -145,7 +148,6 @@ metadata {
                 device.deleteCurrentState("notify4")
                 device.deleteCurrentState("notify5")
             }
-            if(!create5H) device.deleteCurrentState("last5H")
         }
 	}
 

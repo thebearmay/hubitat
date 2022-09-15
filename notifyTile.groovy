@@ -37,7 +37,7 @@
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
-static String version()	{  return '2.0.9'  }
+static String version()	{  return '2.0.10'  }
 
 @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "None"]
 

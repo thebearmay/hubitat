@@ -1,9 +1,9 @@
 {
   "packageName": "Nexia Thermostat Manager",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-09-15",
+  "dateReleased": "2022-09-16",
   "apps": [
     {
       "id": "3c64d650-ba04-47b3-a3c7-2b3d45742629",

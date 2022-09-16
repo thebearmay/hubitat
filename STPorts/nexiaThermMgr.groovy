@@ -15,6 +15,10 @@
  *    Author: Trent Foley
  *    Date: 2016-01-19
  *
+ * **	Modifications **
+ *	Date		Who		Description
+ *	2022-09-15	thebearmay	Port to Hubitat
+ *	2022-09-16	thebearmay	Fix thermostatOperatingMode
  *
  */
 definition(
@@ -23,7 +27,7 @@ definition(
     author: "Trent Foley",
     description: "Connect your Nexia thermostat to SmartThings.",
     category: "Convenience",
-    importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/STPorts/nexiaThermMgr.groovy",    
+	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/STPorts/nexiaThermMgr.groovy",    
     iconUrl: "http://lh4.ggpht.com/oMx3-nlICwLmUxpDhTXWsZ6Ocuzu9P2yfz9jpXBx1rhrW_Vcj94kPl2M9ooApckK6TM1=w60",
     iconX2Url: "https://www.trane.com/content/dam/Trane/residential/products/nexia/medium/TR_Nexia%20-%20Medium.jpg",
     iconX3Url: "https://www.trane.com/content/dam/Trane/residential/products/nexia/medium/TR_Nexia%20-%20Medium.jpg",
@@ -317,6 +321,7 @@ def pollChild(child) {
             "Fan Running": "fan only"
         ]
         if(debugEnabled) log.debug "$zone"
+
         statData = [
             temperature: zone.temperature.toInteger(),
             heatingSetpoint: zone.heating_setpoint.toInteger(),

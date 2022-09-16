@@ -9,6 +9,7 @@
  *  Date        Who          Description
  *  __________  __________   ____________________________________________________________________
  *  2022-09-14  thebearmay   port over to Hubitat
+ *  2022-09-16	thebearmay   Fix thermostatOperatingState
  * 
  */
 metadata {
@@ -28,6 +29,7 @@ metadata {
 
         attribute "activeMode", "string"
         attribute "outdoorTemperature", "number"
+        attribute "thermostatOperatingState", "string"
     }
 }
 
@@ -91,16 +93,16 @@ def poll() {
     if(debugEnabled) log.debug "$data"
 
     if(data) {
-        sendEvent(name: "temperature", value: data.temperature, unit: "F")
-            sendEvent(name: "heatingSetpoint", value: data.heatingSetpoint, unit: "F")
-            sendEvent(name: "coolingSetpoint", value: data.coolingSetpoint, unit: "F")
-            sendEvent(name: "thermostatSetpoint", value: data.thermostatSetpoint, unit: "F")
+        sendEvent(name: "temperature", value: data.temperature, unit: "°F")
+            sendEvent(name: "heatingSetpoint", value: data.heatingSetpoint, unit: "°F")
+            sendEvent(name: "coolingSetpoint", value: data.coolingSetpoint, unit: "°F")
+            sendEvent(name: "thermostatSetpoint", value: data.thermostatSetpoint, unit: "°F")
             sendEvent(name: "thermostatMode", value: data.thermostatMode)
             sendEvent(name: "thermostatFanMode", value: data.thermostatFanMode)
-            //sendEvent(name: "thermostatOperatingState", value: data.thermostatOperatingState)
+            sendEvent(name: "thermostatOperatingState", value: data.thermostatOperatingState)
             sendEvent(name: "humidity", value: data.humidity, unit: "%")
             sendEvent(name: "activeMode", value: data.activeMode)
-            sendEvent(name: "outdoorTemperature", value: data.outdoorTemperature, unit: "F")
+            sendEvent(name: "outdoorTemperature", value: data.outdoorTemperature, unit: "°F")
     } else {
         log.error "ERROR: Device connection removed? No data found for ${device.deviceNetworkId} after polling"
     }
@@ -121,16 +123,16 @@ def setTemperature(degreesF) {
 // Implementation of capability.thermostat
 def setHeatingSetpoint(degreesF) {
     if(debugEnabled) log.debug "setHeatingSetpoint(${degreesF})"
-    sendEvent(name: "heatingSetpoint", value: degreesF, unit: "F")
-    sendEvent(name: "thermostatSetpoint", value: degreesF, unit: "F")
+    sendEvent(name: "heatingSetpoint", value: degreesF, unit: "°F")
+    sendEvent(name: "thermostatSetpoint", value: degreesF, unit: "°F")
     parent.setHeatingSetpoint(this, degreesF)
 }
 
 // Implementation of capability.thermostat
 def setCoolingSetpoint(degreesF) {
     if(debugEnabled) log.debug "setCoolingSetpoint(${degreesF})"
-    sendEvent(name: "coolingSetpoint", value: degreesF, unit: "F")
-    sendEvent(name: "thermostatSetpoint", value: degreesF, unit: "F")
+    sendEvent(name: "coolingSetpoint", value: degreesF, unit: "°F")
+    sendEvent(name: "thermostatSetpoint", value: degreesF, unit: "°F")
     parent.setCoolingSetpoint(this, degreesF)
 }
 

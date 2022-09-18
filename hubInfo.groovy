@@ -109,7 +109,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.2"}
+static String version() {return "2.7.3"}
 
 metadata {
     definition (
@@ -891,6 +891,11 @@ void getHub2(resp, data){
             def jSlurp = new JsonSlurper()
             Map h2Data = (Map)jSlurp.parseText((String)resp.data)
             if (debugEnable) log.info h2Data
+            if (h2Data == null) {
+                if(!warnSuppress) log.warning "h2Data is null, ${device.currentValue('hubModel')} ${device.currentValue('firmwareVersionString')}"
+                return
+            }
+            
             hubAlerts = []
             h2Data.alerts.each{
                 if(it.value == true){

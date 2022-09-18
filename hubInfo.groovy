@@ -103,6 +103,7 @@
  *    2022-08-15  thebearmay     add zigbeeStatus2 from the hub2 data
  *    2022-08-19  thebearmay     allow for a user defined HTML attribute using a file template
  *    2022-08-24  thebearmay     switch all HTML attribute processing to the template
+ *    2022-09-18  thebearmay     add a security in use attribute
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -176,6 +177,7 @@ metadata {
         attribute "hubAlerts", "string"
         attribute "hubMeshData", "string"
         attribute "hubMeshCount", "number"
+        attribute "securityInUse", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -228,7 +230,9 @@ def initialize(){
     // will additionally be checked before execution to determine if C-7 or above
     if(!zwLocked)
         device.updateSetting("checkZwVersion",[value:"true",type:"bool"])
-
+    
+    pollHub2()
+    
     runIn(45,"configure")
     restartCheck() //set Restart Time using uptime and current timeatamp
 }
@@ -409,6 +413,17 @@ boolean isCompatible(Integer minLevel) { //check to see if the hub version meets
 
 }
 
+void pollHub2() {
+        Map params =
+        [
+                uri    : "http://${location.hub.localIP}:8080",
+                path   : "/hub2/hubData",         
+        ]
+    
+        if(debugEnable)log.debug params
+        asynchttpGet("getHub2", params)
+}    
+
 void getPollValues(){
 
     String cookie=(String)null
@@ -455,7 +470,8 @@ void getPollValues(){
         updateAttr("zwaveData",null)
     }
     //Zwave Status - enabled/disabled & hubAlerts
-        Map params =
+    pollHub2()
+/*        Map params =
         [
                 uri    : "http://${location.hub.localIP}:8080",
                 path   : "/hub2/hubData",
@@ -464,7 +480,7 @@ void getPollValues(){
     
         if(debugEnable)log.debug params
         asynchttpGet("getHub2", params)
-    
+ */   
     // get Temperature
     if(tempPollEnable) {
         params = [
@@ -897,6 +913,11 @@ void getHub2(resp, data){
             } else {
                 updateAttr("zigbeeStatus2", "disabled")
                 if (device.currentValue("zigbeeStatus", true) != "disabled") log.warning "Zigbee Status has opposing values - may have crashed."
+            }
+            updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
+            if((!security || password == null || username == null) && h2data.baseModel.userLoggedin == true){
+                log.error "Hub using Security but credentials not supplied"
+                device.updateSetting("security",[value:"true",type:"bool"])
             }
         } else {
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"

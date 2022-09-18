@@ -1,10 +1,10 @@
 {
   "packageName": "Tile Multi-Device Template Manager",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2022-09-05",
-  "releaseNotes": "0.0.5 - add @room\n",
+  "releaseNotes": "0.0.6 - handle tile template read error\n0.0.5 - add @room\n",
   "apps": [
     {
       "id": "a8bf2ba9-caba-4222-a6b8-cde4c4c87848",

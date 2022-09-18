@@ -13,9 +13,10 @@
  *    ===========       ===========   =====================================================
  *    2022-08-30        thebearmay    add file list and template checking
  *    2022-09-05        thebearmay    add @room
+ *    2022-09-18        thebearmay    handle template read error
 */
 
-static String version()	{  return '0.0.5'  }
+static String version()	{  return '0.0.6'  }
 
 
 definition (
@@ -151,6 +152,7 @@ List templateScan() {
 String altHtml(evt = "") {
     //log.debug "altHtml $evt.properties"
     String fContents = readFile("$templateName")
+    if (fContents == null) return
     List fRecs=fContents.split("\n")
     String html = ""
     fRecs.each {

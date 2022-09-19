@@ -109,7 +109,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.4"}
+static String version() {return "2.7.5"}
 
 metadata {
     definition (
@@ -928,7 +928,7 @@ void getHub2(resp, data){
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
         } 
     } catch (Exception ex){
-        if(ex.indexOf("Unable to determine the current character,") > -1) return
+        if(ex.toString().indexOf("Unable to determine the current character,") > -1) return
         if (!warnSuppress) log.warn ex
     }
 }

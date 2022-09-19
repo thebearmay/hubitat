@@ -183,6 +183,7 @@ metadata {
         command "reboot"
         command "shutdown"
         //command "altHtml"
+        command "pollHub2"
     }   
 }
 
@@ -417,7 +418,7 @@ void pollHub2() {
         Map params =
         [
                 uri    : "http://${location.hub.localIP}:8080",
-                path   : "/hub2/hubData",         
+                path   : "/hub2/hubData"        
         ]
     
         if(debugEnable)log.debug params
@@ -887,16 +888,14 @@ void restartCheck() {
 void getHub2(resp, data){
     try{
         if (resp.getStatus() == 200){
-            if (debugEnable) log.info resp.data
-			try{
+            if (debugEnable) log.debug resp.data
+            try{
 				def jSlurp = new JsonSlurper()
-				Map h2Data = (Map)jSlurp.parseText((String)resp.data)
-			}catch (Exception eIgnore) {
-				h2Data = [:]
-                if(debugEnable) log.debug "h2Data is null, ${device.currentValue('hubModel')} ${device.currentValue('firmwareVersionString')}<br>${resp.data}"
+			    h2Data = (Map)jSlurp.parseText((String)resp.data)
+            } catch (eIgnore) {
+                if (debugEnable) log.debug "H2: $h2Data <br> ${resp.data}"
                 return
-			}
-            if (debugEnable) log.info h2Data
+            }
             
             hubAlerts = []
             h2Data.alerts.each{
@@ -925,8 +924,10 @@ void getHub2(resp, data){
                 updateAttr("zigbeeStatus2", "disabled")
                 if (device.currentValue("zigbeeStatus", true) != "disabled") log.warning "Zigbee Status has opposing values - may have crashed."
             }
+            if(debugEnable) log.debug "securityInUse"
             updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
-            if((!security || password == null || username == null) && h2data.baseModel.userLoggedin == true){
+            if(debugEnable) log.debug "h2 security check"
+            if((!security || password == null || username == null) && h2Data.baseModel.userLoggedin == true){
                 log.error "Hub using Security but credentials not supplied"
                 device.updateSetting("security",[value:"true",type:"bool"])
             }

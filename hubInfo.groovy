@@ -109,7 +109,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.6"}
+static String version() {return "2.7.7"}
 
 metadata {
     definition (
@@ -888,13 +888,15 @@ void getHub2(resp, data){
     try{
         if (resp.getStatus() == 200){
             if (debugEnable) log.info resp.data
-            def jSlurp = new JsonSlurper()
-            Map h2Data = (Map)jSlurp.parseText((String)resp.data)
-            if (debugEnable) log.info h2Data
-            if (h2Data == null) {
-                if(!warnSuppress) log.warning "h2Data is null, ${device.currentValue('hubModel')} ${device.currentValue('firmwareVersionString')}"
+			try{
+				def jSlurp = new JsonSlurper()
+				Map h2Data = (Map)jSlurp.parseText((String)resp.data)
+			}catch (Exception eIgnore) {
+				h2Data = [:]
+                if(debugEnable) log.debug "h2Data is null, ${device.currentValue('hubModel')} ${device.currentValue('firmwareVersionString')}<br>${resp.data}"
                 return
-            }
+			}
+            if (debugEnable) log.info h2Data
             
             hubAlerts = []
             h2Data.alerts.each{
@@ -908,7 +910,7 @@ void getHub2(resp, data){
                 }
             }
             updateAttr("hubAlerts",hubAlerts)
-            if(h2Data.baseModel == null) {
+            if(h2Data?.baseModel == null) {
                 if (debugEnable) log.debug "baseModel is missing from h2Data, ${device.currentValue('hubModel')} ${device.currentValue('firmwareVersionString')}<br>$h2Data"
                 return
             }
@@ -932,7 +934,6 @@ void getHub2(resp, data){
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
         } 
     } catch (Exception ex){
-        if(ex.toString().indexOf("Unable to determine the current character,") > -1) return //suppress timing error return of html page
         if (!warnSuppress) log.warn ex
     }
 }

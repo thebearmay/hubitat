@@ -109,7 +109,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.5"}
+static String version() {return "2.7.6"}
 
 metadata {
     definition (
@@ -908,6 +908,10 @@ void getHub2(resp, data){
                 }
             }
             updateAttr("hubAlerts",hubAlerts)
+            if(h2Data.baseModel == null) {
+                if (debugEnable) log.debug "baseModel is missing from h2Data, ${device.currentValue('hubModel')} ${device.currentValue('firmwareVersionString')}<br>$h2Data"
+                return
+            }
             if(h2Data.baseModel.zwaveStatus == "false") 
                 updateAttr("zwaveStatus","enabled")
             else
@@ -928,7 +932,7 @@ void getHub2(resp, data){
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
         } 
     } catch (Exception ex){
-        if(ex.toString().indexOf("Unable to determine the current character,") > -1) return
+        if(ex.toString().indexOf("Unable to determine the current character,") > -1) return //suppress timing error return of html page
         if (!warnSuppress) log.warn ex
     }
 }

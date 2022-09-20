@@ -17,7 +17,7 @@
  *    
 */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -74,13 +74,13 @@ def mainPage(){
                     danfossLogin()
                     state.loginCheck = "false"
                 }
-                paragraph state.authToken
+		    paragraph "${state?.authToken}"
                 input "devCheck", "button", title:"Get Devices"
                 if(state?.getDev == true){
                     getDevices()
                     state.getDev = "false"                    
                 }
-                paragraph state.devResp
+		    paragraph "${state?.devResp}"
             }
 	    } else {
 		    section("") {

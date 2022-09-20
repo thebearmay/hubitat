@@ -14,7 +14,7 @@
  *
  *    Date        Who           What
  *    ----        ---           ----
- *    26Jul2022   thebearmay    additional verifications
+ *    
 */
 
 static String version()	{  return '0.0.1'  }
@@ -30,7 +30,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Danfoss Intefration ",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/apps/xxxx.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/danfoss/danfossMstr.groovy",
     installOnOpen:  true,
 	oauth: 			true,
     iconUrl:        "",

@@ -17,7 +17,7 @@
  *    
 */
 
-static String version()	{  return '0.0.5'}
+static String version()	{  return '0.0.56'}
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -28,7 +28,7 @@ definition (
 	name: 			"Danfoss Master", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Danfoss Intefration ",
+	description: 	"Danfoss Integration ",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/danfoss/danfossMstr.groovy",
     installOnOpen:  true,
@@ -68,7 +68,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') { 
             section("") {
                 input "apiKey", "text", title: "<b>Danfoss API Key</b>", submitOnChange:true, required:false, width:4
-                input "apiSecret", "text", title: "<b>Danfoss API Secret</b>", submitOnChange:true, required:false, width:4
+                input "apiSecret", "password", title: "<b>Danfoss API Secret</b>", submitOnChange:true, required:false, width:4
                 input "sim", "bool", title: "Use Simulated Values", width:4, submitOnChange:true
                 input "debugEnabled", "bool", title: "Enable Debug for 30 Minutes", width:4, submitOnChange:true
                 input "checkCred", "button", title: "Check Credentials"
@@ -76,13 +76,14 @@ def mainPage(){
                     danfossLogin()
                     state.loginCheck = "false"
                 }
-		        paragraph "${state?.authToken}"
+	            paragraph "Current Token: ${state?.authToken}"
                 input "devCheck", "button", title:"Get Devices"
                 if(state?.getDev == true){
-                    getDevices()
-                    state.getDev = "false"                    
+                    state.getDev = false
+                    getDevices()                 
                 }
-		        paragraph "${state?.devResp}"
+                if(state?.devResp)
+                paragraph "${state?.devCount} Devices Processed"
             }
 	    } else {
 		    section("") {
@@ -118,52 +119,77 @@ def danfossLogin(){
 
 def getDevices() {
     danfossLogin()
+    devCount = 0
     try{
         params = [
 					uri: "https://api.danfoss.com/ally/devices",
                     headers: [
                         Authorization: "Bearer ${state.authToken}",
-                        Accept: "application/json"
+                        Accept: "application/json",
+                        textParser:false
                         ]
 
 				]
         if(debugEnabled) log.debug "$params"
         httpGet(params){ resp ->
-            if(debugEnabled) log.debug "$resp.data"
+            if(debugEnabled) log.debug "Response: $resp.data"
             state.devResp = resp.data
 		}
     }catch (e){
         if(!sim) log.error "Error getting devices: ${e}"
     }
-    if(sim) state.devResp = '[  "result": [ {   "active_time": 1605086157,   "create_time": 1591615719,   "id": "bff29edfd82316bc2bbrlu",   "name": "Danfoss Ally™ Gateway",   "online": true,   "status": [],   "sub": false,   "time_zone": "+01:00",   "update_time": 1605296207,   "device_type": "Danfoss Ally™ Gateway" }, {   "active_time": 1605087321,   "create_time": 1605086381,   "id": "bf80b9a848085c5902tiw2",   "name": "Icon RT 8",   "online": true,   "status": [  {    "code": "temp_set",    "value": 200  },  {    "code": "mode",    "value": "hot"  }   ],   "sub": true,   "time_zone": "+08:00",   "update_time": 1605482266,   "device_type": "Icon RT" }, {   "active_time": 1605087321,   "create_time": 1605086381,   "id": "bf80b9a848085c5902bear",   "name": "Bear Danfoss",   "online": true,   "status": [  {    "code": "temp_set",    "value": 200  },  {    "code": "mode",    "value": "hot"  }   ],   "sub": true,   "time_zone": "+08:00",   "update_time": 1605482266,   "device_type": "Icon RT" }  ],  "t": 1604188800]'
+    if(sim) state.devResp = '[  "result": [[   "active_time": 1605086157,   "create_time": 1591615719,   "id": "bff29edfd82316bc2bbrlu",   "name": "Danfoss Ally™ Gateway",   "online": true,   "status": [],   "sub": false,   "time_zone": "+01:00",   "update_time": 1605296207,   "device_type": "Danfoss Ally™ Gateway" }, {   "active_time": 1605087321,   "create_time": 1605086381,   "id": "bf80b9a848085c5902tiw2",   "name": "Icon RT 8",   "online": true,   "status": [  {    "code": "temp_set",    "value": 200  },  {    "code": "mode",    "value": "hot"  }   ],   "sub": true,   "time_zone": "+08:00",   "update_time": 1605482266,   "device_type": "Icon RT" }, {   "active_time": 1605087321,   "create_time": 1605086381,   "id": "bf80b9a848085c5902bear",   "name": "Bear Danfoss",   "online": true,   "status": [  {    "code": "temp_set",    "value": 200  },  {    "code": "mode",    "value": "hot"  }   ],   "sub": true,   "time_zone": "+08:00",   "update_time": 1605482266,   "device_type": "Icon RT" ]],  "t": 1604188800]'
     if(debugEnabled) log.debug state.devResp
     if(state?.devResp != null){
-        respWork = state.devResp.toString()
-        if( respWork.substring(0,1) == '['){
-            respWork = '{'+respWork.substring(1,respWork.length()-1)+'}'
-            if (debugEnabled) log.debug respWork
-        }
-        def jSlurp = new JsonSlurper()
-        Map resMap = (Map)jSlurp.parseText(respWork)
+        resMap = state.devResp
         resMap.result.each() {
-            if(it.device_type.indexOf('Gateway') == -1){
+            if(it.device_type.indexOf('Thermostat') > -1){
+                devCount++
                 if(debugEnabled) log.debug "${it.name}:${it.device_type}:${it.id}"
                 if(!this.getChildDevice("${it.id}"))
-                    cd = addChildDevice("thebearmay", "Danfoss Thermostat", "${it.id}", [name: "${it.name}", isComponent: true, deviceType:"${it.device_type}"])
+                    cd = addChildDevice("thebearmay", "Danfoss Thermostat", "${it.id}", [name: "${it.name}", deviceType:"${it.device_type}", isComponent: true])
                 else 
                     cd = this.getChildDevice("${it.id}")
                 cd.sendEvent(name:"online",value:"${it.online}")
                 it.status.each{
                     if(it.code == "temp_set") {
                         cd.sendEvent(name:"thermostatSetpoint",value:"${it.value}",unit:"°C")
-                        cd.sendEvent(name:"heatingSetpoint",value:"${it.value}",unit:"°C")   
-                    }
+                        cd.sendEvent(name:"heatingSetpoint",value:"${it.value}",unit:"°C") 
+                     }
                     if(it.code == "mode") {
                         cd.sendEvent(name:"thermostatMode",value:"${it.value}")     
                     }
+                    if(it.code == "battery_percentage") {
+                        cd.sendEvent(name:"battery",value:"${it.value}",unit:"%")
+                    }
+                    if(it.code == "temp_current") {
+                        cd.sendEvent(name:"temperature",value:"${it.value}",unit:"°C") 
+                    }
                 }
-            }         
+            }
+            if(it.device_type.indexOf('Sensor') > -1){
+                devCount++
+                if(debugEnabled) log.debug "${it.name}:${it.device_type}:${it.id}"
+                if(!this.getChildDevice("${it.id}"))
+                    cd = addChildDevice("thebearmay", "Danfoss Sensor", "${it.id}", [name: "${it.name}", deviceType:"${it.device_type}", isComponent: true])
+                else 
+                    cd = this.getChildDevice("${it.id}")
+                cd.sendEvent(name:"online",value:"${it.online}")
+                it.status.each{
+                    if(it.code == "va_temperature") {
+                        cd.sendEvent(name:"temperature",value:"${it.value}",unit:"°C")
+                     }
+                    if(it.code == "va_humidity") {
+                        cd.sendEvent(name:"humidity",value:"${it.value}")     
+                    }
+                    if(it.code == "battery_percentage") {
+                        cd.sendEvent(name:"battery",value:"${it.value}",unit:"%")
+                    }
+                } 
+            }
+            
         }
+        state.devCount = devCount
     }
 }
 
@@ -200,7 +226,7 @@ def updateChild(id, cOrF){
         cd.sendEvent(name:"online",value:"${resMap.result.online}")
         resMap.result.status.each{
             if(it.code == "temp_set") {
-                log.debug cOrF
+                if(debugEnabled) log.debug cOrF
                 if(cOrF == "F")
                     tempValue = celsiusToFahrenheit(it.value.toFloat()).toFloat().round(0)
                 else
@@ -210,6 +236,20 @@ def updateChild(id, cOrF){
             }
             if(it.code == "mode") {
                 cd.sendEvent(name:"thermostatMode",value:"${it.value}")     
+            }
+            if(it.code == "battery_percentage") {
+                cd.sendEvent(name:"battery",value:"${it.value}",unit:"%")
+            } 
+            if(it.code == "va_temperature" || it.code == "temp_current"){
+                if(debugEnabled) log.debug cOrF
+                if(cOrF == "F")
+                    tempValue = celsiusToFahrenheit(it.value.toFloat()).toFloat().round(0)
+                else
+                    tempValue = it.value
+                cd.sendEvent(name:"temperature",value:"${tempValue}",unit:"°cOrF")
+            }
+            if(it.code == "va_humidity") {
+                cd.sendEvent(name:"humidity",value:"${it.value}",unit:"%")
             }
         }
     }    

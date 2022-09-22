@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.5"}
+static String version() {return "0.0.6"}
 
 metadata {
     definition (
@@ -35,6 +35,8 @@ metadata {
         capability "Initialize"
         capability "ThermostatHeatingSetpoint"
         capability "ThermostatSetpoint"
+        capability "TemperatureMeasurement"
+        capability "Battery"
         
         attribute "heatingSetpoint", "number"
         attribute "thermostatSetpoint", "number"
@@ -53,7 +55,7 @@ metadata {
 preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?", defaultValue:false)
     input("useFahrenheit", "bool", title: "Use Fahrenheit", defaultValue:false)
-    input("pollRate", "number", title: "Thermostat Polling Rate (minutes)\nZero for no polling:", defaultValue:5)
+    input("pollRate", "number", title: "Thermostat Polling Rate (minutes)\nZero for no polling:", defaultValue:0)
 }
 
 @SuppressWarnings('unused')
@@ -73,7 +75,7 @@ def updated(){
         runIn(1800,logsOff)
     }
     if(pollRate == null)
-        device.updateSetting("pollRate",[value:5,type:"number"])
+        device.updateSetting("pollRate",[value:0,type:"number"])
     if(pollRate > 0){
         runIn(pollRate*60,"refresh")
     } else

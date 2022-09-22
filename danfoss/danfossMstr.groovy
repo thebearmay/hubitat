@@ -17,7 +17,7 @@
  *    
 */
 
-static String version()	{  return '0.0.6'}
+static String version()	{  return '0.0.7'}
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -153,8 +153,9 @@ def getDevices() {
                 cd.sendEvent(name:"online",value:"${it.online}")
                 it.status.each{
                     if(it.code == "temp_set") {
-                        cd.sendEvent(name:"thermostatSetpoint",value:"${it.value}",unit:"°C")
-                        cd.sendEvent(name:"heatingSetpoint",value:"${it.value}",unit:"°C") 
+                        tValue = it.value.toDouble()/10
+                        cd.sendEvent(name:"thermostatSetpoint",value:"${tValue}",unit:"°C")
+                        cd.sendEvent(name:"heatingSetpoint",value:"${tValue}",unit:"°C") 
                      }
                     if(it.code == "mode") {
                         cd.sendEvent(name:"thermostatMode",value:"${it.value}")     
@@ -163,7 +164,8 @@ def getDevices() {
                         cd.sendEvent(name:"battery",value:"${it.value}",unit:"%")
                     }
                     if(it.code == "temp_current") {
-                        cd.sendEvent(name:"temperature",value:"${it.value}",unit:"°C") 
+                        tValue = it.value.toDouble()/10
+                        cd.sendEvent(name:"temperature",value:"${tValue}",unit:"°C") 
                     }
                 }
             }
@@ -177,10 +179,12 @@ def getDevices() {
                 cd.sendEvent(name:"online",value:"${it.online}")
                 it.status.each{
                     if(it.code == "va_temperature") {
-                        cd.sendEvent(name:"temperature",value:"${it.value}",unit:"°C")
+                        tValue = it.value.toDouble()/10
+                        cd.sendEvent(name:"temperature",value:"${tValue}",unit:"°C")
                      }
                     if(it.code == "va_humidity") {
-                        cd.sendEvent(name:"humidity",value:"${it.value}")     
+                        tValue = it.value.toDouble()/10
+                        cd.sendEvent(name:"humidity",value:"${tValue}")     
                     }
                     if(it.code == "battery_percentage") {
                         cd.sendEvent(name:"battery",value:"${it.value}",unit:"%")
@@ -228,9 +232,9 @@ def updateChild(id, cOrF){
             if(it.code == "temp_set") {
                 if(debugEnabled) log.debug cOrF
                 if(cOrF == "F")
-                    tempValue = celsiusToFahrenheit(it.value.toFloat()).toFloat().round(0)
+                    tempValue = celsiusToFahrenheit(it.value.toFloat()/10).toFloat().round(0)
                 else
-                    tempValue = it.value
+                    tempValue = it.value.toFloat()/10
                 cd.sendEvent(name:"thermostatSetpoint",value:"${tempValue}",unit:"°cOrF")
                 cd.sendEvent(name:"heatingSetpoint",value:"${tempValue}",unit:"°cOrF")   
             }
@@ -243,13 +247,14 @@ def updateChild(id, cOrF){
             if(it.code == "va_temperature" || it.code == "temp_current"){
                 if(debugEnabled) log.debug cOrF
                 if(cOrF == "F")
-                    tempValue = celsiusToFahrenheit(it.value.toFloat()).toFloat().round(0)
+                    tempValue = celsiusToFahrenheit(it.value.toFloat()/10).toFloat().round(0)
                 else
-                    tempValue = it.value
+                    tempValue = it.value.toFloat()/10
                 cd.sendEvent(name:"temperature",value:"${tempValue}",unit:"°cOrF")
             }
             if(it.code == "va_humidity") {
-                cd.sendEvent(name:"humidity",value:"${it.value}",unit:"%")
+                tValue = it.value.toFloat()/10
+                cd.sendEvent(name:"humidity",value:"${tValue}",unit:"%")
             }
         }
     }    
@@ -257,10 +262,10 @@ def updateChild(id, cOrF){
 
 def sendCmd(devId,cmd,val){
     danfossLogin()
-    cLine = "{\"commands\":[{\"code\":\"$cmd\",\"value\":\"$val\"}]}"
+    cLine = '{'+"\"commands\":[{\"code\":\"$cmd\",\"value\":\"$val\"}]"+'}'
     try{
         params = [
-					uri: "https://api.danfoss.com/ally/devices/$id/commands",
+					uri: "https://api.danfoss.com/ally/devices/$devId/commands",
                     headers: [
                         Authorization: "Bearer ${state.authToken}",
                         Accept: "application/json",

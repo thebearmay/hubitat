@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.6"}
+static String version() {return "0.0.9"}
 
 metadata {
     definition (
@@ -103,6 +103,7 @@ void refresh() {
 void setHeatingSetpoint(temp){
     if(useFahrenheit)
         temp = fahrenheitToCelsius(temp).toFloat().round(0)
+    temp = temp*10
     parent.sendCmd("${device.deviceNetworkId}","temp_set","$temp")
     updateAttr("thermostatSetpoint",temp,cOrF)
     updateAttr("heatingSetpoint",temp,cOrF)   

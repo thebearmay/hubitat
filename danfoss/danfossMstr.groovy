@@ -1,5 +1,5 @@
 /*
- * Danfoss Ally Master App
+ * Danfoss
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -17,7 +17,7 @@
  *    
 */
 
-static String version()	{  return '0.0.4'}
+static String version()	{  return '0.0.5'}
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -32,7 +32,7 @@ definition (
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/danfoss/danfossMstr.groovy",
     installOnOpen:  true,
-	oauth: 			false,
+	oauth: 			true,
     iconUrl:        "",
     iconX2Url:      ""
 ) 
@@ -135,11 +135,16 @@ def getDevices() {
     }catch (e){
         if(!sim) log.error "Error getting devices: ${e}"
     }
-    if(sim) state.devResp = '{  "result": [ {   "active_time": 1605086157,   "create_time": 1591615719,   "id": "bff29edfd82316bc2bbrlu",   "name": "Danfoss Ally™ Gateway",   "online": true,   "status": [],   "sub": false,   "time_zone": "+01:00",   "update_time": 1605296207,   "device_type": "Danfoss Ally™ Gateway" }, {   "active_time": 1605087321,   "create_time": 1605086381,   "id": "bf80b9a848085c5902tiw2",   "name": "Icon RT 8",   "online": true,   "status": [  {    "code": "temp_set",    "value": 200  },  {    "code": "mode",    "value": "hot"  }   ],   "sub": true,   "time_zone": "+08:00",   "update_time": 1605482266,   "device_type": "Icon RT" }, {   "active_time": 1605087321,   "create_time": 1605086381,   "id": "bf80b9a848085c5902bear",   "name": "Bear Danfoss",   "online": true,   "status": [  {    "code": "temp_set",    "value": 200  },  {    "code": "mode",    "value": "hot"  }   ],   "sub": true,   "time_zone": "+08:00",   "update_time": 1605482266,   "device_type": "Icon RT" }  ],  "t": 1604188800}'
+    if(sim) state.devResp = '[  "result": [ {   "active_time": 1605086157,   "create_time": 1591615719,   "id": "bff29edfd82316bc2bbrlu",   "name": "Danfoss Ally™ Gateway",   "online": true,   "status": [],   "sub": false,   "time_zone": "+01:00",   "update_time": 1605296207,   "device_type": "Danfoss Ally™ Gateway" }, {   "active_time": 1605087321,   "create_time": 1605086381,   "id": "bf80b9a848085c5902tiw2",   "name": "Icon RT 8",   "online": true,   "status": [  {    "code": "temp_set",    "value": 200  },  {    "code": "mode",    "value": "hot"  }   ],   "sub": true,   "time_zone": "+08:00",   "update_time": 1605482266,   "device_type": "Icon RT" }, {   "active_time": 1605087321,   "create_time": 1605086381,   "id": "bf80b9a848085c5902bear",   "name": "Bear Danfoss",   "online": true,   "status": [  {    "code": "temp_set",    "value": 200  },  {    "code": "mode",    "value": "hot"  }   ],   "sub": true,   "time_zone": "+08:00",   "update_time": 1605482266,   "device_type": "Icon RT" }  ],  "t": 1604188800]'
     if(debugEnabled) log.debug state.devResp
     if(state?.devResp != null){
+        respWork = state.devResp.toString()
+        if( respWork.substring(0,1) == '['){
+            respWork = '{'+respWork.substring(1,respWork.length()-1)+'}'
+            if (debugEnabled) log.debug respWork
+        }
         def jSlurp = new JsonSlurper()
-        Map resMap = (Map)jSlurp.parseText((String)state.devResp)
+        Map resMap = (Map)jSlurp.parseText(respWork)
         resMap.result.each() {
             if(it.device_type.indexOf('Gateway') == -1){
                 if(debugEnabled) log.debug "${it.name}:${it.device_type}:${it.id}"
@@ -184,8 +189,13 @@ def updateChild(id, cOrF){
     if(sim) state.devResp = '{ "result": { "active_time": 1605087321, "create_time": 1605086381, "id": "bf80b9a848085c5902tiwi", "name": "Icon RT 8", "online": true, "status": [  {  "code": "temp_set",  "value": 201  },  {  "code": "mode",  "value": "hot"  } ], "sub": true, "time_zone": "+08:00", "update_time": 1605482266, "device_type": "Icon RT" }, "t": 1604188800  }'
     log.debug state.devResp
     if(state?.devResp != null){
+        respWork = state.devResp.toString()
+        if( respWork.substring(0,1) == '['){
+            respWork = '{'+respWork.substring(1,respWork.length()-1)+'}'
+            if (debugEnabled) log.debug respWork
+        }
         def jSlurp = new JsonSlurper()
-        Map resMap = (Map)jSlurp.parseText((String)state.devResp)
+        Map resMap = (Map)jSlurp.parseText(respWork)
         cd = this.getChildDevice("${id}")
         cd.sendEvent(name:"online",value:"${resMap.result.online}")
         resMap.result.status.each{

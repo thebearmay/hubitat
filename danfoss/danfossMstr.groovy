@@ -17,7 +17,7 @@
  *    
 */
 
-static String version()	{  return '0.0.7'}
+static String version()	{  return '0.0.8'}
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -262,7 +262,7 @@ def updateChild(id, cOrF){
 
 def sendCmd(devId,cmd,val){
     danfossLogin()
-    cLine = '{'+"\"commands\":[{\"code\":\"$cmd\",\"value\":\"$val\"}]"+'}'
+    cLine = '{'+"\"commands\":[{\"code\":\"$cmd\",\"value\":$val}]"+'}'
     try{
         params = [
 					uri: "https://api.danfoss.com/ally/devices/$devId/commands",

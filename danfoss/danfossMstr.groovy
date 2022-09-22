@@ -17,7 +17,7 @@
  *    
 */
 
-static String version()	{  return '0.0.8'}
+static String version()	{  return '0.0.9'}
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -269,7 +269,8 @@ def sendCmd(devId,cmd,val){
                     headers: [
                         Authorization: "Bearer ${state.authToken}",
                         Accept: "application/json",
-                        "Content-Type":"application/json"
+                        "Content-Type":"application/json",
+                        textParser:false
                         ],
                     body:"$cLine"
 				]    
@@ -278,7 +279,7 @@ def sendCmd(devId,cmd,val){
             if(debugEnabled) "$resp.data"
         }
     } catch (e){
-        log.error "Error on command send: ${e}"
+        log.error "Error on command send: ${e} ${e.getResponse().data}"
     }
 }
 

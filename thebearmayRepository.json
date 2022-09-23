@@ -188,6 +188,13 @@
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/nexiaThermManifest.json",
       "description": "Port of the ST Nexia Thermostat Manager.  Known work with the XL850 and XL824 Thermostat; may work with any thermostat running off of the TraneHome.com cloud."
+    },
+    {
+      "id": "b81ff898-9642-45e0-a750-36ce50a43ce6",
+      "name": "Danfoss Ally Master",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/danfossAllyManifest.json",
+      "description": "Provides integration with the Danfoss Ally Thermostats and Room Sensors."
     }
   ]
 }

@@ -17,7 +17,7 @@
  *    
 */
 
-static String version()	{  return '0.0.9'}
+static String version()	{  return '1.0.0'}
 
 import java.text.SimpleDateFormat
 import java.util.Date

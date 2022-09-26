@@ -42,10 +42,12 @@ metadata {
         attribute "thermostatSetpoint", "number"
         attribute "thermostatMode", "string"
         attribute "online", "string"
+        attribute "windowState", "string"
         
         
         command "refresh"
-        command "setMode",[[name:"tMode",type:"STRING",description:"Thermostat Mode"]]
+        command "setMode",[[name:"tMode",type:"ENUM",description:"Thermostat Mode", constraints: ['manual', 'at_home', 'leaving_home', 'pause']]]
+        command "winState", [[name:"wState", type:"ENUM", description: "Window State", constraints: ['closed', 'open']]]
         command "pause", [[name:"pTime",type:"NUMBER",description:"Minutes to Pause"]]
         command "adhoc", [[name:"cmd",type:"STRING",description:"AdHoc Command"],[name:"aVal",type:"STRING",description:"Command Value"]]
                                   
@@ -112,6 +114,11 @@ void setHeatingSetpoint(temp){
 void setMode(tMode) {
     parent.sendCmd("${device.deviceNetworkId}","mode","$tMode")
     updateAttr("thermostatMode", "$tMode")
+}
+
+void winState(wState){
+    parent.sendCmd("${device.deviceNetworkId}","window_state","$wState")
+    updateAttr("windowState", "$wState")    
 }
 
 void pause(mins) {

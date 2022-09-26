@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "1.0.0"}
+static String version() {return "1.0.1"}
 
 metadata {
     definition (
@@ -46,8 +46,8 @@ metadata {
         
         command "refresh"
         command "setMode",[[name:"tMode",type:"STRING",description:"Thermostat Mode"]]
-
-
+        command "pause", [[name:"pTime",type:"NUMBER",description:"Minutes to Pause"]]
+        command "adhoc", [[name:"cmd",type:"STRING",description:"AdHoc Command"],[name:"aVal",type:"STRING",description:"Command Value"]]
                                   
     }   
 }
@@ -112,6 +112,14 @@ void setHeatingSetpoint(temp){
 void setMode(tMode) {
     parent.sendCmd("${device.deviceNetworkId}","mode","$tMode")
     updateAttr("thermostatMode", "$tMode")
+}
+
+void pause(mins) {
+    parent.sendCmd("${device.deviceNetworkId}","temp_pause","$mins")
+}
+
+void adhoc(cmd, val){
+    parent.sendCmd("${device.deviceNetworkId}","$cmd","$val")
 }
 
 @SuppressWarnings('unused')

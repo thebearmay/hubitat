@@ -14,10 +14,11 @@
  *
  *    Date        Who           What
  *    ----        ---           ----
+ *    2022-09-26  thebearmay    add window state
  *    
 */
 
-static String version()	{  return '1.0.0'}
+static String version()	{  return '1.0.1'}
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -167,6 +168,9 @@ def getDevices() {
                         tValue = it.value.toDouble()/10
                         cd.sendEvent(name:"temperature",value:"${tValue}",unit:"°C") 
                     }
+                    if(it.code == "window_state") {
+                        cd.sendEvent(name:"window_state",value:"${it.value}") 
+                    }                    
                 }
             }
             if(it.device_type.indexOf('Sensor') > -1){
@@ -256,6 +260,9 @@ def updateChild(id, cOrF){
                 tValue = it.value.toFloat()/10
                 cd.sendEvent(name:"humidity",value:"${tValue}",unit:"%")
             }
+            if(it.code == "window_state") {
+                cd.sendEvent(name:"window_state",value:"${it.value}") 
+            }              
         }
     }    
 }

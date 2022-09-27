@@ -269,7 +269,7 @@ def updateChild(id, cOrF){
 
 def sendCmd(devId,cmd,val){
     danfossLogin()
-    cLine = '{'+"\"commands\":[{\"code\":\"$cmd\",\"value\":$val}]"+'}'
+    cLine = '{'+"\"commands\":[{\"code\":\"$cmd\",\"value\":\"$val\"}]"+'}'
     try{
         params = [
 					uri: "https://api.danfoss.com/ally/devices/$devId/commands",

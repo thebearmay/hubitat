@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "1.0.1"}
+static String version() {return "1.0.2"}
 
 metadata {
     definition (
@@ -46,7 +46,7 @@ metadata {
         
         command "refresh"
         command "setMode",[[name:"tMode",type:"ENUM",description:"Thermostat Mode", constraints: ['manual', 'at_home', 'leaving_home', 'pause']]]
-        command "winOpen", [[name:"wState", type:"ENUM", description: "Window State", constraints: ['closed', 'open']]]
+//        command "winOpen", [[name:"wState", type:"ENUM", description: "Window State", constraints: ['closed', 'open']]]
         command "pause", [[name:"pTime",type:"NUMBER",description:"Minutes to Pause"]]
         command "adhoc", [[name:"cmd",type:"STRING",description:"AdHoc Command"],[name:"aVal",type:"STRING",description:"Command Value"]]
                                   

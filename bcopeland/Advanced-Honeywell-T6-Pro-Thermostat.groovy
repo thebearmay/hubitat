@@ -6,6 +6,9 @@ import groovy.transform.Field
  *
  * Date       Who           Description
  * 2022-09-26 thebearmay    post 269 modifications
+ *
+ *
+ * v1.2.2
  */
 
 metadata {
@@ -446,7 +449,7 @@ void zwaveEvent(hubitat.zwave.commands.sensormultilevelv5.SensorMultilevelReport
         eventProcess(name: "temperature", value: cmd.scaledSensorValue, unit: cmd.scale == 1 ? "F" : "C")
     } else if (cmd.sensorType.toInteger() == 5) {
         if (logEnable) log.debug "got humidity: ${cmd.scaledSensorValue}"//if (logEnable) log.debug "got temp: ${cmd.scaledSensorValue}"
-        if(cmd.scaledSensorValue>=0 && cmd.scaledeSensorValue<=100) eventProcess(name: "humidity", value: Math.round(cmd.scaledSensorValue), unit: cmd.scale == 0 ? "%": "g/m³")
+        if(cmd.scaledSensorValue>=0 && cmd.scaledSensorValue<=100) eventProcess(name: "humidity", value: Math.round(cmd.scaledSensorValue), unit: cmd.scale == 0 ? "%": "g/m³")
     }
 }
 

@@ -2,19 +2,19 @@ import groovy.transform.Field
 
 /**
  * Advanced Honeywell T6 Pro
- * v1.2
+ * Modified using bcopeland's v1.2 code as the baseline
  *
  * Date       Who           Description
  * 2022-09-26 thebearmay    post 269 modifications
  * 2022-09-27 thebearmay    add jkenn99 pull request changes
- * 2022-09-29 thebearmay    correct refresh C to F jumping, setPoint rounding issue correction, add option to always send temperature/humidity reading events
- *                          add presence sensor capability
+ * 2022-09-29 thebearmay    correct refresh C to F jumping, setPoint rounding issue correction, add option to always send temperature reading events
+ *                          add presence capability
  *
- * v1.2.5
  */
 
+static String version()	{  return "1.2.5" }
 metadata {
-    definition (name: "Advanced Honeywell T6 Pro Thermostat", namespace: "djdizzyd", author: "Bryan Copeland", importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/bcopeland/Advanced-Honeywell-T6-Pro-Thermostat.groovy") {
+    definition (name: "Advanced Honeywell T6 Pro Thermostat", namespace: "djdizzyd", author: "Bryan Copeland", importUrl: "https://raw.githubusercontent.com0/thebearmay/hubitat/main/bcopeland/Advanced-Honeywell-T6-Pro-Thermostat.groovy") {
 
         capability "Actuator"
         capability "Battery"

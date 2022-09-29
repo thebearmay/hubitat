@@ -8,8 +8,9 @@ import groovy.transform.Field
  * 2022-09-26 thebearmay    post 269 modifications
  * 2022-09-27 thebearmay    add jkenn99 pull request changes
  * 2022-09-29 thebearmay    correct refresh C to F jumping, setPoint rounding issue correction, add option to always send temperature reading events
+ *                          add presence capability
  *
- * v1.2.4
+ * v1.2.5
  */
 
 metadata {
@@ -30,6 +31,7 @@ metadata {
         capability "ThermostatOperatingState"
         capability "RelativeHumidityMeasurement"
         capability "PowerSource"
+        capability "PresenceSensor"
 
         attribute "currentSensorCal", "number"
         attribute "idleBrightness", "number"
@@ -58,8 +60,8 @@ metadata {
 @Field static Map THERMOSTAT_FAN_MODE=[0x00:"auto",0x01:"on",0x02:"auto",0x03:"on",0x04:"auto",0x05:"on",0x06:"circulate",0x07:"circulate"]
 @Field static Map SET_THERMOSTAT_FAN_MODE=["auto":0x00,"on":0x01,"circulate":0x06, " auto":0x00, " on":0x01, " circulate":0x06] //@Field static Map SET_THERMOSTAT_FAN_MODE=["auto":0x00,"on":0x01,"circulate":0x06]
 @Field static Map THERMOSTAT_FAN_STATE=[0x00:"idle", 0x01:"running", 0x02:"running high",0x03:"running medium",0x04:"circulation mode",0x05:"humidity circulation mode",0x06:"right - left circulation mode",0x07:"quiet circulation mode"]
-@Field static Map SET_PRESENCE=["away":0x00, "home":0xFF]
-@Field static Map PRESENCE_VALUE=[0x00:"away",0xFF:"home"]
+@Field static Map SET_PRESENCE=["not present":0x00, "present":0xFF]
+@Field static Map PRESENCE_VALUE=[0x00:"not present",0xFF:"present"]
 @Field static List<String> supportedThermostatFanModes=["on","auto","circulate"]
 @Field static List<String> supportedThermostatModes=["auto", "off", "heat", "emergency heat", "cool"]
 @Field static Map ZWAVE_NOTIFICATION_TYPES=[0:"Reserverd", 1:"Smoke", 2:"CO", 3:"CO2", 4:"Heat", 5:"Water", 6:"Access Control", 7:"Home Security", 8:"Power Management", 9:"System", 10:"Emergency", 11:"Clock", 12:"First"]

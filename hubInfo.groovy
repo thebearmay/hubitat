@@ -104,12 +104,13 @@
  *    2022-08-19  thebearmay     allow for a user defined HTML attribute using a file template
  *    2022-08-24  thebearmay     switch all HTML attribute processing to the template
  *    2022-09-18  thebearmay     add a security in use attribute
+ *    2022-09-29  thebearmay     handle null or 'null' html template
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.7"}
+static String version() {return "2.7.8"}
 
 metadata {
     definition (
@@ -1085,6 +1086,11 @@ void altHtml(){
         device.updateSetting("alternateHtml",[value:"hubInfoTemplate.res", type:"string"])
     }
     String fContents = readFile("$alternateHtml")
+    if(fContents == 'null' || fContents == null) {
+        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+        device.updateSetting("alternateHtml",[value:"hubInfoTemplate.res", type:"string"]) 
+        fContents = readFile("$alternateHtml")
+    }
     List fRecs=fContents.split("\n")
     String html = ""
     fRecs.each {

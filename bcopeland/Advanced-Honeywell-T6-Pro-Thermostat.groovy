@@ -7,6 +7,7 @@ import groovy.transform.Field
  * Date       Who           Description
  * 2022-09-26 thebearmay    post 269 modifications
  * 2022-09-27 thebearmay    add jkenn99 pull request changes
+ * 2022-09-29 thebearmay    correct refresh C to F jumping
  *
  * v1.2.3
  */
@@ -304,7 +305,7 @@ void pollDeviceData() {
 void refresh() {
     List<hubitat.zwave.Command> cmds=[]
     cmds.add(zwave.batteryV1.batteryGet())
-    cmds.add(zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType: 1, scale: configParam2==0?0:1))
+    cmds.add(zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType: 1, scale: configParam2==0?1:0))
     cmds.add(zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType: 5, scale: 0))
     cmds.add(zwave.thermostatFanModeV3.thermostatFanModeGet())
     cmds.add(zwave.thermostatFanStateV1.thermostatFanStateGet())

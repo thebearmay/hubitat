@@ -7,9 +7,9 @@ import groovy.transform.Field
  * Date       Who           Description
  * 2022-09-26 thebearmay    post 269 modifications
  * 2022-09-27 thebearmay    add jkenn99 pull request changes
- * 2022-09-29 thebearmay    correct refresh C to F jumping, setPoint rounding issue correction
+ * 2022-09-29 thebearmay    correct refresh C to F jumping, setPoint rounding issue correction, add option to always send temperature reading events
  *
- * v1.2.3
+ * v1.2.4
  */
 
 metadata {
@@ -46,6 +46,7 @@ metadata {
     preferences {
         configParams.each { input it.value.input }
         input "logEnable", "bool", title: "Enable debug logging", defaultValue: false
+		input "sendAllTemps", "bool", title: "Create Events for All Temperature Readings"
     }
 
 }
@@ -287,7 +288,7 @@ void zwaveEvent(hubitat.zwave.commands.configurationv1.ConfigurationReport cmd) 
 }
 
 void eventProcess(Map evt) {
-    if (device.currentValue(evt.name).toString() != evt.value.toString()) {
+    if (device.currentValue(evt.name).toString() != evt.value.toString() || (evt.name == 'temperature' && sendAllTemps)) {
         evt.isStateChange=true
         sendEvent(evt)
     }
@@ -484,7 +485,7 @@ void setpointCalc(String newmode, String unit, value) {
         mode=state.lastMode
     }
     if (newmode==mode) {
-        eventProcess(name: "thermostatSetpoint", value: String.format("%.1f",value), unit: unit, type: state.isDigital?"digital":"physical")
+        eventProcess(name: "thermostatSetpoint", value: String.format("%.1f",Math.round(value*10)/10), unit: unit, type: state.isDigital?"digital":"physical")
     }
 }
 
@@ -495,11 +496,11 @@ void zwaveEvent(hubitat.zwave.commands.thermostatsetpointv2.ThermostatSetpointRe
     String unit=cmd.scale == 1 ? "F" : "C"
     switch (cmd.setpointType) {
         case 1:
-            eventProcess(name: "heatingSetpoint", value: String.format("%.1f",cmd.scaledValue), unit: unit, type: state.isDigital?"digital":"physical")
+            eventProcess(name: "heatingSetpoint", value: String.format("%.1f",Math.round(cmd.scaledValue*10)/10), unit: unit, type: state.isDigital?"digital":"physical")
             setpointCalc("heat", unit, cmd.scaledValue)
             break
         case 2:
-            eventProcess(name: "coolingSetpoint", value: String.format("%.1f",cmd.scaledValue), unit: unit, type: state.isDigital?"digital":"physical")
+            eventProcess(name: "coolingSetpoint", value: String.format("%.1f",Math.round(cmd.scaledValue*10)/10), unit: unit, type: state.isDigital?"digital":"physical")
             setpointCalc("cool", unit, cmd.scaledValue)
             break
     }

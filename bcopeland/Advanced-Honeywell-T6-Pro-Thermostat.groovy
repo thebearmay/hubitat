@@ -7,7 +7,7 @@ import groovy.transform.Field
  * Date       Who           Description
  * 2022-09-26 thebearmay    post 269 modifications
  * 2022-09-27 thebearmay    add jkenn99 pull request changes
- * 2022-09-29 thebearmay    correct refresh C to F jumping, setPoint rounding issue correction, add option to always send temperature reading events
+ * 2022-09-29 thebearmay    correct refresh C to F jumping, setPoint rounding issue correction, add option to always send temperature/humidity reading events
  *                          add presence capability
  *
  * v1.2.5
@@ -48,7 +48,7 @@ metadata {
     preferences {
         configParams.each { input it.value.input }
         input "logEnable", "bool", title: "Enable debug logging", defaultValue: false
-		input "sendAllTemps", "bool", title: "Create Events for All Temperature Readings"
+		input "sendAllTemps", "bool", title: "Create Events for All Temperature and Humidity Readings"
     }
 
 }
@@ -290,7 +290,7 @@ void zwaveEvent(hubitat.zwave.commands.configurationv1.ConfigurationReport cmd) 
 }
 
 void eventProcess(Map evt) {
-    if (device.currentValue(evt.name).toString() != evt.value.toString() || (evt.name == 'temperature' && sendAllTemps)) {
+    if (device.currentValue(evt.name).toString() != evt.value.toString() || ((evt.name == 'temperature' || evt.name == 'humidity') && sendAllTemps)) {
         evt.isStateChange=true
         sendEvent(evt)
     }

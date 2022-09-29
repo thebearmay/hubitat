@@ -484,7 +484,7 @@ void setpointCalc(String newmode, String unit, value) {
         mode=state.lastMode
     }
     if (newmode==mode) {
-        eventProcess(name: "thermostatSetpoint", value: String.format("%.1f",Math.round(value*10)/10), unit: unit, type: state.isDigital?"digital":"physical")
+        eventProcess(name: "thermostatSetpoint", value: String.format("%.1f",value), unit: unit, type: state.isDigital?"digital":"physical")
     }
 }
 
@@ -495,11 +495,11 @@ void zwaveEvent(hubitat.zwave.commands.thermostatsetpointv2.ThermostatSetpointRe
     String unit=cmd.scale == 1 ? "F" : "C"
     switch (cmd.setpointType) {
         case 1:
-            eventProcess(name: "heatingSetpoint", value: String.format("%.1f",Math.round(cmd.scaledValue*10)/10), unit: unit, type: state.isDigital?"digital":"physical")
+            eventProcess(name: "heatingSetpoint", value: String.format("%.1f",cmd.scaledValue), unit: unit, type: state.isDigital?"digital":"physical")
             setpointCalc("heat", unit, cmd.scaledValue)
             break
         case 2:
-            eventProcess(name: "coolingSetpoint", value: String.format("%.1f",Math.round(cmd.scaledValue*10)/10), unit: unit, type: state.isDigital?"digital":"physical")
+            eventProcess(name: "coolingSetpoint", value: String.format("%.1f",cmd.scaledValue), unit: unit, type: state.isDigital?"digital":"physical")
             setpointCalc("cool", unit, cmd.scaledValue)
             break
     }

@@ -195,6 +195,13 @@
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/danfossAllyManifest.json",
       "description": "Provides integration with the Danfoss Ally Thermostats and Room Sensors."
+    },
+    {
+      "id": "1acee6d9-61fb-4640-82eb-02f7537d78e8",
+      "name": "Advanced Honeywell T6 Pro",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/honeywellT6PManifest.json",
+      "description": "Advanced driver for the Honeywell T6 Pro Z-Wave thermostat - the baseline code is from v1.2 bcopeland driver.  Provides access to all 42 device parameters, Clock synchronization, and Power Source Monitoring, in addition to the standard thermostat functions"
     }
   ]
 }

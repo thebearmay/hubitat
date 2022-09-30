@@ -1,7 +1,16 @@
 {
   "packageName": "Advanced Honeywell T6 Pro",
   "author": "Jean P. May, Jr.",
-  "version": "1.2.7",
+  "version": "1.2.6",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-09-3"
+  "dateReleased": "2022-09-3",
+  "drivers": [
+    {
+      "id": "69a73c40-e404-4773-aa75-1d73e009d8e4",
+      "name": "Advanced Honeywell T6 Pro Thermostat",
+      "namespace": "djdizzyd",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/bcopeland/Advanced-Honeywell-T6-Pro-Thermostat.groovy",
+      "required": true
+    }
+  ]
 }

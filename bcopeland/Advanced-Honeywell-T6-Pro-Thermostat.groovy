@@ -9,12 +9,14 @@ import groovy.transform.Field
  * 2022-09-27 thebearmay    add jkenn99 pull request changes
  * 2022-09-29 thebearmay    correct refresh C to F jumping, setPoint rounding issue correction, add option to always send temperature reading events
  *                          add presence capability - jkenn99 completion
- * 2022-09-30 thebearmay    last activity attribute, force time sync option, sync time on Mains Reconnect
- *                            fix typo in activity reporting
+ * 2022-09-30 thebearmay    v1.2.6 last activity attribute, force time sync option, sync time on Mains Reconnect
+ *                          v1.2.7 fix typo in activity reporting
+ *                          v1.2.8 fix typo in setpoint scaling, change where sendAllTemps is evaluated
+ *
  *
  */
 
-static String version()	{  return "1.2.7" }
+static String version()	{  return "1.2.8" }
 metadata {
     definition (name: "Advanced Honeywell T6 Pro Thermostat", namespace: "djdizzyd", author: "Bryan Copeland", importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/bcopeland/Advanced-Honeywell-T6-Pro-Thermostat.groovy") {
 
@@ -297,7 +299,7 @@ void zwaveEvent(hubitat.zwave.commands.configurationv1.ConfigurationReport cmd) 
 }
 
 void eventProcess(Map evt) {
-    if (device.currentValue(evt.name).toString() != evt.value.toString() || ((evt.name == 'temperature' || evt.name == 'humidity') && sendAllTemps)) {
+    if (device.currentValue(evt.name).toString() != evt.value.toString()) {
         evt.isStateChange=true
         sendEvent(evt)
     }
@@ -309,7 +311,7 @@ void eventProcess(Map evt) {
     Long prevActivity = device.currentValue("lastActivity")
     evt.descriptionText="${device.displayName} Last Activity"
     sendEvent(evt)
-    if(forceTimeSync != null && forceTimeSync > 0){
+    if(forceTimeSync != null && preActivity != null && forceTimeSync > 0){
         if((lastActivity - prevActivity) > (forceTimeSync * 60000))
            syncClock()
     }
@@ -482,10 +484,11 @@ void zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 void zwaveEvent(hubitat.zwave.commands.sensormultilevelv5.SensorMultilevelReport cmd) {
     if (cmd.sensorType.toInteger() == 1) {
         if (logEnable) log.debug "got temp: ${cmd.scaledSensorValue}"
-        eventProcess(name: "temperature", value: cmd.scaledSensorValue, unit: cmd.scale == 1 ? "F" : "C")
+        eventProcess(name: "temperature", value: cmd.scaledSensorValue, unit: cmd.scale == 1 ? "F" : "C", isStateChange: sendAllTemps ? true:false)
     } else if (cmd.sensorType.toInteger() == 5) {
         if (logEnable) log.debug "got humidity: ${cmd.scaledSensorValue}"//if (logEnable) log.debug "got temp: ${cmd.scaledSensorValue}"
-        if(cmd.scaledSensorValue>=0 && cmd.scaledSensorValue<=100) eventProcess(name: "humidity", value: Math.round(cmd.scaledSensorValue), unit: cmd.scale == 0 ? "%": "g/m³")
+        if(cmd.scaledSensorValue>=0 && cmd.scaledSensorValue<=100) 
+            eventProcess(name: "humidity", value: Math.round(cmd.scaledSensorValue), unit: cmd.scale == 0 ? "%": "g/m³", isStateChange: sendAllTemps ? true:false)
     }
 }
 
@@ -518,11 +521,11 @@ void zwaveEvent(hubitat.zwave.commands.thermostatsetpointv2.ThermostatSetpointRe
     String unit=cmd.scale == 1 ? "F" : "C"
     switch (cmd.setpointType) {
         case 1:
-            eventProcess(name: "heatingSetpoint", value: String.format("%.1f",value), unit: unit, type: state.isDigital?"digital":"physical")
+            eventProcess(name: "heatingSetpoint", value: String.format("%.1f",cmd.scaledValue), unit: unit, type: state.isDigital?"digital":"physical")
             setpointCalc("heat", unit, cmd.scaledValue)
             break
         case 2:
-            eventProcess(name: "coolingSetpoint", value: String.format("%.1f",value), unit: unit, type: state.isDigital?"digital":"physical")
+            eventProcess(name: "coolingSetpoint", value: String.format("%.1f",cmd.scaledValue), unit: unit, type: state.isDigital?"digital":"physical")
             setpointCalc("cool", unit, cmd.scaledValue)
             break
     }

@@ -10,10 +10,11 @@ import groovy.transform.Field
  * 2022-09-29 thebearmay    correct refresh C to F jumping, setPoint rounding issue correction, add option to always send temperature reading events
  *                          add presence capability - jkenn99 completion
  * 2022-09-30 thebearmay    last activity attribute, force time sync option, sync time on Mains Reconnect
+ *                            fix typo in activity reporting
  *
  */
 
-static String version()	{  return "1.2.6" }
+static String version()	{  return "1.2.7" }
 metadata {
     definition (name: "Advanced Honeywell T6 Pro Thermostat", namespace: "djdizzyd", author: "Bryan Copeland", importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/bcopeland/Advanced-Honeywell-T6-Pro-Thermostat.groovy") {
 
@@ -302,7 +303,7 @@ void eventProcess(Map evt) {
     }
     // record last activity
     Long lastActivity = new Date().getTime()
-    evt.name="powerSource"
+    evt.name="lastActivity"
     evt.isStateChange=true
     evt.value="$lastActivity"
     Long prevActivity = device.currentValue("lastActivity")

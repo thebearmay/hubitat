@@ -359,7 +359,7 @@ void parse(String description) {
     if (cmd) {
         zwaveEvent(cmd)
     }
-    actvityCheck()
+    activityCheck()
 }
 
 void zwaveEvent(hubitat.zwave.commands.supervisionv1.SupervisionGet cmd) {
@@ -476,7 +476,7 @@ void zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 void zwaveEvent(hubitat.zwave.commands.sensormultilevelv5.SensorMultilevelReport cmd) {
     if (cmd.sensorType.toInteger() == 1) {
         if (logEnable) log.debug "got temp: ${cmd.scaledSensorValue}"
-        if(configParam2.toInteger() != cmd.scale) //temperature scale and configParam2 have reversed values
+        if(configParam2.toInteger() != cmd.scale.toInteger()) //temperature scale and configParam2 have reversed values
             eventProcess(name: "temperature", value: cmd.scaledSensorValue, unit: cmd.scale == 1 ? "F" : "C", isStateChange: sendAllTemps)
         else //Temperature Scale reported mismatch 
             adjustReportedTemp(cmd.scaledSensorValue, cmd.Scale)

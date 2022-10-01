@@ -359,7 +359,7 @@ void parse(String description) {
     if (cmd) {
         zwaveEvent(cmd)
     }
-    activityCheck()
+    if(forceTimeSync > 0) activityCheck()
 }
 
 void zwaveEvent(hubitat.zwave.commands.supervisionv1.SupervisionGet cmd) {

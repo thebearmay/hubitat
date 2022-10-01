@@ -479,7 +479,7 @@ void zwaveEvent(hubitat.zwave.commands.sensormultilevelv5.SensorMultilevelReport
         if(configParam2.toInteger() != cmd.scale.toInteger()) //temperature scale and configParam2 have reversed values
             eventProcess(name: "temperature", value: cmd.scaledSensorValue, unit: cmd.scale == 1 ? "F" : "C", isStateChange: sendAllTemps)
         else //Temperature Scale reported mismatch 
-            adjustReportedTemp(cmd.scaledSensorValue, cmd.Scale)
+            adjustReportedTemp(cmd.scaledSensorValue, cmd.scale)
     } else if (cmd.sensorType.toInteger() == 5) {
         if (logEnable) log.debug "got humidity: ${cmd.scaledSensorValue}"//if (logEnable) log.debug "got temp: ${cmd.scaledSensorValue}"
         if(cmd.scaledSensorValue>=0 && cmd.scaledSensorValue<=100) 

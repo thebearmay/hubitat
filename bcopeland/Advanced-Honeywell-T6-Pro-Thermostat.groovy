@@ -191,7 +191,7 @@ void zwaveEvent(hubitat.zwave.commands.notificationv3.NotificationReport cmd) {
                 break
             case 3:
                 // AC mains re-connected
-                syncClock()
+                runin(10, "syncClock")
                 evt.name="powerSource"
                 evt.isStateChange=true
                 evt.value="mains"

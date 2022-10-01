@@ -1,9 +1,9 @@
 {
   "packageName": "Advanced Honeywell T6 Pro",
   "author": "Jean P. May, Jr.",
-  "version": "1.2.9",
+  "version": "1.2.10",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-09-3",
+  "dateReleased": "2022-09-30",
   "drivers": [
     {
       "id": "69a73c40-e404-4773-aa75-1d73e009d8e4",

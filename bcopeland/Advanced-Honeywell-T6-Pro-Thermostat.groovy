@@ -14,11 +14,12 @@ import java.text.SimpleDateFormat
  *                          v1.2.7 fix typo in activity reporting
  *                          v1.2.8 fix typo in setpoint scaling, change where sendAllTemps is evaluated
  * 2022-10-01 thebearmay    v1.2.9 change lastActivty to use device.lastActivity
+ *.                         v1.2.10 powersource event getting overwritten by syncClock
  *
  *
  */
 
-static String version()	{  return "1.2.9" }
+static String version()	{  return "1.2.10" }
 metadata {
     definition (name: "Advanced Honeywell T6 Pro Thermostat", 
                 namespace: "djdizzyd", 
@@ -190,11 +191,11 @@ void zwaveEvent(hubitat.zwave.commands.notificationv3.NotificationReport cmd) {
                 break
             case 3:
                 // AC mains re-connected
+                syncClock()
                 evt.name="powerSource"
                 evt.isStateChange=true
                 evt.value="mains"
                 evt.descriptionText="${device.displayName} AC mains re-connected"
-                syncClock()
                 break
             case 4:
                 // surge detected
@@ -359,7 +360,7 @@ void parse(String description) {
     if (cmd) {
         zwaveEvent(cmd)
     }
-    if(forceTimeSync > 0) activityCheck()
+    activityCheck()
 }
 
 void zwaveEvent(hubitat.zwave.commands.supervisionv1.SupervisionGet cmd) {
@@ -479,7 +480,7 @@ void zwaveEvent(hubitat.zwave.commands.sensormultilevelv5.SensorMultilevelReport
         if(configParam2.toInteger() != cmd.scale.toInteger()) //temperature scale and configParam2 have reversed values
             eventProcess(name: "temperature", value: cmd.scaledSensorValue, unit: cmd.scale == 1 ? "F" : "C", isStateChange: sendAllTemps)
         else //Temperature Scale reported mismatch 
-            adjustReportedTemp(cmd.scaledSensorValue, cmd.scale)
+            adjustReportedTemp(cmd.scaledSensorValue, cmd.Scale)
     } else if (cmd.sensorType.toInteger() == 5) {
         if (logEnable) log.debug "got humidity: ${cmd.scaledSensorValue}"//if (logEnable) log.debug "got temp: ${cmd.scaledSensorValue}"
         if(cmd.scaledSensorValue>=0 && cmd.scaledSensorValue<=100) 

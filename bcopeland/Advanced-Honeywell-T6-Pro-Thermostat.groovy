@@ -15,11 +15,12 @@ import java.text.SimpleDateFormat
  *                          v1.2.8 fix typo in setpoint scaling, change where sendAllTemps is evaluated
  * 2022-10-01 thebearmay    v1.2.9 change lastActivty to use device.lastActivity
  *.                         v1.2.10 powersource event getting overwritten by syncClock
- *			    v1.2.11 scale vs Scale code reversion fix
+ *                          v1.2.11 scale vs Scale code reversion fix
+ *                          v1.2.12 basic report correction
  *
  */
 
-static String version()	{  return "1.2.10" }
+static String version()	{  return "1.2.12" }
 metadata {
     definition (name: "Advanced Honeywell T6 Pro Thermostat", 
                 namespace: "djdizzyd", 
@@ -191,7 +192,7 @@ void zwaveEvent(hubitat.zwave.commands.notificationv3.NotificationReport cmd) {
                 break
             case 3:
                 // AC mains re-connected
-                syncClock()
+                runIn(10,"syncClock")
                 evt.name="powerSource"
                 evt.isStateChange=true
                 evt.value="mains"
@@ -355,12 +356,12 @@ void zwaveEvent(hubitat.zwave.commands.multicmdv1.MultiCmdEncap cmd) {
 }
 
 void parse(String description) {
+    if(forceTimeSync > 0)runIn(10,"activityCheck")    
     if (logEnable) log.debug "parse:${description}"
     hubitat.zwave.Command cmd = zwave.parse(description, CMD_CLASS_VERS)
     if (cmd) {
         zwaveEvent(cmd)
     }
-    activityCheck()
 }
 
 void zwaveEvent(hubitat.zwave.commands.supervisionv1.SupervisionGet cmd) {
@@ -579,7 +580,7 @@ void zwaveEvent(hubitat.zwave.commands.basicv1.BasicReport cmd) {
 void zwaveEvent(hubitat.zwave.commands.basicv1.BasicSet cmd) {
     // setup basic reports for missed operating state changes
     if (cmd.value.toInteger()==0xFF) {
-        if (device.currentValue("thermostatOperatingState")!="heating" || device.currentValue("thermostatOperatingState")!="cooling") sendToDevice(zwave.thermostatOperatingStateV1.thermostatOperatingStateGet())
+        if (device.currentValue("thermostatOperatingState")!="heating" && device.currentValue("thermostatOperatingState")!="cooling") sendToDevice(zwave.thermostatOperatingStateV1.thermostatOperatingStateGet())
     } else {
         if (device.currentValue("thermostatOperatingState")=="heating" || device.currentValue("thermostatOperatingState")=="cooling") sendToDevice(zwave.thermostatOperatingStateV1.thermostatOperatingStateGet())
     }

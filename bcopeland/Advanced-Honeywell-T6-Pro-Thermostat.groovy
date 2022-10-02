@@ -304,7 +304,7 @@ void zwaveEvent(hubitat.zwave.commands.configurationv1.ConfigurationReport cmd) 
 }
 
 void eventProcess(Map evt) {
-    if (device.currentValue(evt.name).toString() != evt.value.toString()) {
+    if (device.currentValue(evt.name).toString() != evt.value.toString() || evt.isStateChange) {
         evt.isStateChange=true
         sendEvent(evt)
     }    

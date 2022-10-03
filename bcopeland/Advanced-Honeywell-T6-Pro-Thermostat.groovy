@@ -321,7 +321,7 @@ void eventProcess(Map evt) {
     } else if(evt.name == "humidity"){
         absDiff = Math.abs(device.currentValue(evt.name).toFloat() - evt.value.toFloat())
         if(deltaHumRpt == null) deltaHumRpt = 1
-        if(absDiff >= deltaHumRpt.toFloat() || state.refreshingHum){
+        if(absDiff >= deltaHumRpt.toFloat() || state?.refreshingHum){
             state.refreshingHum = false
             evt.isStateChange=true
             sendEvent(evt)        

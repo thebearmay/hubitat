@@ -16,12 +16,13 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
+ *    2022-10-03   thebearmay    add returnToSchedule command
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "1.0.2"}
+static String version() {return "1.0.3"}
 
 metadata {
     definition (
@@ -48,6 +49,7 @@ metadata {
         command "setMode",[[name:"tMode",type:"ENUM",description:"Thermostat Mode", constraints: ['manual', 'at_home', 'leaving_home', 'pause']]]
 //        command "winOpen", [[name:"wState", type:"ENUM", description: "Window State", constraints: ['closed', 'open']]]
         command "pause", [[name:"pTime",type:"NUMBER",description:"Minutes to Pause"]]
+        command "returnToSchedule"
         command "adhoc", [[name:"cmd",type:"STRING",description:"AdHoc Command"],[name:"aVal",type:"STRING",description:"Command Value"]]
                                   
     }   
@@ -124,6 +126,10 @@ void winOpen(wState){
 
 void pause(mins) {
     parent.sendCmd("${device.deviceNetworkId}","temp_pause","$mins")
+}
+
+void returnToSchedule(){
+    parent.sendCmd("${device.deviceNetworkId}","mode",device.currentValue("thermostatMode"))
 }
 
 void adhoc(cmd, val){

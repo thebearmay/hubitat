@@ -205,3 +205,71 @@ String readExtFile(fName){
         return null;
     }
 }
+
+HashMap readImage(imagePath){   
+    def imageData
+
+    if(debugEnabled) log.debug "Getting Image $imagePath"
+    httpGet([
+        uri: "$imagePath",
+        contentType: "*/*",
+        headers: [
+            "authorization": "Basic [Base64 Encoded Credentials]" 
+        ],
+        textParser: false]){ response ->
+            if(debugEnabled) log.debug "${response.properties}"
+            imageData = response.data 
+            if(debugEnabled) log.debug "Image Size (${imageData.available()} ${response.headers['Content-Length']})"
+
+            def bSize = imageData.available()
+            def imageType = response.contentType 
+            byte[] imageArr = new byte[bSize]
+            imageData.read(imageArr, 0, bSize)
+            if(debugEnabled) log.debug "Image size: ${imageArr.length} Type:$imageType"  
+            return [iContent: imageArr, iType: imageType]
+        }    
+}
+
+Boolean writeImageFile(String fName, byte[] fData, String imageType) {
+    now = new Date()
+    String encodedString = "thebearmay$now".bytes.encodeBase64().toString();
+    bDataTop = """--${encodedString}\r\nContent-Disposition: form-data; name="uploadFile"; filename="${fName}"\r\nContent-Type:${imageType}\r\n\r\n""" 
+    bDataBot = """\r\n\r\n--${encodedString}\r\nContent-Disposition: form-data; name="folder"\r\n\r\n--${encodedString}--"""
+    byte[] bDataTopArr = bDataTop.getBytes("UTF-8")
+    byte[] bDataBotArr = bDataBot.getBytes("UTF-8")
+    
+    ByteArrayOutputStream bDataOutputStream = new ByteArrayOutputStream();
+
+    bDataOutputStream.write(bDataTopArr);
+    bDataOutputStream.write(fData);
+    bDataOutputStream.write(bDataBotArr);
+
+    byte[] postBody = bDataOutputStream.toByteArray();
+
+    
+try {
+		def params = [
+			uri: 'http://127.0.0.1:8080',
+			path: '/hub/fileManager/upload',
+			query: [
+				'folder': '/'
+			],
+            requestContentType: "application/octet-stream",
+			headers: [
+				'Content-Type': "multipart/form-data; boundary=$encodedString"
+			], 
+            body: postBody,
+			timeout: 300,
+			ignoreSSLIssues: true
+		]
+		httpPost(params) { resp ->
+            if(debugEnabled) log.debug "writeImageFile ${resp.properties}"
+            log.info resp.data.status 
+            return resp.data.success
+		}
+	}
+	catch (e) {
+		log.error "Error writing file $fName: ${e}"
+	}
+	return false
+}

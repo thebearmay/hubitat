@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat
  *                          v1.2.11 scale vs Scale code reversion fix
  *                          v1.2.12 basic report correction
  * 2022-10-02 thebearmay    v1.2.13 add thermostatFanOperatingState, replace sendAllTemps with deltaTempRpt and deltaHumRpt                    
+ * 2022-10-03 thebearmay    v1.2.14 refresh to create temperature and humidity events regardless of deltas
  *
  */
 
@@ -312,14 +313,16 @@ void eventProcess(Map evt) {
     if(evt.name == "temperature"){
         absDiff = Math.abs(device.currentValue(evt.name).toFloat() - evt.value.toFloat())
         if(deltaTempRpt == null) deltaTempRpt = 1
-        if(absDiff >= deltaTempRpt.toFloat()){
+        if(absDiff >= deltaTempRpt.toFloat() || state?.refreshingTemp){
+            state.refreshingTemp = false
             evt.isStateChange=true
             sendEvent(evt)        
         }
     } else if(evt.name == "humidity"){
         absDiff = Math.abs(device.currentValue(evt.name).toFloat() - evt.value.toFloat())
         if(deltaHumRpt == null) deltaHumRpt = 1
-        if(absDiff >= deltaHumRpt.toFloat()){
+        if(absDiff >= deltaHumRpt.toFloat() || state.refreshingHum){
+            state.refreshingHum = false
             evt.isStateChange=true
             sendEvent(evt)        
         }
@@ -351,6 +354,7 @@ void refresh() {
     cmds.add(zwave.thermostatSetpointV2.thermostatSetpointGet(setpointType: 2))
     cmds.add(zwave.basicV1.basicGet())
     sendToDevice(cmds)
+    state.refreshing = true
     runIn(10, "syncClock")
 }
 
@@ -503,7 +507,7 @@ void zwaveEvent(hubitat.zwave.commands.sensormultilevelv5.SensorMultilevelReport
     } else if (cmd.sensorType.toInteger() == 5) {
         if (logEnable) log.debug "got humidity: ${cmd.scaledSensorValue}"//if (logEnable) log.debug "got temp: ${cmd.scaledSensorValue}"
         if(cmd.scaledSensorValue>=0 && cmd.scaledSensorValue<=100) 
-            eventProcess(name: "humidity", value: Math.round(cmd.scaledSensorValue), unit: cmd.scale == 0 ? "%": "g/m³", isStateChange: sendAllTemps)
+            eventProcess(name: "humidity", value: Math.round(cmd.scaledSensorValue), unit: cmd.scale == 0 ? "%": "g/m³")//, isStateChange: sendAllTemps)
     }
 }
 

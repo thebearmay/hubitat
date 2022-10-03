@@ -20,6 +20,7 @@
  *    25Mar2022    thebearmay    add callback option for non-child application usage (input( "x", "capability.*"...))
  *    27Mar2022    thebearmay    allow hub w/security to be external file source
  *    08Apr2022    thebearmay    ensure correct encoding returned for extended characters
+ *    03Oct2022    thebearmay    add image file capabilities
 */
 
 import java.net.URLEncoder
@@ -31,14 +32,14 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.2.2"}
+static String version() {return "0.2.3"}
 
 metadata {
     definition (
         name: "File Manager Device", 
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
-        description: "Device (or child device) that allows string data to be save and retrieved from HE Local File Storage",
+        description: "Device (or child device) that allows string or image data to be saved to and retrieved from HE Local File Storage",
         importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/fileMgr.groovy"
     ) {
         
@@ -70,6 +71,9 @@ metadata {
                                [name:"offset", type:"NUMBER",description:"Number of Characters to Remove from the Beginning of the File"]
                               ]               
         command "listFiles"
+        command "uploadImage",[[name:"iPath", type:"STRING",title:"Path Image"],
+                            [name:"oName", type:"STRING",title:"File Manager Name"]
+                           ]        
 
 
 
@@ -365,7 +369,7 @@ def readExtFile(fName, Closure closure) {
 
 @SuppressWarnings('unused')
 String readExtFile(fName){
-    if(security) cookie = securityLogin().cookie    
+    if(security) cookie = securityLogin().cookie   
     def params = [
         uri: fName,
         contentType: "text/html",
@@ -436,6 +440,80 @@ List<String> listFiles(){
     } catch (e) {
         log.error e
     }
+}
+
+def uploadImage(imagePath, oName){
+    imageData = readImage(imagePath)
+    writeImageFile(oName, imageData.iContent, imageData.iType)
+}
+
+HashMap readImage(imagePath){   
+    def imageData
+    if(security) cookie = securityLogin().cookie   
+
+    if(debugEnabled) log.debug "Getting Image $imagePath"
+    httpGet([
+        uri: "$imagePath",
+        contentType: "*/*",
+        headers: [
+            "Cookie": cookie
+        ],
+        textParser: false]){ response ->
+            if(debugEnabled) log.debug "${response.properties}"
+            imageData = response.data 
+            if(debugEnabled) log.debug "Image Size (${imageData.available()} ${response.headers['Content-Length']})"
+
+            def bSize = imageData.available()
+            def imageType = response.contentType 
+            byte[] imageArr = new byte[bSize]
+            imageData.read(imageArr, 0, bSize)
+            if(debugEnabled) log.debug "Image size: ${imageArr.length} Type:$imageType"  
+            return [iContent: imageArr, iType: imageType]
+        }    
+}
+
+Boolean writeImageFile(String fName, byte[] fData, String imageType) {
+    now = new Date()
+    String encodedString = "thebearmay$now".bytes.encodeBase64().toString();
+    bDataTop = """--${encodedString}\r\nContent-Disposition: form-data; name="uploadFile"; filename="${fName}"\r\nContent-Type:${imageType}\r\n\r\n""" 
+    bDataBot = """\r\n\r\n--${encodedString}\r\nContent-Disposition: form-data; name="folder"\r\n\r\n--${encodedString}--"""
+    byte[] bDataTopArr = bDataTop.getBytes("UTF-8")
+    byte[] bDataBotArr = bDataBot.getBytes("UTF-8")
+    
+    ByteArrayOutputStream bDataOutputStream = new ByteArrayOutputStream();
+
+    bDataOutputStream.write(bDataTopArr);
+    bDataOutputStream.write(fData);
+    bDataOutputStream.write(bDataBotArr);
+
+    byte[] postBody = bDataOutputStream.toByteArray();
+
+    
+try {
+		def params = [
+			uri: 'http://127.0.0.1:8080',
+			path: '/hub/fileManager/upload',
+			query: [
+				'folder': '/'
+			],
+            requestContentType: "application/octet-stream",
+			headers: [
+				'Content-Type': "multipart/form-data; boundary=$encodedString"
+			], 
+            body: postBody,
+			timeout: 300,
+			ignoreSSLIssues: true
+		]
+		httpPost(params) { resp ->
+            if(debugEnabled) log.debug "writeImageFile ${resp.properties}"
+            log.info resp.data.status 
+            return resp.data.success
+		}
+	}
+	catch (e) {
+		log.error "Error writing file $fName: ${e}"
+	}
+	return false
 }
 
 @SuppressWarnings('unused')

@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat
  *
  */
 
-static String version()	{  return "1.2.13" }
+static String version()	{  return "1.2.14" }
 metadata {
     definition (name: "Advanced Honeywell T6 Pro Thermostat", 
                 namespace: "djdizzyd", 

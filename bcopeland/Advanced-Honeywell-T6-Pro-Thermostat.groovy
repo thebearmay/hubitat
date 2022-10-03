@@ -354,7 +354,8 @@ void refresh() {
     cmds.add(zwave.thermostatSetpointV2.thermostatSetpointGet(setpointType: 2))
     cmds.add(zwave.basicV1.basicGet())
     sendToDevice(cmds)
-    state.refreshing = true
+    state.refreshingTemp = true
+    state.refreshingHum = true
     runIn(10, "syncClock")
 }
 

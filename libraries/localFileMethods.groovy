@@ -208,13 +208,14 @@ String readExtFile(fName){
 
 HashMap readImage(imagePath){   
     def imageData
+    if(security) cookie = securityLogin().cookie   
 
     if(debugEnabled) log.debug "Getting Image $imagePath"
     httpGet([
         uri: "$imagePath",
         contentType: "*/*",
         headers: [
-            "authorization": "Basic [Base64 Encoded Credentials]" 
+            "Cookie": cookie
         ],
         textParser: false]){ response ->
             if(debugEnabled) log.debug "${response.properties}"

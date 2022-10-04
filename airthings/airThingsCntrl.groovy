@@ -111,7 +111,7 @@ void initialAuth(){
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
-        uri:  "https://accounts-api.airthings.com/v1/token", //"https://accounts.airthings.com/authorize",
+        uri:  "https://accounts.airthings.com/authorize",//https://accounts-api.airthings.com/v1/token"
         requestContentType: 'application/json',
 		contentType: 'application/json',
         body: "$bodyText"

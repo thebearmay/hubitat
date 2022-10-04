@@ -133,41 +133,8 @@ Boolean appendFile(fName,newData){
 }
 
 Boolean writeFile(String fName, String fData) {
-    now = new Date()
-    String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
-    
-try {
-		def params = [
-			uri: 'http://127.0.0.1:8080',
-			path: '/hub/fileManager/upload',
-			query: [
-				'folder': '/'
-			],
-			headers: [
-				'Content-Type': "multipart/form-data; boundary=$encodedString"
-			],
-            body: """--${encodedString}
-Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
-Content-Type: text/plain
-
-${fData}
-
---${encodedString}
-Content-Disposition: form-data; name="folder"
-
-
---${encodedString}--""",
-			timeout: 300,
-			ignoreSSLIssues: true
-		]
-		httpPost(params) { resp ->
-		}
-		return true
-	}
-	catch (e) {
-		log.error "Error writing file $fName: ${e}"
-	}
-	return false
+    byte[] fDataB = fData.getBytes("UTF-8")
+    return writeImageFile(fName, fDataB, "text/html")   
 }
 
 Boolean xferFile(fileIn, fileOut) {

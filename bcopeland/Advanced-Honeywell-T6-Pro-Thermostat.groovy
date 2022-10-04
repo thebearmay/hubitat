@@ -63,8 +63,8 @@ metadata {
         configParams.each { input it.value.input }
         input "logEnable", "bool", title: "Enable debug logging", defaultValue: false
 //		input "sendAllTemps", "bool", title: "Create Events for All Temperature and Humidity Readings", submitOnChange: true, defaultValue: false
-        input "deltaTempRpt", "number", title: "Minimum Temperature Delta to Generate Event, O reports all readings", submitOnChange:true, defaultValue: 1
-        input "deltaHumRpt", "number", title: "Minimum Humidity Delta to Generate Event, O reports all readings", submitOnChange:true, defaultValue: 1
+        input "deltaTempRpt", "number", title: "Minimum Temperature Delta to Generate Event, 0 reports all readings", submitOnChange:true, defaultValue: 1
+        input "deltaHumRpt", "number", title: "Minimum Humidity Delta to Generate Event, 0 reports all readings", submitOnChange:true, defaultValue: 1
         input "forceTimeSync", "number", title: "Mintutes Before Forcing Time Sync if no Activity", submitOnChange:true, defaultValue: 0
     }
 

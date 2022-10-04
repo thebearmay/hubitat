@@ -21,15 +21,12 @@
  *    27Mar2022    thebearmay    allow hub w/security to be external file source
  *    08Apr2022    thebearmay    ensure correct encoding returned for extended characters
  *    03Oct2022    thebearmay    add image file capabilities
+ *    04Oct2022    thebearmay    combine write methods
 */
 
 import java.net.URLEncoder
-
 import groovy.json.JsonSlurper
 import groovy.transform.Field
-
-
-
 
 @SuppressWarnings('unused')
 static String version() {return "0.2.3"}
@@ -39,7 +36,7 @@ metadata {
         name: "File Manager Device", 
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
-        description: "Device (or child device) that allows string or image data to be saved to and retrieved from HE Local File Storage",
+        description: "Device (or child device) that allows string data to be save and retrieved from HE Local File Storage",
         importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/fileMgr.groovy"
     ) {
         
@@ -73,12 +70,10 @@ metadata {
         command "listFiles"
         command "uploadImage",[[name:"iPath", type:"STRING",title:"Path Image"],
                             [name:"oName", type:"STRING",title:"File Manager Name"]
-                           ]        
-
-
-
-    }   
+                           ]  
+    }
 }
+        
 
 preferences {
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
@@ -312,41 +307,8 @@ def writeFile(String fName, String fData, Closure closure) {
 
 @SuppressWarnings('unused')
 Boolean writeFile(String fName, String fData) {
-    now = new Date()
-    String encodedString = "thebearmay$now".bytes.encodeBase64().toString(); 
-    
-try {
-		def params = [
-			uri: 'http://127.0.0.1:8080',
-			path: '/hub/fileManager/upload',
-			query: [
-				'folder': '/'
-			],
-			headers: [
-				'Content-Type': "multipart/form-data; boundary=$encodedString;text/html; charset=utf-8"
-			],
-            body: """--${encodedString}
-Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
-Content-Type: text/plain
-
-${fData}
-
---${encodedString}
-Content-Disposition: form-data; name="folder"
-
-
---${encodedString}--""",
-			timeout: 300,
-			ignoreSSLIssues: true
-		]
-		httpPost(params) { resp ->
-		}
-		return true
-	}
-	catch (e) {
-		log.error "Error writing file $fName: ${e}"
-	}
-	return false
+    byte[] fDataB = fData.getBytes("UTF-8")
+    return writeImageFile(fName, fDataB, "text/html")   
 }
 
 @SuppressWarnings('unused')
@@ -447,6 +409,11 @@ def uploadImage(imagePath, oName){
     writeImageFile(oName, imageData.iContent, imageData.iType)
 }
 
+@SuppressWarnings('unused')
+def readImage(Closure closure) {
+    closure(readImage(imagePath))
+}                             
+                             
 HashMap readImage(imagePath){   
     def imageData
     if(security) cookie = securityLogin().cookie   
@@ -472,6 +439,11 @@ HashMap readImage(imagePath){
         }    
 }
 
+@SuppressWarnings('unused')
+def writeImageFile(String fName, byte[] fData, String imageType, Closure closure) {
+    closure(writeImageFile(fName, fData, imageType))
+}                             
+
 Boolean writeImageFile(String fName, byte[] fData, String imageType) {
     now = new Date()
     String encodedString = "thebearmay$now".bytes.encodeBase64().toString();
@@ -486,10 +458,8 @@ Boolean writeImageFile(String fName, byte[] fData, String imageType) {
     bDataOutputStream.write(fData);
     bDataOutputStream.write(bDataBotArr);
 
-    byte[] postBody = bDataOutputStream.toByteArray();
-
-    
-try {
+    byte[] postBody = bDataOutputStream.toByteArray();  
+    try {
 		def params = [
 			uri: 'http://127.0.0.1:8080',
 			path: '/hub/fileManager/upload',
@@ -506,8 +476,8 @@ try {
 		]
 		httpPost(params) { resp ->
             if(debugEnabled) log.debug "writeImageFile ${resp.properties}"
-            log.info resp.data.status 
-            return resp.data.success
+            log.info "${resp.data.success} ${resp.data.status}"
+            return resp.data.success == 'true' ? true:false
 		}
 	}
 	catch (e) {

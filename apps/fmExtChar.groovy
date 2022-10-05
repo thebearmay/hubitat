@@ -14,10 +14,10 @@
  *
  *    Date        Who           What
  *    ----        ---           ----
+ *    05Oct2022   thebearmay    code clean up
  */
-
 import java.text.SimpleDateFormat
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 
 definition (
@@ -34,7 +34,7 @@ definition (
 
 preferences {
    page name: "mainPage"
-   page name: "fileDisp", nextPage: "mainPage"
+   page name: "fileDisp"
 
 }
 
@@ -60,24 +60,39 @@ void logsOff(){
 def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
-	    	section("Main")
+	    	section("")
 		    {
               section("File List", hideable: true, hidden: false){
                   fileList = listFiles()
                   SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                  paragraph "<div><div style='width:15em'>&nbsp;</div><div style='text-align:center;width:26em;float:left;font-weight:bold'>Name</div><div style='text-align:center;width:5em;float:left;font-weight:bold'>Size</div><div style='text-align:center;width:10em;float:left;font-weight:bold'>Date</div></div>"
-                  
+                  paragraph "<div><div style='width:15em'>&nbsp;</div><div style='text-align:center;width:37em;float:left;font-weight:bold'>Name</div><div style='text-align:center;width:5em;float:left;font-weight:bold'>Size</div><div style='text-align:center;width:10em;float:left;font-weight:bold'>Date</div></div>"
+                  int i = 0
                   fileList.each {
                       if(it.date)                   
                           dDate = sdf.format(new Date(Long.parseLong(it.date)))
                       else
                           dDate = "Date not Available"
-                      oData =  "<div><div style='float:left;width:6em'><button><a href='http://${location.hub.localIP}:8080/local/${it.name}' target='_blank'>FM Classic</a></button></div>"
-                      oData +="<div style='width:20em;float:left'><a href='http://${location.hub.localIP}:8080/local/${it.name}?raw=true'>${it.name}</a></div>"
-                      oData +="<div style='width:5em;float:left;text-align:right'>${String.format('%,.0f',it.size.toDouble())}</div>"
-                      oData +="<div style='width:10em;float:left;text-align:right'>$dDate</div></div>"
+
+                      oData = "<div style='float:left;width:8em'>&nbsp;</div><div style='float:right;width:6em'><button><a href='http://${location.hub.localIP}:8080/local/${it.name}?raw=true'>Download</a></button></div>"
+                      oData +="<div style='width:30em;float:left;'><a href='http://${location.hub.localIP}:8080/local/${it.name}' target='_blank'>${it.name}</a></div>"
+                      oData +="<div style='width:5em;float:left;text-align:left'>${String.format('%,.0f',it.size.toDouble())}</div>"
+                      oData +="<div style='width:10em;float:left;text-align:left'>$dDate&nbsp;</div></div>"
+ //<style>.mdl-button{width:6em;height:2em;padding:0;margins:0;border:2px solid black;color:blue;text-align:top left;}</style>
+                      paragraph "<div>"
+                      input "fDispBtn$i", "button", title:"FM Ext View", backgroundColor:"green", textColor:"white"                   
+//                     href "fileDisp", title: "FM Ext View" , description: "", params:["fName": "${it.name}"], width:2, height:0.5, style:"font-size:smaller;"
                       paragraph oData
-                      href "fileDisp", title: "View" , description: "", params:["fName": "${it.name}"], width:2, style:"font-size:smaller;"
+                      //paragraph ""
+                      if(state["btnPush$i"]){
+                          state["btnPush$i"] = false
+                          fContent = readFile("${it.name}")
+                          fContent = fContent.replace('<','&lt;')
+                          paragraph "<pre style='border:1px solid blue;overflow:auto'>${fContent}</pre>"
+                          input "clear", "button", title:"Close", backgroundColor:"yellow"
+                      }
+                      
+
+                      i++
                   }
 
                   paragraph "<hr />"
@@ -106,15 +121,27 @@ def mainPage(){
 }
 
 def fileDisp(params){
-    dynamicPage (name: "fileDisp", title: "File Display", nextPage: "mainPage", install: false, uninstall:false) {
+    dynamicPage (name: "fileDisp", title: "File Display",nextPage: "mainPage",  install: false, uninstall:false) {
         section("File Contents") {
-            paragraph readFile("$params.fName")            
+            
+            paragraph "params ${params}" //getQueryStringParams()
+            if(params != null){
+                fContent = readFile("${it.name}")
+                fContent = fContent.replace('<','&lt;')
+                paragraph "<pre style='border:1px solid blue;overflow:auto'>${fContent}</pre>" 
+            }
         }
     }
 }
 
 def appButtonHandler(btn) {
-    switch(btn) {       
+    switch(btn) {  
+        case {it.contains('fDispBtn')}:
+            bNum=btn.substring(8)
+            state["btnPush$bNum"] = true
+            break
+        case "clear":
+            break
         default: 
             log.error "Undefined button $btn pushed"
             break
@@ -184,7 +211,10 @@ String readFile(fName){
 
     try {
         httpGet(params) { resp ->
-            if(resp!= null) {       
+            if(resp!= null) {
+                //log.debug "${resp.contentType}"
+               if(!resp.contentType.contains("text") && !resp.contentType.contains("json"))
+                   return "File type is not text -> $resp.contentType"
                int i = 0
                String delim = ""
                i = resp.data.read() 

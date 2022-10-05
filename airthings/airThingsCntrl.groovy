@@ -27,7 +27,7 @@ definition (
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
 	description: 	"Air Things Allview Cloud Interface",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/airthings/airThingsCntrl.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/xxx.groovy",
     installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",
@@ -111,7 +111,7 @@ void initialAuth(){
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
-        uri:  "https://accounts.airthings.com/authorize",//https://accounts-api.airthings.com/v1/token"
+        uri:  "https://accounts-api.airthings.com/v1/token", //"https://accounts.airthings.com/authorize",
         requestContentType: 'application/json',
 		contentType: 'application/json',
         body: "$bodyText"
@@ -122,8 +122,24 @@ void initialAuth(){
     asynchttpPost("getResp", requestParams, [cmd:"${command}"]) 
 }
 
+void authReq2(){
+    command = "auth2"
+    bodyMap = [email:"$userName", password:"$pwd", grant_type:"read:device"]
 
+    def bodyText = JsonOutput.toJson(bodyMap)
+	Map requestParams =
+	[
+        uri: "https://accounts.airthings.com/authorize",
+        Authorization: "Bearer $state.temp_token",
+        requestContentType: 'application/json',
+		contentType: 'application/json',
+        body: "$bodyText"
+	]
 
+    //if(debugEnabled) 
+    log.debug "$requestParams"
+    asynchttpPost("getResp", requestParams, [cmd:"${command}"]) 
+}
 
 void getResp(resp, data) {
     try {
@@ -131,6 +147,14 @@ void getResp(resp, data) {
         log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data){
+                if(data.cmd == "initialAuth"){
+                    jsonData = (HashMap) resp.JSON
+                    state.temp_token = jsonData.token
+                    authReq2()
+                } else if(data.cmd == "auth2") {
+                    jsonData = (HashMap) resp.JSON
+                    log.debug "$jsonData"
+                }
    
             } 
         }

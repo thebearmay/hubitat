@@ -176,7 +176,7 @@ void getApi(resp, data){
         if(debugEnabled) log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data){
-                if(data.cmd == "devices"){
+                if(data.cmd == "/devices"){
                     jsonData = (HashMap) resp.json
                     jsonData.devices.each{
                         if(debugEnabled) log.debug "${it.id}, ${it.deviceType}, ${it.segment.name}"

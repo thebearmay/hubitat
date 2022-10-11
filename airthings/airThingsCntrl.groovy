@@ -16,7 +16,7 @@
  *    ----        ---           ----
 */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.0'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -114,7 +114,10 @@ def cloudCredentials(){
 //Begin App Authorization 
 
 void getAuth(command){
-    bodyMap = [grant_type:"client_credentials",client_id:"$userName", client_secret:"$pwd"]
+//    if(command == "auth") 
+        bodyMap = [grant_type:"client_credentials",client_id:"$userName", client_secret:"$pwd"]
+//    else
+//        bodyMap = [grant_type:"refresh_token",client_id:"$userName", client_secret:"$pwd", refresh_token:"state.temp_token"]
 
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
@@ -139,6 +142,7 @@ void getResp(resp, data) {
                 if(data.cmd == "initialAuth"){
                     jsonData = (HashMap) resp.json
                     state.temp_token = jsonData.access_token
+                    apiGet("/devices")
                 } else if(data.cmd == "reAuth") {
                     jsonData = (HashMap) resp.json
                     state.temp_token = jsonData.access_token
@@ -156,24 +160,27 @@ void getResp(resp, data) {
 
 void apiGet (command){
     getAuth("reAuth")
-    // commands should take the form "devices/${devId}/optionalParam"
-    //def bodyText = JsonOutput.toJson(bodyMap)
+    // commands should take the form "devices/${devId}/optionalParams
+    bodyMap = [Authorization: "$state.temp_token"]
+    def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
         uri:  "https://ext-api.airthings.com/v1/$command",
         requestContentType: 'application/json',
 		contentType: 'application/json',
-        Authorization: "Bearer $state.temp_token"
-        //body: "$bodyText"
+//        Authorization: "$state.temp_token"
+        body: "$bodyText"
 	]
 
-    if(debugEnabled) log.debug "$requestParams"
+    //if(debugEnabled) 
+        log.debug "$requestParams"
     asynchttpGet("getApi", requestParams, [cmd:"${command}"]) 
 }
 
 void getApi(resp, data){
     try {
-        if(debugEnabled) log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
+        //if(debugEnabled) 
+            log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data){
                 if(data.cmd == "/devices"){

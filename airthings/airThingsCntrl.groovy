@@ -16,7 +16,7 @@
  *    ----        ---           ----
 */
 
-static String version()	{  return '0.0.0'  }
+static String version()	{  return '0.0.1'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -71,12 +71,21 @@ def mainPage(){
      	    }
             
             section("<span style='text-decoration:underline;font-weight:bold'>Application Credentials</span>", hideable: false, hidden: false){  
-                input "userName", "text", title: "Airthings User Name:",width:4
-                input "pwd", "password", title: "Airthings Password:", width:4
+                paragraph "<a href='https://dashboard.airthings.com/integrations/api-integration/add-api-client', target='_blank'>Link to AirThings for ID/Secret</a>"
+                input "userName", "text", title: "Airthings API ID:",width:4
+                input "pwd", "password", title: "Airthings Secret:", width:4
                 input "authBtn", "button", title: "Create Initial Authorization"
                 if(state?.authBtnPushed) {
                     state.authBtnPushed = false
-                    initialAuth()
+                    getAuth("initialAuth")
+                }
+                paragraph "Token: ${state.temp_token.toString().substring(0,50)}..."
+                if(state?.temp_token != null){
+                    input "devBtn", "button", title: "Get Devices"
+                    if(state?.devBtnPushed) {
+                        state.devBtnPushed = false
+                        apiGet("/devices", [:])
+                    } 
                 }
             }            
 
@@ -104,33 +113,13 @@ def cloudCredentials(){
 
 //Begin App Authorization 
 
-void initialAuth(){
-    command = "initialAuth"
-    bodyMap = [email:"$userName", password:"$pwd", grant_type:"read:device"]
+void getAuth(command){
+    bodyMap = [grant_type:"client_credentials",client_id:"$userName", client_secret:"$pwd"]
 
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
-        uri:  "https://accounts-api.airthings.com/v1/token", //"https://accounts.airthings.com/authorize",
-        requestContentType: 'application/json',
-		contentType: 'application/json',
-        body: "$bodyText"
-	]
-
-    //if(debugEnabled) 
-    log.debug "$requestParams"
-    asynchttpPost("getResp", requestParams, [cmd:"${command}"]) 
-}
-
-void authReq2(){
-    command = "auth2"
-    bodyMap = [email:"$userName", password:"$pwd", grant_type:"read:device"]
-
-    def bodyText = JsonOutput.toJson(bodyMap)
-	Map requestParams =
-	[
-        uri: "https://accounts.airthings.com/authorize",
-        Authorization: "Bearer $state.temp_token",
+        uri:  "https://accounts-api.airthings.com/v1/token",
         requestContentType: 'application/json',
 		contentType: 'application/json',
         body: "$bodyText"
@@ -148,12 +137,11 @@ void getResp(resp, data) {
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data){
                 if(data.cmd == "initialAuth"){
-                    jsonData = (HashMap) resp.JSON
-                    state.temp_token = jsonData.token
-                    authReq2()
-                } else if(data.cmd == "auth2") {
-                    jsonData = (HashMap) resp.JSON
-                    log.debug "$jsonData"
+                    jsonData = (HashMap) resp.json
+                    state.temp_token = jsonData.access_token
+                } else if(data.cmd == "reAuth") {
+                    jsonData = (HashMap) resp.json
+                    state.temp_token = jsonData.access_token
                 }
    
             } 
@@ -166,16 +154,17 @@ void getResp(resp, data) {
          
 // Begin API
 
-void apiGet (command, bodyMap){
-    // commands should take the form "devices/{serialNumber}/{subType}"
+void apiGet (command){
+    getAuth("reAuth")
+    // commands should take the form "devices/${devId}/optionalParam"
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
         uri:  "https://ext-api.airthings.com/v1/$command",
         requestContentType: 'application/json',
 		contentType: 'application/json',
-        Authorization: "Bearer $state.dknAccessToken",
-        body: "$bodyText"
+        Authorization: "Bearer $state.temp_token"
+        //body: "$bodyText"
 	]
 
     if(debugEnabled) log.debug "$requestParams"
@@ -188,19 +177,12 @@ void getApi(resp, data){
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data){
                 if(data.cmd == "devices"){
-                    jsonData = (HashMap) resp.JSON
-                    state.siteId = jsonData._id
-                    state.siteName = jsonData.name 
-                    unitTran = ['C', 'F']
-                    state.siteUnit = unitTran[jsonData.Units.toInteger()]
+                    jsonData = (HashMap) resp.json
                     jsonData.devices.each{
-                        createChildDev(it.name, it.mac)
+                        if(debugEnabled) log.debug "${it.id}, ${it.deviceType}, ${it.segment.name}"
+                        //createChildDev(it.id, it.deviceType, it.segment.name)
                     }
-                } else if(data.cmd.indexOf("$state.siteId")!= -1) {
-                    mac = data.cmd.substring(data.cmd.lastIndexOf("/")+1)
-                    macStrip = mac.replace(":","")
-                    cd = getChildDevice("${device.deviceNetworkId}-${macStrip}")
-                    cd.updState("${resp.JSON}")
+                } else if(data.cmd == ""){
                 }
             }
         }
@@ -210,41 +192,11 @@ void getApi(resp, data){
 }
                    
 
-void apiPut (command, bodyMap){
-    def bodyText = JsonOutput.toJson(bodyMap)
-	Map requestParams =
-	[
-        uri:  "https://dkncloudna.com/api/v1/open/${state.siteId}/$command",
-        requestContentType: 'application/json',
-		contentType: 'application/json',
-        Authorization: "Bearer $state.dknAccessToken",
-        body: "$bodyText"
-	]
-
-    if(debugEnabled) log.debug "$requestParams"
-    httpPut(requestParams, [cmd:"${command}",bMap:bodyMap]) {resp -> 
-        if (resp.getStatus() == 401){
-            tokenRefresh()
-            pauseExecution(500)
-            apiPut(data.cmd, data.bMap)
-        } else if (resp.getStatus == 400) {
-            log.error "${resp.JSON}"        
-        }else {
-            mac = data.cmd.substring(0,17)
-            macStrip = mac.replace(":","")
-            cd = getChildDevice("${device.deviceNetworkId}-${macStrip}")
-            cd.updState("${resp.JSON}")
-        }
-        
-    }
-}
-
 // End API
 
-void createChildDev(name, mac){
-    macStrip = mac.replace(":","")
-    cd = addChildDevice("thebearmay", "Daikin Cloud Device", "${device.deviceNetworkId}-$macStrip", [name: "${name}", isComponent: true, mac:"$mac", label:"dcd$name"])
-    apiGet("${state.siteId}/${cd.properties.data["${mac}"]}")
+void createChildDev(devId, devType, devName){
+    cd = addChildDevice("thebearmay", "Air Things Device", "${device.deviceNetworkId}-$devId", [name: "${devName}", isComponent: true, deviceId:"$devId", label:"$devName"])
+    apiGet("devices/${devId}/samples")
 }
 
 void appButtonHandler(btn) {
@@ -252,6 +204,9 @@ void appButtonHandler(btn) {
           case ("authBtn"):
               state.authBtnPushed = true
               break
+          case ("devBtn"):
+              state.devBtnPushed = true
+              break        
           default: 
               if(debugEnabled) log.error "Undefined button $btn pushed"
               break

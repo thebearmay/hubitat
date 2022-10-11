@@ -19,10 +19,11 @@ import java.text.SimpleDateFormat
  *                          v1.2.12 basic report correction
  * 2022-10-02 thebearmay    v1.2.13 add thermostatFanOperatingState, replace sendAllTemps with deltaTempRpt and deltaHumRpt                    
  * 2022-10-03 thebearmay    v1.2.14 refresh to create temperature and humidity events regardless of deltas
+ * 2022-10-11 thebearmay    v1.2.15 first run humidity and temperature error correction
  *
  */
 
-static String version()	{  return "1.2.14" }
+static String version()	{  return "1.2.15" }
 metadata {
     definition (name: "Advanced Honeywell T6 Pro Thermostat", 
                 namespace: "djdizzyd", 
@@ -63,8 +64,8 @@ metadata {
         configParams.each { input it.value.input }
         input "logEnable", "bool", title: "Enable debug logging", defaultValue: false
 //		input "sendAllTemps", "bool", title: "Create Events for All Temperature and Humidity Readings", submitOnChange: true, defaultValue: false
-        input "deltaTempRpt", "number", title: "Minimum Temperature Delta to Generate Event, 0 reports all readings", submitOnChange:true, defaultValue: 1
-        input "deltaHumRpt", "number", title: "Minimum Humidity Delta to Generate Event, 0 reports all readings", submitOnChange:true, defaultValue: 1
+        input "deltaTempRpt", "number", title: "Minimum Temperature Delta to Generate Event, O reports all readings", submitOnChange:true, defaultValue: 1
+        input "deltaHumRpt", "number", title: "Minimum Humidity Delta to Generate Event, O reports all readings", submitOnChange:true, defaultValue: 1
         input "forceTimeSync", "number", title: "Mintutes Before Forcing Time Sync if no Activity", submitOnChange:true, defaultValue: 0
     }
 
@@ -311,20 +312,26 @@ void zwaveEvent(hubitat.zwave.commands.configurationv1.ConfigurationReport cmd) 
 
 void eventProcess(Map evt) {
     if(evt.name == "temperature"){
-        absDiff = Math.abs(device.currentValue(evt.name).toFloat() - evt.value.toFloat())
-        if(deltaTempRpt == null) deltaTempRpt = 1
-        if(absDiff >= deltaTempRpt.toFloat() || state?.refreshingTemp){
-            state.refreshingTemp = false
-            evt.isStateChange=true
-            sendEvent(evt)        
+        if(device.currentValue(evt.name) == null) sendEvent(evt)
+        else {
+            absDiff = Math.abs(device.currentValue(evt.name).toFloat() - evt.value.toFloat())
+            if(deltaTempRpt == null) deltaTempRpt = 1
+            if(absDiff >= deltaTempRpt.toFloat() || state?.refreshingTemp){
+                state.refreshingTemp = false
+                evt.isStateChange=true
+                sendEvent(evt)        
+            }
         }
     } else if(evt.name == "humidity"){
-        absDiff = Math.abs(device.currentValue(evt.name).toFloat() - evt.value.toFloat())
-        if(deltaHumRpt == null) deltaHumRpt = 1
-        if(absDiff >= deltaHumRpt.toFloat() || state?.refreshingHum){
-            state.refreshingHum = false
-            evt.isStateChange=true
-            sendEvent(evt)        
+        if(device.currentValue(evt.name) == null) sendEvent(evt)
+        else {        
+            absDiff = Math.abs(device.currentValue(evt.name).toFloat() - evt.value.toFloat())
+            if(deltaHumRpt == null) deltaHumRpt = 1
+            if(absDiff >= deltaHumRpt.toFloat() || state?.refreshingHum){
+                state.refreshingHum = false
+                evt.isStateChange=true
+                sendEvent(evt)        
+            }
         }
     } else if (device.currentValue(evt.name).toString() != evt.value.toString() || evt.isStateChange) {
         evt.isStateChange=true

@@ -84,7 +84,7 @@ def mainPage(){
                     input "devBtn", "button", title: "Get Devices"
                     if(state?.devBtnPushed) {
                         state.devBtnPushed = false
-                        apiGet("/devices", [:])
+                        apiGet("/devices")
                     } 
                 }
             }            
@@ -157,7 +157,7 @@ void getResp(resp, data) {
 void apiGet (command){
     getAuth("reAuth")
     // commands should take the form "devices/${devId}/optionalParam"
-    def bodyText = JsonOutput.toJson(bodyMap)
+    //def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
 	[
         uri:  "https://ext-api.airthings.com/v1/$command",

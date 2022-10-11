@@ -1,9 +1,10 @@
 {
   "packageName": "Advanced Honeywell T6 Pro",
   "author": "Jean P. May, Jr.",
-  "version": "1.2.14",
+  "version": "1.2.15",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-10-03",
+  "dateReleased": "2022-10-11",
+  "releaseNotes": "v1.2.15 - set initial humidity and temperature setting if null",
   "drivers": [
     {
       "id": "69a73c40-e404-4773-aa75-1d73e009d8e4",

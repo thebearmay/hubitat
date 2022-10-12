@@ -79,7 +79,7 @@ def mainPage(){
                     state.authBtnPushed = false
                     getAuth("initialAuth")
                 }
-                paragraph "Token: ${state?.temp_token.toString().substring(0,50)}..."
+                if(state.temp_token != null) paragraph "Token: ${state.temp_token.toString().substring(0,50)}..."
                 if(state?.temp_token != null){
                     input "devBtn", "button", title: "Get Devices"
                     if(state?.devBtnPushed) {

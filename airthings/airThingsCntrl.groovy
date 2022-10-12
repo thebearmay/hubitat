@@ -16,7 +16,7 @@
  *    ----        ---           ----
 */
 
-static String version()	{  return '0.0.0'  }
+static String version()	{  return '0.0.3'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -79,7 +79,13 @@ def mainPage(){
                     state.authBtnPushed = false
                     getAuth("initialAuth")
                 }
-                if(state.temp_token != null) paragraph "Token: ${state.temp_token.toString().substring(0,50)}..."
+                if(state.temp_token != null) {
+                    if(state.temp_token.size() > 50)
+                        eos = 50
+                    else 
+                        eos = state.temp_token.size()
+                    paragraph "Token: ${state.temp_token.toString().substring(0,eos)} . . ."
+                }
                 if(state?.temp_token != null){
                     input "devBtn", "button", title: "Get Devices"
                     if(state?.devBtnPushed) {

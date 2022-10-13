@@ -100,12 +100,12 @@ void dataRefresh(retData){
         switch (it.key){
             case("temp"):
                 unit="°"
-                if(useFahrenheit) it.value = celciusToFahrenheit(it.value)
+                if(useFahrenheit) it.value = celsiusToFahrenheit(it.value)
                 updateAttr("temperature", it.value, unit)
                 break
             case("radonShortTermAvg"):
                 if(usePicoC){
-                    it.value = it.value/37
+                    it.value = (it.value/37).round(1)
                     unit="pCi/L"
                 }else
                     unit="Bq/m<sup>3</sup>"

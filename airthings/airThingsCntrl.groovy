@@ -16,11 +16,12 @@
  *    ----        ---           ----
 */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import java.text.SimpleDateFormat
 
 definition (
 	name: 			"Air Things Cloud", 
@@ -72,26 +73,32 @@ def mainPage(){
             
             section("<span style='text-decoration:underline;font-weight:bold'>Application Credentials</span>", hideable: false, hidden: false){  
                 paragraph "<a href='https://dashboard.airthings.com/integrations/api-integration/add-api-client', target='_blank'>Link to AirThings for ID/Secret</a>"
-                input "userName", "text", title: "Airthings API ID:",width:4
-                input "pwd", "password", title: "Airthings Secret:", width:4
+                input "userName", "text", title: "<b>Airthings API ID:</b>",width:4
+                input "pwd", "password", title: "<b>Airthings Secret:</b>", width:4
                 input "authBtn", "button", title: "Create Initial Authorization"
+                if(!this.getChildDevice("${app.id}-temp"))
+                    cd = addChildDevice("thebearmay", "Get Authorization", "${app.id}-temp", [name: "Air Things Helper", isComponent: true, label:"Air Things Helper"])
                 if(state?.authBtnPushed) {
                     state.authBtnPushed = false
-                    getAuth("initialAuth")
+                    authToken = getAuth("initialAuth")
+                    apiGet("devices")
                 }
                 if(state.temp_token != null) {
                     if(state.temp_token.size() > 50)
                         eos = 50
                     else 
                         eos = state.temp_token.size()
-                    paragraph "Token: ${state.temp_token.toString().substring(0,eos)} . . ."
+                    paragraph "<b>Token:</b> ${state.temp_token.toString().substring(0,eos)}. . . . ."
+                    paragraph "<b>Expires:</b> ${state?.tokenExpiresDisp}"
                 }
                 if(state?.temp_token != null){
                     input "devBtn", "button", title: "Get Devices"
                     if(state?.devBtnPushed) {
                         state.devBtnPushed = false
-                        apiGet("/devices")
-                    } 
+                        apiGet("devices")
+                    }
+                    if (state.numberDevices == null) state.numberDevices = 0
+                    paragraph "Found ${state.numberDevices} devices"
                 }
             }            
 
@@ -121,7 +128,7 @@ def cloudCredentials(){
 
 void getAuth(command){
 //    if(command == "auth") 
-        bodyMap = [grant_type:"client_credentials",client_id:"$userName", client_secret:"$pwd"]
+        bodyMap = [grant_type:"client_credentials",client_id:"$userName", client_secret:"$pwd","scope": ["read:device:current_values"]]
 //    else
 //        bodyMap = [grant_type:"refresh_token",client_id:"$userName", client_secret:"$pwd", refresh_token:"state.temp_token"]
 
@@ -136,68 +143,68 @@ void getAuth(command){
 
     //if(debugEnabled) 
     log.debug "$requestParams"
-    asynchttpPost("getResp", requestParams, [cmd:"${command}"]) 
-}
-
-void getResp(resp, data) {
-    try {
-        //if(debugEnabled) 
-        log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
+    httpPost (requestParams) { resp ->
+        if(debugEnabled) 
+        	log.debug "${resp.properties} - ${command} - ${resp.getStatus()} "
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data){
-                if(data.cmd == "initialAuth"){
-                    jsonData = (HashMap) resp.json
+//                log.debug "Data: ${resp.data}"
+                    Map jsonData = (HashMap) resp.data             
                     state.temp_token = jsonData.access_token
-                    apiGet("/devices")
-                } else if(data.cmd == "reAuth") {
-                    jsonData = (HashMap) resp.json
-                    state.temp_token = jsonData.access_token
-                }
-   
+                    log.debug "Token: ${jsonData.access_token}"
+                    state.tokenExpires = (jsonData.expires_in.toLong()*1000) + new Date().getTime().toLong()
+                    SimpleDateFormat sdf= new SimpleDateFormat("HH:mm:ss yyyy-MM-dd")
+                    state.tokenExpiresDisp = sdf.format(new Date(state.tokenExpires))
             } 
         }
-    } catch (Exception ex) {
-            log.error "getResp - $ex.message"
-    } 
+    }
 }
 // End App Authorization
          
 // Begin API
 
-void apiGet (command){
-    getAuth("reAuth")
+def apiGet (command){
+    if(new Date().getTime().toLong() >= state?.tokenExpires.toLong() - 3000) //if token has expired or is within 3 seconds of expiring
+        getAuth("reAuth")
     // commands should take the form "devices/${devId}/optionalParams
-    bodyMap = [Authorization: "$state.temp_token"]
-    def bodyText = JsonOutput.toJson(bodyMap)
+                           
 	Map requestParams =
 	[
-        uri:  "https://ext-api.airthings.com/v1/$command",
-        requestContentType: 'application/json',
-		contentType: 'application/json',
-//        Authorization: "$state.temp_token"
-        body: "$bodyText"
+        uri: "https://ext-api.airthings.com/v1/$command",
+        headers: [
+            Authorization: "Bearer ${state.temp_token}",
+            requestContentType: 'application/json',
+		    contentType: 'application/json'
+        ]
 	]
 
     //if(debugEnabled) 
         log.debug "$requestParams"
-    asynchttpGet("getApi", requestParams, [cmd:"${command}"]) 
+    asynchttpGet("getApi", requestParams, [cmd:"${command}"])
+    
 }
 
-void getApi(resp, data){
+def getApi(resp, data){   
     try {
-        //if(debugEnabled) 
-            log.debug "$resp.properties - ${data['cmd']} - ${resp.getStatus()}"
+        if(debugEnabled) 
+            log.debug "$resp.properties - $data.cmd - ${resp.getStatus()}"
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data){
-                if(data.cmd == "/devices"){
+                if(data.cmd == "devices"){
                     jsonData = (HashMap) resp.json
+                    numDev = 0
                     jsonData.devices.each{
                         if(debugEnabled) log.debug "${it.id}, ${it.deviceType}, ${it.segment.name}"
                         //createChildDev(it.id, it.deviceType, it.segment.name)
+                        numDev++
                     }
-                } else if(data.cmd == ""){
+                    state.numberDevices = numDev
+                } else {
+                    log.error "Unhandled Command: '${data.cmd}'"
                 }
             }
+        } else if(resp.getStatus() == 401) {
+            apiGet("${data.cmd}")
         }
     } catch (Exception e) {
         log.error "getApi - $e.message"        
@@ -208,7 +215,8 @@ void getApi(resp, data){
 // End API
 
 void createChildDev(devId, devType, devName){
-    cd = addChildDevice("thebearmay", "Air Things Device", "${device.deviceNetworkId}-$devId", [name: "${devName}", isComponent: true, deviceId:"$devId", label:"$devName"])
+    if(!this.getChildDevice("${app.id}-$devId"))
+        cd = addChildDevice("thebearmay", "Air Things Device", "${app.id}-$devId", [name: "${devName}", isComponent: true, deviceId:"$devId", label:"$devName"])
     apiGet("devices/${devId}/samples")
 }
 

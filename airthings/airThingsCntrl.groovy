@@ -159,6 +159,7 @@ void getAuth(command){
 // Begin API
 
 def apiGet (command){
+	if(state.tokenExpires == null) state.tokenExpires = new Date().getTime().toLong()
     if(new Date().getTime().toLong() >= state?.tokenExpires?.toLong() - 3000) //if token has expired or is within 3 seconds of expiring
         getAuth("reAuth")
     // commands should take the form "devices/${devId}/optionalParams

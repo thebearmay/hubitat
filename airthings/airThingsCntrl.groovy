@@ -76,8 +76,6 @@ def mainPage(){
                 input "userName", "text", title: "<b>Airthings API ID:</b>",width:4
                 input "pwd", "password", title: "<b>Airthings Secret:</b>", width:4
                 input "authBtn", "button", title: "Create Initial Authorization"
-                if(!this.getChildDevice("${app.id}-temp"))
-                    cd = addChildDevice("thebearmay", "Get Authorization", "${app.id}-temp", [name: "Air Things Helper", isComponent: true, label:"Air Things Helper"])
                 if(state?.authBtnPushed) {
                     state.authBtnPushed = false
                     authToken = getAuth("initialAuth")

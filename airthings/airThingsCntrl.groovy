@@ -16,7 +16,7 @@
  *    ----        ---           ----
 */
 
-static String version()	{  return '0.1.1'  }
+static String version()	{  return '0.1.2'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -159,7 +159,7 @@ void getAuth(command){
 // Begin API
 
 def apiGet (command){
-    if(new Date().getTime().toLong() >= state?.tokenExpires.toLong() - 3000) //if token has expired or is within 3 seconds of expiring
+    if(new Date().getTime().toLong() >= state?.tokenExpires?.toLong() - 3000) //if token has expired or is within 3 seconds of expiring
         getAuth("reAuth")
     // commands should take the form "devices/${devId}/optionalParams
                            

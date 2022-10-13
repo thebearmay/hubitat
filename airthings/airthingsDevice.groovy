@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.4"}
+static String version() {return "0.0.5"}
 
 metadata {
     definition (
@@ -105,7 +105,7 @@ void dataRefresh(retData){
                 break
             case("radonShortTermAvg"):
                 if(usePicoC){
-                    it.value = (it.value/37).round(1)
+                    it.value = (it.value/37).toFloat().round(1)
                     unit="pCi/L"
                 }else
                     unit="Bq/m<sup>3</sup>"

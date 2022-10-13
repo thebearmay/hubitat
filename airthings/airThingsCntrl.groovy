@@ -16,7 +16,7 @@
  *    ----        ---           ----
 */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.1.1'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -194,7 +194,7 @@ def getApi(resp, data){
                         numDev++
                     }
                     state.numberDevices = numDev
-                } else if(data.cmd.contains("last-samples")) {
+                } else if(data.cmd.contains("latest-samples")) {
                     start = data.cmd.indexOf('/')+1
                     end = data.cmd.indexOf('/',start)
                     devId = data.cmd.substring(start,end)

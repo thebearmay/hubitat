@@ -16,7 +16,7 @@
  *    ----        ---           ----
 */
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.1.0'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -125,10 +125,7 @@ def cloudCredentials(){
 //Begin App Authorization 
 
 void getAuth(command){
-//    if(command == "auth") 
-        bodyMap = [grant_type:"client_credentials",client_id:"$userName", client_secret:"$pwd","scope": ["read:device:current_values"]]
-//    else
-//        bodyMap = [grant_type:"refresh_token",client_id:"$userName", client_secret:"$pwd", refresh_token:"state.temp_token"]
+    bodyMap = [grant_type:"client_credentials",client_id:"$userName", client_secret:"$pwd","scope": ["read:device:current_values"]]
 
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
@@ -139,8 +136,8 @@ void getAuth(command){
         body: "$bodyText"
 	]
 
-    //if(debugEnabled) 
-    log.debug "$requestParams"
+    if(debugEnabled) 
+        log.debug "$requestParams"
     httpPost (requestParams) { resp ->
         if(debugEnabled) 
         	log.debug "${resp.properties} - ${command} - ${resp.getStatus()} "
@@ -193,10 +190,17 @@ def getApi(resp, data){
                     numDev = 0
                     jsonData.devices.each{
                         if(debugEnabled) log.debug "${it.id}, ${it.deviceType}, ${it.segment.name}"
-                        //createChildDev(it.id, it.deviceType, it.segment.name)
+                        createChildDev(it.id, it.deviceType, it.segment.name, it.location.name)
                         numDev++
                     }
                     state.numberDevices = numDev
+                } else if(data.cmd.contains("last-samples")) {
+                    start = data.cmd.indexOf('/')+1
+                    end = data.cmd.indexOf('/',start)
+                    devId = data.cmd.substring(start,end)
+                    cd = getChildDevice("${app.id}-$devId")
+                    jsonData = (HashMap) resp.json
+                    cd.dataRefresh(jsonData)                    
                 } else {
                     log.error "Unhandled Command: '${data.cmd}'"
                 }
@@ -212,10 +216,19 @@ def getApi(resp, data){
 
 // End API
 
-void createChildDev(devId, devType, devName){
+void createChildDev(devId, devType, devName, devLoc){
     if(!this.getChildDevice("${app.id}-$devId"))
         cd = addChildDevice("thebearmay", "Air Things Device", "${app.id}-$devId", [name: "${devName}", isComponent: true, deviceId:"$devId", label:"$devName"])
-    apiGet("devices/${devId}/samples")
+    else
+        cd = getChildDevice("${app.id}-$devId")
+    cd.updateDataValue("deviceId","$devId")
+    cd.updateDataValue("deviceType","$devType")
+    cd.updateDataValue("location","$devLoc")
+    
+}
+
+void updateChild(devId){
+    apiGet("devices/${devId}/latest-samples")
 }
 
 void appButtonHandler(btn) {

@@ -28,7 +28,7 @@ definition (
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
 	description: 	"Air Things Allview Cloud Interface",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/xxx.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/airthings/airThingsCntrl.groovy",
     installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",

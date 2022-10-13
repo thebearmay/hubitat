@@ -16,7 +16,7 @@
  *    ----        ---           ----
 */
 
-static String version()	{  return '0.1.2'  }
+static String version()	{  return '0.1.3'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput

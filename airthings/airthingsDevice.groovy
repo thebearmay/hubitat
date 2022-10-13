@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -41,6 +41,7 @@ metadata {
         attribute "co2", "number"
         attribute "voc", "number"
         attribute "temperature", "number"
+        attribute "battery", "number"
         
         command "refresh"                                  
     }   
@@ -48,7 +49,8 @@ metadata {
 
 preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?", defaultValue:false)
-    //input("useFahrenheit", "bool", title: "Use Fahrenheit", defaultValue:false)
+    input("useFahrenheit", "bool", title: "Use Fahrenheit", defaultValue:false)
+    input("usePicoC", "bool", title: "Use pCi/L for Radon", defaultValue:false)
     input("pollRate", "number", title: "Sensor Polling Rate (minutes)\nZero for no polling:", defaultValue:0)
 }
 
@@ -98,10 +100,15 @@ void dataRefresh(retData){
         switch (it.key){
             case("temp"):
                 unit="°"
+                if(useFahrenheit) it.value = celciusToFahrenheit(it.value)
                 updateAttr("temperature", it.value, unit)
                 break
             case("radonShortTermAvg"):
-                unit="Bq/m<sup>3</sup>"
+                if(usePicoC){
+                    it.value = it.value/37
+                    unit="pCi/L"
+                }else
+                    unit="Bq/m<sup>3</sup>"
                 break
             case("humidity"):
                 unit="%"
@@ -114,6 +121,9 @@ void dataRefresh(retData){
                 break
             case("voc"):
                 unit="ppb"
+                break
+            case("battery"):
+                unit="%"
                 break
             default:
                 unit=""

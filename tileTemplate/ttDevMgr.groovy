@@ -145,7 +145,7 @@ def checkSubscriptions(){
 
 void clearMessage(){
     if(debugEnable) log.debug "clearMessage()"
-    state.message.delete()
+    state.message=null
 }
 
 void altHtml(evt) {

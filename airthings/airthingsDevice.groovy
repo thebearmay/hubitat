@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.5"}
+static String version() {return "0.0.6"}
 
 metadata {
     definition (
@@ -42,6 +42,29 @@ metadata {
         attribute "voc", "number"
         attribute "temperature", "number"
         attribute "battery", "number"
+        attribute "pm1", "number"
+        attribute "pm10", "number"
+        attribute "pm11", "number"
+        attribute "pm12", "number"
+        attribute "pm13", "number"
+        attribute "pm14", "number"
+        attribute "pm15", "number"
+        attribute "pm16", "number"
+        attribute "pm17", "number"
+        attribute "pm18", "number"
+        attribute "pm19", "number"
+        attribute "pm2", "number"
+        attribute "pm20", "number"
+        attribute "pm21", "number"
+        attribute "pm22", "number"
+        attribute "pm23", "number"
+        attribute "pm24", "number"
+        attribute "pm25", "number"
+        attribute "pm26", "number"
+        attribute "pm27", "number"
+        attribute "pm28", "number"
+        attribute "pm29", "number"
+        attribute "valuesAsOf", "string"
         
         command "refresh"                                  
     }   
@@ -97,6 +120,7 @@ void refresh() {
 
 void dataRefresh(retData){
     retData.data.each{
+            unit=""
         switch (it.key){
             case("temp"):
                 unit="°"
@@ -125,12 +149,19 @@ void dataRefresh(retData){
             case("battery"):
                 unit="%"
                 break
+            case("rssi"):
+                unit="dBm"
+                break
             default:
                 unit=""
                 break
         }
-        if(it.key != "temp" && unit != null) //unit will be null for any values not tracked
+        if((it.key != "temp" && unit != null) || it.key.startsWith('pm')) //unit will be null for any values not tracked
             updateAttr(it.key, it.value,unit)
+        if(it.key == "time") {
+            tStamp = new Date(it.value)
+            updateAttr("valuesAsOf", tStamp)
+        }
     }
 }
 

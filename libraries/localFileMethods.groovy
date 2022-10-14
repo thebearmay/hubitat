@@ -1,5 +1,3 @@
-/* Doesn't work as a library - Server Error 500 copy and paste the methods
-
 library (
     base: "driver",
     author: "Jean P. May Jr.",
@@ -8,10 +6,10 @@ library (
     name: "localFileMethods",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/localFileMethods.groovy",
-    version: "0.0.5",
+    version: "0.0.9",
     documentationLink: ""
 )
-*/
+
 HashMap securityLogin(){
     def result = false
     try{
@@ -201,8 +199,8 @@ HashMap readImage(imagePath){
 Boolean writeImageFile(String fName, byte[] fData, String imageType) {
     now = new Date()
     String encodedString = "thebearmay$now".bytes.encodeBase64().toString();
-    bDataTop = """--${encodedString}\r\nContent-Disposition: form-data; name="uploadFile"; filename="${fName}"\r\nContent-Type:${imageType}\r\n\r\n""" 
-    bDataBot = """\r\n\r\n--${encodedString}\r\nContent-Disposition: form-data; name="folder"\r\n\r\n--${encodedString}--"""
+    bDataTop = "--${encodedString}\r\nContent-Disposition: form-data; name=\"uploadFile\"; filename=\"${fName}\"\r\nContent-Type:${imageType}\r\n\r\n" 
+    bDataBot = "\r\n\r\n--${encodedString}\r\nContent-Disposition: form-data; name=\"folder\"\r\n\r\n--${encodedString}--"
     byte[] bDataTopArr = bDataTop.getBytes("UTF-8")
     byte[] bDataBotArr = bDataBot.getBytes("UTF-8")
     

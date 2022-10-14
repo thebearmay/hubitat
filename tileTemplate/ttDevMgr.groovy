@@ -17,7 +17,7 @@
  *    2022-09-05        thebearmay    add @room
 */
 
-static String version()	{  return '0.0.5'  }
+static String version()	{  return '0.0.6'  }
 
 
 definition (
@@ -64,7 +64,13 @@ def mainPage(){
                 state.saveReq = false
                 input "qryDevice", "capability.*", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
                 if (qryDevice != null){        
-                        href "templateSelect", title: "Assign Templates to Devices", required: false
+                    href "templateSelect", title: "Assign Templates to Devices", required: false
+                    input "checkSubs", "button", title: "Check Subscriptions", width:4
+                    if(state.checkSubsPushed == true){ 
+                        state.checkSubsPushed = false
+                        paragraph "${state.message}"
+                        runIn(120,"clearMessage")
+                    }
                 }
                 input "clearSettings", "button", title: "Clear previous settings"
                 if(state?.clearAll == true) {
@@ -76,6 +82,7 @@ def mainPage(){
                     }
                     state.clearAll = false
                 }
+                input "debugEnable", "bool", title: "Enable Debug Logs", submitOnChange:true
                 if(!this.getChildDevice("ttdm${app.id}"))
                     addChildDevice("thebearmay","Generic HTML Device","ttdm${app.id}", [name: "HTML Tile Device${app.id}", isComponent: true, label:"HTML Tile Device${app.id}"])                
                 input "security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4
@@ -84,10 +91,10 @@ def mainPage(){
                     input("password", "password", title: "Hub Security Password", required: false)
                 }
             }
-             section("Change Application Name", hideable: true, hidden: true){
+            section("Change Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
                if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
-             }  
+            }  
 	    } else {
 		    section("") {
 			    paragraph title: "Click Done", "Please click Done to install app before continuing"
@@ -116,6 +123,30 @@ def templateSelect(){
     }
 }
 
+def checkSubscriptions(){
+    subDevList = []
+    app.subscriptions.each{
+        subDevList.add(it.deviceId)
+    }
+    subDevList = subDevList.sort()
+    corrMade = 0
+    refreshes = 0
+    qryDevice.each{
+        if(subDevList.indexOf(it.deviceId) < 0 && settings["template${it.deviceId}"]){
+            subscribe(it, "altHtml", [filterEvents:true])
+            corrMade++
+        }
+        altHtml([deviceId:it.deviceId])
+        refreshes++
+    }
+    state.message = "Found ${qryDevice.size()} device(s) with ${subDevList.size()} subscription(s). Made $corrMade corrections, and refreshed $refreshes slot(s)."
+}
+
+void clearMessage(){
+    if(debugEnable) log.debug "clearMessage()"
+    state.message.delete()
+}
+
 void altHtml(evt) {
     //log.debug "Device Id ${evt.deviceId}"
 
@@ -127,6 +158,7 @@ void altHtml(evt) {
     String fContents = readFile("${settings["template${evt.deviceId}"]}")
     List fRecs=fContents.split("\n")
     String html = ""
+    //if(debugEnable) log.debug "Template has ${fRec.size()} records"
     fRecs.each {
         int vCount = it.count("<%")
         if(debugEnable) log.debug "variables found: $vCount"
@@ -138,7 +170,7 @@ void altHtml(evt) {
                     html+= it
                 else {
                     vName = it.substring(0,it.indexOf('%>'))
-                    if(debugEnable) log.debug "${it.indexOf("5>")}<br>$it<br>${it.substring(0,it.indexOf("%>"))}"
+                    if(debugEnable) log.debug "${it.indexOf("%>")}<br>$it<br>${it.substring(0,it.indexOf("%>"))}"
                     if(vName == "date()" || vName == "@date")
                         aVal = new Date()
                     else if (vName == "@version")
@@ -165,7 +197,7 @@ void altHtml(evt) {
     if (debugEnable) log.debug html
     chd = getChildDevice("ttdm${app.id}")
     slotNum = settings["slot${evt.deviceId}"]
-    //log.debug "html$slotNum\n$html"
+    if (debugEnable) log.debug "html$slotNum\n$html"
     chd.sendEvent(name:"html$slotNum", value:html)
 }
 
@@ -286,6 +318,10 @@ def appButtonHandler(btn) {
         case "saveTemplate":
             if(saveAs == null) break
             state.saveReq = true
+            break
+        case "checkSubs":
+            state.checkSubsPushed = true
+            checkSubscriptions()
             break
         default: 
             log.error "Undefined button $btn pushed"

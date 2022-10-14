@@ -1,0 +1,8 @@
+<table>
+<tr><th>CO<sub>2</sub></th><td><%co2%></td></tr>
+<tr><th>Humidity</th><td><%humidity%></td></tr>
+<tr><th>Pressure</th><td><%pressure%></td></tr>
+<tr><th>Radon</th><td><%radonShortTermAvg%></td></tr>
+<tr><th>Temperature</th><td><%temperature%></td></tr>
+<tr><th>VOC</th><td><%voc%></td></tr>
+</table>

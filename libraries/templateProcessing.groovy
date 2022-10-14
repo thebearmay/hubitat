@@ -11,7 +11,7 @@ library (
 )
 
 String genHtml(templateName) {
-    String fContents = readFile("$alternateHtml")
+    String fContents = readFile("$templateName")
     List fRecs=fContents.split("\n")
     if(fContents == 'null' || fContents == null) {
         xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")

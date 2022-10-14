@@ -69,6 +69,7 @@ def mainPage(){
                     if(state.checkSubsPushed == true){ 
                         state.checkSubsPushed = false
                         paragraph "${state.message}"
+			    if(debugEnable) log.debug "${state.message}"
                         runIn(120,"clearMessage")
                     }
                 }

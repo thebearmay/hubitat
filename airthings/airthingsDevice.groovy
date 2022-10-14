@@ -19,9 +19,11 @@
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
+#include thebearmay.localFileMethods
+#include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.7"}
+static String version() {return "0.0.8"}
 
 metadata {
     definition (
@@ -65,6 +67,7 @@ metadata {
         attribute "pm28", "number"
         attribute "pm29", "number"
 //        attribute "valuesAsOf", "string"
+        attribute "html", "string"
         
         command "refresh"                                  
     }   
@@ -75,6 +78,12 @@ preferences {
     input("useFahrenheit", "bool", title: "Use Fahrenheit", defaultValue:false)
     input("usePicoC", "bool", title: "Use pCi/L for Radon", defaultValue:false)
     input("pollRate", "number", title: "Sensor Polling Rate (minutes)\nZero for no polling:", defaultValue:0)
+    input("security", "bool", title: "Enable if using Hub Security", defaultValue: false, submitOnChange:true)
+    if(security){
+        input("username","string", title:"Hub Security Username")
+        input("password","string", title:"Hub Security Password")
+    }
+    input("tileTemplate", "string", title:"Template for generating HTML for dashboard tile")
 }
 
 @SuppressWarnings('unused')
@@ -158,11 +167,12 @@ void dataRefresh(retData){
         }
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm')) //unit will be null for any values not tracked
             updateAttr(it.key, it.value,unit)
-/*        if(it.key == "time") {
-            tStamp = new Date(it.value)
-            updateAttr("valuesAsOf", tStamp)
-        } */
     }
+    if(tileTemplate){
+        tileHtml = genHtml(tileTemplate)
+        updateAttr("html","$tileHtml")
+    }
+ 
 }
 
 @SuppressWarnings('unused')

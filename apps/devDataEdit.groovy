@@ -15,9 +15,10 @@
  *    ----          ---           ----
  *    08Jun2022    thebearmay    clear state when selected device changes
  *    15Jun2022    thebearmay    add the ability to remove a note
+ *    14Oct2022    thebearmay    address some data retention issues when editting multiple devices
  */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 
 definition (
@@ -53,7 +54,7 @@ def initialize(){
 }
 
 void logsOff(){
-     app.updateSetting("debugEnable",[value:"false",type:"bool"])
+     app.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }
 
 def mainPage(){
@@ -62,7 +63,8 @@ def mainPage(){
             section("Main <p style='text-align:right;font-size:small'>Device Data Edit v${version()}</p>"){
                 app.removeSetting("noteName")
                 app.removeSetting("custNote")
-                if(state.updFlag || state.lastDev != qryDevice?.displayName){
+                input "qryDevice", "capability.*", title: "Device to Update Data Items:", multiple: false, required: false, submitOnChange: true
+                if(state.updFlag || state.lastDev != qryDevice?.deviceId){
                     settings.each{
                         if("$it.key".indexOf("dv") == 0) {
                             app.removeSetting("$it.key")
@@ -70,9 +72,7 @@ def mainPage(){
                     }
                     state.updFlag = false
                 }
-                input "qryDevice", "capability.*", title: "Device to Update Data Items:", multiple: false, required: false, submitOnChange: true
-
-                state.lastDev = qryDevice?.displayName
+                state.lastDev = qryDevice?.deviceId
                 if(qryDevice){ 
                     qryDevice.properties.data.each{
                         input "dv$it.key", "text",title:"<b>$it.key</b>", defaultValue: "$it.value", submitOnChange:true
@@ -138,6 +138,11 @@ def toCamelCase(init) {
     return ret;
 }            
 
+def clearMessage(){
+    atomicState.meshedDeviceMsg="."
+}
+
+
 def appButtonHandler(btn) {
     switch(btn) {
 	case "updBtn":
@@ -154,7 +159,8 @@ def appButtonHandler(btn) {
             atomicState.meshedDeviceMsg="<span style='background-color:red;font-weight:bold;color:white;'>$qryDevice is a Hub Mesh Device, notes must be updated on the <i>REAL</i> device to be retained</span><br>"
         } else 
              atomicState.meshedDeviceMsg = "<span style='background-color:green;font-weight:bold;color:white;'>Update Successful</span>"
-		break
+        runIn(30,"clearMessage")
+        break
 	case "addNote":
 	    if(!custNote) break
         atomicState.meshedDeviceMsg = ""
@@ -168,6 +174,7 @@ def appButtonHandler(btn) {
 	case "remNote":
         if(!noteName) break
 		qryDevice.removeDataValue(noteName)
+        app.removeSetting("dv$noteName")
 		break        
     default: 
 		log.error "Undefined button $btn pushed"

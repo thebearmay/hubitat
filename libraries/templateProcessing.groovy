@@ -11,51 +11,46 @@ library (
 )
 
 String genHtml(templateName) {
-    String fContents = readFile("$templateName")
-    if (fContents == null) return
+    String fContents = readFile("$alternateHtml")
     List fRecs=fContents.split("\n")
+    if(fContents == 'null' || fContents == null) {
+        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+        device.updateSetting("alternateHtml",[value:"hubInfoTemplate.res", type:"string"]) 
+        fContents = readFile("$alternateHtml")
+    }
     String html = ""
     fRecs.each {
         int vCount = it.count("<%")
+        if(debugEnable) log.debug "variables found: $vCount"
         if(vCount > 0){
             recSplit = it.split("<%")
+            if(debugEnable) log.debug "$recSplit"
             recSplit.each {
                 if(it.indexOf("%>") == -1)
                     html+= it
                 else {
-                    vEnd = it.indexOf("%>")
-                    if(it.indexOf(":") > -1 && it.indexOf(":") < vEnd){
-                        devId = it.substring(0,it.indexOf(":")).toLong()
-                        qryDevice.each{
-                            if(it.deviceId == devId) dev=it
-                        }
-                        vName = it.substring(it.indexOf(":")+1,it.indexOf('%>'))
-                        //log.debug "$devId $vName"
-                    } else
-                        vName = it.substring(0,it.indexOf('%>'))
-
-                    if(vName == "@date")
+                    vName = it.substring(0,it.indexOf('%>'))
+                    if(debugEnable) log.debug "${it.indexOf("%>")}<br>$it<br>${it.substring(0,it.indexOf("%>"))}"
+                    if(vName == "date()" || vName == "@date")
                         aVal = new Date()
                     else if (vName == "@version")
                         aVal = version()
-                    else if (vName == "@name" && dev != null)// requires a format of <%devId:attribute%>
-                        aVal = dev.properties.displayName
-                    else if (vName == "@room" && dev != null)
-                        aVal = dev.properties.roomName
-                    else if(dev != null) {
-                        aVal = dev.currentValue("$vName",true)
-                        String attrUnit = dev.currentState("vName")?.unit
+                    else {
+                        aVal = device.currentValue("$vName",true)
+                        String attrUnit = getUnitFromState("$vName")
                         if (attrUnit != null) aVal+=" $attrUnit"
                     }
                     html+= aVal
                     if(it.indexOf("%>")+2 != it.length()) {
+                        if(debugEnable) log.debug "${it.substring(it.indexOf("%>")+2)}"
                         html+=it.substring(it.indexOf("%>")+2)
                     }
                 }                 
             }
         }
         else html += it
-    } 
+    }
+    if (debugEnable) log.debug html
     return html
 
 }

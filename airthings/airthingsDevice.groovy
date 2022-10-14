@@ -64,7 +64,7 @@ metadata {
         attribute "pm27", "number"
         attribute "pm28", "number"
         attribute "pm29", "number"
-        attribute "valuesAsOf", "string"
+//        attribute "valuesAsOf", "string"
         
         command "refresh"                                  
     }   
@@ -158,10 +158,10 @@ void dataRefresh(retData){
         }
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm')) //unit will be null for any values not tracked
             updateAttr(it.key, it.value,unit)
-        if(it.key == "time") {
+/*        if(it.key == "time") {
             tStamp = new Date(it.value)
             updateAttr("valuesAsOf", tStamp)
-        }
+        } */
     }
 }
 

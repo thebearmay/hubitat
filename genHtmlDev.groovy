@@ -17,9 +17,10 @@
  *    2021-08-03  thebearmay	 Original version 0.0.1
  *    2022-04-05  thebearmay     add additional html attributes
  *    2022-0629   thebearmay     Add refreshSlot command
+ *    2022-10-14  thebearmay     Add attribute html back in for Device Data Item Display app
  */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 metadata {
     definition (
@@ -29,7 +30,8 @@ metadata {
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/genHtmlDev.groovy"
 	) {
         capability "Actuator"
-		
+        attribute "html", "string"
+		attribute "html0", "string"
 		attribute "html1", "string"
 		attribute "html2", "string"
 		attribute "html3", "string"
@@ -60,6 +62,7 @@ def updated(){
 
 void refreshSlot(sNum){
     if(sNum < 1 || sNum > 10) return
+    
     sendEvent(name:"html$sNum", value:".")
     if(parent) parent.refreshSlot(sNum.toLong())
 }

@@ -37,7 +37,7 @@ String genHtml(templateName) {
                         aVal = version()
                     else {
                         aVal = device.currentValue("$vName",true)
-                        String attrUnit = getUnitFromState("$vName")
+                        String attrUnit = device.currentState("$vName")?.unit
                         if (attrUnit != null) aVal+=" $attrUnit"
                     }
                     html+= aVal

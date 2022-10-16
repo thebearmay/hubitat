@@ -16,7 +16,7 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
- *    16Oct2022    thebearmay    add capability CarbonDioxideMeasureMent
+ *    16Oct2022    thebearmay    add appropriate capabilities
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -35,8 +35,10 @@ metadata {
     ) {
         capability "Actuator"
         capability "Initialize"
-        //capability "Battery"
+        capability "Battery"
         capability "CarbonDioxideMeasurement"
+        capability "RelativeHumidityMeasurement"
+        capability "TemperatureMeasurement"
  
         attribute "radonShortTermAvg", "number"
         attribute "humidity", "number"
@@ -133,8 +135,11 @@ void dataRefresh(retData){
             unit=""
         switch (it.key){
             case("temp"):
-                unit="°"
-                if(useFahrenheit) it.value = celsiusToFahrenheit(it.value)
+                unit="°C"
+                if(useFahrenheit){ 
+                    it.value = celsiusToFahrenheit(it.value) 
+                    unit = "°F"
+                }
                 updateAttr("temperature", it.value, unit)
                 break
             case("radonShortTermAvg"):

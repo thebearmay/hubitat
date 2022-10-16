@@ -16,6 +16,7 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
+ *    16Oct2022    thebearmay    add capability CarbonDioxideMeasureMent
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -23,7 +24,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.8"}
+static String version() {return "0.0.9"}
 
 metadata {
     definition (
@@ -35,8 +36,8 @@ metadata {
         capability "Actuator"
         capability "Initialize"
         //capability "Battery"
-
-
+        capability "CarbonDioxideMeasurement"
+ 
         attribute "radonShortTermAvg", "number"
         attribute "humidity", "number"
         attribute "pressure", "number"
@@ -148,6 +149,7 @@ void dataRefresh(retData){
                 break
             case("co2"):
                 unit="ppm"
+                updateAttr("carbonDioxide", it.value, unit) //required for capability CarbonDioxideMeasurement, co2 retained for backward compatibility
                 break
             case("pressure"):
                 unit="mBar"
@@ -166,7 +168,7 @@ void dataRefresh(retData){
                 break
         }
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm')) //unit will be null for any values not tracked
-            updateAttr(it.key, it.value,unit)
+            updateAttr(it.key, it.value, unit) 
     }
     if(tileTemplate){
         tileHtml = genHtml(tileTemplate)

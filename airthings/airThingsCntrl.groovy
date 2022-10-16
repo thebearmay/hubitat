@@ -12,11 +12,12 @@
  *
  *  Change History:
  *
- *    Date        Who           What
- *    ----        ---           ----
+ *    Date         Who           What
+ *    ----         ---           ----
+ *    16Oct2022    thebearmay    Code cleanup
 */
 
-static String version()	{  return '0.1.3'  }
+static String version()	{  return '0.1.4'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -37,7 +38,6 @@ definition (
 
 preferences {
    page name: "mainPage"
-   page name: "cloudCredentials"
 }
 
 
@@ -114,14 +114,6 @@ def mainPage(){
 }
 
 
-
-def cloudCredentials(){
-    dynamicPage (name: "cloudCredentials", title: "", install: false, uninstall: false, nextPage:"mainPage") {
-
-    }
-}
-
-
 //Begin App Authorization 
 
 void getAuth(command){
@@ -143,10 +135,9 @@ void getAuth(command){
         	log.debug "${resp.properties} - ${command} - ${resp.getStatus()} "
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data){
-//                log.debug "Data: ${resp.data}"
                     Map jsonData = (HashMap) resp.data             
                     state.temp_token = jsonData.access_token
-                    log.debug "Token: ${jsonData.access_token}"
+                    if(debugEnabled) log.debug "Token: ${jsonData.access_token}"
                     state.tokenExpires = (jsonData.expires_in.toLong()*1000) + new Date().getTime().toLong()
                     SimpleDateFormat sdf= new SimpleDateFormat("HH:mm:ss yyyy-MM-dd")
                     state.tokenExpiresDisp = sdf.format(new Date(state.tokenExpires))
@@ -159,7 +150,6 @@ void getAuth(command){
 // Begin API
 
 def apiGet (command){
-	if(state.tokenExpires == null) state.tokenExpires = new Date().getTime().toLong()
     if(new Date().getTime().toLong() >= state?.tokenExpires?.toLong() - 3000) //if token has expired or is within 3 seconds of expiring
         getAuth("reAuth")
     // commands should take the form "devices/${devId}/optionalParams
@@ -174,7 +164,7 @@ def apiGet (command){
         ]
 	]
 
-    //if(debugEnabled) 
+    if(debugEnabled) 
         log.debug "$requestParams"
     asynchttpGet("getApi", requestParams, [cmd:"${command}"])
     

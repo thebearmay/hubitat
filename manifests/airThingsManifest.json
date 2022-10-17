@@ -1,0 +1,19 @@
+{
+  "packageName": "Air Things View Plus API Integration",
+  "author": "Jean P. May, Jr.",
+  "version": "0.1.4",
+  "minimumHEVersion": "2.2.5.131",
+  "dateReleased": "2022-10-17",
+  "releaseNotes": "",
+  "documentationLink": "https://github.com/thebearmay/hubitat/blob/main/airthings/README.md",
+  "communityLink": "https://community.hubitat.com/t/air-things-view-plus/94434",
+  "bundles": [
+    {
+      "id": "8c1cb804-1a8b-4e28-93e8-7cacc155c801",
+      "name": "Air Things API Bundle",
+      "namespace": "thebearmay",
+      "location": "https://github.com/thebearmay/hubitat/raw/main/airthings/AirThings.zip",
+      "required": true
+    }
+  ]
+}

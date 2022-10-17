@@ -16,7 +16,7 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
- *    16Oct2022    thebearmay    add appropriate capabilities
+ *    16Oct2022    thebearmay    add capability CarbonDioxideMeasureMent,RelativeHumidityMeasurement
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper

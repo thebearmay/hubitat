@@ -202,6 +202,13 @@
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/honeywellT6PManifest.json",
       "description": "Advanced driver for the Honeywell T6 Pro Z-Wave thermostat - the baseline code is from v1.2 bcopeland driver.  Provides access to all 42 device parameters, Clock synchronization, and Power Source Monitoring, in addition to the standard thermostat functions"
+    },
+    {
+      "id": "edc910d9-34f5-4f08-b584-4574598f9834",
+      "name": "Air Things View Plus API Integration",
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/airThingsManifest.json",
+      "description": "Provides the interface and device(s) to integrate the Air Things View Plus hub and sensors with Hubitat(TM)."
     }
   ]
 }

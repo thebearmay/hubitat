@@ -1,0 +1,15 @@
+{
+ "packageName":"HPM Manifest Generator",
+ "author":"Jean P. May, Jr.",
+ "version":"1.0.0",
+ "minimumHEVersion":"2.3.0.1",
+ "dateReleased":"2022-10-18",
+ "bundles": [
+  {
+     "id":"84f8db21-a1d6-4ca1-8604-759457146a72",
+     "name":"HPM Manifest Generator",
+     "location":"https://github.com/thebearmay/hubitat/raw/main/bundles/HPMManifestGenerator.zip",
+     "required":"true"
+  }
+  ]
+}

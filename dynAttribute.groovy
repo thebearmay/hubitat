@@ -16,6 +16,7 @@
  *    ----        ---            ----
  *    2021-01-04  thebearmay	 Original version 0.1.0
  *    2021-01-05  thebearmay     v0.5.0 add JSON format, getValue, and getEntryValue
+ *    2022-10-18  thebearmay     v0.5.1 allow entry creation as a single parameter
  * 
  */
 
@@ -34,6 +35,7 @@ metadata {
     attribute "semaphor", "STRING"
   
     command "setAttribute", [[name:"attrName*", type:"STRING", description:"Attribute Name/Key"],[name:"attrValue*", type:"STRING", description:"Attribute Value, \\0 to remove key"]]   
+    command "setEntry", [[name:"entryStr*", type:"STRING", description: "Key:Value Pair"]]
     command "clearStateVariables"
     command "getValue", [[name:"lookupKey*", type:"STRING", description:"Key to retrieve value for"]]
     command "getEntryValue", [[name:"lookupKey*", type:"STRING", description:"Key to retrieve the Key:Value pair for"]]
@@ -63,6 +65,15 @@ def setAttribute(attrName,attrValue) {
     
     if(debugEnable) log.debug attrRet
     sendEvent(name:"attrRet", value:attrRet)
+}
+
+def setEntry(entryStr){
+    entrySplit = entryStr.split(":")
+    if (entrySplit.size() == 1){
+        sendEvent(name:"attrRet", value:"Error - Expected : separated string")
+        return
+    }
+    setAttribute(entrySplit[0], entrySplit[1])
 }
 
 def formatMap(mapIn){

@@ -209,6 +209,13 @@
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/airThingsManifest.json",
       "description": "Provides the interface and device(s) to integrate the Air Things View Plus hub and sensors with Hubitat(TM)."
+    },
+    {
+      "id":"6ebe30ae-0cfd-42cb-bfac-dc13309eb914",
+      "packageName":"HPM Manifest Generator",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hpmManGenManifest.json",
+      "description":"Developers utility that automates the generation of an HPM Manifest, and the merge entry for the Repository.  "
     }
   ]
 }

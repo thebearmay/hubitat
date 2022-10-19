@@ -43,6 +43,7 @@ metadata {
 
     preferences{
         input name: 'zoneName', type: 'text', title: 'Zone Name', required: true, defaultValue: 'Zone X', description: 'Name for Zone'
+        input name: 'debugEnabled', type: 'bool', title: 'Enable debug logging'
     }
 }
 
@@ -54,7 +55,10 @@ void installed() {
 }
 
 void updated() {
-    log.debug "${zoneName}"
+    if(debugEnabled) {
+        log.debug "${zoneName}"
+        runIn(1800,'logsOff')
+    }
     sendEvent(name: 'ZoneName',value: zoneName)
 }
 
@@ -95,7 +99,7 @@ void volumeDown() {
 
 void setVolume(volume) {
     if (device.currentValue('switch') == 'off') {
-        log.debug "Device off, no volume control"
+        if(debugEnabled) log.debug "Device off, no volume control"
         return
     }
 
@@ -106,7 +110,7 @@ void setVolume(volume) {
 
     def desiredVolume = volume*60/100 as int
 
-    log.debug "Input Volume: ${volume}, Desired Volume: ${desiredVolume}, Current Volume: ${currentVolume}"
+    if(debugEnabled) log.debug "Input Volume: ${volume}, Desired Volume: ${desiredVolume}, Current Volume: ${currentVolume}"
 
     state.updatingVolume = true
     
@@ -181,6 +185,7 @@ void unmute() {
 }
 
 void selectInput(inputNum) {
+    if(debugEnabled) log.debug "${state.ZoneNumber} requesting Input $inputNum"
     def zone = state.ZoneNumber as byte
 
     getParent().selectInput(zone, inputNum as byte)
@@ -197,4 +202,9 @@ void updateState(statesMap) {
         state."${entry.key}" = entry.value
         }
     }
+}
+
+@SuppressWarnings('unused')
+void logsOff(){
+     device.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }

@@ -395,6 +395,7 @@ void receiveMessage(byte[] byte_message)
 
 // Asynchronous receive function
 void parse(String msg) {
+    if(debugEnabled) log.debug "Message recieved from Amp: $msg"
     receiveMessage(hubitat.helper.HexUtils.hexStringToByteArray(msg))
 }
 

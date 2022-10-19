@@ -219,6 +219,7 @@ void lyncMuteOff(byte zone){
 }
 
 void selectInput(byte zone, byte inputNum) {
+    if (debugEnabled) log.debug "Input change request from zone $zone"
     def inputNumRange = 1..state.numInputs
     if ( inputNumRange.contains(inputNum as int) )
     {

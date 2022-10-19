@@ -192,11 +192,12 @@ void selectInput(inputNum) {
 }
 
 void updateState(statesMap) {
+    if(debugEnabled) log.debug "Request from parent to update states $statesMap"
     if (state.updatingVolume == null)
     {
         state.updatingVolume = false
     }
-
+    if(debugEnabled) log.debug "updatingVolume = ${state.updatingVolume} lync = ${device.properties.data.lync}"
     if (state.updatingVolume == false || device.properties.data.lync) {
         statesMap.each{entry -> sendEvent(name: entry.key, value: entry.value)
         state."${entry.key}" = entry.value

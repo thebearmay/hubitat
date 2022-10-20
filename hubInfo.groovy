@@ -105,12 +105,15 @@
  *    2022-08-24  thebearmay     switch all HTML attribute processing to the template
  *    2022-09-18  thebearmay     add a security in use attribute
  *    2022-09-29  thebearmay     handle null or 'null' html template
+ *    2022-10-20  thebearmay	 add sunrise sunset
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
+import groovy.transform.Field
+@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss"]
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.8"}
+static String version() {return "2.7.9"}
 
 metadata {
     definition (
@@ -179,6 +182,8 @@ metadata {
         attribute "hubMeshData", "string"
         attribute "hubMeshCount", "number"
         attribute "securityInUse", "string"
+		attribute "sunrise", "string"
+		attribute "sunset", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -204,7 +209,8 @@ preferences {
     input("zwLocked", "bool", title: "Never Run ZWave Version Update", defaultValue:false, submitOnChange: true)
     input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true)
     input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true)
-    input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true) 
+    input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true)
+    input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss")	
     input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true)
     input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true)
@@ -427,6 +433,14 @@ void pollHub2() {
 
 void getPollValues(){
 
+	if(sunSdfPref == null) device.updateSetting("sunSdfPref",[value:"HH:mm:ss",type:"enum"])
+	SimpleDateFormat sdf = new SimpleDateFormat(sunSdfPref)
+    SimpleDateFormat sdfIn = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
+    sunrise = sdfIn.parse(location.sunrise.toString())
+    sunset = sdfIn.parse(location.sunset.toString())
+    updateAttr("sunrise", sdf.format(sunrise))
+	updateAttr("sunset", sdf.format(sunset))
+	
     String cookie=(String)null
     if(security) cookie = getCookie()
     if(debugEnable) log.debug "Cookie = $cookie"

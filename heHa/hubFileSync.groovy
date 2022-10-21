@@ -249,7 +249,7 @@ HashMap remoteLogin(rName, rPwd){
     if(result){
         app.updateSetting("security",[value:"true",type:"bool"])
         app.updateSetting("username",[value:"$rName",type:"string"])
-        app.updateSetting("password",[value:"$rPwd",type:"string"])
+        app.updateSetting("password",[value:"$rPwd",type:"password"])
     }
 	return [result: result, cookie: cookie]
 }

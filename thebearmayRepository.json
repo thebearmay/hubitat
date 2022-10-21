@@ -208,7 +208,7 @@
       "name": "Air Things View Plus API Integration",
       "category": "Utility",
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/airThingsManifest.json",
-      "description": "Provides the interface and device(s) to integrate the Air Things View Plus hub and sensors with Hubitat(TM)."
+      "description": "Provides the interface and device(s) to integrate the Air Things (aka AirThings) View Plus hub and sensors with Hubitat(TM)."
     },
     {
       "id":"6ebe30ae-0cfd-42cb-bfac-dc13309eb914",

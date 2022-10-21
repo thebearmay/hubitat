@@ -105,15 +105,15 @@
  *    2022-08-24  thebearmay     switch all HTML attribute processing to the template
  *    2022-09-18  thebearmay     add a security in use attribute
  *    2022-09-29  thebearmay     handle null or 'null' html template
- *    2022-10-20  thebearmay	 add sunrise sunset
+ *	  2022-10-20  thebearmay	 add sunrise sunset
+ *    2022-10-21  thebearmay     add format option for lastUpdated
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
-@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss"]
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.9"}
+static String version() {return "2.7.10"}
 
 metadata {
     definition (
@@ -177,6 +177,7 @@ metadata {
         attribute "ipSubnetsAllowed", "string"
         attribute "zigbeeStatus", "string"
         attribute "zigbeeStatus2", "string"
+        attribute "zigbeeStack", "string"
         attribute "zwaveStatus", "string"
         attribute "hubAlerts", "string"
         attribute "hubMeshData", "string"
@@ -193,34 +194,35 @@ metadata {
 }
 
 preferences {
-    input("debugEnable", "bool", title: "Enable debug logging?")
-    input("warnSuppress", "bool", title: "Suppress Warn Level Logging")
-    input("tempPollEnable", "bool", title: "Enable Temperature Polling")
-    input("freeMemPollEnabled", "bool", title: "Enable Free Memory Polling")
-    input("cpuPollEnabled", "bool", title: "Enable CPU Load Polling")
-    input("dbPollEnabled","bool", title: "Enable DB Size Polling")
-    input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", defaultValue: false, required: false, submitOnChange: true)
-    input("evtStateDaysEnable", "bool", title:"Enable Display of Max Event/State Days Setting")
+    input("debugEnable", "bool", title: "Enable debug logging?", width:4)
+    input("warnSuppress", "bool", title: "Suppress Warn Level Logging", width:4)
+    input("tempPollEnable", "bool", title: "Enable Temperature Polling", width:4)
+    input("freeMemPollEnabled", "bool", title: "Enable Free Memory Polling", width:4)
+    input("cpuPollEnabled", "bool", title: "Enable CPU Load Polling", width:4)
+    input("dbPollEnabled","bool", title: "Enable DB Size Polling", width:4)
+    input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", defaultValue: false, required: false, submitOnChange: true, width:4)
+    input("evtStateDaysEnable", "bool", title:"Enable Display of Max Event/State Days Setting", width:4)
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
         input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true, width:4)
-    input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true)
+    input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true, width:4)
     input("alternateHtml", "string", title: "Template file for HTML attribute", submitOnChange: true, defaultValue: "hubInfoTemplate.res")
-    input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", defaultValue: false, submitOnChange: true)
-    input("zwLocked", "bool", title: "Never Run ZWave Version Update", defaultValue:false, submitOnChange: true)
-    input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true)
-    input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true)
-    input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true)
-    input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss")	
-    input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true)
-	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true)
-    input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true)
-    input("allowReboot","bool", title: "Allow Hub to be shutdown or rebooted", defaultValue: false, submitOnChange: true)
-    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
+    input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", defaultValue: false, submitOnChange: true, width:4)
+    input("zwLocked", "bool", title: "Never Run ZWave Version Update", defaultValue:false, submitOnChange: true, width:4)
+    input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true, width:4)
+    input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true, width:4)
+    input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true, width:4)
+    input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss", width:4)
+    input("updSdfPref", "enum", title: "Date/Time Format for Last Updated", options:sdfList, defaultValue:"Milliseconds", width:4)
+    input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true, width:4)
+	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true, width:4)
+    input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true, width:4)
+    input("allowReboot","bool", title: "Allow Hub to be shutdown or rebooted", defaultValue: false, submitOnChange: true, width:4)
+    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
     if (security) { 
-        input("username", "string", title: "Hub Security Username", required: false)
-        input("password", "password", title: "Hub Security Password", required: false)
+        input("username", "string", title: "Hub Security Username", required: false, width:4)
+        input("password", "password", title: "Hub Security Password", required: false, width:4)
     }
-    input("fwUpdatePollRate","number", title:"Poll rate (in seconds) for FW Update Check (Default:6000, Disable:0):", defaultValue:6000, submitOnChange:true, width:6)
+    input("fwUpdatePollRate","number", title:"Poll rate (in seconds) for FW Update Check (Default:6000, Disable:0):", defaultValue:6000, submitOnChange:true, width:4)
 }
 
 @SuppressWarnings('unused')
@@ -359,7 +361,15 @@ def configure() {
             updateAttr("macAddr","NA")
     }
     updateAttr("hubModel", getModel())
-    updateAttr("lastUpdated", now())
+    if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
+    if(updSdfPref == "Milliseconds") 
+        updateAttr("lastUpdated", now())
+    else {
+        SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
+        updateAttr("lastUpdated", sdf.format(now()))
+    }
+
+    
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) 
         getPollValues()
     if (attribEnable) altHtml()
@@ -408,6 +418,19 @@ String getModel(){
     }
 }
 
+void checkZigStack(){
+    if(!beta)
+        return
+    try{
+        httpGet("http://${location.hub.localIP}:8080/hub/currentZigbeeStack") { resp ->
+            if(resp.data.toString().indexOf('standard') > -1)
+                updateAttr("zigbeeStack","standard")
+            else
+                updateAttr("zigbeeStack","new")
+            }       
+       } catch(ignore) { }
+}
+
 boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement
     String model = device.currentValue("hubModel",true)
     if(!model){
@@ -433,13 +456,19 @@ void pollHub2() {
 
 void getPollValues(){
 
-	if(sunSdfPref == null) device.updateSetting("sunSdfPref",[value:"HH:mm:ss",type:"enum"])
-	SimpleDateFormat sdf = new SimpleDateFormat(sunSdfPref)
     SimpleDateFormat sdfIn = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
     sunrise = sdfIn.parse(location.sunrise.toString())
     sunset = sdfIn.parse(location.sunset.toString())
-    updateAttr("sunrise", sdf.format(sunrise))
-	updateAttr("sunset", sdf.format(sunset))
+    
+	if(sunSdfPref == null) device.updateSetting("sunSdfPref",[value:"HH:mm:ss",type:"enum"])
+    if(sunSdfPref != "Milliseconds") {
+        SimpleDateFormat sdf = new SimpleDateFormat(sunSdfPref)
+        updateAttr("sunrise", sdf.format(sunrise))
+	    updateAttr("sunset", sdf.format(sunset))
+    } else {
+        updateAttr("sunrise", sunrise.getTime())
+	    updateAttr("sunset", sunset.getTime())
+    }
 	
     String cookie=(String)null
     if(security) cookie = getCookie()
@@ -640,7 +669,7 @@ void getPollValues(){
     if (attribEnable) altHtml()
     
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
-
+    if(location.hub.firmwareVersionString >= "2.3.3.120") checkZigStack()
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) {
         if(tempPollRate == null){
             device.updateSetting("tempPollRate",[value:300,type:"number"])
@@ -649,7 +678,14 @@ void getPollValues(){
             runIn(tempPollRate,"getPollValues")
         }
     }
-    updateAttr("lastUpdated", new Date().getTime().toLong())
+    
+    if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
+    if(updSdfPref == "Milliseconds") 
+        updateAttr("lastUpdated", now())
+    else {
+        SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
+        updateAttr("lastUpdated", sdf.format(now()))
+    }
 }
 
 @SuppressWarnings('unused')
@@ -1141,7 +1177,7 @@ void altHtml(){
     if (debugEnable) log.debug html
     updateAttr("html", html)
 }
-
+@Field beta = false
 @SuppressWarnings('unused')
 String readFile(fName){
     if(security) cookie = getCookie()
@@ -1297,3 +1333,5 @@ Boolean fileExists(fName){
 void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }
+
+@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

@@ -105,7 +105,7 @@
  *    2022-08-24  thebearmay     switch all HTML attribute processing to the template
  *    2022-09-18  thebearmay     add a security in use attribute
  *    2022-09-29  thebearmay     handle null or 'null' html template
- *	  2022-10-20  thebearmay	 add sunrise sunset
+ *    2022-10-20  thebearmay	 add sunrise sunset
  *    2022-10-21  thebearmay     add format option for lastUpdated
 */
 import java.text.SimpleDateFormat

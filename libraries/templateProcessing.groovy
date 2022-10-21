@@ -6,7 +6,7 @@ library (
     name: "templateProcessing",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/templateProcessing.groovy",
-    version: "0.0.1",
+    version: "0.0.2",
     documentationLink: ""
 )
 
@@ -34,7 +34,11 @@ String genHtml(templateName) {
                     if(vName == "date()" || vName == "@date")
                         aVal = new Date()
                     else if (vName == "@version")
-                        aVal = version()
+a                        aVal = version()
+                    else if (vName == "@name")
+                        aVal = device.properties.displayName
+                    else if (vName == "@room")
+                        aVal = device.properties.roomName                    
                     else {
                         aVal = device.currentValue("$vName",true)
                         String attrUnit = device.currentState("$vName")?.unit

@@ -1,10 +1,10 @@
 {
   "packageName": "Air Things View Plus API Integration",
   "author": "Jean P. May, Jr.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-10-17",
-  "releaseNotes": "",
+  "dateReleased": "2022-10-21",
+  "releaseNotes": "added <%@name%> and <%@room%> tags for templates",
   "documentationLink": "https://github.com/thebearmay/hubitat/blob/main/airthings/README.md",
   "communityLink": "https://community.hubitat.com/t/air-things-view-plus/94434",
   "bundles": [

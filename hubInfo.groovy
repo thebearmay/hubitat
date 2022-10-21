@@ -183,8 +183,8 @@ metadata {
         attribute "hubMeshData", "string"
         attribute "hubMeshCount", "number"
         attribute "securityInUse", "string"
-		attribute "sunrise", "string"
-		attribute "sunset", "string"
+        attribute "sunrise", "string"
+        attribute "sunset", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"

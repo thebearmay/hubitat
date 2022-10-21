@@ -156,7 +156,7 @@ def fileSync(){
 		    copyFile("http://$syncMaster/local/$it")
        i++
 	}
-    if(!state.checkRead){
+    if(state.checkRead){
         log.info "1 file copied from $syncMaster, $i files in list" 
         state.lastSyncResult = "1 file copied from $syncMaster, $i files in list" 
     } else {
@@ -179,7 +179,7 @@ def fileSync(){
                     break
                 default:
                     log.error "Invalid Interval - $syncIntervalType, scheduling daily"
-                    mulitplier = 86400
+                    multiplier = 86400
                     break                    
             }
             Long compSeconds = syncInterval.toLong() * mulitplier

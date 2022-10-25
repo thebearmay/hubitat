@@ -15,7 +15,9 @@ Community Supplied
     a.	Only needed if using variables that affect real time processing 
 
 Setup and Flow
-Initial 
+
+Initial
+
   1.	Power up and register the spare hub.
   2.	Turn off the ZWave and Zigbee radios on the spare hub
   3.	Install and configure the Failover Manager app and the optional File Manager Sync and Variable Sync apps on the production hub.
@@ -27,10 +29,13 @@ Initial
   8.	Turn on the Zigbee radio on the production hub.
 
 Ongoing Maintenance
+
   1.	Periodically take a backup from production and restore it to the spare to capture any rule or application changes.
   2.	After adding a new device to production do a Cloud Backup of production and restore it to the spare; if a zigbee device pair the device to the spare afterwards.
+  3.	Re-initialize the Hub Failover app to suspend all other apps.
 
 In Operation
+
   •	Failover App on the spare hub does a periodic (configurable) ping of the production hub.
   •	If the production hub fails to respond X (configurable) times:
     o	Failover app sends shutdown command to production (in case it is up and can’t respond)

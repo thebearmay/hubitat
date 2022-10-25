@@ -1,4 +1,4 @@
-Solution Desired
+<b>Solution Desired</b>
 
 For homes where automation of the environment has become the expected condition it is highly disruptive when a key component fails.  In the Hubitat™ environment, the loss of the hub is significant, and while the Hub Protection service provides for a replacement hub and permits restoration of the hub’s data and radios there is a delay before the restoration can occur due to shipping.  In the ideal world, a secondary hub would be on hot standby and would automatically assume control of the environment if it detected a failure (loss of communication in the primary hub.
 

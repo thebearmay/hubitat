@@ -37,6 +37,9 @@ Ongoing Maintenance
 In Operation
 
   •	Failover App on the spare hub does a periodic (configurable) ping of the production hub.
+  
   •	If the production hub fails to respond X (configurable) times:
+  
     o	Failover app sends shutdown command to production (in case it is up and can’t respond)
+    
     o	Failover turns on the Zigbee and Zwave radio on the spare hub

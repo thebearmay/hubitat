@@ -33,7 +33,7 @@ definition (
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/heHa/heFailover.groovy",
     installOnOpen:  true,
-	oauth: 			true,
+	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""
 ) 
@@ -204,9 +204,9 @@ def heartbeat(){
                     state.zwave = respMap.zwave
                     state.zigbee = respMap.zigbee
                     state.alive = respMap.alive
-                    state.missed = 0
+                    state.hbMissed = 0
                 } else {
-                    state.missed = state.missed.toInteger + 1
+                    state.hbMissed = state.hbMissed.toInteger + 1
                     state.alive = "unknown"
                     state.zigbee = "unknown"
                     state.zwave = "unknown"
@@ -217,7 +217,7 @@ def heartbeat(){
             log.error "$ex<br>$ex.getResponse()"
         }
     }    
-    if(state.missed.toInteger() > missed.toInteger() && !monitorOnly){
+    if(state.hbMissed.toInteger() > missed.toInteger() && !monitorOnly){
         zwPost("enabled")
         zbPost("enabled")
         sendNotice("Hub Failover for $prodHub is ACTIVE")

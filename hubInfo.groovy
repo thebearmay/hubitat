@@ -105,15 +105,16 @@
  *    2022-08-24  thebearmay     switch all HTML attribute processing to the template
  *    2022-09-18  thebearmay     add a security in use attribute
  *    2022-09-29  thebearmay     handle null or 'null' html template
- *    2022-10-20  thebearmay	 add sunrise sunset
+ *	  2022-10-20  thebearmay	 add sunrise sunset
  *    2022-10-21  thebearmay     add format option for lastUpdated
+ *    2022-10-25  thebearmay     handle a 408 in fileExists() 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.10"}
+static String version() {return "2.7.11"}
 
 metadata {
     definition (
@@ -183,8 +184,8 @@ metadata {
         attribute "hubMeshData", "string"
         attribute "hubMeshCount", "number"
         attribute "securityInUse", "string"
-        attribute "sunrise", "string"
-        attribute "sunset", "string"
+		attribute "sunrise", "string"
+		attribute "sunset", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -681,10 +682,10 @@ void getPollValues(){
     
     if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
     if(updSdfPref == "Milliseconds") 
-        updateAttr("lastUpdated", now())
+        updateAttr("lastUpdated", new Date().getTime())
     else {
         SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
-        updateAttr("lastUpdated", sdf.format(now()))
+        updateAttr("lastUpdated", sdf.format(new Date().getTime()))
     }
 }
 
@@ -1177,7 +1178,7 @@ void altHtml(){
     if (debugEnable) log.debug html
     updateAttr("html", html)
 }
-@Field beta = false
+@Field beta = true
 @SuppressWarnings('unused')
 String readFile(fName){
     if(security) cookie = getCookie()
@@ -1322,7 +1323,7 @@ Boolean fileExists(fName){
     } catch (exception){
         if (exception.message == "status code: 404, reason phrase: Not Found"){
             if(debugEnable) log.debug "File Exist: false"
-        } else {
+        } else if (exception.getStatusCode() != 408) {
             log.error "Find file $fName :: Connection Exception: ${exception.message}"
         }
         return false

@@ -33,7 +33,7 @@ definition (
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/heHa/heFailover.groovy",
     installOnOpen:  true,
-	oauth: 			false,
+	oauth: 			true,
     iconUrl:        "",
     iconX2Url:      ""
 ) 

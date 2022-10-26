@@ -12,9 +12,11 @@ For homes where automation of the environment has become the expected condition 
 
   1.	Heartbeat/Failover Manager Application
   2.	File Manager Sync 
-    a.	for application data files, etc.
+      
+      a.	for application data files, etc.
   3.	Variable Sync 
-    a.	Only needed if using variables that affect real time processing 
+      
+      a.	Only needed if using variables that affect real time processing 
 
 <b>Setup and Flow</b>
 

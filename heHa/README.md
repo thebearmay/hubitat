@@ -36,7 +36,7 @@ For homes where automation of the environment has become the expected condition 
 
   1.	Periodically take a backup from production and restore it to the spare to capture any rule or application changes.
   2.	After adding a new device to production do a Cloud Backup of production and restore it to the spare; if a zigbee device pair the device to the spare afterwards.
-  3.	Re-initialize the Hub Failover app to suspend all other apps.
+  3.	Re-initialize the Hub Failover app by doing 9(a) above.
 
   <b>In Operation</b>
 

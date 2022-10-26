@@ -46,6 +46,9 @@ mappings {
     path("/heartbeat") {
         action: [POST: "beatCheck"]
     }
+    path("/shutdown") {
+        action: [POST: "hubShutdown"]
+    }
 }
 
 void installed() {
@@ -228,6 +231,8 @@ def heartbeat(){
     if(state.hbMissed.toInteger() > missed.toInteger() && !monitorOnly){
         zwPost("enabled")
         zbPost("enabled")
+        if(state.appToggle == "disabled")
+            toggleApps()
         sendNotice("Hub Failover for $prodHub is ACTIVE")
         return
     }
@@ -344,6 +349,48 @@ def getAppsList() {
 	}
     state.appsList = allAppsList.sort { a, b -> a.title <=> b.title }
 }
+
+def hubShutdown(){
+    log.info "Hub Reboot requested"
+
+    String cookie=(String)null
+    if(sourceSecurity) cookie = getCookie()
+	httpPost(
+		[
+			uri: "http://${location.hub.localIP}:8080",
+			path: "/hub/shutdown",
+			headers:[
+				"Cookie": cookie
+			]
+		]
+	) {		resp ->	} 
+}
+
+@SuppressWarnings('unused')
+String getCookie(){
+    try{
+  	  httpPost(
+		[
+		uri: "http://127.0.0.1:8080",
+		path: "/login",
+		query: [ loginRedirect: "/" ],
+		body: [
+			username: username,
+			password: password,
+			submit: "Login"
+			]
+		]
+	  ) { resp -> 
+		cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) 
+        if(debugEnable)
+            log.debug "$cookie"
+	  }
+    } catch (e){
+        cookie = ""
+    }
+    return "$cookie"
+
+}    
 
 def appButtonHandler(btn) {
     switch(btn) {

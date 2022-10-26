@@ -41,7 +41,7 @@ For homes where automation of the environment has become the expected condition 
   <b>In Operation</b>
 
   •	Failover App on the spare hub does a periodic (configurable) ping of the production hub.  
-  •	If the production hub fails to respond X (configurable) times:      
-    •	Failover app sends shutdown command to production (in case it is up and can’t respond)      
-    •	Failover turns on the Zigbee and Zwave radio on the spare hub      
-    •	Failover turns on all disabled apps
+  •	If the production hub fails to respond X (configurable) times:        
+    •	Failover app sends shutdown command to production (in case it is up and can’t respond)        
+    •	Failover turns on the Zigbee and Zwave radio on the spare hub       
+    •	Failover turns on all disabled apps 

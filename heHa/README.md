@@ -14,7 +14,6 @@ For homes where automation of the environment has become the expected condition 
   2.	File Manager Sync      
     a.	for application data files, etc.
   3.	Variable Sync 
-      
     a.	Only needed if using variables that affect real time processing 
 
 <b><i>Setup and Flow</i></b>

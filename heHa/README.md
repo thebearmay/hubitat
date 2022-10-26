@@ -28,11 +28,9 @@ For homes where automation of the environment has become the expected condition 
   6.	Pair all of the Zigbee devices with the spare hub.
   7.	Turn off the Zigbee radio on the spare hub.
   8.	Turn on the Zigbee radio on the production hub.
-  9.  Check the configuration of the Failover Manager app, and then
-      
-      a. Press the button to disable all apps on the spare hub
-     
-      b. Toggle the <i>Turn off all radios and start monitoring heartbeat</i> switch
+  9.  Check the configuration of the Failover Manager app, and then      
+    a. Press the button to disable all apps on the spare hub      
+    b. Toggle the <i>Turn off all radios and start monitoring heartbeat</i> switch
 
 <b>Ongoing Maintenance</b>
 

@@ -13,7 +13,7 @@ For homes where automation of the environment has become the expected condition 
   1.	<a href='https://raw.githubusercontent.com/thebearmay/hubitat/main/heHa/heFailover.groovy'>Hub Failover Manager Application</a>
   2.	<a href='https://raw.githubusercontent.com/thebearmay/hubitat/main/heHa/hubFileSync.groovy'>Hub File Manager Sync</a>      
     a.	for application data files, etc.
-  3.	<a href='https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubVarSync.groovy'>Hub Variable Sync</a>
+  3.	<a href='https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubVarSync.groovy'>Hub Variable Sync</a>  	
     a.	Only needed if using variables that affect real time processing 
 
 <b><i>Setup and Flow</i></b>

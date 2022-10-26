@@ -33,7 +33,7 @@ definition (
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/heHa/heFailover.groovy",
     installOnOpen:  true,
-	oauth: 			true,
+	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""
 ) 
@@ -84,6 +84,14 @@ def mainPage(){
                 input "missed", "number", title: "How many check-ins can be missed", constraints: ["NUMBER"], width:2, submitOnChange:true, defaultValue:5
                 if(location.hub.localIP != prodHub){
                     state.hubRole = "Monitor"
+                    input "pauseApps", "button", title: "Disable/Enable Apps", width:2
+                    if(state.pauseApps == true){
+                        toggleApps()
+                        state.pauseApps = false
+                    }
+                    
+                    paragraph "Apps state is showing: ${state.appToggle}", width:2
+                    
                     input "hbEnabled", "bool", title: "Turn off radios and start heartbeat monitoring", defaultValue:false, submitOnChange: true, width:4
                     input "monitorOnly", "bool", title: "Leave radios on and monitor heartbeat <br><span style='font-size:x-small'>(could cause a conflict if Hub Protect™ restore has been done on this hub)</span>", defaultValue:false, submitOnChange: true, width:4
                     if(heartbeatUnit.toString() == null) app.updateSetting("hearbeatUnit",[value:"Minutes",type:"enum"])
@@ -269,10 +277,78 @@ def beatCheck(){
     render contentType:'application/json', data: "$jsonText", status:200 
 }
 
+def toggleApps(){
+    getAppsList()
+    state.appsList.each{
+        if(it.id != app.id){
+            if(state.appToggle == "disabled"){
+                appsPost("enable", "${it.id}")
+                if(debugEnabled) log.debug "enable, $it.id"
+            }else{
+                appsPost("disable", "${it.id}")
+                if(debugEnabled) log.debug "disable, $it.id"
+            }          
+        }
+    }     
+    if(state.appToggle == "disabled") state.appToggle = "enabled"
+    else state.appToggle = "disabled"
+}
+
+def appsPost(String eOrD, String aId){
+    if(eOrD == "enable") tOrF = false
+    else tOrF = true
+    try{
+        params = [
+            uri: "http://127.0.0.1:8080/installedapp/disable",
+            headers: [
+                "Content-Type": "application/x-www-form-urlencoded",
+                Accept: "application/json"
+            ],
+            body:[id:"$aId", disable:"$tOrF"], //
+            followRedirects: true
+        ]
+        if(debugEnabled) log.debug "$params"
+        httpPost(params){ resp ->
+            if(debugEnabled) log.debug "appsPost response: $resp.data"
+		}
+    }catch (e){
+        
+    }
+}
+
+def getAppsList() { 
+ //   if (security)
+
+	def params = [
+		uri: "http://127.0.0.1:8080/installedapp/list",
+		textParser: true
+	  ]
+	
+	def allAppsList = []
+    def allAppNames = []
+	try {
+		httpGet(params) { resp ->    
+			def matcherText = resp.data.text.replace("\n","").replace("\r","")
+			def matcher = matcherText.findAll(/(<tr class="app-row" data-app-id="[^<>]+">.*?<\/tr>)/).each {
+				def allFields = it.findAll(/(<td .*?<\/td>)/) // { match,f -> return f } 
+				def id = it.find(/data-app-id="([^"]+)"/) { match,i -> return i.trim() }
+				def title = allFields[0].find(/data-order="([^"]+)/) { match,t -> return t.trim() }
+				allAppsList += [id:id,title:title]
+                allAppNames << title
+			}
+
+		}
+	} catch (e) {
+		log.error "Error retrieving installed apps: ${e}"
+        log.error(getExceptionMessageWithLine(e))
+	}
+    state.appsList = allAppsList.sort { a, b -> a.title <=> b.title }
+}
+
 def appButtonHandler(btn) {
     switch(btn) {
-        case "zwCheck":
-            state.zwCheck = true
+        case "pauseApps":
+            state.pauseApps = true
             break
         case "resetToken":
             createAccessToken()

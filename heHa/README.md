@@ -29,7 +29,9 @@ For homes where automation of the environment has become the expected condition 
   7.	Turn off the Zigbee radio on the spare hub.
   8.	Turn on the Zigbee radio on the production hub.
   9.  Check the configuration of the Failover Manager app, and then
+      
       a. Press the button to disable all apps on the spare hub
+     
       b. Toggle the <i>Turn off all radios and start monitoring heartbeat</i> switch
 
 <b>Ongoing Maintenance</b>
@@ -44,8 +46,8 @@ For homes where automation of the environment has become the expected condition 
   
   •	If the production hub fails to respond X (configurable) times:
   
-    o	Failover app sends shutdown command to production (in case it is up and can’t respond)
+    •	Failover app sends shutdown command to production (in case it is up and can’t respond)
     
-    o	Failover turns on the Zigbee and Zwave radio on the spare hub
+    •	Failover turns on the Zigbee and Zwave radio on the spare hub
     
-    o	Failover turns on all disabled apps
+    •	Failover turns on all disabled apps

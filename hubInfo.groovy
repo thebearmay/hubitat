@@ -108,13 +108,14 @@
  *	  2022-10-20  thebearmay	 add sunrise sunset
  *    2022-10-21  thebearmay     add format option for lastUpdated
  *    2022-10-25  thebearmay     handle a 408 in fileExists() 
+ *    2022-10-26  thebearmay     fix a typo
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.11"}
+static String version() {return "2.7.12"}
 
 metadata {
     definition (
@@ -1178,7 +1179,7 @@ void altHtml(){
     if (debugEnable) log.debug html
     updateAttr("html", html)
 }
-@Field beta = true
+@Field beta = false
 @SuppressWarnings('unused')
 String readFile(fName){
     if(security) cookie = getCookie()
@@ -1323,7 +1324,7 @@ Boolean fileExists(fName){
     } catch (exception){
         if (exception.message == "status code: 404, reason phrase: Not Found"){
             if(debugEnable) log.debug "File Exist: false"
-        } else if (exception.getStatusCode() != 408) {
+        } else if (resp.getStatus() != 408) {
             log.error "Find file $fName :: Connection Exception: ${exception.message}"
         }
         return false

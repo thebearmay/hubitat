@@ -109,13 +109,14 @@
  *    2022-10-21  thebearmay     add format option for lastUpdated
  *    2022-10-25  thebearmay     handle a 408 in fileExists() 
  *    2022-10-26  thebearmay     fix a typo
+ *    2022-10-28  thebearmay     add a couple of additional dateTime formats, add traps for null sdf selection
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.12"}
+static String version() {return "2.7.13"}
 
 metadata {
     definition (
@@ -365,10 +366,10 @@ def configure() {
     updateAttr("hubModel", getModel())
     if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
     if(updSdfPref == "Milliseconds") 
-        updateAttr("lastUpdated", now())
+        updateAttr("lastUpdated", new Date().getTime())
     else {
         SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
-        updateAttr("lastUpdated", sdf.format(now()))
+        updateAttr("lastUpdated", sdf.format(new Date().getTime()))
     }
 
     
@@ -1179,7 +1180,7 @@ void altHtml(){
     if (debugEnable) log.debug html
     updateAttr("html", html)
 }
-@Field beta = false
+@Field beta = true
 @SuppressWarnings('unused')
 String readFile(fName){
     if(security) cookie = getCookie()
@@ -1336,4 +1337,4 @@ void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }
 
-@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]
+@Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

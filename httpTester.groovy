@@ -27,7 +27,7 @@ metadata {
 		name: "HttpGetPost Tester", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
-	        importUrl:""
+	        importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/httpTester.groovy"
 	) {
         capability "Actuator"
        

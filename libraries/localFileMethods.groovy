@@ -6,7 +6,7 @@ library (
     name: "localFileMethods",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/localFileMethods.groovy",
-    version: "0.0.9",
+    version: "0.0.10",
     documentationLink: ""
 )
 
@@ -238,4 +238,19 @@ try {
 		log.error "Error writing file $fName: ${e}"
 	}
 	return false
+}
+
+@SuppressWarnings('unused')
+String deleteFile(fName){
+    bodyText = JsonOutput.toJson(name:"$fname",type:"file")
+    params = [
+        uri: "http://127.0.0.1:8080",
+	path: "/hub/fileManager/delete"
+        contentType:"text/plain",
+        requestContentType:"application/json",
+        body: bodyText
+        ]
+    httpPost(params) { resp ->
+        return resp.data.toString()
+    }
 }

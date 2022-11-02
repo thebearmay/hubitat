@@ -44,7 +44,7 @@ metadata {
         capability "Actuator"
         
         attribute "fileList", "string"
-        attribute "fileContents", "string"
+        attribute "fileContent", "string"
  
         command "writeFile",[[name:"fileName", type:"STRING", description:"File Manager Destination Name"],
                              [name:"writeString", type:"STRING", description:"String to Store"]

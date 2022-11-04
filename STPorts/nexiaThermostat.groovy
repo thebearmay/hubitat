@@ -10,8 +10,11 @@
  *  __________  __________   ____________________________________________________________________
  *  2022-09-14  thebearmay   port over to Hubitat
  *  2022-09-16	thebearmay   Fix thermostatOperatingState
+ *  2022-10-04  thebearmay   Add permanent hold and return to schedule
  * 
  */
+static String version()	{  return '1.0.2'  }
+
 metadata {
     definition (name: "Nexia Thermostat", 
                 namespace: "trentfoley", 
@@ -25,11 +28,13 @@ metadata {
         capability "Polling"
         capability "Sensor"
         capability "Refresh"
-        command "setTemperature"
+        command "setTemperature", [[name:"Temperature*", type:"number", description:"Temperature in Degrees Fahrenheit"]]
+        command "setHold", [[name:"holdType", type:"ENUM", constraints:["Permanent Hold","Return to Schedule"]]]
 
         attribute "activeMode", "string"
         attribute "outdoorTemperature", "number"
         attribute "thermostatOperatingState", "string"
+        attribute "holdStatus", "string"
     }
 }
 
@@ -103,6 +108,7 @@ def poll() {
             sendEvent(name: "humidity", value: data.humidity, unit: "%")
             sendEvent(name: "activeMode", value: data.activeMode)
             sendEvent(name: "outdoorTemperature", value: data.outdoorTemperature, unit: "°F")
+            sendEvent(name: "holdStatus", value: data.setpointStatus)
     } else {
         log.error "ERROR: Device connection removed? No data found for ${device.deviceNetworkId} after polling"
     }
@@ -118,6 +124,15 @@ def setTemperature(degreesF) {
     } else {
         setHeatingSetpoint(device.currentValue("heatingSetpoint") + delta)
     }
+}
+
+def setHold(hType){
+    hType = hType.toLowerCase().replace(" ","_")
+    parent.setHoldMode(this, hType)
+    if(hType == "permanent_hold")
+        sendEvent(name:"holdStatus",value:"Permanent Hold Requested")
+    else
+        sendEvent(name:"holdStatus",value:"Return to Schedule Requested")
 }
 
 // Implementation of capability.thermostat

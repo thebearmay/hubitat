@@ -1,0 +1,15 @@
+{
+ "packageName":"Zigbee-ZWave Radio Toggle Buttons",
+ "author":"Jean P. May, Jr.",
+ "version":"0.0.1",
+ "minimumHEVersion":"2.3.3.140",
+ "dateReleased":"2022-11-04",
+ "drivers": [
+  {
+     "id":"adc70136-816e-42fa-a9e9-4859f31c0df9",
+     "name":"ZB-ZW Radio Toggle",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/zbZwToggle.groovy",
+     "required":"true"
+  }
+  ]
+}

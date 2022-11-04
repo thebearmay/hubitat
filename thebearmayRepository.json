@@ -228,6 +228,18 @@
         "Safety & Security",
         "Tools & Utilities"
        ]
+    },
+    {
+      "id":"2bcff027-0fdb-4ad8-9e3d-ba8b12c1ac95",
+      "packageName":"Zigbee-ZWave Radio Toggle Buttons",
+      "category":"Control",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/zbZwToggleManifest.json",
+      "description":"Provides a set of buttons to enable/disable the Zigbee/ZWave radios.",
+      "tags":[
+        "Buttons",
+        "Zigbee",
+        "ZWave"
+       ]
     }
   ]
 }

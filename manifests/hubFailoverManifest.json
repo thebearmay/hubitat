@@ -1,0 +1,19 @@
+{
+ "packageName":"Hub Failover Manager",
+ "author":"Jean P. May, Jr.",
+ "version":"1.0.0",
+ "minimumHEVersion":"2.3.3.140",
+ "dateReleased":"2022-10-26",
+ "documentationLink":"https://github.com/thebearmay/hubitat/tree/main/heHa#readme",
+ "communityLink":"https://community.hubitat.com/t/beta-hub-failover-aka-an-opportunity-to-protect-or-destroy-your-environment/103879",
+ "apps": [
+  {
+     "id":"9f045969-8fab-42c5-b648-d9e04c1d1d5c",
+     "name":"Hub Failover Manager",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/heHa/heFailover.groovy",
+     "required":"true",
+     "oauth":"true",
+     "primary":"true"
+  }
+  ]
+}

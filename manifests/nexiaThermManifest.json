@@ -1,9 +1,10 @@
 {
   "packageName": "Nexia Thermostat Manager",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.3",
+  "version": "1.0.2",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-09-16",
+  "dateReleased": "2022-10-04",
+  "releaseNotes": "1.0.2 - add Permanent Hold and Return to Schedule options",
   "apps": [
     {
       "id": "3c64d650-ba04-47b3-a3c7-2b3d45742629",

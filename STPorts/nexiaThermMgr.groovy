@@ -16,11 +16,14 @@
  *    Date: 2016-01-19
  *
  * **	Modifications **
- *	Date		Who		Description
+ *	Date		Who		    Description
  *	2022-09-15	thebearmay	Port to Hubitat
  *	2022-09-16	thebearmay	Fix thermostatOperatingMode
+ *  2022-10-04  thebearmay  Add permanent hold and return to schedule
  *
  */
+static String version()	{  return '1.0.2' }
+
 definition(
     name: "Nexia Thermostat Manager",
     namespace: "trentfoley",
@@ -320,7 +323,7 @@ def pollChild(child) {
             "Cooling": "cooling",
             "Fan Running": "fan only"
         ]
-        if(debugEnabled) log.debug "$zone"
+        if(debugEnabled) log.debug "Zone: $zone"
 
         statData = [
             temperature: zone.temperature.toInteger(),
@@ -335,7 +338,8 @@ def pollChild(child) {
             activeMode: zone.zone_mode.toLowerCase(),
             emergencyHeatSupported: stat.emergency_heat_supported,
             humidity: (stat.current_relative_humidity * 100).toInteger(),
-            outdoorTemperature: stat.raw_outdoor_temperature.toInteger()
+            outdoorTemperature: stat.raw_outdoor_temperature.toInteger(),
+            setpointStatus: zone.setpoint_status
         ]
     }
     
@@ -453,6 +457,22 @@ def setThermostatMode(child, value) {
         zone.requested_zone_mode = value.toUpperCase()
         zone.last_requested_zone_mode = value.toUpperCase()
         updateZone(zone, "zone_mode")
+    }
+}
+
+def setHoldMode(child, value) {//"permanent_hold" or "return_to_schedule"
+    def deviceNetworkId = ((child.device.deviceNetworkId).split('_'))[0]
+    def zonedBool = ((child.device.deviceNetworkId).split('_')).size()
+    if(debugEnabled) log.debug("setThermostatMode(${deviceNetworkId}, ${value})")
+    
+    requestThermostat(deviceNetworkId) { stat ->
+        def zone = stat.zones[0]
+        if(zonedBool > 1) {
+            def zoneNetworkId = ((child.device.deviceNetworkId).split('_'))[1]
+            zone = stat.zones.find {it.id == zoneNetworkId.toInteger()}
+        }
+        
+        updateZone(zone, value)
     }
 }
 

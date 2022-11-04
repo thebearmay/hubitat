@@ -21,6 +21,9 @@ static String version()	{  return '1.0.0'  }
 import groovy.json.JsonOutput
 import java.text.SimpleDateFormat
 #include thebearmay.localFileMethods
+/* *********************************************************************************************
+ * https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/localFileMethods.groovy *
+ ***********************************************************************************************/
 import groovy.transform.Field
 
 

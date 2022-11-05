@@ -23,7 +23,7 @@
  *    03Oct2022    thebearmay    add image file capabilities
  *    04Oct2022    thebearmay    combine write methods
  *    01Nov2022    thebearmay    add file delete
- *    11Nov2022    thebearmay	 exist attribute instantiate
+ *    05Nov2022    thebearmay	 exist attribute instantiate
 */
 
 import java.net.URLEncoder

@@ -1,9 +1,9 @@
 {
   "packageName": "File Manager Device",
   "author": "Jean P. May, Jr.",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-10-03",
+  "dateReleased": "2022-11-05",
   "releaseNotes": "v0.2.5 - instantiate the exist attribute\nv0.2.4 - add file delete command\nv0.2.3 - add read and write for image files\nv0.2.2 - correct issue with extended character sets\nv0.2.1 - allow hub w/security to be external file source\nv0.2.0 - add app callback option\nv0.1.1 - hub security bug\nv0.1.0 - added temporary fileContent attribute, fileList attribute, fileTrimTop and copyFile commands",
   "drivers": [
     {

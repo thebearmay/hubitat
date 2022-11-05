@@ -22,14 +22,17 @@
  *    08Apr2022    thebearmay    ensure correct encoding returned for extended characters
  *    03Oct2022    thebearmay    add image file capabilities
  *    04Oct2022    thebearmay    combine write methods
+ *    01Nov2022    thebearmay    add file delete
+ *    11Nov2022    thebearmay	 exist attribute instantiate
 */
 
 import java.net.URLEncoder
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.2.3"}
+static String version() {return "0.2.5"}
 
 metadata {
     definition (
@@ -43,6 +46,7 @@ metadata {
       
         capability "Actuator"
         
+        attribute "exist", "string"
         attribute "fileList", "string"
         attribute "fileContent", "string"
  
@@ -71,6 +75,7 @@ metadata {
         command "uploadImage",[[name:"iPath", type:"STRING",title:"Path Image"],
                             [name:"oName", type:"STRING",title:"File Manager Name"]
                            ]  
+        command "deleteFile", [[name:"f2Delete", type:"STRING", title: "Name of File to Delete"]]
     }
 }
         
@@ -373,8 +378,7 @@ def listFiles(Closure closure) {
 
 @SuppressWarnings('unused')
 List<String> listFiles(){
-        if(security) cookie = securityLogin().cookie
-    // Adapted from BptWorld's Community Post 89466/4
+    if(security) cookie = securityLogin().cookie
     if(debugEnabled) log.debug "Getting list of files"
     uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
     def params = [
@@ -403,10 +407,25 @@ List<String> listFiles(){
         log.error e
     }
 }
-
+@SuppressWarnings('unused')
 def uploadImage(imagePath, oName){
     imageData = readImage(imagePath)
     writeImageFile(oName, imageData.iContent, imageData.iType)
+}
+
+@SuppressWarnings('unused')
+String deleteFile(fName){
+    bodyText = JsonOutput.toJson(name:"$fname",type:"file")
+    params = [
+        uri: "http://127.0.0.1:8080",
+        path: "/hub/fileManager/delete",
+        contentType:"text/plain",
+        requestContentType:"application/json",
+        body: bodyText
+        ]
+    httpPost(params) { resp ->
+        return resp.data.toString()
+    }
 }
 
 @SuppressWarnings('unused')

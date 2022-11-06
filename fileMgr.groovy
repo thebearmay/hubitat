@@ -190,6 +190,7 @@ Boolean fileExists(fName){
                 return true;
             } else {
                 if(logResponses) log.info "File Exist: true"
+		updateAttr("exist","false")    
                 return false
             }
         }
@@ -199,6 +200,7 @@ Boolean fileExists(fName){
         } else {
             log.error("Find file $fName) :: Connection Exception: ${exception.message}")
         }
+	updateAttr("exist","false")    
         return false;
     }
 

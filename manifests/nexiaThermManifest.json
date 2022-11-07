@@ -1,10 +1,10 @@
 {
   "packageName": "Nexia Thermostat Manager",
   "author": "Jean P. May, Jr.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2022-10-04",
-  "releaseNotes": "1.0.2 - add Permanent Hold and Return to Schedule options",
+  "releaseNotes": "v1.0.3 - add American Standard Login option\nv1.0.2 - add Permanent Hold and Return to Schedule options",
   "apps": [
     {
       "id": "3c64d650-ba04-47b3-a3c7-2b3d45742629",

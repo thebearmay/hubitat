@@ -20,15 +20,16 @@
  *	2022-09-15	thebearmay	Port to Hubitat
  *	2022-09-16	thebearmay	Fix thermostatOperatingMode
  *  2022-10-04  thebearmay  Add permanent hold and return to schedule
+ *  2022-10-07  thebearmay  Option to use American Standard Login 
  *
  */
-static String version()	{  return '1.0.2' }
+static String version()	{  return '1.0.3' }
 
 definition(
     name: "Nexia Thermostat Manager",
     namespace: "trentfoley",
     author: "Trent Foley",
-    description: "Connect your Nexia thermostat to SmartThings.",
+    description: "Connect your Nexia thermostat to Hubitat.",
     category: "Convenience",
 	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/STPorts/nexiaThermMgr.groovy",    
     iconUrl: "http://lh4.ggpht.com/oMx3-nlICwLmUxpDhTXWsZ6Ocuzu9P2yfz9jpXBx1rhrW_Vcj94kPl2M9ooApckK6TM1=w60",
@@ -38,17 +39,23 @@ definition(
 ) { }
 
 preferences {
-    section("Nexia Auth") {
+    section("<h2 style='color:blue'>Nexia Authentication<br><span style='font-size:small'>v${version()}</span></h2>") {
         input "username", "text", title: "Username"
         input "password", "password", title: "Password"
-        input "debugEnabled", "bool", title: "Enable debug logging?"
+        input "debugEnabled", "bool", title: "Enable debug logging?", width:4
+        input "useAmerStand", "bool", title: "Use American Standard login", width:4, defaultValue:false
         if(debugEnabled) runIn(1800, "logsOff")
     }
 }
 
 def getChildNamespace() { "trentfoley" }
 def getChildName() { "Nexia Thermostat" }
-def getServerUrl() { "https://www.tranehome.com/login" }
+def getServerUrl() { 
+    if(useAmerStand) 
+        return "https://asairhome.com/login" 
+    else
+        return "https://www.tranehome.com/login" 
+}
 
 def installed() {
     if(debugEnabled) log.debug("installed()")

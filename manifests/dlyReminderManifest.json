@@ -1,9 +1,10 @@
 {
   "packageName": "Daily Reminder",
   "author": "Jean P. May, Jr.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-07-26",
+  "dateReleased": "2022-11-11",
+  "releaseNotes": "v0.1.2 add ability to suppress CSS in the output",
   "apps": [
     {
       "id": "7e008c92-2159-4488-bb34-3f0f638df558",

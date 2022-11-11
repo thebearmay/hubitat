@@ -15,9 +15,10 @@
  *    Date        Who           What
  *    ----        ---           ----
  *    26Jul2022   thebearmay    additional verifications
+ *    11Nov2022   thebearmay    suppress CSS option
 */
 
-static String version()	{  return '0.1.1'  }
+static String version()	{  return '0.1.2'  }
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -128,6 +129,7 @@ def options(){
     dynamicPage (name: "options", title: "", install: false, uninstall: false) {
         section("<u><b>Options</b></u>"){
             input "dateFmt2", "enum", title: "<b>Date format to prepend note:</b>", submitOnChange:true, required:false, options:sdfList2, defaultValue:"dd MMM", width:4
+            input "noCSS", "bool", title: "<b>No CSS in Output</b>", submitOnChange:true, defaultValue:false, width:4
             input "swDev", "capability.switch", title:"<b>Optional switch to turn on, on the event date</b>", submitOnChange:true, required:false
             input "notifDev", "capability.notification", title:"<b>Optional notification device(s)</b>", submitOnChange:true, required:false, multiple:true
             if(notifDev) {
@@ -143,7 +145,10 @@ void processFile(){
     List fRecs=fContent.split("\n")
     String today = (new SimpleDateFormat("yyyyMMdd")).format(new Date())
     sdf = new SimpleDateFormat("$dateFmt")
-    dailyMessage = "<span style='color:black;background-color:red'>&nbsp;No future events to display&nbsp;</span>"
+    if(!noCSS)
+        dailyMessage = "<span style='color:black;background-color:red'>&nbsp;No future events to display&nbsp;</span>"
+    else
+        dailyMessage = "No future events to display"
     boolean procFlag = true
     if(swDev) swDev.off()
     fRecs.each {

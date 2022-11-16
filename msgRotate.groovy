@@ -17,7 +17,7 @@
 
  */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 metadata {
     definition (
@@ -70,11 +70,12 @@ void remMessage(mID){
         if(it.key != "$mID")
             state.messages[it.key]=it.value
     }
-    if(state.messages == null) {
+    if(state.messages == null || state.messages == [:]) {
         unschedule("cycleMessages")
         state.messages = [:]
         sendEvent(name:"html", value:"No Current Messages")
-    } 
+    } else
+        cycleMessages(0)
 }
 
 void clearAll(){

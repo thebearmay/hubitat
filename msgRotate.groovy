@@ -17,7 +17,7 @@
 
  */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 metadata {
     definition (
@@ -54,19 +54,27 @@ def updated(){
 void addMessage(mID, mContent){
     if(state.messages == null)  state.messages = [:]
     state.messages["$mID"] = "$mContent"
-    log.debug "Number of Messages: ${state.messages.size()}<br>${state.messages}"
+    if(debugEnabled) log.debug "Number of Messages: ${state.messages.size()}<br>${state.messages}"
     if(cycleTime == null) updateSetting("cycleTime",[type:"number", value:3])
     unschedule("cycleMessages")
     cycleMessages(state.messages.size() - 1)
 }
 
-void remMessage(mID){
-    state.messages = state.messages.remove("$mID")
+void remMessage(mID){ 
+    msgs = [:]
+    state.messages.each{
+        msgs[it.key]=it.value
+    }
+    state.messages = [:]
+    msgs.each {
+        if(it.key != "$mID")
+            state.messages[it.key]=it.value
+    }
     if(state.messages == null) {
         unschedule("cycleMessages")
         state.messages = [:]
         sendEvent(name:"html", value:"No Current Messages")
-    }
+    } 
 }
 
 void clearAll(){

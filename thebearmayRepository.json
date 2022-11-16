@@ -240,6 +240,16 @@
         "Zigbee",
         "ZWave"
        ]
+    },
+    {
+      "id":"a0251230-0a94-4a13-8e71-fb120d9b6788",
+      "packageName":"Message Rotator Tile Device",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/msgRotateManifest.json",
+      "description":"Message Rotator Tile device allows for multiple messages to be stored via RM, webCoRE, manually, etc. and then rotated to display on an attribute tile.",
+      "tags":[
+        "Dashboards"
+       ]
     }
   ]
 }

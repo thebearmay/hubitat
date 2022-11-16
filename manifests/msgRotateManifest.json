@@ -4,5 +4,13 @@
  "version":"0.0.3",
  "minimumHEVersion":"2.2.8.0",
  "dateReleased":"2022-11-16",
- "communityLink":"https://community.hubitat.com/t/needed-an-app-to-display-multiple-alerts-in-a-common-dashboard-tile/92885"
+ "communityLink":"https://community.hubitat.com/t/needed-an-app-to-display-multiple-alerts-in-a-common-dashboard-tile/92885",
+ "drivers": [
+  {
+     "id":"d12db7d1-b2f1-4af8-ad51-8e84bca4e875",
+     "name":"Message Rotator Tile Device",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/msgRotate.groovy",
+     "required":"true"
+  }
+  ]
 }

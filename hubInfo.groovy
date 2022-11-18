@@ -110,13 +110,14 @@
  *    2022-10-25  thebearmay     handle a 408 in fileExists() 
  *    2022-10-26  thebearmay     fix a typo
  *    2022-10-28  thebearmay     add a couple of additional dateTime formats, add traps for null sdf selection
+ *    2022-11-18  thebearmay     add an attribute to display next poll time, add checkPolling method instead of forcing a poll at startup
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.13"}
+static String version() {return "2.7.14"}
 
 metadata {
     definition (
@@ -128,6 +129,7 @@ metadata {
         capability "Actuator"
         capability "Configuration"
         capability "Initialize"
+        capability "Refresh"
         capability "Sensor"
         capability "TemperatureMeasurement"
         
@@ -188,6 +190,7 @@ metadata {
         attribute "securityInUse", "string"
 		attribute "sunrise", "string"
 		attribute "sunset", "string"
+        attribute "nextPoll", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -258,6 +261,9 @@ def updated(){
     if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion){
         unschedule("getPollValues")
         getPollValues()
+    }else {
+        unschedule("getPollValues")
+        updateAttr("nextPoll","None")
     }
     if(fwUpdatePollRate == null) 
         device.updateSetting("fwUpdatePollRate",[value:6000,type:"number"])
@@ -357,12 +363,6 @@ def configure() {
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
 
-    if(device.currentValue("macAddr")){
-        if(location.hub.firmwareVersionString >= "2.2.8.0") 
-            device.deleteCurrentState("macAddr")
-        else
-            updateAttr("macAddr","NA")
-    }
     updateAttr("hubModel", getModel())
     if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
     if(updSdfPref == "Milliseconds") 
@@ -374,7 +374,9 @@ def configure() {
 
     
     if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) 
-        getPollValues()
+        checkPolling()
+    else 
+        updateAttr("nextPoll","None")
     if (attribEnable) altHtml()
     if(fwUpdatePollRate == null) 
         device.updateSetting("fwUpdatePollRate",[value:6000,type:"number"])
@@ -456,6 +458,10 @@ void pollHub2() {
         if(debugEnable)log.debug params
         asynchttpGet("getHub2", params)
 }    
+
+void refresh() {
+    getPollValues
+}
 
 void getPollValues(){
 
@@ -689,6 +695,7 @@ void getPollValues(){
         SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
         updateAttr("lastUpdated", sdf.format(new Date().getTime()))
     }
+    checkPolling()
 }
 
 @SuppressWarnings('unused')
@@ -1180,7 +1187,7 @@ void altHtml(){
     if (debugEnable) log.debug html
     updateAttr("html", html)
 }
-@Field beta = false
+@Field beta = true
 @SuppressWarnings('unused')
 String readFile(fName){
     if(security) cookie = getCookie()
@@ -1330,6 +1337,38 @@ Boolean fileExists(fName){
         }
         return false
     }
+}
+
+@SuppressWarnings('unused')
+void checkPolling(){
+    if(debubEnable)log.debug "checkPolling"
+    params = [
+                uri: "http://127.0.0.1:8080",
+                path: "/logs/json"
+            ]
+    
+    
+    httpGet(params) { resp ->
+        if(debubEnable)log.debug resp.properties
+        mapData = (HashMap) resp.data
+        myJobs = [:]
+        devID = device.getId().toString()
+        pollFound = false
+        if(debubEnable)log.debug "${mapData.jobs}"
+        mapData.jobs.each {
+            if(it.link.contains('/device/edit') && it.link.endsWith(devID)){
+                if("$it.methodName" == 'getPollValues'){
+                    updateAttr("nextPoll",it.nextRun)
+                    sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+                    Long nextPollTime = sdf.parse("${it.nextRunDt}").getTime()
+                    if(nextPollTime > new Date().getTime())
+                        pollFound = true
+                }
+            }
+        }
+        if(!pollFound && (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable))
+            getPollValues()
+    }    
 }
 
 @SuppressWarnings('unused')

@@ -1187,7 +1187,7 @@ void altHtml(){
     if (debugEnable) log.debug html
     updateAttr("html", html)
 }
-@Field beta = true
+@Field beta = false
 @SuppressWarnings('unused')
 String readFile(fName){
     if(security) cookie = getCookie()

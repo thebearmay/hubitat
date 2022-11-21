@@ -30,7 +30,7 @@ static String version() {return "0.0.11"}
 
 metadata {
     definition (
-        name: "Air Things Device Test", 
+        name: "Air Things Device", 
         namespace: "thebearmay", 
         author: "Jean P. May, Jr.",
         importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/airthings/airthingsDevice.groovy"

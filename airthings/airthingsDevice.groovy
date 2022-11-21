@@ -17,6 +17,7 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    16Oct2022    thebearmay    add capability CarbonDioxideMeasureMent,RelativeHumidityMeasurement
+ *    21Nov2022    thebearmay    make the tile template selection an ENUM
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -24,7 +25,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.9"}
+static String version() {return "0.0.10"}
 
 metadata {
     definition (
@@ -86,7 +87,11 @@ preferences {
         input("username","string", title:"Hub Security Username")
         input("password","string", title:"Hub Security Password")
     }
-    input("tileTemplate", "string", title:"Template for generating HTML for dashboard tile")
+    //input("tileTemplate", "string", title:"Template for generating HTML for dashboard tile")
+    fileList = []
+    fileList = listFiles()
+
+    input("tileTemplate", "enum", title:"Template for generating HTML for dashboard tile", options:fileList, defaultValue:"--No Selection--", submitOnChange:true)
 }
 
 @SuppressWarnings('unused')
@@ -175,11 +180,43 @@ void dataRefresh(retData){
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm')) //unit will be null for any values not tracked
             updateAttr(it.key, it.value, unit) 
     }
-    if(tileTemplate){
+    if(tileTemplate && tileTemplate != "No selection" && tileTemplate != "--No Selection--"){
         tileHtml = genHtml(tileTemplate)
         updateAttr("html","$tileHtml")
     }
  
+}
+
+@SuppressWarnings('unused')
+List<String> listFiles(){
+    if(security) cookie = getCookie()
+    if(debugEnabled) log.debug "Getting list of files"
+    uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
+    def params = [
+        uri: uri,
+        headers: [
+				"Cookie": cookie
+            ]        
+    ]
+    try {
+        fileList = []
+        httpGet(params) { resp ->
+            if (resp != null){
+                if(logEnable) log.debug "Found the files"
+                def json = resp.data
+                for (rec in json.files) {
+                    fileList << rec.name
+                }
+            } else {
+                //
+            }
+            fileList.add("--No Selection--")
+        }
+        if(debugEnabled) log.debug fileList.sort()
+        return fileList.sort()
+    } catch (e) {
+        log.error e
+    }
 }
 
 @SuppressWarnings('unused')

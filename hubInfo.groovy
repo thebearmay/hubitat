@@ -1346,7 +1346,7 @@ Boolean fileExists(fName){
 void checkPolling(){
     if(debubEnable)log.debug "checkPolling"
 	getNextPoll()
-	sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+	sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
 	Long nextPollTime = sdf.parse("${device.currentValue('nextPoll')}").getTime()
 	if(nextPollTime > new Date().getTime())
 		pollFound = true

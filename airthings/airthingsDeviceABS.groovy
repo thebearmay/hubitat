@@ -197,7 +197,7 @@ void calcAbsHumidity() {
         deviceTempInCelsius = device.currentValue("temperature").toFloat()
     //(6.112 × e^[(17.67 × T)/(T+243.5)] × rh × 2.1674)/ (273.15+T)    
     BigDecimal absHumidity = ((6.112 * Math.exp((17.67 * deviceTempInCelsius)) / (deviceTempInCelsius + 243.5)) * device.currentValue("humidity").toFloat() * 2.1674)/(273.15+deviceTempInCelsius)
-    absHumidity = (absHumidity * 100).toInteger()/100
+    absHumidity = ((absHumidity * 100).toInteger()/100).toFloat()
     updateAttr("absHumidity", absHumidity, "g/m<sup>3</sup>")
 }
 

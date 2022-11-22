@@ -112,13 +112,14 @@
  *    2022-10-28  thebearmay     add a couple of additional dateTime formats, add traps for null sdf selection
  *    2022-11-18  thebearmay     add an attribute to display next poll time, add checkPolling method instead of forcing a poll at startup
  *    2022-11-22  thebearmay     catch an error on checking poll times
+ *	  2022-11-22  thebearmay	 correct a stack overflow
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.15"}
+static String version() {return "2.7.16"}
 
 metadata {
     definition (
@@ -461,7 +462,7 @@ void pollHub2() {
 }    
 
 void refresh() {
-    getPollValues
+    getPollValues()
 }
 
 void getPollValues(){
@@ -689,6 +690,8 @@ void getPollValues(){
         }
     }
     
+    getNextPoll()
+    
     if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
     if(updSdfPref == "Milliseconds") 
         updateAttr("lastUpdated", new Date().getTime())
@@ -696,9 +699,8 @@ void getPollValues(){
         SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
         updateAttr("lastUpdated", sdf.format(new Date().getTime()))
     }
-    checkPolling()
+    
 }
-
 @SuppressWarnings('unused')
 def getTemp(){  // this is to handle the upgrade path from >= 1.8.x
     log.info "Upgrading HubInfo polling from 1.8.x"
@@ -1343,6 +1345,18 @@ Boolean fileExists(fName){
 @SuppressWarnings('unused')
 void checkPolling(){
     if(debubEnable)log.debug "checkPolling"
+	getNextPoll()
+	sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+	Long nextPollTime = sdf.parse("${device.currentValue('nextPoll')}").getTime()
+	if(nextPollTime > new Date().getTime())
+		pollFound = true
+	if(!pollFound && (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable))
+        getPollValues()
+
+}
+
+@SuppressWarnings('unused')
+void getNextPoll(){
     if(security) cookie = getCookie()    
     params = [
                 uri: "http://127.0.0.1:8080",
@@ -1364,21 +1378,15 @@ void checkPolling(){
             if(it.link.contains('/device/edit') && it.link.endsWith(devID)){
                 if("$it.methodName" == 'getPollValues'){
                     updateAttr("nextPoll",it.nextRun)
-                    sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-                    Long nextPollTime = sdf.parse("${it.nextRunDt}").getTime()
-                    if(nextPollTime > new Date().getTime())
-                        pollFound = true
                 }
             }
         }
-        if(!pollFound && (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable))
-            getPollValues()
+
      }
     } catch (ignore) {
-        if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable)
-            getPollValues()
     }
 }
+
 
 @SuppressWarnings('unused')
 void logsOff(){

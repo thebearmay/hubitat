@@ -111,13 +111,14 @@
  *    2022-10-26  thebearmay     fix a typo
  *    2022-10-28  thebearmay     add a couple of additional dateTime formats, add traps for null sdf selection
  *    2022-11-18  thebearmay     add an attribute to display next poll time, add checkPolling method instead of forcing a poll at startup
+ *    2022-11-22  thebearmay     catch an error on checking poll times
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.14"}
+static String version() {return "2.7.15"}
 
 metadata {
     definition (
@@ -1342,13 +1343,17 @@ Boolean fileExists(fName){
 @SuppressWarnings('unused')
 void checkPolling(){
     if(debubEnable)log.debug "checkPolling"
+    if(security) cookie = getCookie()    
     params = [
                 uri: "http://127.0.0.1:8080",
-                path: "/logs/json"
+                path: "/logs/json",
+                headers: [
+				    "Cookie": cookie
+                ]
             ]
     
-    
-    httpGet(params) { resp ->
+    try{
+     httpGet(params) { resp ->
         if(debubEnable)log.debug resp.properties
         mapData = (HashMap) resp.data
         myJobs = [:]
@@ -1368,7 +1373,11 @@ void checkPolling(){
         }
         if(!pollFound && (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable))
             getPollValues()
-    }    
+     }
+    } catch (ignore) {
+        if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable)
+            getPollValues()
+    }
 }
 
 @SuppressWarnings('unused')

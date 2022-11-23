@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.7.16",
+  "version": "2.7.17",
   "minimumHEVersion": "2.2.5.130",
-  "dateReleased": "2022-11-22",
-  "releaseNotes": "2.7.16 - fix stackoverflow\n2.7.15 - add security to poll checking\n2.7.14 - add an attribute to display next poll time, add checkPolling method instead of forcing a poll at startup\n2.7.13 - additional dateTime options\n2.7.12 - wrong method for a status code\n2.7.11 - additional 408 processing\n2.7.10 - add format option for lastUpdated\n2.7.9 - add sunrise sunset\n2.7.8 - handle null or 'null' html template\n2.7.7/2.7.6/2.7.5 - chasing a timing bug\n2.7.4 - suppress h2Data from a timeout\n2.7.3 - Issue warning when h2Data return is null\n2.7.2 - add securityInUse attribute and warning\n2.7.1 - missed a security login change\n2.7.0 - switch creation of the html attribute to using a file template stored on the hub, code cleanup",
+  "dateReleased": "2022-11-23",
+  "releaseNotes": "2.7.17 - change host for publicIP\n2.7.16 - fix stackoverflow\n2.7.15 - add security to poll checking\n2.7.14 - add an attribute to display next poll time, add checkPolling method instead of forcing a poll at startup\n2.7.13 - additional dateTime options\n2.7.12 - wrong method for a status code\n2.7.11 - additional 408 processing\n2.7.10 - add format option for lastUpdated\n2.7.9 - add sunrise sunset\n2.7.8 - handle null or 'null' html template\n2.7.7/2.7.6/2.7.5 - chasing a timing bug\n2.7.4 - suppress h2Data from a timeout\n2.7.3 - Issue warning when h2Data return is null\n2.7.2 - add securityInUse attribute and warning\n2.7.1 - missed a security login change\n2.7.0 - switch creation of the html attribute to using a file template stored on the hub, code cleanup",
   "drivers": [
     {
       "id": "acccd477-2d55-4ed0-8fca-7b290117440e",

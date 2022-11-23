@@ -112,14 +112,15 @@
  *    2022-10-28  thebearmay     add a couple of additional dateTime formats, add traps for null sdf selection
  *    2022-11-18  thebearmay     add an attribute to display next poll time, add checkPolling method instead of forcing a poll at startup
  *    2022-11-22  thebearmay     catch an error on checking poll times
- *	  2022-11-22  thebearmay	 correct a stack overflow
+ *	  2022-11-22  thebearmay	 correct stack overflow
+ *    2022-11-23  thebearmay     change host for publicIP
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.16"}
+static String version() {return "2.7.17"}
 
 metadata {
     definition (
@@ -593,9 +594,10 @@ void getPollValues(){
     if(publicIPEnable) {
         params =
         [
-            uri:  "https://ifconfig.co/",
+//            uri:  "https://ifconfig.co/",
+            uri: "https://api.ipify.org?format=json",
             headers: [ 
-                   Host: "ifconfig.co",               
+//                   Host: "ifconfig.co",               
                    Accept: "application/json"
             ]
         ]
@@ -842,7 +844,8 @@ void getDbHandler(resp, data) {
 void getIfHandler(resp, data){
     try{
         if (resp.getStatus() == 200){
-            if (debugEnable) log.info resp.data
+            if (debugEnable) 
+                log.debug resp.data
             def jSlurp = new JsonSlurper()
             Map ipData = (Map)jSlurp.parseText((String)resp.data)
             updateAttr("publicIP",ipData.ip)

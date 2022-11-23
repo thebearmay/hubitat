@@ -15,9 +15,10 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    18Oct2022    thebearmay    New Code
+ *    23Nov2022    thebearmay    Fix Repository Entry
 */
 
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.0.1'  }
 
 import java.text.SimpleDateFormat
 #include thebearmay.localFileMethods
@@ -254,7 +255,7 @@ def mainPage(){
                     reposWork = reposWork.substring(0,reposWork.lastIndexOf("}")+1)
                     reposWork +=",\n    {\n"
                     reposWork += "      \"id\":\"${GUID()}\",\n"
-                    reposWork += "      \"packageName\":\"$packageName\",\n"
+                    reposWork += "      \"name\":\"$packageName\",\n"
                     reposWork += "      \"category\":\"$reposCat\",\n"
                     reposWork += "      \"location\":\"$reposManLoc\",\n"
                     reposWork += "      \"description\":\"$reposDesc\""

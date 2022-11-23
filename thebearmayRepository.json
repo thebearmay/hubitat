@@ -212,14 +212,14 @@
     },
     {
       "id":"6ebe30ae-0cfd-42cb-bfac-dc13309eb914",
-      "packageName":"HPM Manifest Generator",
+      "name":"HPM Manifest Generator",
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hpmManGenManifest.json",
       "description":"Developers utility that automates the generation of an HPM Manifest, and the merge entry for the Repository.  "
     },
     {
       "id":"b08d7f15-470a-442e-86ce-0f9408c1c6bf",
-      "packageName":"Hub Failover Manager",
+      "name":"Hub Failover Manager",
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubFailoverManifest.json",
       "description":"Hubitat® Elevation Higher Availability (HE-Ha)  For homes where automation of the environment has become the expected condition it is highly disruptive when a key component fails. In the Hubitat® environment, the loss of the hub is significant, and while the Hub Protection service provides for a replacement hub and permits restoration of the hub’s data and radios there is a delay before the restoration can occur due to shipping. In the ideal world, a secondary hub would be on hot standby and would automatically assume control of the environment if it detected a failure (loss of communication in the primary hub).",
@@ -231,7 +231,7 @@
     },
     {
       "id":"2bcff027-0fdb-4ad8-9e3d-ba8b12c1ac95",
-      "packageName":"Zigbee-ZWave Radio Toggle Buttons",
+      "name":"Zigbee-ZWave Radio Toggle Buttons",
       "category":"Control",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/zbZwToggleManifest.json",
       "description":"Provides a set of buttons to enable/disable the Zigbee/ZWave radios.",
@@ -243,7 +243,7 @@
     },
     {
       "id":"a0251230-0a94-4a13-8e71-fb120d9b6788",
-      "packageName":"Message Rotator Tile Device",
+      "name":"Message Rotator Tile Device",
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/msgRotateManifest.json",
       "description":"Message Rotator Tile device allows for multiple messages to be stored via RM, webCoRE, manually, etc. and then rotated to display on an attribute tile.",

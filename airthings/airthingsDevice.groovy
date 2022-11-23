@@ -18,6 +18,7 @@
  *    ----         ---           ----
  *    16Oct2022    thebearmay    add capability CarbonDioxideMeasureMent,RelativeHumidityMeasurement
  *    21Nov2022    thebearmay    make the tile template selection an ENUM
+ *                               add absHumidity
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -25,7 +26,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.10"}
+static String version() {return "0.0.11"}
 
 metadata {
     definition (
@@ -71,9 +72,10 @@ metadata {
         attribute "pm28", "number"
         attribute "pm29", "number"
 //        attribute "valuesAsOf", "string"
+        attribute "absHumidity", "number"
         attribute "html", "string"
         
-        command "refresh"                                  
+        command "refresh"  
     }   
 }
 
@@ -180,11 +182,27 @@ void dataRefresh(retData){
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm')) //unit will be null for any values not tracked
             updateAttr(it.key, it.value, unit) 
     }
+    calcAbsHumidity()
     if(tileTemplate && tileTemplate != "No selection" && tileTemplate != "--No Selection--"){
         tileHtml = genHtml(tileTemplate)
         updateAttr("html","$tileHtml")
     }
  
+}
+
+void calcAbsHumidity() {
+    if(useFahrenheit)
+        deviceTempInCelsius = fahrenheitToCelsius(device.currentValue("temperature",true).toFloat())
+    else
+        deviceTempInCelsius = device.currentValue("temperature",true).toFloat()
+    //(6.112 × e^[(17.67 × T)/(T+243.5)] × rh × 2.1674)     / (273.15+T)    
+    Double numerator = 6.112 * Math.exp((17.67 * deviceTempInCelsius)/(deviceTempInCelsius + 243.5)) * device.currentValue("humidity",true).toFloat() * 2.1674
+    Double denominator = (273.15+deviceTempInCelsius)
+    Double absHumidity = numerator/denominator
+    //updateAttr("d", denominator)
+    //updateAttr("n", numerator)
+    absHumidityR =  absHumidity.round(2)
+    updateAttr("absHumidity", absHumidityR, "g/m<sup>3</sup>")
 }
 
 @SuppressWarnings('unused')

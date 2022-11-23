@@ -1,9 +1,9 @@
 {
  "packageName":"HPM Manifest Generator",
  "author":"Jean P. May, Jr.",
- "version":"1.0.0",
+ "version":"1.0.1",
  "minimumHEVersion":"2.3.0.1",
- "dateReleased":"2022-10-18",
+ "dateReleased":"2022-11-23",
  "bundles": [
   {
      "id":"84f8db21-a1d6-4ca1-8604-759457146a72",

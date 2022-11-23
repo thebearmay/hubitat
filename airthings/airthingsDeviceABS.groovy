@@ -75,7 +75,7 @@ metadata {
         attribute "absHumidity", "number"
         attribute "html", "string"
         
-        command "refresh"                                  
+        command "refresh"  
     }   
 }
 
@@ -192,13 +192,17 @@ void dataRefresh(retData){
 
 void calcAbsHumidity() {
     if(useFahrenheit)
-        deviceTempInCelsius = fahrenheitToCelsius(device.currentValue("temperature").toFloat())
+        deviceTempInCelsius = fahrenheitToCelsius(device.currentValue("temperature",true).toFloat())
     else
-        deviceTempInCelsius = device.currentValue("temperature").toFloat()
-    //(6.112 × e^[(17.67 × T)/(T+243.5)] × rh × 2.1674)/ (273.15+T)    
-    BigDecimal absHumidity = ((6.112 * Math.exp((17.67 * deviceTempInCelsius)) / (deviceTempInCelsius + 243.5)) * device.currentValue("humidity").toFloat() * 2.1674)/(273.15+deviceTempInCelsius)
-    absHumidity = ((absHumidity * 100).toInteger()/100).toFloat()
-    updateAttr("absHumidity", absHumidity, "g/m<sup>3</sup>")
+        deviceTempInCelsius = device.currentValue("temperature",true).toFloat()
+    //(6.112 × e^[(17.67 × T)/(T+243.5)] × rh × 2.1674)     / (273.15+T)    
+    Double numerator = 6.112 * Math.exp((17.67 * deviceTempInCelsius)/(deviceTempInCelsius + 243.5)) * device.currentValue("humidity",true).toFloat() * 2.1674
+    Double denominator = (273.15+deviceTempInCelsius)
+    Double absHumidity = numerator/denominator
+    //updateAttr("d", denominator)
+    //updateAttr("n", numerator)
+    absHumidityR =  absHumidity.round(2)
+    updateAttr("absHumidity", absHumidityR, "g/m<sup>3</sup>")
 }
 
 @SuppressWarnings('unused')

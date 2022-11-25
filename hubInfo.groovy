@@ -114,13 +114,14 @@
  *    2022-11-22  thebearmay     catch an error on checking poll times
  *	  2022-11-22  thebearmay	 correct stack overflow
  *    2022-11-23  thebearmay     change host for publicIP
+ *    2022-11-25  thebearmay     log.warn instead of log.warning
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.17"}
+static String version() {return "2.7.18"}
 
 metadata {
     definition (
@@ -527,16 +528,7 @@ void getPollValues(){
     }
     //Zwave Status - enabled/disabled & hubAlerts
     pollHub2()
-/*        Map params =
-        [
-                uri    : "http://${location.hub.localIP}:8080",
-                path   : "/hub2/hubData",
-                headers: ["Cookie": cookie]           
-        ]
-    
-        if(debugEnable)log.debug params
-        asynchttpGet("getHub2", params)
- */   
+
     // get Temperature
     if(tempPollEnable) {
         params = [
@@ -985,10 +977,10 @@ void getHub2(resp, data){
                 updateAttr("zwaveStatus","disabled")
             if(h2Data.baseModel.zigbeeStatus == "false"){
                 updateAttr("zigbeeStatus2", "enabled")
-                if (device.currentValue("zigbeeStatus", true) != "enabled") log.warning "Zigbee Status has opposing values - may have crashed."
+                if (device.currentValue("zigbeeStatus", true) != "enabled") log.warn "Zigbee Status has opposing values - may have crashed."
             } else {
                 updateAttr("zigbeeStatus2", "disabled")
-                if (device.currentValue("zigbeeStatus", true) != "disabled") log.warning "Zigbee Status has opposing values - may have crashed."
+                if (device.currentValue("zigbeeStatus", true) != "disabled") log.warn "Zigbee Status has opposing values - may have crashed."
             }
             if(debugEnable) log.debug "securityInUse"
             updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)

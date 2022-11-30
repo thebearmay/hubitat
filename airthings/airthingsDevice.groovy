@@ -19,7 +19,7 @@
  *    16Oct2022    thebearmay    add capability CarbonDioxideMeasureMent,RelativeHumidityMeasurement
  *    21Nov2022    thebearmay    make the tile template selection an ENUM
  *                               add absHumidity
- *    39Nov2022    thebearmay    add option to force Integer values
+ *    39Nov2022    thebearmay    add option to force Integer values, add mold attribute
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -74,6 +74,7 @@ metadata {
         attribute "pm29", "number"
 //        attribute "valuesAsOf", "string"
         attribute "absHumidity", "number"
+        attribute "mold", "number"
         attribute "html", "string"
         
         command "refresh"  
@@ -141,7 +142,7 @@ void refresh() {
 
 void dataRefresh(retData){
     retData.data.each{
-            unit=""
+        unit=""
         switch (it.key){
             case("temp"):
                 unit="°C"
@@ -157,6 +158,7 @@ void dataRefresh(retData){
                     unit="pCi/L"
                 }else
                     unit="Bq/m<sup>3</sup>"
+                if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
             case("humidity"):
                 unit="%"
@@ -182,8 +184,13 @@ void dataRefresh(retData){
                 unit="dBm"
                 if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
+            case("mold"):
+                unit="ppm"
+                if(forceInt) it.value = it.value.toFloat().toInteger()
+                break
             default:
                 unit=""
+                if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
         }
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm')) //unit will be null for any values not tracked
@@ -216,7 +223,7 @@ void calcAbsHumidity() {
 List<String> listFiles(){
     if(security) cookie = getCookie()
     if(debugEnabled) log.debug "Getting list of files"
-    uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
+    uri = "http://127.0.0.1:8080/hub/fileManager/json";
     def params = [
         uri: uri,
         headers: [

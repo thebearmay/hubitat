@@ -19,7 +19,7 @@
  *    16Oct2022    thebearmay    add capability CarbonDioxideMeasureMent,RelativeHumidityMeasurement
  *    21Nov2022    thebearmay    make the tile template selection an ENUM
  *                               add absHumidity
- *    39Nov2022    thebearmay    add option to force Integer values, add mold attribute
+ *    30Nov2022    thebearmay    add option to force Integer values, add mold attribute
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper

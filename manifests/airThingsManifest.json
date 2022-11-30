@@ -1,10 +1,10 @@
 {
   "packageName": "Air Things View Plus API Integration",
   "author": "Jean P. May, Jr.",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-10-21",
-  "releaseNotes": "Made the template selection a drop down",
+  "dateReleased": "2022-11-30",
+  "releaseNotes": "30Nov22 -Added option to force Integer values for most attributes\n21Oct22 - Made the template selection a drop down",
   "documentationLink": "https://github.com/thebearmay/hubitat/blob/main/airthings/README.md",
   "communityLink": "https://community.hubitat.com/t/air-things-view-plus/94434",
   "bundles": [

@@ -19,6 +19,7 @@
  *    16Oct2022    thebearmay    add capability CarbonDioxideMeasureMent,RelativeHumidityMeasurement
  *    21Nov2022    thebearmay    make the tile template selection an ENUM
  *                               add absHumidity
+ *    39Nov2022    thebearmay    add option to force Integer values
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -26,7 +27,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.11"}
+static String version() {return "0.0.12"}
 
 metadata {
     definition (
@@ -83,6 +84,7 @@ preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?", defaultValue:false)
     input("useFahrenheit", "bool", title: "Use Fahrenheit", defaultValue:false)
     input("usePicoC", "bool", title: "Use pCi/L for Radon", defaultValue:false)
+    input("forceInt", "bool", title: "Store values as Integer", defaultValue: false)
     input("pollRate", "number", title: "Sensor Polling Rate (minutes)\nZero for no polling:", defaultValue:0)
     input("security", "bool", title: "Enable if using Hub Security", defaultValue: false, submitOnChange:true)
     if(security){
@@ -158,22 +160,27 @@ void dataRefresh(retData){
                 break
             case("humidity"):
                 unit="%"
+                if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
             case("co2"):
                 unit="ppm"
+                if(forceInt) it.value = it.value.toFloat().toInteger()
                 updateAttr("carbonDioxide", it.value, unit) //required for capability CarbonDioxideMeasurement, co2 retained for backward compatibility
                 break
             case("pressure"):
                 unit="mBar"
+                if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
             case("voc"):
                 unit="ppb"
+                if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
             case("battery"):
                 unit="%"
                 break
             case("rssi"):
                 unit="dBm"
+                if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
             default:
                 unit=""

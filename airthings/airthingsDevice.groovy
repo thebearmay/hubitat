@@ -184,8 +184,8 @@ void dataRefresh(retData){
                 unit="dBm"
                 if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
-            case("mold"):
-                unit="ppm"
+            case("mold")://mold risk index - integer 0-10
+                unit=""
                 if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
             default:
@@ -193,7 +193,7 @@ void dataRefresh(retData){
                 if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
         }
-        if((it.key != "temp" && unit != null) || it.key.startsWith('pm')) //unit will be null for any values not tracked
+        if((it.key != "temp" && unit != null) || it.key.startsWith('pm') || it.key == "mold") //unit will be null for any values not tracked
             updateAttr(it.key, it.value, unit) 
     }
     calcAbsHumidity()

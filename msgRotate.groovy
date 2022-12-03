@@ -14,10 +14,10 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
-
+ *    03Dec2022   thebearmay     Fix a null message condition when list size==1
  */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 metadata {
     definition (
@@ -70,6 +70,7 @@ void remMessage(mID){
         if(it.key != "$mID")
             state.messages[it.key]=it.value
     }
+
     if(state.messages == null || state.messages == [:]) {
         unschedule("cycleMessages")
         state.messages = [:]
@@ -98,6 +99,8 @@ void cycleMessages(inx){
     if(debugEnabled) log.debug "Inx post size check: $inx"
     if(state.messages.size() > 1)  
         runIn(cycleTime,"cycleMessages",[data:"$inx"])
+    if((device.currentValue("html", true)=="null" || device.currentValue("html", true) == null) && state.messages.size() > 0)
+        sendEvent(name:"html", value:"${messageList[0]}")
 }
 
 void logsOff(){

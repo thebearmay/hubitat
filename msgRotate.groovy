@@ -14,10 +14,10 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- *    03Dec2022   thebearmay     Fix a null message condition when list size==1
+ *    03Dec2022   thebearmay    Fix null after remove to messages.size() == 1
  */
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.3'  }
 
 metadata {
     definition (
@@ -36,7 +36,7 @@ metadata {
 }
 
 preferences {
-	input("debugEnable", "bool", title: "Enable debug logging?", width:4)
+	input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
     input("cycleTime", "number", title: "Number of seconds to display each message", defaultValue:3, width:4)
 }
 
@@ -48,7 +48,7 @@ def installed() {
 
 def updated(){
     log.trace "updated()"
-    if(debugEnable) runIn(1800,logsOff)
+    if(debugEnabled) runIn(1800,logsOff)
 }
 
 void addMessage(mID, mContent){
@@ -86,7 +86,7 @@ void clearAll(){
 }
 
 void cycleMessages(inx){
-    if(data) log.debug "Data: ${data.toInteger()}" 
+    if(data && debugEnabled) log.debug "Data: ${data.toInteger()}" 
     if(inx == null) inx = data.toInteger()
     inx = inx.toInteger()
     messageList = state.messages.collect{entry -> entry.value}
@@ -97,10 +97,12 @@ void cycleMessages(inx){
     if(debugEnabled) log.debug "Inx++ $inx"
     if(inx >= state.messages.size()) inx = 0
     if(debugEnabled) log.debug "Inx post size check: $inx"
-    if(state.messages.size() > 1)  
-        runIn(cycleTime,"cycleMessages",[data:"$inx"])
+    if(debugEnabled) log.debug "Size ${state.messages.size()} ${device.currentValue("html",true)}"
     if((device.currentValue("html", true)=="null" || device.currentValue("html", true) == null) && state.messages.size() > 0)
         sendEvent(name:"html", value:"${messageList[0]}")
+    
+    if(state.messages.size() > 1)  
+        runIn(cycleTime,"cycleMessages",[data:"$inx"])
 }
 
 void logsOff(){

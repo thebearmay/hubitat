@@ -15,9 +15,10 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    03Dec2022   thebearmay    Fix null after remove to messages.size() == 1
+ *    06Dec2022   thebearmay    Space if no messages option
  */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.6'  }
 
 metadata {
     definition (
@@ -38,6 +39,7 @@ metadata {
 preferences {
 	input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
     input("cycleTime", "number", title: "Number of seconds to display each message", defaultValue:3, width:4)
+    input("blankIfNone", "bool", title: "Blank if No Current Messages", defaultValue: false, width:4)
 }
 
 def installed() {
@@ -74,7 +76,10 @@ void remMessage(mID){
     if(state.messages == null || state.messages == [:]) {
         unschedule("cycleMessages")
         state.messages = [:]
-        sendEvent(name:"html", value:"No Current Messages")
+        if(blankIfNone)
+           sendEvent(name:"html", value:" ")
+        else        
+            sendEvent(name:"html", value:"No Current Messages")
     } else
         cycleMessages(0)
 }
@@ -82,7 +87,10 @@ void remMessage(mID){
 void clearAll(){
     state.messages = [:]
     unschedule("cycleMessages")
-    sendEvent(name:"html", value:"No Current Messages")
+    if(blankIfNone)
+        sendEvent(name:"html", value:" ")
+    else    
+        sendEvent(name:"html", value:"No Current Messages")
 }
 
 void cycleMessages(inx){

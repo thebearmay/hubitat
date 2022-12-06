@@ -34,12 +34,13 @@
 *    2021-12-07  thebearmay    add "none" as a date time format
 *    2022-04-06  thebearmay    fix max message state coming back as string
 *    2022-09-15  thebearmay    issue with clean install
+*    2022-12-06  thebearmay    additional date/time format
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
-static String version()	{  return '2.0.10'  }
+static String version()	{  return '2.0.11'  }
 
-@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "None"]
+@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "MM/dd h:mma", "HH:mm", "H:mm","h:mma", "None"]
 
 metadata {
 	definition (

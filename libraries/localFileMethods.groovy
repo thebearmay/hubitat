@@ -6,7 +6,7 @@ library (
     name: "localFileMethods",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/localFileMethods.groovy",
-    version: "0.0.10",
+    version: "0.0.11",
     documentationLink: ""
 )
 

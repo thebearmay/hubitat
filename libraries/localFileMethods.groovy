@@ -245,7 +245,7 @@ String deleteFile(fName){
     bodyText = JsonOutput.toJson(name:"$fName",type:"file")
     params = [
         uri: "http://127.0.0.1:8080",
-	path: "/hub/fileManager/delete"
+	path: "/hub/fileManager/delete",
         contentType:"text/plain",
         requestContentType:"application/json",
         body: bodyText

@@ -24,6 +24,7 @@
  *    04Oct2022    thebearmay    combine write methods
  *    01Nov2022    thebearmay    add file delete
  *    05Nov2022    thebearmay	 exist attribute instantiate
+ *    08Dec2022    thebearmat    Fix typo in fileDelete method
 */
 
 import java.net.URLEncoder
@@ -32,7 +33,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.2.5"}
+static String version() {return "0.2.6"}
 
 metadata {
     definition (
@@ -417,7 +418,7 @@ def uploadImage(imagePath, oName){
 
 @SuppressWarnings('unused')
 String deleteFile(fName){
-    bodyText = JsonOutput.toJson(name:"$fname",type:"file")
+    bodyText = JsonOutput.toJson(name:"$fName",type:"file")
     params = [
         uri: "http://127.0.0.1:8080",
         path: "/hub/fileManager/delete",

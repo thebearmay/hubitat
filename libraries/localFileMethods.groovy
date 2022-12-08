@@ -242,7 +242,7 @@ try {
 
 @SuppressWarnings('unused')
 String deleteFile(fName){
-    bodyText = JsonOutput.toJson(name:"$fname",type:"file")
+    bodyText = JsonOutput.toJson(name:"$fName",type:"file")
     params = [
         uri: "http://127.0.0.1:8080",
 	path: "/hub/fileManager/delete"

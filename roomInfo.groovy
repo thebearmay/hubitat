@@ -45,9 +45,18 @@ metadata {
 
 preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
+    input("pollRate","number", title:"Poll rate (in minutes) (Default:1440, Disable:0):", defaultValue:1440, submitOnChange:true, width:4)    
+    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
+    if (security) { 
+        input("username", "string", title: "Hub Security Username", required: false, width:4)
+        input("password", "password", title: "Hub Security Password", required: false, width:4)
+    }
 }
 
 void initialize() {
+    if(pollRate == null) {
+        device.updateSetting("pollRate",[value:1440,type:"number"])
+    }    
     getRoomList()
 }
 
@@ -60,6 +69,14 @@ def updated(){
         log.debug "updated()"
         runIn(1800,logsOff)
     }
+    if(pollRate == null) {
+        device.updateSetting("pollRate",[value:1440,type:"number"])
+    }
+    if(pollRate == 0)
+        unschedule("refresh")
+    else 
+        runIn(pollRate*60,"refresh")
+    
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){

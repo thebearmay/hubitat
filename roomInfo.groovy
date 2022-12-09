@@ -56,12 +56,20 @@ preferences {
 void initialize() {
     if(pollRate == null) {
         device.updateSetting("pollRate",[value:1440,type:"number"])
-    }    
+    }
+    if(pollRate == 0)
+        unschedule("refresh")
+    else 
+        runIn(pollRate*60,"refresh")    
     getRoomList()
 }
 
 void refresh() {
     getRoomList()
+    if(pollRate == 0)
+        unschedule("refresh")
+    else 
+        runIn(pollRate*60,"refresh")    
 }
 
 def updated(){

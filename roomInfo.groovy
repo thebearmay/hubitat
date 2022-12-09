@@ -20,6 +20,8 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
+static String version() {return "0.0.1"}
+
 metadata {
     definition (
         name: "Room Information", 
@@ -60,7 +62,7 @@ void initialize() {
     if(pollRate == 0)
         unschedule("refresh")
     else 
-        runIn(pollRate*60,"refresh")    
+        runIn(pollRate.toInteger()*60,"refresh")    
     getRoomList()
 }
 
@@ -69,7 +71,7 @@ void refresh() {
     if(pollRate == 0)
         unschedule("refresh")
     else 
-        runIn(pollRate*60,"refresh")    
+        runIn(pollRate.toInteger()*60,"refresh")    
 }
 
 def updated(){

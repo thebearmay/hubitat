@@ -115,13 +115,14 @@
  *	  2022-11-22  thebearmay	 correct stack overflow
  *    2022-11-23  thebearmay     change host for publicIP
  *    2022-11-25  thebearmay     log.warn instead of log.warning
+ *    2022-12-09  thebearmay     fix timing issue with Next Poll Time
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.18"}
+static String version() {return "2.7.19"}
 
 metadata {
     definition (
@@ -369,7 +370,7 @@ def configure() {
 
     updateAttr("hubModel", getModel())
     if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
-    if(updSdfPref == "Milliseconds") 
+    if(updSdfPref == "Milliseconds" || updSdfPref == null) 
         updateAttr("lastUpdated", new Date().getTime())
     else {
         SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
@@ -1341,8 +1342,12 @@ Boolean fileExists(fName){
 void checkPolling(){
     if(debubEnable)log.debug "checkPolling"
 	getNextPoll()
+    nextPoll = device.currentValue('nextPoll',true)
 	sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
-	Long nextPollTime = sdf.parse("${device.currentValue('nextPoll')}").getTime()
+    if(nextPoll != null)
+	    Long nextPollTime = sdf.parse("${nextPoll}").getTime()
+    else
+        nextPollTime = 0
 	if(nextPollTime > new Date().getTime())
 		pollFound = true
 	if(!pollFound && (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable))
@@ -1352,6 +1357,7 @@ void checkPolling(){
 
 @SuppressWarnings('unused')
 void getNextPoll(){
+    pollFound = false
     if(security) cookie = getCookie()    
     params = [
                 uri: "http://127.0.0.1:8080",
@@ -1367,12 +1373,12 @@ void getNextPoll(){
         mapData = (HashMap) resp.data
         myJobs = [:]
         devID = device.getId().toString()
-        pollFound = false
         if(debubEnable)log.debug "${mapData.jobs}"
         mapData.jobs.each {
             if(it.link.contains('/device/edit') && it.link.endsWith(devID)){
                 if("$it.methodName" == 'getPollValues'){
                     updateAttr("nextPoll",it.nextRun)
+                    pollFound = true
                 }
             }
         }

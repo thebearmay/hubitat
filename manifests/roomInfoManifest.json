@@ -1,0 +1,15 @@
+{
+ "packageName":"Room Information Device",
+ "author":"Jean P. May, Jr.",
+ "version":"1.0.0",
+ "minimumHEVersion":"2.3.3.0",
+ "dateReleased":"2022-12-09",
+ "drivers": [
+  {
+     "id":"75fd9552-c092-4a24-a25e-ce774df93407",
+     "name":"Room Information Driver",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/roomInfo.groovy",
+     "required":"true"
+  }
+  ]
+}

@@ -250,6 +250,13 @@
       "tags":[
         "Dashboards"
        ]
+    },
+    {
+      "id":"a63409d4-5bb1-4024-ba03-05344ce61696",
+      "name":"Room Information Device",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/roomInfoManifest.json",
+      "description":"Provides a JSON summary of all Rooms and their associated devices and images."
     }
   ]
 }

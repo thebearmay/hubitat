@@ -1,3 +1,29 @@
+/*
+* Methods:
+* 
+* String getRoomList(String username, String password)
+*    Returns a JSON String containing a list of rooms with their associated attributes, i.e.
+*        {"roomNumber":{"name":"roomName","hasImage":"trueOrFalse","deviceList":{"deviceName":"deviceNumber",...}}}
+*        (this is the roomJson that all other methods are expecting)
+*        username and password are only required if the hub is using Hub Security
+*
+* String getRoomImage(Integer rNum, String roomJson)
+*    Returns a string containing an html image tag for the room image or "-1" if no image was assigned
+*
+* String getRoomName(Integer rNum, String roomJson)
+*    Returns a string containing the room name, or "-1" if an invalid room number was passed
+*
+* String getRoomDevices(Integer rNum, String roomJson)
+*    Returns a JSON string containing a list of devices and their device number {"deviceName":"deviceNumber",...}
+*        or {"Error":"-1"} if an invalid room number was passed
+*
+* String roomLookup(String rName, String roomJson)
+*    Returns a JSON string containing a list of rooms (and their room number) that contain rName (case insensitive)
+*        in their name {"roomName":"roomNumber",...} or {"Error":"-1"} if an invalid room number was passed
+*
+*/
+
+
 library (
     base: "driver",
     author: "Jean P. May Jr.",
@@ -10,8 +36,8 @@ library (
     documentationLink: ""
 )
 
-String getRoomList(){
-    respData = readPage("http://127.0.0.1:8080/room/list")
+String getRoomList(username="", password=""){
+    respData = readPage("http://127.0.0.1:8080/room/list", username, password)
     recs = respData.split("\n")
     if (debugEnabled) log.debug recs.size()
     roomList = [:]
@@ -73,36 +99,36 @@ String buildRoomJSON(rList,dToR,dToN,rToI){
     
 }
 
-String getRoomImage(rNum) {
+String getRoomImage(rNum, roomJson) {
     JsonSlurper jSlurp = new JsonSlurper() 
-    Map rInfo = (Map) jSlurp.parseText(device.currentValue("roomJson"))
+    Map rInfo = (Map) jSlurp.parseText("$roomJson")
     if(rInfo["$rNum"]?.hasImage == "true")
         return "<img src='http://${location.hub.localIP}:8080/room/image/$rNum' />"
     else
         return "-1"
 }
 
-String getRoomName(rNum) {
+String getRoomName(rNum, roomJson) {
     JsonSlurper jSlurp = new JsonSlurper() 
-    Map rInfo = (Map) jSlurp.parseText(device.currentValue("roomJson"))
+    Map rInfo = (Map) jSlurp.parseText("$roomJson")
     if(rInfo["$rNum"]?.name)
         return "${rInfo["$rNum"]?.name}")
     else
         return "-1"
 }
 
-String getRoomDevices(rNum) {
+String getRoomDevices(rNum, roomJson) {
     JsonSlurper jSlurp = new JsonSlurper() 
-    Map rInfo = (Map) jSlurp.parseText(device.currentValue("roomJson"))
+    Map rInfo = (Map) jSlurp.parseText("$roomJson")
     if(rInfo["$rNum"]?.deviceList)
         return "${JsonOutput.toJson(rInfo["$rNum"]?.deviceList)}"
     else
         return ${JsonOutput.toJson(["Error":"-1"])}"
 }
 
-String roomLookup(rName){
+String roomLookup(rName, roomJson){
     JsonSlurper jSlurp = new JsonSlurper() 
-    Map rInfo = (Map) jSlurp.parseText(device.currentValue("roomJson"))
+    Map rInfo = (Map) jSlurp.parseText("$roomJson")
     rName=rName.toLowerCase()
     rList=[:]
     rInfo.each{
@@ -116,8 +142,8 @@ String roomLookup(rName){
         return ${JsonOutput.toJson(["Error":"-1"])}"
 }
 
-String readPage(fName){
-    if(security) cookie = securityLogin().cookie
+String readPage(fName, username="", password=""){
+    if(username) cookie = securityLogin(username, password).cookie
     def params = [
         uri: fName,
         contentType: "text/html",
@@ -150,7 +176,7 @@ String readPage(fName){
         return null;
     }
 }
-HashMap securityLogin(){
+HashMap securityLogin(username, password){
     def result = false
     try{
         httpPost(

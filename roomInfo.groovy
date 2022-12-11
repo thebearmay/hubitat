@@ -16,11 +16,12 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    09Dec2022    thebearmay    Original Code
+ *    11Dec2022    thebearmay    add room lookup
 */
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-static String version() {return "1.0.0"}
+static String version() {return "1.0.1"}
 
 metadata {
     definition (
@@ -41,6 +42,7 @@ metadata {
         command "getRoomImage", [[name:"roomNum", type:"NUMBER", description:"Room Number"]]
         command "getRoomName", [[name:"roomNum", type:"NUMBER", description:"Room Number"]]
         command "getRoomDevices", [[name:"roomNum", type:"NUMBER", description:"Room Number"]]
+        command "roomLookup",[[name:"roomName", type:"STRING", description:"Partial or Full Name"]]
 
     }
 }
@@ -182,9 +184,25 @@ void getRoomDevices(rNum) {
     JsonSlurper jSlurp = new JsonSlurper() 
     Map rInfo = (Map) jSlurp.parseText(device.currentValue("roomJson"))
     if(rInfo["$rNum"]?.deviceList)
-        updateAttr("cmdReturn", "${rInfo["$rNum"]?.deviceList}")
+        updateAttr("cmdReturn", "${JsonOutput.toJson(rInfo["$rNum"]?.deviceList)}")
     else
         updateAttr("cmdReturn","Invalid Room")
+}
+
+void roomLookup(rName){
+    JsonSlurper jSlurp = new JsonSlurper() 
+    Map rInfo = (Map) jSlurp.parseText(device.currentValue("roomJson"))
+    rName=rName.toLowerCase()
+    rList=[:]
+    rInfo.each{
+        if(it.value.name.toLowerCase().contains("$rName")){
+            rList["${it.value.name}"]="${it.key}"
+        }
+    }
+    if(rList.size()>0)
+    updateAttr("cmdReturn","${JsonOutput.toJson(rList)}")
+    else
+        updateAttr("cmdReturn","Room not Found")
 }
 
 String readPage(fName){

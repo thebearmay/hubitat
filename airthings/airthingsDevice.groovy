@@ -20,6 +20,7 @@
  *    21Nov2022    thebearmay    make the tile template selection an ENUM
  *                               add absHumidity
  *    30Nov2022    thebearmay    add option to force Integer values, add mold attribute
+ *    16Dec2022    thebearmay    handle mismatched return data elements
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -27,7 +28,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.12"}
+static String version() {return "0.0.13"}
 
 metadata {
     definition (
@@ -190,7 +191,8 @@ void dataRefresh(retData){
                 break
             default:
                 unit=""
-                if(forceInt) it.value = it.value.toFloat().toInteger()
+                if(forceInt && it.value.isNumber()) it.value = it.value.toFloat().toInteger()
+                //else log.warn "Return Data Mismatch, Key: ${it.key} Value: ${it.value}"
                 break
         }
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm') || it.key == "mold") //unit will be null for any values not tracked
@@ -205,6 +207,8 @@ void dataRefresh(retData){
 }
 
 void calcAbsHumidity() {
+    if(device.currentValue("temperature",true) == null || device.currentValue("humidity",true) == null)
+        return //Calculation cannot continue
     if(useFahrenheit)
         deviceTempInCelsius = fahrenheitToCelsius(device.currentValue("temperature",true).toFloat())
     else

@@ -16,9 +16,10 @@
  *    ----        ---            ----
  *    03Dec2022   thebearmay    Fix null after remove to messages.size() == 1
  *    06Dec2022   thebearmay    Space if no messages option
+ *    21Dec2022   thebearmay    Close a possible "null" message opportunity
  */
 
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.7'  }
 
 metadata {
     definition (
@@ -108,6 +109,12 @@ void cycleMessages(inx){
     if(debugEnabled) log.debug "Size ${state.messages.size()} ${device.currentValue("html",true)}"
     if((device.currentValue("html", true)=="null" || device.currentValue("html", true) == null) && state.messages.size() > 0)
         sendEvent(name:"html", value:"${messageList[0]}")
+    else if(state.messages.size() < 1) {
+        if(blankIfNone)
+            sendEvent(name:"html", value:" ")
+        else    
+            sendEvent(name:"html", value:"No Current Messages")
+    }
     
     if(state.messages.size() > 1)  
         runIn(cycleTime,"cycleMessages",[data:"$inx"])

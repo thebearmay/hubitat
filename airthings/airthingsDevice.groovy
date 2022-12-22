@@ -21,6 +21,7 @@
  *                               add absHumidity
  *    30Nov2022    thebearmay    add option to force Integer values, add mold attribute
  *    16Dec2022    thebearmay    handle mismatched return data elements
+ *    22Dec2022    thebearmay    hub security 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -28,7 +29,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.13"}
+static String version() {return "0.0.14"}
 
 metadata {
     definition (
@@ -225,7 +226,7 @@ void calcAbsHumidity() {
 
 @SuppressWarnings('unused')
 List<String> listFiles(){
-    if(security) cookie = getCookie()
+    if(security) cookie = securityLogin().cookie
     if(debugEnabled) log.debug "Getting list of files"
     uri = "http://127.0.0.1:8080/hub/fileManager/json";
     def params = [

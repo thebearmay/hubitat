@@ -116,13 +116,14 @@
  *    2022-11-23  thebearmay     change host for publicIP
  *    2022-11-25  thebearmay     log.warn instead of log.warning
  *    2022-12-09  thebearmay     fix timing issue with Next Poll Time
+ *    2022-12-23  thebearmay     use the loopback address for shutdown and reboot     
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.19"}
+static String version() {return "2.7.20"}
 
 metadata {
     definition (
@@ -1082,7 +1083,7 @@ void reboot() {
     if(security) cookie = getCookie()
 	httpPost(
 		[
-			uri: "http://${location.hub.localIP}:8080",
+			uri: "http://127.0.0.1:8080",
 			path: "/hub/reboot",
 			headers:[
 				"Cookie": cookie
@@ -1104,7 +1105,7 @@ void shutdown() {
     if(security) cookie = getCookie()
 	httpPost(
 		[
-			uri: "http://${location.hub.localIP}:8080",
+			uri: "http://127.0.0.1:8080",
 			path: "/hub/shutdown",
 			headers:[
 				"Cookie": cookie

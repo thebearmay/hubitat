@@ -116,14 +116,16 @@
  *    2022-11-23  thebearmay     change host for publicIP
  *    2022-11-25  thebearmay     log.warn instead of log.warning
  *    2022-12-09  thebearmay     fix timing issue with Next Poll Time
- *    2022-12-23  thebearmay     use the loopback address for shutdown and reboot     
+ *    2022-12-23  thebearmay     use the loopback address for shutdown and reboot
+ *    2022-12-29  thebearmay     more hub2 data with HEv2.3.4.126
 */
 import java.text.SimpleDateFormat
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.20"}
+static String version() {return "2.7.21"}
 
 metadata {
     definition (
@@ -197,6 +199,13 @@ metadata {
 		attribute "sunrise", "string"
 		attribute "sunset", "string"
         attribute "nextPoll", "string"
+        //v2.3.4.126
+        attribute "connectType", "string" //Ethernet, WiFi, Dual
+        attribute "dnsServers", "string"
+        attribute "staticIPJson", "string"
+        attribute "wirelessIP", "string"
+        attribute "wifiNetwork", "string"
+        
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -433,7 +442,7 @@ void checkZigStack(){
     if(!beta)
         return
     try{
-        httpGet("http://${location.hub.localIP}:8080/hub/currentZigbeeStack") { resp ->
+        httpGet("http://127.0.0.1:8080/hub/currentZigbeeStack") { resp ->
             if(resp.data.toString().indexOf('standard') > -1)
                 updateAttr("zigbeeStack","standard")
             else
@@ -457,7 +466,7 @@ boolean isCompatible(Integer minLevel) { //check to see if the hub version meets
 void pollHub2() {
         Map params =
         [
-                uri    : "http://${location.hub.localIP}:8080",
+                uri    : "http://127.0.0.1:8080",
                 path   : "/hub2/hubData"        
         ]
     
@@ -518,7 +527,7 @@ void getPollValues(){
 
     if(checkZwVersion && isCompatible(7) && !zwLocked){
         Map paramZ = [
-            uri    : "http://${location.hub.localIP}:8080",
+            uri    : "http://127.0.0.1:8080",
             path   : "/hub/zwaveVersion",
             headers: ["Cookie": cookie]
         ]
@@ -534,7 +543,7 @@ void getPollValues(){
     // get Temperature
     if(tempPollEnable) {
         params = [
-                uri    : "http://${location.hub.localIP}:8080",
+                uri    : "http://127.0.0.1:8080",
                 path   : "/hub/advanced/internalTempCelsius",
                 headers: ["Cookie": cookie]
         ]
@@ -545,7 +554,7 @@ void getPollValues(){
     // get Free Memory
     if(freeMemPollEnabled) {
         params = [
-                uri    : "http://${location.hub.localIP}:8080",
+                uri    : "http://127.0.0.1:8080",
                 path   : "/hub/advanced/freeOSMemory",
                 headers: ["Cookie": cookie]
         ]
@@ -557,13 +566,13 @@ void getPollValues(){
     if(cpuPollEnabled) {
         if (location.hub.firmwareVersionString <= "2.2.5.131") {
             params = [
-                    uri    : "http://${location.hub.localIP}:8080",
+                    uri    : "http://127.0.0.1:8080",
                     path   : "/hub/advanced/freeOSMemoryHistory",
                     headers: ["Cookie": cookie]
             ]
         } else {
             params = [
-                    uri    : "http://${location.hub.localIP}:8080",
+                    uri    : "http://127.0.0.1:8080",
                     path   : "/hub/advanced/freeOSMemoryLast",
                     headers: ["Cookie": cookie]
             ]
@@ -575,7 +584,7 @@ void getPollValues(){
     //Get DB size
     if(dbPollEnabled) {
         params = [
-                uri    : "http://${location.hub.localIP}:8080",
+                uri    : "http://127.0.0.1:8080",
                 path   : "/hub/advanced/databaseSize",
                 headers: ["Cookie": cookie]
         ]
@@ -604,7 +613,7 @@ void getPollValues(){
     if(evtStateDaysEnable) {
         params =
         [
-                uri    : "http://${location.hub.localIP}:8080",
+                uri    : "http://127.0.0.1:8080",
                 path   : "/hub/advanced/maxDeviceStateAgeDays",
                 headers: ["Cookie": cookie]           
         ]
@@ -615,7 +624,7 @@ void getPollValues(){
      //Max Event Days
         params =
         [
-                uri    : "http://${location.hub.localIP}:8080",
+                uri    : "http://127.0.0.1:8080",
                 path   : "/hub/advanced/maxEventAgeDays",
                 headers: ["Cookie": cookie]           
         ]
@@ -630,7 +639,7 @@ void getPollValues(){
     if(ntpCkEnable){
         params =
         [
-                uri    : "http://${location.hub.localIP}:8080",
+                uri    : "http://127.0.0.1:8080",
                 path   : "/hub/advanced/ntpServer",
                 headers: ["Cookie": cookie]           
         ]
@@ -642,7 +651,7 @@ void getPollValues(){
     if(subnetEnable) {
         params =
         [
-                uri    : "http://${location.hub.localIP}:8080",
+                uri    : "http://127.0.0.1:8080",
                 path   : "/hub/allowSubnets",
                 headers: ["Cookie": cookie]           
         ]
@@ -656,13 +665,27 @@ void getPollValues(){
     if(hubMeshPoll) {
         params =
         [
-                uri    : "http://${location.hub.localIP}:8080",
+                uri    : "http://127.0.0.1:8080",
                 path   : "/hub2/hubMeshJson",
                 headers: ["Cookie": cookie]           
         ]
     
         if(debugEnable)log.debug params
         asynchttpGet("getHubMesh", params)
+    }
+    
+    //v2.3.4.126 data
+    if(location.hub.firmwareVersionString >= "2.3.4.126" && hubMeshPoll){
+        params =
+        [
+                uri    : "http://127.0.0.1:8080",
+                path   : "/hub2/networkConfiguration",
+                headers: ["Cookie": cookie]           
+        ]
+    
+        if(debugEnable)log.debug params
+        asynchttpGet("getNetworkConfig", params)        
+        
     }
     
     //End Pollable Gets
@@ -1026,6 +1049,41 @@ void getHubMesh(resp, data){
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
         } 
     } catch (Exception ex){
+        if (!warnSuppress) log.warn ex
+    }
+}
+
+@SuppressWarnings('unused')
+void getNetworkConfig(resp, data){
+    try{
+        if (resp.getStatus() == 200){
+            if (debugEnable) log.info resp.data
+            def jSlurp = new JsonSlurper()
+            Map h2Data = (Map)jSlurp.parseText((String)resp.data)
+            if(!h2Data.usingStaticIP)
+                updateAttr("staticIPJson", "[]")
+            else {
+                jMap = [staticIP:"${h2Data.staticIP}", staticGateway:"${h2Data.staticGateway}", staticSubnetMask:"${h2Data.staticSubnetMask}",staticNameServers:"${h2Data.staticNameServers}"]
+                updateAttr("staticIPJson",JsonOutput.toJson(jMap))
+            }
+            if(h2Data.hasEthernet && h2Data.hasWiFi )
+                updateAttr("connectType","Dual")
+            else if(h2Data.hasEthernet)
+                updateAttr("connectType","Ethernet")
+            else if(h2Data.hasWiFi)
+                updateAttr("connectType","WiFi")
+            if(h2Data.hasWiFi){
+                updateAttr("wifiNetwork", h2Data.wifiNetwork)
+                updateAttr("wirelessIP",h2Data.wlanAddr)
+            } else {
+                updateAttr("wifiNetwork", "None")
+                updateAttr("wirelessIP", "None")
+            }
+            updateAttr("dnsServers", h2Data.dnsServers)
+            
+               
+        }
+    }catch (ex) {
         if (!warnSuppress) log.warn ex
     }
 }

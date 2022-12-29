@@ -203,6 +203,7 @@ metadata {
         attribute "connectType", "string" //Ethernet, WiFi, Dual
         attribute "dnsServers", "string"
         attribute "staticIPJson", "string"
+        attribute "lanIPAddr", "string"
         attribute "wirelessIP", "string"
         attribute "wifiNetwork", "string"
         
@@ -1066,11 +1067,13 @@ void getNetworkConfig(resp, data){
                 jMap = [staticIP:"${h2Data.staticIP}", staticGateway:"${h2Data.staticGateway}", staticSubnetMask:"${h2Data.staticSubnetMask}",staticNameServers:"${h2Data.staticNameServers}"]
                 updateAttr("staticIPJson",JsonOutput.toJson(jMap))
             }
-            if(h2Data.hasEthernet && h2Data.hasWiFi )
+            if(h2Data.hasEthernet && h2Data.hasWiFi ){
                 updateAttr("connectType","Dual")
-            else if(h2Data.hasEthernet)
+                updateAttr("lanIPAddr", h2Data.lanAddr)    
+            } else if(h2Data.hasEthernet){
                 updateAttr("connectType","Ethernet")
-            else if(h2Data.hasWiFi)
+                updateAttr("lanIPAddr", h2Data.lanAddr)
+            } else if(h2Data.hasWiFi)
                 updateAttr("connectType","WiFi")
             if(h2Data.hasWiFi){
                 updateAttr("wifiNetwork", h2Data.wifiNetwork)
@@ -1080,6 +1083,7 @@ void getNetworkConfig(resp, data){
                 updateAttr("wirelessIP", "None")
             }
             updateAttr("dnsServers", h2Data.dnsServers)
+            updateAttr("lanIPAddr", h2Data.lanAddr)
             
                
         }

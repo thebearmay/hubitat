@@ -17,9 +17,10 @@
  *    2022-03-23        thebearmay    remove auth for HIA-HI
  *    2022-04-06        thebearmay    use local file space to allow tiles over 1024
  *    2022-04-12        thebearmay    typo in memory warning
+ *    2022-12-30        thebearmay    error when removing child device that doesn't exist
  */
 
-static String version()	{  return '1.0.6'  }
+static String version()	{  return '1.0.8'  }
 
 
 definition (
@@ -66,7 +67,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main")
 		    {
-                input "qryDevice", "capability.initialize", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
+                input "qryDevice", "device.HubInformation", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
                 if (qryDevice != null){
                     hubDevCheck = true
                     qryDevice.each{
@@ -206,12 +207,12 @@ String buildTable() {
 
 def addDevice() {
     if(!this.getChildDevice("hia${app.id}"))
-    addChildDevice("thebearmay","Hub Information Aggregation Device","hia${app.id}")
+        addChildDevice("thebearmay","Hub Information Aggregation Device","hia${app.id}")
 }
 
 def removeDevice(){
     unschedule("refreshDevice")
-    deleteChildDevice("hiad001")
+    if(this.getChildDevice("hia${app.id}")) deleteChildDevice("hia${app.id}")
 }
 
 def refreshDevice(evt = null){

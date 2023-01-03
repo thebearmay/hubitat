@@ -118,6 +118,7 @@
  *    2022-12-09  thebearmay     fix timing issue with Next Poll Time
  *    2022-12-23  thebearmay     use the loopback address for shutdown and reboot
  *    2022-12-29  thebearmay     more hub2 data with HEv2.3.4.126
+ *    2023-01-03  thebearmay     minor cosmetic fixes
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -125,7 +126,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "2.7.21"}
+static String version() {return "2.7.22"}
 
 metadata {
     definition (
@@ -199,7 +200,7 @@ metadata {
 		attribute "sunrise", "string"
 		attribute "sunset", "string"
         attribute "nextPoll", "string"
-        //v2.3.4.126
+        //HE v2.3.4.126
         attribute "connectType", "string" //Ethernet, WiFi, Dual
         attribute "dnsServers", "string"
         attribute "staticIPJson", "string"
@@ -211,11 +212,14 @@ metadata {
         command "hiaUpdate", ["string"]
         command "reboot"
         command "shutdown"
+        command "updateCheck"
+
 
     }   
 }
 
 preferences {
+    input("quickref","href", title:"<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef.html' target='_blank'>Quick Reference v${version()}</a>")
     input("debugEnable", "bool", title: "Enable debug logging?", width:4)
     input("warnSuppress", "bool", title: "Suppress Warn Level Logging", width:4)
     input("tempPollEnable", "bool", title: "Enable Temperature Polling", width:4)
@@ -224,8 +228,6 @@ preferences {
     input("dbPollEnabled","bool", title: "Enable DB Size Polling", width:4)
     input("publicIPEnable", "bool", title: "Enable Querying the cloud \nto obtain your Public IP Address?", defaultValue: false, required: false, submitOnChange: true, width:4)
     input("evtStateDaysEnable", "bool", title:"Enable Display of Max Event/State Days Setting", width:4)
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || evtStateDaysEnable)
-        input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true, width:4)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true, width:4)
     input("alternateHtml", "string", title: "Template file for HTML attribute", submitOnChange: true, defaultValue: "hubInfoTemplate.res")
     input("checkZwVersion","bool",title:"Force Update of ZWave Version Attribute", defaultValue: false, submitOnChange: true, width:4)
@@ -233,8 +235,10 @@ preferences {
     input("ntpCkEnable","bool", title: "Check NTP Server on Poll", defaultValue:false,submitOnChange: true, width:4)
     input("subnetEnable", "bool", title: "Check for additional Subnets on Poll",defaultValue:false,submitOnChange: true, width:4)
     input("hubMeshPoll", "bool", title: "Include Hub Mesh Data", defaultValue:false, submitOnChange:true, width:4)
+    input("extNetData", "bool", title: "Include Expanded Network Data", defaultValue: false, submitOnChange:true, width:4)
     input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss", width:4)
     input("updSdfPref", "enum", title: "Date/Time Format for Last Updated", options:sdfList, defaultValue:"Milliseconds", width:4)
+    input("upTimeSep", "string", title: "Separator for Formatted Uptime", defaultValue: ",", width:4)
     input("suppressData", "bool", title: "Suppress <i>data</i> attribute if Zigbee is null", defaultValue:false, submitOnChange: true, width:4)
 	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true, width:4)
     input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true, width:4)
@@ -244,7 +248,18 @@ preferences {
         input("username", "string", title: "Hub Security Username", required: false, width:4)
         input("password", "password", title: "Hub Security Password", required: false, width:4)
     }
+    if(pollingCheck())
+        input("tempPollRate", "number", title: "Polling Rate (seconds)\nDefault:300", defaultValue:300, submitOnChange: true, width:4)    
     input("fwUpdatePollRate","number", title:"Poll rate (in seconds) for FW Update Check (Default:6000, Disable:0):", defaultValue:6000, submitOnChange:true, width:4)
+    if(fwUpdatePollRate != null && fwUpdatePollRate.toInteger() > 0)
+        input("rawUpdateNotice", "bool", title:"Use raw update notice", defaultValue:true, width:4, submitOnChange:true)
+}
+
+boolean pollingCheck(){
+    if(tempPollEnable||freeMemPollEnabled||cpuPollEnabled||dbPollEnabled||publicIPEnable||evtStateDaysEnable||checkZwVersion||ntpCkEnable||subnetEnable||hubMeshPoll||extNetData)
+        return true
+    else
+        return false
 }
 
 @SuppressWarnings('unused')
@@ -274,7 +289,7 @@ def updated(){
         log.debug "updated()"
         runIn(1800,logsOff)
     }
-    if(tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion){
+    if(pollingCheck()){
         unschedule("getPollValues")
         getPollValues()
     }else {
@@ -338,6 +353,15 @@ def updated(){
             device.deleteCurrentState("hubMeshData")
             device.deleteCurrentState("hubMeshCount")
         }
+        if(!extNetData) {
+            device.deleteCurrentState("connectType")
+            device.deleteCurrentState("dnsServers")
+            device.deleteCurrentState("staticIPJson")
+            device.deleteCurrentState("lanIPAddr")
+            device.deleteCurrentState("dnsServers")
+            device.deleteCurrentState("wirelessIP")
+            device.deleteCurrentState("wifiNetwork")
+        }
         device.deleteCurrentState("hubUpdateResp")
 	}
     
@@ -389,7 +413,7 @@ def configure() {
     }
 
     
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) 
+    if (pollingCheck()) 
         checkPolling()
     else 
         updateAttr("nextPoll","None")
@@ -416,8 +440,11 @@ void formatUptime(){
         Integer hrs = Math.floor((ut - (days * (3600*24))) /3600).toInteger()
         Integer min = Math.floor( (ut -  ((days * (3600*24)) + (hrs * 3600))) /60).toInteger()
         Integer sec = Math.floor(ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60))).toInteger()
-    
-        String attrval = days.toString() + "d," + hrs.toString() + "h," + min.toString() + "m," + sec.toString() + "s"
+        if(upTimeSep == null){
+            device.updateSetting("upTimeSep",[value:",", type:"string"])
+            upTimeSep = ","
+        }
+        String attrval = "${days.toString()}d$upTimeSep${hrs.toString()}h$upTimeSep${min.toString()}m$upTimeSep${sec.toString()}s"
         updateAttr("formattedUptime", attrval) 
     } catch(ignore) {
         updateAttr("formattedUptime", "")
@@ -598,10 +625,8 @@ void getPollValues(){
     if(publicIPEnable) {
         params =
         [
-//            uri:  "https://ifconfig.co/",
             uri: "https://api.ipify.org?format=json",
-            headers: [ 
-//                   Host: "ifconfig.co",               
+            headers: [            
                    Accept: "application/json"
             ]
         ]
@@ -676,7 +701,7 @@ void getPollValues(){
     }
     
     //v2.3.4.126 data
-    if(location.hub.firmwareVersionString >= "2.3.4.126" && hubMeshPoll){
+    if(location.hub.firmwareVersionString >= "2.3.4.126" && extNetData){
         params =
         [
                 uri    : "http://127.0.0.1:8080",
@@ -701,7 +726,7 @@ void getPollValues(){
     
     if (debugEnable) log.debug "tempPollRate: $tempPollRate"
     if(location.hub.firmwareVersionString >= "2.3.3.120") checkZigStack()
-    if (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable) {
+    if (pollingCheck()) {
         if(tempPollRate == null){
             device.updateSetting("tempPollRate",[value:300,type:"number"])
             runIn(300,"getPollValues")
@@ -1113,14 +1138,23 @@ void updateCheck(){
 
 @SuppressWarnings('unused')
 void updChkCallback(resp, data) {
+    if(rawUpdateNotice == null){
+        rawUpdateNotce = true
+        device.updateSetting("rawUpdateNotice",[value:"true",type:"bool"])
+    }
     try {
         if (resp.status == 200) {
-           def jSlurp = new JsonSlurper()
-           Map resMap = (Map)jSlurp.parseText((String)resp.data)
-           updateAttr("hubUpdateStatus",resMap.status)
-           if(resMap.version)
-		        updateAttr("hubUpdateVersion",resMap.version)
-           else updateAttr("hubUpdateVersion",location.hub.firmwareVersionString)
+            def jSlurp = new JsonSlurper()
+            Map resMap = (Map)jSlurp.parseText((String)resp.data)
+            if(rawUpdateNotice) 
+                updateAttr("hubUpdateStatus",resMap.status)
+            else if(resMap.status == "NO_UPDATE_AVAILABLE")
+                updateAttr("hubUpdateStatus","Current")
+            else
+                updateAttr("hubUpdateStatus","Update Available")
+            if(resMap.version)
+                updateAttr("hubUpdateVersion",resMap.version)
+            else updateAttr("hubUpdateVersion",location.hub.firmwareVersionString)
         }
     } catch(ignore) {
        updateAttr("hubUpdateStatus","Status Not Available")
@@ -1413,7 +1447,7 @@ void checkPolling(){
         nextPollTime = 0
 	if(nextPollTime > new Date().getTime())
 		pollFound = true
-	if(!pollFound && (tempPollEnable || freeMemPollEnabled || cpuPollEnabled || dbPollEnabled || publicIPEnable || checkZwVersion || ntpCkEnable || subnetEnable))
+	if(!pollFound && pollingCheck())
         getPollValues()
 
 }

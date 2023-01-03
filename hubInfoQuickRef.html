@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+	<title>Hub Information Driver Quick Reference</title>
+	<style>
+		h1, h2, h3 { color: RoyalBlue;}
+	</style>
+</head>
+<body>
+	<div>
+		<h1>Hub Information Driver Quick Reference</h1>
+		<div>
+			<h2>Commands</h2>
+			<ul>
+				<li><b>Configure - Sets the initial values for the base attributes</b></li>
+					<ul>
+						<li>latitude</li>
+						<li>longitude</li>
+						<li>timeZone</li>
+						<li>zipCode<li>
+						<li>temperatureScale</li>
+						<li>id</li>
+						<li>name</li>
+						<li>data</li>
+						<li>zigbeeId</li>
+						<li>zigbeeEui</li>
+						<li>hardwareID</li>
+						<li>type</li>
+						<li>localIP</li>
+						<li>localSrvPortTCP</li>
+						<li>firmwareVersionString</li>
+						<li>uptime</li>
+						<li>locationName</li>
+						<li>locationId</li>
+						<li>hubModel</li>
+					</ul>
+				<li><b>HIA Update - </b>Allows the Hub Information Aggregation app to override the <i>hmtl</i> attribute</li>
+				<li><b>Initialize - </b>Runs at hub start up to check polling status and re-run <i>Configure</i></li>
+				<li><b>Reboot - </b>If the preference is set to allow, this will reboot the hub (command is affected by Hub Security)</li>
+				<li><b>Refresh - </b>Forces a run of the polling cycle which refreshes the attributes not covered by <i>Configure</i></li>
+				<li><b>Shutdown - </b>If the preference is set to allow, this will shutdown the hub (command is affected by Hub Security)</li>
+			</ul>
+		</div>
+		
+		<div>
+			<h2>Preferences</h2>
+			<p>Most of these options require the driver to make a separate call to the hub gather the information, so it is recommended that you only 
+				select the data that you are actively interested.  Additional note, the CPU load information is a 5 minute average so it recommended that
+				polling be set at no less than 5 minutes (300 seconds).</p>
+			<ul>
+				<li><b>Enable debug logging? -</b> Creates Debug Entries in the HE Log for 30 minutes</li>
+				<li><b>Suppress Warn Level Logging -</b> Don't create <i>Warn</i>ing log entries (most are simply informational)</li>
+    			<li><b>Enable Temperature Polling -</b> Request current CPU temperature (attributes: temperatureF, temperatureC, temperature)</li>
+    			<li><b>Enable Free Memory Polling -</b> Request available free memory (attribute: freeMemory)</li>
+    			<li><b>Enable CPU Load Polling -</b> Request CPU load information (attributes: cpuLoad, cpuPct)</li>
+    			<li><b>Enable DB Size Polling -</b> Request DB size (attribute: dbSize)</li>
+    			<li><b>Enable Querying the cloud to obtain your Public IP Address? -</b> Hit an external site to obtain the external IP address (attribute: publicIP )</li>
+    			<li><b>Enable Display of Max Event/State Days Setting -</b> Request the system defaults for maximum days event and state changes are logged (attributes: maxEvtDays,maxStateDays) </li>
+    			<li><b>Enable HTML Attribute Creation? -</b> Create a custom attribute for display on a tile when the polling runs (attribute: html)</li>
+    			<li><b>Template file for HTML attribute -</b> A file in the HE File Manager that contains information to build the html attribute</li>
+    			<li><b>Force Update of ZWave Version Attribute -</b> Request information on the ZWave Version on poll instead of just at start up (attributes: zwaveVersion, zwaveSDKVersion)</li>
+    			<li><b>Never Run ZWave Version Update -</b> Do not poll for ZWave information (the poll used to lock up C5, C4, and C3 hubs)</li>
+    			<li><b>Check NTP Server on Poll -</b> Request the server address used for time synchronization (attribute: ntpServer)</li>
+    			<li><b>Check for additional Subnets on Poll -</b> Check for secondary subnets (attribute: ipSubnetsAllowed)</li>
+    			<li><b>Include Hub Mesh Data -</b> Map data for any hubs participating in HubMesh (attributes: hubMeshData, hubMeshCount)</li>
+    			<li><b>Include Expanded Network Data -</b> HE v2.3.4.126 made available some addition network related data (attributes: connectType (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork)</li>
+    			<li><b>Date/Time Format for Sunrise/Sunset -</b> Simple Date Time Format string  (attributes: sunrise, sunset)</li>
+    			<li><b>Date/Time Format for Last Update -</b> Simple Date Time Format string  (attribute: lastUpdated)</li>
+    			<li><b>Separator for Formatted Uptime -</b> Character/string to place between the formatted time segments (attribute: formattedUptime)</li>
+    			<li><b>Suppress <i>data</i> attribute if Zigbee is null -</b> don't create attribute <i>data</i> if the Zigbee radio is off (attribute: data)</li>
+				<li><b>Remove unused attributes (Requires HE >= 2.2.8.141) -</b> removes any attribute not currently in an update/polled status</li>
+    			<li><b>Log all attribute changes -</b> Create an <i>Info</i>rmation level log entry for every attribute update, regardless of whether the value changes</li>
+    			<li><b>Allow Hub to be shutdown or rebooted -</b> Enable or disable the command for the driver to shutdown or reboot the hub</li>
+    			<li><b>Hub Security Enabled -</b> If Hub Security is turned on, enable this option to enter the Username and Password</li>
+				<ul>
+        			<li><b>Hub Security Username -</b> Username to allow login to the hub</li>
+        			<li><b>Hub Security Password -</b> Password to allow login to the hub</li>
+				</ul>
+        		<li><b>Polling Rate (seconds) Default:300 -</b> Frequency to query the hub </li>
+    			<li><b>Poll rate (in seconds) for FW Update Check (Default:6000, Disable:0) -</b> Frequency to check Hubitat for firmware updates</li>
+				<ul>
+        			<li><b>Use raw update notice -</b> Use the update text returned from the query or the interpreted version (NO_UPDATE_AVAILABLE-->Current, UPDATE_AVAILABLE-->Update Available)</li>
+				</ul>
+		</div>
+
+</body>
+</html>

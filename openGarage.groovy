@@ -133,7 +133,7 @@ void poll(){
             if (resp.getStatus() == 200){
                 if (debugEnable) 
                     log.debug resp.data
-                processJc(respToMap(resp.Data))
+                processJc(respToMap(resp.data))
             }
         }catch (ex) {
             log.error "$ex"

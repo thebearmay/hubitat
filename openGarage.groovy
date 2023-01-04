@@ -28,16 +28,16 @@ metadata {
 	) {
         capability "Actuator"
         capability "Polling"
+        capability "GarageDoorControl"
         
         attribute "door", "string"
         attribute "distance", "number"
         attribute "vehStatus", "string"
         attribute "rssi","number"
         
-        command "close"
+        //command "close"
         command "toggleDoor"
         command "rebootDevice"
-        //command "respToMap", ["string"]
     }   
 }
 
@@ -68,12 +68,26 @@ def updated(){
     
 }
 
+void open() {
+    if(debugEnable) log.debug "opening.."
+    httpGet(
+        [
+            uri: "http://$devIP",
+            path: "/cc?dkey=$devPwd&open=1",
+            headers: [            
+                   Accept: "application/json"
+            ]
+        ]
+    ) { resp -> }
+    runIn(10,"poll")
+  
+}
 
 void close() {
     if(debugEnable) log.debug "closing.."
     httpGet(
         [
-            uri: "http:$devIP",
+            uri: "http://$devIP",
             path: "/cc?dkey=$devPwd&close=1",
             headers: [            
                    Accept: "application/json"

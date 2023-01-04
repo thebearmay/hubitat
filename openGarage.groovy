@@ -174,11 +174,11 @@ HashMap respToMap(String rData){
 
 void processJc(dMap){
     updateAttr("distance", dMap.dist, "cm")
-    if(dMap.door == "1")
+    if(dMap.door.toInteger() == 1)
         updateAttr("door","open")
     else
         updateAttr("door", "closed")
-    if(dMap.vehicle == "1")
+    if(dMap.vehicle.toInteger() == 1)
         updateAttr("vehStatus", "present")
     else 
         updateAttr("vehStatus", "not present")

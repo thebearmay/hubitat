@@ -157,6 +157,11 @@ void poll(){
             log.error "$ex"
         }
     }
+    
+    if(pollRate > 0)
+        runIn(pollRate, "poll")
+    else
+        unschedule("poll")
 }
 
 HashMap respToMap(String rData){

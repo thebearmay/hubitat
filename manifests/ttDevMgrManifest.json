@@ -1,10 +1,10 @@
 {
   "packageName": "Tile Template Device Manager",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-09-05",
-  "releaseNotes": "0.0.5 - add @room\n0.0.4 - add file list for template selection\n0.0.3 - force HTML attribute refresh on save of template assign, add child refreshSlot command",
+  "dateReleased": "2023-01-05",
+  "releaseNotes": "0.0.7 - add filter option for template selection\n0.0.5 - add @room\n0.0.4 - add file list for template selection\n0.0.3 - force HTML attribute refresh on save of template assign, add child refreshSlot command",
   "apps": [
     {
       "id": "45d36b99-8d66-4c2d-9ba9-ffa61ba1e749",

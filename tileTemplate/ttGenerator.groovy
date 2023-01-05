@@ -13,9 +13,10 @@
  *    ===========       ===========   =============================================================
  *    2022-08-26        thebearmay    add a check for saveAs not null before displaying save button
  *    2022-08-30        thebearmay    add option to generate multi-device templates
+ *    2023-01-05        thebearmay    check for invalid characters in save file name
  */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 
 definition (
@@ -150,6 +151,7 @@ def templatePreview(){
           paragraph "<textarea disabled='true' cols='70' rows='15'>${retMap.template}</textarea>"
           input "saveAs", "text", title: "Enter Name for Template", multiple: false, required: false, submitOnChange: true, width:4
           if(saveAs != null) {
+              app.updateSetting("saveAs",[value:toCamelCase(saveAs),type:"text"])
               input "saveTemplate", "button", title:"Save Template"
               if(state.saveReq == true) {
                   writeFile("$saveAs","${retMap.template}")
@@ -159,6 +161,25 @@ def templatePreview(){
       }
     }
 }
+
+String toCamelCase(init) {
+    if (init == null)
+        return null;
+
+    String ret = ""
+    List word = init.split(" ")
+    if(word.size == 1)
+        return init
+    word.each{
+        ret+=Character.toUpperCase(it.charAt(0))
+        ret+=it.substring(1).toLowerCase()        
+    }
+    ret="${Character.toLowerCase(ret.charAt(0))}${ret.substring(1)}"
+
+    if(debugEnabled) log.debug "toCamelCase return $ret"
+    return ret;
+}
+
 
 HashMap buildTable() {
     String htmlWork = '<table>\n'

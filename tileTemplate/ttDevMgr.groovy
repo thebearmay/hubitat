@@ -112,10 +112,9 @@ def templateSelect(){
           int i = 1
 
           List<String> fList 
-          input "mustContain", "string", title:"Filter to Templates that contain", required:false, submitOnUpdate: true
+          input "mustContain", "string", title:"Filter to Templates that contain", required:false, submitOnUpdate: true, width:4
           input "applyFilter", "button", title: "Apply Filter"
           if(state.afPushed) {
-            //templateSelect()
             state.afPushed = false
           }
              

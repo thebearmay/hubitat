@@ -15,9 +15,10 @@
  *    2022-08-29        thebearmay    populate attribute on save, add refreshSlot from child
  *    2022-08-30        thebearmay    add file list for templates
  *    2022-09-05        thebearmay    add @room
+ *    2023-01-05        thebearmay    Add filter option for template assignment
 */
 
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.7'  }
 
 
 definition (
@@ -109,7 +110,20 @@ def templateSelect(){
 	  section(""){
           unsubscribe()
           int i = 1
-          List<String> fList = listFiles()
+
+          List<String> fList 
+          input "mustContain", "string", title:"Filter to Templates that contain", required:false, submitOnUpdate: true
+          input "applyFilter", "button", title: "Apply Filter"
+          if(state.afPushed) {
+            //templateSelect()
+            state.afPushed = false
+          }
+             
+          if(mustContain != null)
+              fList = listFiles("$mustContain")
+          else
+              fList = listFiles()
+          if(fList)
           qryDevice.each{
               input "template${it.deviceId}", "enum", title: "<b>Template for $it</b>", required: false, width:5, submitOnUpdate:true, options:fList
               input "slot${it.deviceId}","number", title:"<b>Slot Number</b>", required: false, width:5, defaultValue:i, submitOnUpdate:true
@@ -217,7 +231,7 @@ void refreshSlot(sNum) {
 @SuppressWarnings('unused')
 String readFile(fName){
     if(security) cookie = getCookie()
-    uri = "http://${location.hub.localIP}:8080/local/${fName}"
+    uri = "http://127.0.0.1:8080/local/${fName}"
 
     def params = [
         uri: uri,
@@ -254,9 +268,9 @@ String readFile(fName){
 }
 
 @SuppressWarnings('unused')
-List<String> listFiles(){
+List<String> listFiles(filt = null){
+
     if(security) cookie = getCookie()
-    // Adapted from BptWorld's Community Post 89466/4
     if(debugEnabled) log.debug "Getting list of files"
     uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
     def params = [
@@ -272,7 +286,12 @@ List<String> listFiles(){
                 if(logEnable) log.debug "Found the files"
                 def json = resp.data
                 for (rec in json.files) {
-                    fileList << rec.name
+                    if(filt != null){
+                        if(rec.name.contains("$filt")){
+                            fileList << rec.name
+                        }
+                    } else
+                        fileList << rec.name
                 }
             } else {
                 //
@@ -323,6 +342,10 @@ def appButtonHandler(btn) {
         case "checkSubs":
             state.checkSubsPushed = true
             checkSubscriptions()
+            break
+        case "applyFilter":
+            state.afPushed = true
+            templateSelect()
             break
         default: 
             log.error "Undefined button $btn pushed"

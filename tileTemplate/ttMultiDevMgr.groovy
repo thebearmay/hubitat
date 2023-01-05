@@ -14,9 +14,10 @@
  *    2022-08-30        thebearmay    add file list and template checking
  *    2022-09-05        thebearmay    add @room
  *    2022-09-18        thebearmay    handle template read error
+ *    2023-01-05        thebearmay    add a filter for template selection
 */
 
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.7'  }
 
 
 definition (
@@ -60,8 +61,20 @@ def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main") {
+                
                 state.validTemplate = false
-                List<String> fList = listFiles()
+                List<String> fList 
+                input "mustContain", "string", title:"Filter to Templates that contain", required:false, submitOnUpdate: true, width:4
+                input "applyFilter", "button", title: "Apply Filter"                
+                if(state.afPushed) {
+                    state.afPushed = false
+                }
+             
+                if(mustContain != null)
+                    fList = listFiles("$mustContain")
+                else
+                    fList = listFiles()
+                
                 input "templateName", "enum", title: "<b>Template to Process</b>", required: true, width:5, submitOnUpdate:true, options:fList
                 input "templateCheck", "button", title:"Check Template"
                 if(templateName != null && state?.tCheck == true) {
@@ -248,9 +261,8 @@ String readFile(fName){
 }
 
 @SuppressWarnings('unused')
-List<String> listFiles(){
+List<String> listFiles(filt = null){
     if(security) cookie = getCookie()
-    // Adapted from BptWorld's Community Post 89466/4
     if(debugEnabled) log.debug "Getting list of files"
     uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
     def params = [
@@ -266,7 +278,12 @@ List<String> listFiles(){
                 if(logEnable) log.debug "Found the files"
                 def json = resp.data
                 for (rec in json.files) {
-                    fileList << rec.name
+                    if(filt != null){
+                        if(rec.name.contains("$filt")){
+                            fileList << rec.name
+                        }
+                    } else
+                        fileList << rec.name
                 }
             } else {
                 //
@@ -312,6 +329,10 @@ def appButtonHandler(btn) {
             break
         case "templateCheck":
             state.tCheck = true
+            break
+        case "applyFilter":
+            state.afPushed = true
+            mainPage()
             break
         default: 
             log.error "Undefined button $btn pushed"

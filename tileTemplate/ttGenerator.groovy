@@ -64,7 +64,7 @@ def mainPage(){
 	    	section("Main") {
                 state.saveReq = false
                 input "qryDevice", "capability.*", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
-                log.debug "$qryDevice"
+                
                 if (qryDevice){        
                         href "attrSelect", title: "Select Attributes", required: true
                         href "attrRepl", title: "Alternate Text for Attributes", required: false
@@ -195,7 +195,7 @@ HashMap buildTable() {
         }
     }
     sortedList=attrList.sort()
-        log.debug "$sortedList"
+       
     sortedList.each{
         replacement = "repl$it"
         if(settings["$replacement"]) {

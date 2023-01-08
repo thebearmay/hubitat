@@ -29,7 +29,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.14"}
+static String version() {return "0.0.15"}
 
 metadata {
     definition (

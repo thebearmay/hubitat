@@ -192,7 +192,7 @@ void dataRefresh(retData){
                 break
             default:
                 unit=""
-                if(forceInt && it.value.isNumber()) it.value = it.value.toFloat().toInteger()
+                if(forceInt && it.value != null && it.value.isNumber()) it.value = it.value.toFloat().toInteger()
                 //else log.warn "Return Data Mismatch, Key: ${it.key} Value: ${it.value}"
                 break
         }

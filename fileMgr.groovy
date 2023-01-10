@@ -77,6 +77,7 @@ metadata {
                             [name:"oName", type:"STRING",title:"File Manager Name"]
                            ]  
         command "deleteFile", [[name:"f2Delete", type:"STRING", title: "Name of File to Delete"]]
+        command "readExternalFile",[[name:"fUrl", type:"STRING", title: "Path of file to read"]]
     }
 }
         
@@ -330,6 +331,10 @@ Boolean xferFile(fileIn, fileOut) {
     retStat = writeFile(fileOut, fileBuffer)
     if(logResponses) log.info "File xFer Status: $retStat"
     return retStat
+}
+
+def readExternalFile(fName){
+    updateAttr("fileContent",readExtFile(fName))
 }
 
 @SuppressWarnings('unused')

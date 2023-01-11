@@ -18,9 +18,10 @@
  *    2022-04-06        thebearmay    use local file space to allow tiles over 1024
  *    2022-04-12        thebearmay    typo in memory warning
  *    2022-12-30        thebearmay    error when removing child device that doesn't exist
+ *    2023-01-11        thebearmay    allow for V3
  */
 
-static String version()	{  return '1.0.8'  }
+static String version()	{  return '1.0.9'  }
 
 
 definition (
@@ -67,12 +68,12 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main")
 		    {
-                input "qryDevice", "device.HubInformation", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
+                input "qryDevice", "device.HubInformatin,device.HubInformationV3", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
                 if (qryDevice != null){
                     hubDevCheck = true
-                    qryDevice.each{
-                        if(it.typeName != 'Hub Information') hubDevCheck = false
-                    }
+                   // qryDevice.each{
+                   //     if(it.typeName != 'Hub Information') hubDevCheck = false
+                   // }
                     if(hubDevCheck) {
                         href "hubAttrSelect", title: "Select Attributes", required: true
                         href "attrRepl", title: "Alternate Text for Attributes", required: false

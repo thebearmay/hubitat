@@ -11,6 +11,7 @@
   {
      "id":"ef5dfb98-fc1b-4dcd-9629-9d5e137a21fc",
      "name":"Hub Information Driver v3",
+     "namespace": "thebearmay",
      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoV3.groovy",
      "required":"true"
   }

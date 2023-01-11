@@ -255,6 +255,8 @@ void installed() {
 void initialize() {
     restartCheck()
     updated()
+    if(security) cookie = getCookie()
+    freeMemoryReq(cookie)
     baseData()
 }
 
@@ -397,6 +399,7 @@ void everyPoll(){
         updateAttr("sunrise", sunrise.getTime())
 	    updateAttr("sunset", sunset.getTime())  
     }
+    updateAttr("localIP",location.hub.localIP)
     
     if (attribEnable) createHtml()
     formatUptime()

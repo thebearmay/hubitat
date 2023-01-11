@@ -157,6 +157,7 @@ metadata {
         attribute "localSrvPortTCP", "string"
         attribute "uptime", "number"
         attribute "lastUpdated", "string"
+        attribute "lastPoll", "string"
         attribute "lastHubRestart", "string"
         attribute "firmwareVersionString", "string"
         attribute "timeZone", "string"
@@ -307,7 +308,7 @@ void poll1(){
 	}
 	if(pollRate1 > 0)
 		runIn(pollRate1*60, "poll1")
-    everyPoll()
+    everyPoll("poll1")
 }
 
 void poll2(){
@@ -317,7 +318,7 @@ void poll2(){
 	}
 	if(pollRate2 > 0)
 		runIn(pollRate2*60, "poll2")
-    everyPoll()
+    everyPoll("poll2")
 }
 
 void poll3(){
@@ -327,7 +328,7 @@ void poll3(){
 	}
 	if(pollRate3*60 > 0)
 		runIn(pollRate3, "poll3")
-    everyPoll()
+    everyPoll("poll3")
 }
 
 void poll4(){
@@ -337,7 +338,7 @@ void poll4(){
 	}
 	if(pollRate4 > 0)
 		runIn(pollRate4*60*60, "poll4")
-    everyPoll()
+    everyPoll("poll4")
 }
 
 void baseData(dummy=null){
@@ -348,8 +349,11 @@ void baseData(dummy=null){
     locProp.each{
         if(it != "timeZone")
             updateAttr(it, location["${it}"])
-        else
-            updateAttr("timeZone",location["timeZone"].toString().substring(location["timeZone"].toString().indexOf("TimeZone")+8))
+        else {
+            tzWork=location["timeZone"].toString().substring(location["timeZone"].toString().indexOf("TimeZone")+8)
+            tzMap= (Map) evaluate(tzWork.replace("=",":\"").replace(",","\",").replace("]]","\"]"))
+            updateAttr("timeZone",JsonOutput.toJson(tzMap))
+        }
     }
     
     def myHub = location.hub
@@ -371,18 +375,10 @@ void baseData(dummy=null){
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
 
-    if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
-    if(updSdfPref == "Milliseconds" || updSdfPref == null) 
-        updateAttr("lastUpdated", new Date().getTime())
-    else {
-        SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
-        updateAttr("lastUpdated", sdf.format(new Date().getTime()))
-    }
-
-    everyPoll()
+    everyPoll("baseData")
 }
 
-void everyPoll(){
+void everyPoll(whichPoll=null){
     updateAttr("currentMode", location.properties.currentMode)
     updateAttr("currentHsmMode", location.hsmStatus)
     
@@ -400,9 +396,21 @@ void everyPoll(){
 	    updateAttr("sunset", sunset.getTime())  
     }
     updateAttr("localIP",location.hub.localIP)
+
+    if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
+    if(updSdfPref == "Milliseconds" || updSdfPref == null) 
+        updateAttr("lastUpdated", new Date().getTime())
+    else {
+        SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
+        updateAttr("lastUpdated", sdf.format(new Date().getTime()))
+    }
+    if(whichPoll != null)
+        updateAttr("lastPoll", whichPoll)
     
-    if (attribEnable) createHtml()
     formatUptime()
+      
+    if (attribEnable) createHtml()
+    
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
@@ -1269,6 +1277,6 @@ void logsOff(){
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
-[parm14:[desc:"Base Data",attributeList:"ToDo",method:"baseData"]]]
+[parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]]]
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

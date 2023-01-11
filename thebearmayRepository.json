@@ -257,6 +257,19 @@
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/roomInfoManifest.json",
       "description":"Provides a JSON summary of all Rooms and their associated devices and images."
+    },
+    {
+      "id":"b2af0b32-74c4-473a-ac91-69b95a9d3307",
+      "name":"Hub Information Driver v3",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubInfoV3Manifest.json",
+      "description":"Rewrite of the original Hub Information Driver.  Driver includes 40+ attributes related to the operation and general fitness of the hub.",
+      "tags":[
+        "Dashboards",
+        "Misc. Devices",
+        "Monitoring",
+        "Tools & Utilities"
+       ]
     }
   ]
 }

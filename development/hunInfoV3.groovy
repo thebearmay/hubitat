@@ -239,7 +239,7 @@ preferences {
     input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss", width:4)
     input("updSdfPref", "enum", title: "Date/Time Format for Last Updated", options:sdfList, defaultValue:"Milliseconds", width:4)
     input("upTimeSep", "string", title: "Separator for Formatted Uptime", defaultValue: ",", width:4)
-	input("pollRate1", "number", title: "Poll Rate 1 in minutes", defaultValue:0, submitOnChange: true, width:4) 
+	input("pollRate1", "number", title: "Poll Rate 1 in minutes", defaultValue:0, submitOnChange: true, width:4, constraints:[[NUMBER]]) 
 	input("pollRate2", "number", title: "Poll Rate 2 in minutes", defaultValue:0, submitOnChange: true, width:4) 
 	input("pollRate3", "number", title: "Poll Rate 3 in minutes", defaultValue:0, submitOnChange: true, width:4) 
     input("pollRate4", "number", title: "Poll Rate 4 in <b style='background-color:red'>&nbsp;hours&nbsp;</b>", defaultValue:0, submitOnChange: true, width:4) 
@@ -278,7 +278,8 @@ void updated(){
                 state["poll${settings["${it.key}"]}"].add("${pMap.method}")
             }
         }
-	}
+    }    
+    
 	if(pollRate1 > 0)
 		runIn(pollRate1*60, "poll1")
 	if(pollRate2 > 0)
@@ -874,7 +875,7 @@ void getExtNetwork(resp, data){
     }
 }
 
-void updateCheckReq(){
+void updateCheck(){
     if(security) cookie = getCookie()
     updateCheckReq(cookie)
 }

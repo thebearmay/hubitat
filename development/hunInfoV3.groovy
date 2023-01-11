@@ -281,7 +281,28 @@ void updated(){
                 state["poll${settings["${it.key}"]}"].add("${pMap.method}")
             }
         }
-    }    
+    }  
+    //Enforce the integer value 
+    try{
+        if(pollRate1.toString().contains(".")){
+            pollRate1 = pollRate1.toString().substring(0,pollRate1.toString().indexOf(".")).toInteger()
+            device.updateSetting("pollRate1",[value:pollRate1,type:"number"])
+        }       
+        if(pollRate2.toString().contains(".")){
+            pollRate2 = pollRate2.toString().substring(0,pollRate2.toString().indexOf(".")).toInteger()
+            device.updateSetting("pollRate2",[value:pollRate2,type:"number"])
+        }
+        if(pollRate3.toString().contains(".")){
+            pollRate3 = pollRate3.toString().substring(0,pollRate3.toString().indexOf(".")).toInteger()
+            device.updateSetting("pollRate3",[value:pollRate3,type:"number"])
+        }
+        if(pollRate4.toString().contains(".")){
+            pollRate4 = pollRate4.toString().substring(0,pollRate4.toString().indexOf(".")).toInteger()
+            device.updateSetting("pollRate4",[value:pollRate4,type:"number"])
+        }        
+    } catch (ex) {
+        log.debug ex
+    }
     
 	if(pollRate1 > 0)
 		runIn(pollRate1*60, "poll1")
@@ -903,6 +924,7 @@ void updateCheckReq(cookie){
 
 @SuppressWarnings('unused')
 void getUpdateCheck(resp, data) {
+    if(debugEnable) log.debug "update check: ${resp.status}"
     try {
         if (resp.status == 200) {
             def jSlurp = new JsonSlurper()

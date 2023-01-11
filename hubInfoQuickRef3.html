@@ -1,14 +1,73 @@
 <!doctype html>
 <html>
 <head>
-	<title>Hub Information Driver v3 Quick Reference</title>
+	<title>Hub Information Driver Quick Reference</title>
 	<style>
 		h1, h2, h3 { color: RoyalBlue;}
 	</style>
 </head>
 <body>
 	<div>
-  COMING SOON
-  </div>
+		<h1>Hub Information Driver Quick Reference</h1>
+		<div>
+			<h2>Commands</h2>
+			<ul>
+				<li><b>Configure - </b>Updates the preference settings and the base data</li>
+				<li><b>HIA Update - </b>Allows the Hub Information Aggregation app to override the <i>hmtl</i> attribute</li>
+				<li><b>Initialize - </b>Runs at hub start up, updates the preference settings and restarts all polling</li>
+				<li><b>Reboot - </b>If the preference is set to allow, this will reboot the hub (command is affected by Hub Security)</li>
+				<li><b>Refresh - </b>Forces a run of all polling cycles to refreshes all polled attributes (including base data if not polled independently)</li>
+				<li><b>Shutdown - </b>If the preference is set to allow, this will shutdown the hub (command is affected by Hub Security)</li>
+				<li><b>Update Check - </b>Force an unscheduled check for a Firmware Update</li>
+			</ul>
+		</div>
+		
+		<div>
+			<h2>Preferences</h2>
+			<p>Most of these options require the driver to make a separate call to the hub gather the information, so it is recommended that you only 
+				select the data that you are actively interested.  Additional note, the CPU load information is a 5 minute average so it recommended that
+				polling be set at no less than 5 minutes.  There are 4 polling queues available, the attribute selection preferences will allow designation of queues 0-4, zero is the do not report setting.</p>
+			<ul>
+				<li><b>Enable debug logging? -</b> Creates Debug Entries in the HE Log for 30 minutes</li>
+				<li><b>Suppress Warn Level Logging -</b> Don't create <i>Warn</i>ing log entries (most are simply informational)</li>
+    			<li><b>CPU Temperature Polling-</b> Request current CPU temperature (attributes: temperatureF, temperatureC, temperature)</li>
+    			<li><b>Free Memory Polling -</b> Request available free memory (attribute: freeMemory)</li>
+    			<li><b>CPU Load Polling -</b> Request CPU load information (attributes: cpuLoad, cpuPct)</li>
+    			<li><b>DB Size Polling -</b> Request DB size (attribute: dbSize)</li>
+    			<li><b>Public IP Address -</b> Hit an external site to obtain the external IP address (attribute: publicIP )</li>
+    			<li><b>Max Event/State Days Setting -</b> Request the system defaults for maximum days event and state changes are logged (attributes: maxEvtDays,maxStateDays) </li>
+				<li><b>Zwave Version -</b> Request the Zwave and SDK version levels (attributes: zwaveVersion, zwaveSDKVersion)
+    			<li><b>Time Sync Server Address -</b> Request the server address used for time synchronization (attribute: ntpServer)</li>
+    			<li><b>Additional Subnets -</b> Check for secondary subnets (attribute: ipSubnetsAllowed)</li>
+    			<li><b>Hub Mesh Data -</b> Map data for any hubs participating in HubMesh (attributes: hubMeshData, hubMeshCount)</li>
+    			<li><b>Expanded Network Data -</b> HE v2.3.4.126 made available some addition network related data (attributes: connectType (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork)</li>
+				<li><b>Check for Firmware Update -</b> Check Hubitat.com for firmware updates (attributes: hubUpdateStatus, hubUpdateVersion)</li>			
+				<li><b>Zwave Status & Hub Alerts -</b> Checks the hub UI for Zigbee/ZWave status and Hub Alert Messages (attributes: hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse)</li>
+				<li><b>Base Data -</b> Base data is that data which seldom changes so by default it only is refreshed at driver initialization - normally at hub reboot. (attributes: firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode)</li>
+    			<li><b>Enable HTML Attribute Creation? -</b> Create a custom attribute for display on a tile when the polling runs (attribute: html)</li>
+    			<li><b>Template file for HTML attribute -</b> An editable text file in the HE File Manager that contains information to build the html attribute</li>
+    			<li><b>Log all attribute changes -</b> Create an <i>Info</i>rmation level log entry for every attribute update, regardless of whether the value changes</li>
+    			<li><b>Allow Hub to be shutdown or rebooted -</b> Enable or disable the command for the driver to shutdown or reboot the hub</li>
+    			<li><b>Hub Security Enabled -</b> If Hub Security is turned on, enable this option to enter the Username and Password</li>
+				<ul>
+        			<li><b>Hub Security Username -</b> Username to allow login to the hub</li>
+        			<li><b>Hub Security Password -</b> Password to allow login to the hub</li>
+				</ul>								
+    			<li><b>Date/Time Format for Sunrise/Sunset -</b> Simple Date Time Format string  (attributes: sunrise, sunset)</li>
+    			<li><b>Date/Time Format for Last Updated -</b> Simple Date Time Format string  (attribute: lastUpdated)</li>
+    			<li><b>Separator for Formatted Uptime -</b> Character/string to place between the formatted time segments (attribute: formattedUptime)</li>
+				<li><b>Poll Rate <i>x</i> in minutes - </b> The number minutes to set the polling interval for the associated queue</li>
+				<li><b>Poll Rate 4 in <span style='background-color:red;font-weight:bold;color:black'>&nbsp;hours&nbsp;</span>- </b> The number hours to set the polling interval for queue 4</li>
+			</ul>
+		</div>
+		<div>
+			<h2>Recommendations</h2>
+			<ul>
+				<li>Only poll attributes that are of value or interest to you, each selection will utilize some CPU time to process.</li>
+				<li>Most attributes do not change (or report change) in less than 5 minutes intervals, having a polling interval that is shorter doesn't make them report faster and may impact hub performance if set too often.
+				<li>Poll queue 4 interval is in hours because some attributes, i.e. Firmware Update Availability, have very long intervals before they change - sometimes weeks. Using the hour interval saves in the math needed by you (although you are welcome to use one of the minutes interval queues if you desire).
+		</div<
+
+	<div>
 </body>
 </html>

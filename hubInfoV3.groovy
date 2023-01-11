@@ -17,6 +17,7 @@
  *    2020-12-07  thebearmay     Original version 0.1.0
  *    ..........
  *    2023-01-10  thebearmay     version 3 rewrite ** minFwVersion = "2.2.8.141" **
+ *                               v3.0.1 - Poll 4 error
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -24,7 +25,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.0"}
+static String version() {return "3.0.1"}
 
 metadata {
     definition (
@@ -266,7 +267,7 @@ void poll3(){
 
 void poll4(){
     if(security) cookie = getCookie()
-	state.poll1.each{
+	state.poll4.each{
 		this."$it"(cookie)
 	}
 	if(pollRate4 > 0)

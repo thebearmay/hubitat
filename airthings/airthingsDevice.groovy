@@ -22,6 +22,7 @@
  *    30Nov2022    thebearmay    add option to force Integer values, add mold attribute
  *    16Dec2022    thebearmay    handle mismatched return data elements
  *    22Dec2022    thebearmay    hub security 
+ *    11Jan2023    thebearmay    handle a data value error
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -29,7 +30,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.15"}
+static String version() {return "0.0.16"}
 
 metadata {
     definition (
@@ -192,8 +193,12 @@ void dataRefresh(retData){
                 break
             default:
                 unit=""
-                if(forceInt && it.value != null && it.value.isNumber()) it.value = it.value.toFloat().toInteger()
-                //else log.warn "Return Data Mismatch, Key: ${it.key} Value: ${it.value}"
+                try{
+                    it.value = it.value.toFloat().toInteger()
+                } catch(e) { 
+                    log.warn "Return Data Mismatch, Key: ${it.key} Value: ${it.value} - value will be set to zero"
+                    it.value = 0
+                }
                 break
         }
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm') || it.key == "mold") //unit will be null for any values not tracked

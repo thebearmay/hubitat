@@ -1,0 +1,18 @@
+{
+ "packageName":"Hub Information Driver v3",
+ "author":"Jean P. May, Jr.",
+ "version":"3.0.0",
+ "minimumHEVersion":"2.2.8.141",
+ "dateReleased":"2023-01-11",
+ "releaseNotes":"Rewrite of the original Hub Information Driver",
+ "documentationLink":"https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html",
+ "communityLink":"https://community.hubitat.com/t/coming-soon-hub-information-driver-v3/109902",
+ "drivers": [
+  {
+     "id":"ef5dfb98-fc1b-4dcd-9629-9d5e137a21fc",
+     "name":"Hub Information Driver v3",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoV3.groovy",
+     "required":"true"
+  }
+  ]
+}

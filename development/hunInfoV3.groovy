@@ -255,6 +255,7 @@ void installed() {
 void initialize() {
     restartCheck()
     updated()
+    baseData()
 }
 
 void configure() {
@@ -309,7 +310,7 @@ void poll1(){
 void poll2(){
     if(security) cookie = getCookie()
 	state.poll2.each{
-		this."$it".call(cookie)
+		this."$it"(cookie)
 	}
 	if(pollRate2 > 0)
 		runIn(pollRate2*60, "poll2")
@@ -319,7 +320,7 @@ void poll2(){
 void poll3(){
     if(security) cookie = getCookie()
 	state.poll3.each{
-		this."$it".call(cookie)
+		this."$it"(cookie)
 	}
 	if(pollRate3*60 > 0)
 		runIn(pollRate3, "poll3")
@@ -336,7 +337,7 @@ void poll4(){
     everyPoll()
 }
 
-void baseData(){
+void baseData(dummy=null){
     String model = getHubVersion() // requires >=2.2.8.141
     updateAttr("hubModel", model)
     
@@ -1263,6 +1264,7 @@ void logsOff(){
 [parm10:[desc:"Hub Mesh Data", attributeList:"hubMeshData, hubMeshCount", method:"hubMeshReq"]],
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
-[parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]]]
+[parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
+[parm14:[desc:"Base Data",attributeList:"ToDo",method:"baseData"]]]
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

@@ -21,6 +21,7 @@
  *    2023-01-12                 v3.0.2 - Zigbee status/status2 disagreement handler (happens when radio is shut off without a reboot)
  *                                        Turn off Debug Logs after 30 minutes
  *                                        Add removeUnused method, command and preference
+ *                               v3.0.3 - Add Uptime Descriptor 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -28,7 +29,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.2"}
+static String version() {return "3.0.3"}
 
 metadata {
     definition (
@@ -142,7 +143,8 @@ preferences {
     }
     input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss", width:4)
     input("updSdfPref", "enum", title: "Date/Time Format for Last Updated", options:sdfList, defaultValue:"Milliseconds", width:4)
-    input("upTimeSep", "string", title: "Separator for Formatted Uptime", defaultValue: ",", width:4)
+    input("upTimeSep", "string", title: "Separator for Formatted Uptime", defaultValue: ", ", width:4)
+    input("upTimeDesc", "enum", title: "Uptime Descriptors", defaultValue:"d/h/m/s", options:["d/h/m/s"," days/ hrs/ min/ sec"," days/ hours/ minutes/ seconds"])
 	input("pollRate1", "number", title: "Poll Rate 1 in minutes", defaultValue:0, submitOnChange: true, width:4) 
 	input("pollRate2", "number", title: "Poll Rate 2 in minutes", defaultValue:0, submitOnChange: true, width:4) 
 	input("pollRate3", "number", title: "Poll Rate 3 in minutes", defaultValue:0, submitOnChange: true, width:4) 
@@ -1187,7 +1189,8 @@ void formatUptime(){
             device.updateSetting("upTimeSep",[value:",", type:"string"])
             upTimeSep = ","
         }
-        String attrval = "${days.toString()}d$upTimeSep${hrs.toString()}h$upTimeSep${min.toString()}m$upTimeSep${sec.toString()}s"
+        utD=upTimeDesc.split("/")
+        String attrval = "${days.toString()}${utD[0]}$upTimeSep${hrs.toString()}${utD[1]}$upTimeSep${min.toString()}${utD[2]}$upTimeSep${sec.toString()}${utD[3]}"
         updateAttr("formattedUptime", attrval) 
     } catch(ignore) {
         updateAttr("formattedUptime", "")

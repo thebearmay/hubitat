@@ -20,6 +20,7 @@
  *    2023-01-11                 v3.0.1 - Poll 4 error
  *    2023-01-12                 v3.0.2 - Zigbee status/status2 disagreement handler (happens when radio is shut off without a reboot)
  *                                        Turn off Debug Logs after 30 minutes
+ *                                        Add removeUnused method, command and preference
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -113,6 +114,7 @@ metadata {
         command "reboot"
         command "shutdown"
         command "updateCheck"
+        command "removeUnused"
     }   
 }
 preferences {
@@ -128,10 +130,9 @@ preferences {
             input ("${it.key}", "enum", title: "<div class='tTip'>${pMap.desc}<span class='tTipText'>${pMap.attributeList}</span></div>", options:pollList, submitOnChange:true, width:4, defaultValue:"0")
         }
 	}
-    
+    input("remUnused", "bool", title: "Remove unused attributes", defaultValue: false, submitOnChange: true, width:4)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true, width:4)
     input("alternateHtml", "string", title: "Template file for HTML attribute", submitOnChange: true, defaultValue: "hubInfoTemplate.res", width:4)
-//	input("remUnused", "bool", title: "Remove unused attributes (Requires HE >= 2.2.8.141", defaultValue: false, submitOnChange: true, width:4)
     input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true, width:4)
     input("allowReboot","bool", title: "Allow Hub to be shutdown or rebooted", defaultValue: false, submitOnChange: true, width:4)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
@@ -222,6 +223,7 @@ void updated(){
     if(debugEnable)
         runIn(1800,"logsOff")
 
+    if(remUnused) removeUnused()
 }
 
 void refresh(){
@@ -1202,6 +1204,22 @@ void restartCheck() {
     updateAttr("lastHubRestart", ut)
     SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     updateAttr("lastHubRestartFormatted",sdf.format(upDate))
+}
+
+void removeUnused() {
+	prefList.each{ l1 ->
+        l1.each{
+            if(it.key.contains("parm")  && (settings["${it.key}"] == null || settings["${it.key}"] == "0")) {
+                pMap = (HashMap) it.value
+                if(debugEnable) log.debug "${it.key} poll${settings["${it.key}"]} ${pMap.attributeList}" 
+                aList = pMap.attributeList.split(",")
+                aList.each{
+                    if(debugEnable) log.debug "device.deleteCurrentState(\"${it.trim()}\")"
+                    device.deleteCurrentState("${it.trim()}")
+                }
+            }
+        }
+    }    
 }
 
 @SuppressWarnings('unused')

@@ -17,6 +17,7 @@
 				<li><b>Initialize - </b>Runs at hub start up, updates the preference settings and restarts all polling</li>
 				<li><b>Reboot - </b>If the preference is set to allow, this will reboot the hub (command is affected by Hub Security)</li>
 				<li><b>Refresh - </b>Forces a run of all polling cycles to refresh all polled attributes (including base data if not polled independently)</li>
+				<li><b>Remove Unused - </b>Remove attributes that are not selected for polling</li>
 				<li><b>Shutdown - </b>If the preference is set to allow, this will shutdown the hub (command is affected by Hub Security)</li>
 				<li><b>Update Check - </b>Force an unscheduled check for a Firmware Update</li>
 			</ul>
@@ -30,32 +31,33 @@
 			<ul>
 				<li><b>Enable debug logging? -</b> Creates Debug Entries in the HE Log for 30 minutes</li>
 				<li><b>Suppress Warn Level Logging -</b> Don't create <i>Warn</i>ing log entries (most are simply informational)</li>
-    			<li><b>CPU Temperature Polling-</b> Request current CPU temperature (attributes: temperatureF, temperatureC, temperature)</li>
-    			<li><b>Free Memory Polling -</b> Request available free memory (attribute: freeMemory)</li>
-    			<li><b>CPU Load Polling -</b> Request CPU load information (attributes: cpuLoad, cpuPct)</li>
-    			<li><b>DB Size Polling -</b> Request DB size (attribute: dbSize)</li>
-    			<li><b>Public IP Address -</b> Hit an external site to obtain the external IP address (attribute: publicIP )</li>
-    			<li><b>Max Event/State Days Setting -</b> Request the system defaults for maximum days event and state changes are logged (attributes: maxEvtDays,maxStateDays) </li>
-				<li><b>Zwave Version -</b> Request the Zwave and SDK version levels (attributes: zwaveVersion, zwaveSDKVersion)
-    			<li><b>Time Sync Server Address -</b> Request the server address used for time synchronization (attribute: ntpServer)</li>
-    			<li><b>Additional Subnets -</b> Check for secondary subnets (attribute: ipSubnetsAllowed)</li>
-    			<li><b>Hub Mesh Data -</b> Map data for any hubs participating in HubMesh (attributes: hubMeshData, hubMeshCount)</li>
-    			<li><b>Expanded Network Data -</b> HE v2.3.4.126 made available some addition network related data (attributes: connectType (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork)</li>
+    				<li><b>CPU Temperature Polling-</b> Request current CPU temperature (attributes: temperatureF, temperatureC, temperature)</li>
+    				<li><b>Free Memory Polling -</b> Request available free memory (attribute: freeMemory)</li>
+    				<li><b>CPU Load Polling -</b> Request CPU load information (attributes: cpuLoad, cpuPct)</li>
+    				<li><b>DB Size Polling -</b> Request DB size (attribute: dbSize)</li>
+    				<li><b>Public IP Address -</b> Hit an external site to obtain the external IP address (attribute: publicIP )</li>
+    				<li><b>Max Event/State Days Setting -</b> Request the system defaults for maximum days event and state changes are logged (attributes: maxEvtDays,maxStateDays) </li>
+				<li><b>Zwave Version -</b> Request the Zwave and SDK version levels (attributes: zwaveVersion, zwaveSDKVersion)</li>
+    				<li><b>Time Sync Server Address -</b> Request the server address used for time synchronization (attribute: ntpServer)</li>
+    				<li><b>Additional Subnets -</b> Check for secondary subnets (attribute: ipSubnetsAllowed)</li>
+    				<li><b>Hub Mesh Data -</b> Map data for any hubs participating in HubMesh (attributes: hubMeshData, hubMeshCount)</li>
+    				<li><b>Expanded Network Data -</b> HE v2.3.4.126 made available some addition network related data (attributes: connectType (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork)</li>
 				<li><b>Check for Firmware Update -</b> Check Hubitat.com for firmware updates (attributes: hubUpdateStatus, hubUpdateVersion)</li>			
 				<li><b>Zwave Status & Hub Alerts -</b> Checks the hub UI for Zigbee/ZWave status and Hub Alert Messages (attributes: hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse)</li>
 				<li><b>Base Data -</b> Base data is that data which seldom changes so by default it only is refreshed at driver initialization - normally at hub reboot. (attributes: firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode)</li>
-    			<li><b>Enable HTML Attribute Creation? -</b> Create a custom attribute for display on a tile when the polling runs (attribute: html)</li>
-    			<li><b>Template file for HTML attribute -</b> An editable text file in the HE File Manager that contains information to build the html attribute</li>
-    			<li><b>Log all attribute changes -</b> Create an <i>Info</i>rmation level log entry for every attribute update, regardless of whether the value changes</li>
-    			<li><b>Allow Hub to be shutdown or rebooted -</b> Enable or disable the command for the driver to shutdown or reboot the hub</li>
-    			<li><b>Hub Security Enabled -</b> If Hub Security is turned on, enable this option to enter the Username and Password</li>
+				<li><b>Remove used attributes - </b>Remove all attributes not selected for polling</li>
+				<li><b>Enable HTML Attribute Creation? -</b> Create a custom attribute for display on a tile when the polling runs (attribute: html)</li>
+    				<li><b>Template file for HTML attribute -</b> An editable text file in the HE File Manager that contains information to build the html attribute</li>
+    				<li><b>Log all attribute changes -</b> Create an <i>Info</i>rmation level log entry for every attribute update, regardless of whether the value changes</li>
+    				<li><b>Allow Hub to be shutdown or rebooted -</b> Enable or disable the command for the driver to shutdown or reboot the hub</li>
+	    			<li><b>Hub Security Enabled -</b> If Hub Security is turned on, enable this option to enter the Username and Password</li>
 				<ul>
-        			<li><b>Hub Security Username -</b> Username to allow login to the hub</li>
-        			<li><b>Hub Security Password -</b> Password to allow login to the hub</li>
+        				<li><b>Hub Security Username -</b> Username to allow login to the hub</li>
+        				<li><b>Hub Security Password -</b> Password to allow login to the hub</li>
 				</ul>								
-    			<li><b>Date/Time Format for Sunrise/Sunset -</b> Simple Date Time Format string  (attributes: sunrise, sunset)</li>
-    			<li><b>Date/Time Format for Last Updated -</b> Simple Date Time Format string  (attribute: lastUpdated)</li>
-    			<li><b>Separator for Formatted Uptime -</b> Character/string to place between the formatted time segments (attribute: formattedUptime)</li>
+    				<li><b>Date/Time Format for Sunrise/Sunset -</b> Simple Date Time Format string  (attributes: sunrise, sunset)</li>
+    				<li><b>Date/Time Format for Last Updated -</b> Simple Date Time Format string  (attribute: lastUpdated)</li>
+	    			<li><b>Separator for Formatted Uptime -</b> Character/string to place between the formatted time segments (attribute: formattedUptime)</li>
 				<li><b>Poll Rate <i>x</i> in minutes - </b> The number minutes to set the polling interval for the associated queue</li>
 				<li><b>Poll Rate 4 in <span style='background-color:red;font-weight:bold;color:black'>&nbsp;hours&nbsp;</span>- </b> The number hours to set the polling interval for queue 4</li>
 			</ul>

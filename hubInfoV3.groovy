@@ -1190,7 +1190,15 @@ void formatUptime(){
             upTimeSep = ","
         }
         utD=upTimeDesc.split("/")
-        String attrval = "${days.toString()}${utD[0]}$upTimeSep${hrs.toString()}${utD[1]}$upTimeSep${min.toString()}${utD[2]}$upTimeSep${sec.toString()}${utD[3]}"
+        dayD = (days==1) ? utD[0].replace("s",""):utD[0]
+        hrD = (hrs==1) ? utD[1].replace("s",""):utD[1]
+        minD = (min==1) ? utD[2].replace("s",""):utD[2]
+        if(utD[3] == " seconds")
+            secD = (sec==1) ? " second":utD[3]
+        else 
+            secD = utD[3]
+        
+        String attrval = "${days.toString()}${dayD}$upTimeSep${hrs.toString()}${hrD}$upTimeSep${min.toString()}${minD}$upTimeSep${sec.toString()}${secD}"
         updateAttr("formattedUptime", attrval) 
     } catch(ignore) {
         updateAttr("formattedUptime", "")

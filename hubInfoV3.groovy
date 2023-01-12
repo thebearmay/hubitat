@@ -17,7 +17,9 @@
  *    2020-12-07  thebearmay     Original version 0.1.0
  *    ..........
  *    2023-01-10  thebearmay     version 3 rewrite ** minFwVersion = "2.2.8.141" **
- *                               v3.0.1 - Poll 4 error
+ *    2023-01-11                 v3.0.1 - Poll 4 error
+ *    2023-01-12                 v3.0.2 - Zigbee status/status2 disagreement handler (happens when radio is shut off without a reboot)
+ *                                        Turn off Debug Logs after 30 minutes
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -25,7 +27,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.1"}
+static String version() {return "3.0.2"}
 
 metadata {
     definition (
@@ -217,6 +219,9 @@ void updated(){
 		runIn(pollRate3*60, "poll3")		
     if(pollRate4 > 0)
 		runIn(pollRate4*60*60, "poll4")	
+    if(debugEnable)
+        runIn(1800,"logsOff")
+
 }
 
 void refresh(){
@@ -307,9 +312,9 @@ void baseData(dummy=null){
     else
         updateAttr("zigbeeChannel","Not Available")
                    
-    if(location.hub.properties.data.zigbeeChannel != null)
+    if(location.hub.properties.data.zigbeeChannel != null){
         updateAttr("zigbeeStatus", "enabled")
-    else
+    }else
         updateAttr("zigbeeStatus", "disabled")
     
     updateAttr("locationName", location.name)
@@ -770,10 +775,16 @@ void getHub2Data(resp, data){
                 updateAttr("zwaveStatus","disabled")
             if(h2Data.baseModel.zigbeeStatus == "false"){
                 updateAttr("zigbeeStatus2", "enabled")
-                if (device.currentValue("zigbeeStatus", true) != "enabled") log.warn "Zigbee Status has opposing values - may have crashed."
+                if (device.currentValue("zigbeeStatus", true) != "enabled" && !state.errorZigbeeMismatch ){
+                    log.warn "Zigbee Status has opposing values - radio was either turned off or crashed"
+                    state.errorZigbeeMismatch = true
+                } else state.errorZigbeeMismatch = false
             } else {
                 updateAttr("zigbeeStatus2", "disabled")
-                if (device.currentValue("zigbeeStatus", true) != "disabled") log.warn "Zigbee Status has opposing values - may have crashed."
+                if (device.currentValue("zigbeeStatus", true) != "disabled" && !state.errorZigbeeMismatch){
+                    log.warn "Zigbee Status has opposing values - radio was either turned off or crashed."
+                    state.errorZigbeeMismatch = true
+                } else state.errorZigbeeMismatch = false                    
             }
             if(debugEnable) log.debug "securityInUse"
             updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
@@ -1218,6 +1229,6 @@ void logsOff(){
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
-[parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]]]
+[parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]]]
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

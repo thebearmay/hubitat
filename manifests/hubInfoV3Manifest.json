@@ -1,10 +1,10 @@
 {
  "packageName":"Hub Information Driver v3",
  "author":"Jean P. May, Jr.",
- "version":"3.0.3",
+ "version":"3.0.4",
  "minimumHEVersion":"2.2.8.141",
- "dateReleased":"2023-01-12",
- "releaseNotes":"v3.0.3 - Add Uptime Descriptors option\nv3.0.2 - zigbeeStatus/Status2 mismatch, turn off debug after 30 mins, add Remove Unused attributes\nv3.0.1 - Poll4 bug fix\nv3.0.0 -Rewrite of the original Hub Information Driver",
+ "dateReleased":"2023-01-13",
+ "releaseNotes":"v3.0.4 - Add select option to format the hub restart date/time\nv3.0.3 - Add Uptime Descriptors option\nv3.0.2 - zigbeeStatus/Status2 mismatch, turn off debug after 30 mins, add Remove Unused attributes\nv3.0.1 - Poll4 bug fix\nv3.0.0 -Rewrite of the original Hub Information Driver",
  "documentationLink":"https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html",
  "communityLink":"https://community.hubitat.com/t/coming-soon-hub-information-driver-v3/109902",
  "drivers": [

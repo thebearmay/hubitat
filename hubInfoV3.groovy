@@ -23,6 +23,7 @@
  *                                        Add removeUnused method, command and preference
  *                               v3.0.3 - Add Uptime Descriptor 
  *    2023-01-13                 v3.0.4 - Select format for restart formatted attribute
+ *                               v3.0.5 - Missing zigbeeStatus generating warning message
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -30,7 +31,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.4"}
+static String version() {return "3.0.5"}
 
 metadata {
     definition (
@@ -781,13 +782,13 @@ void getHub2Data(resp, data){
                 updateAttr("zwaveStatus","disabled")
             if(h2Data.baseModel.zigbeeStatus == "false"){
                 updateAttr("zigbeeStatus2", "enabled")
-                if (device.currentValue("zigbeeStatus", true) != "enabled" && !state.errorZigbeeMismatch ){
+                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "enabled" && !state.errorZigbeeMismatch ){
                     log.warn "Zigbee Status has opposing values - radio was either turned off or crashed"
                     state.errorZigbeeMismatch = true
                 } else state.errorZigbeeMismatch = false
             } else {
                 updateAttr("zigbeeStatus2", "disabled")
-                if (device.currentValue("zigbeeStatus", true) != "disabled" && !state.errorZigbeeMismatch){
+                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "disabled" && !state.errorZigbeeMismatch){
                     log.warn "Zigbee Status has opposing values - radio was either turned off or crashed."
                     state.errorZigbeeMismatch = true
                 } else state.errorZigbeeMismatch = false                    

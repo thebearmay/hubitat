@@ -22,6 +22,7 @@
  *                                        Turn off Debug Logs after 30 minutes
  *                                        Add removeUnused method, command and preference
  *                               v3.0.3 - Add Uptime Descriptor 
+ *    2023-01-13                 v3.0.4 - Select format for restart formatted attribute
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -29,7 +30,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.3"}
+static String version() {return "3.0.4"}
 
 metadata {
     definition (
@@ -143,6 +144,7 @@ preferences {
     }
     input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss", width:4)
     input("updSdfPref", "enum", title: "Date/Time Format for Last Updated", options:sdfList, defaultValue:"Milliseconds", width:4)
+    input("rsrtSdfPref", "enum", title: "Date/Time Format for Hub Restart Formatted", options:sdfList, defaultValue:"yyyy-MM-dd HH:mm:ss", width:4)  
     input("upTimeSep", "string", title: "Separator for Formatted Uptime", defaultValue: ", ", width:4)
     input("upTimeDesc", "enum", title: "Uptime Descriptors", defaultValue:"d/h/m/s", options:["d/h/m/s"," days/ hrs/ min/ sec"," days/ hours/ minutes/ seconds"])
 	input("pollRate1", "number", title: "Poll Rate 1 in minutes", defaultValue:0, submitOnChange: true, width:4) 
@@ -1213,8 +1215,20 @@ void restartCheck() {
     if(debugEnable) log.debug "RS: $rsDate  UT:$ut  upTime Date: $upDate   upTime: ${location.hub.uptime}"
     
     updateAttr("lastHubRestart", ut)
-    SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    updateAttr("lastHubRestartFormatted",sdf.format(upDate))
+    
+    if(rsrtSdfPref == null){
+        device.updateSetting("rsrtSdfPref",[value:"yyyy-MM-dd HH:mm:ss",type:"string"])
+        rsrtSdfPref="yyyy-MM-dd HH:mm:ss"
+    }
+    if(rsrtSdfPref == "Milliseconds") 
+        updateAttr("lastHubRestartFormatted", upDate.getTime())
+    else {
+        SimpleDateFormat sdf = new SimpleDateFormat(rsrtSdfPref)
+        updateAttr("lastHubRestartFormatted", sdf.format(upDate.getTime()))
+    }
+    
+//    SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+//    updateAttr("lastHubRestartFormatted",sdf.format(upDate))
 }
 
 void removeUnused() {

@@ -20,9 +20,10 @@
  *    2022-03-23        thebearmay    remove the second auth requirement to reboot
  *    2022-04-12        thebearmay    typo in memory warning
  *    2022-06-10        thebearmay    pull in hubAlerts attribute
+ *    2023-01-15        thebearmay    Allow v3 
  */
 
-static String version()	{  return '1.0.11'  }
+static String version()	{  return '1.0.12'  }
 
 
 definition (
@@ -69,13 +70,11 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main")
 		    {
-                input "qryDevice", "device.HubInformation", title: "Hubs to Monitor:", multiple: true, required: true, submitOnChange: true
+                input "qryDevice", "device.HubInformation,device.HubInformationDriverV3", title: "Hubs to Monitor:", multiple: true, required: true, submitOnChange: true
                 input "debugEnable", "bool", title: "Enable Debugging:", submitOnChange: true
                 if (qryDevice != null){
                     hubDevCheck = true
-                    qryDevice.each{
-                        if(it.typeName != 'Hub Information') hubDevCheck = false
-                    }
+                    
                     if(hubDevCheck) {
                         unsubscribe()
 		        	    qryDevice.each{
@@ -142,7 +141,7 @@ def refreshDevice(evt = null){
                 notifyStr = "Hub Monitor DB Size Warning on ${it.currentValue('locationName')} - ${it.currentValue("dbSize",true)}"
                 sendNotification(notifyStr)
             }
-            if(it.currentValue("freeMemory",true)?.toInteger() <= settings["minMem$numHub"]?.toInteger() && it.currentValue("freeMemory",true) != null ){
+            if(it.currentValue("freeMemory",true)?.toFloat() <= settings["minMem$numHub"]?.toFloat() && it.currentValue("freeMemory",true) != null ){
                 notifyStr = "Hub Monitor Free Memory Warning on ${it.currentValue('locationName')} - ${it.currentValue("freeMemory")}"
                 sendNotification(notifyStr)
             }

@@ -28,6 +28,7 @@
  *                               v3.0.7 - hubversion to v2Cleanup, 
  *                    					  FreeMemoryUnit option
  *					                      Add Update Check to Initialize if polled
+ *                               v3.0.8 - Fix 500 Error on device create
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -35,7 +36,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.7"}
+static String version() {return "3.0.8"}
 
 metadata {
     definition (
@@ -126,8 +127,8 @@ metadata {
 }
 preferences {
     if(state?.errorMinVersion || state?.errorMinVersion == "true") 
-        input("errMsg", "", title:"<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>")
-    input("quickref","", title:"$ttStyleStr<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html' target='_blank'>Quick Reference v${version()}</a>")
+        input("errMsg", "string", title:"<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>")
+    input("quickref","string", title:"$ttStyleStr<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html' target='_blank'>Quick Reference v${version()}</a>")
     input("debugEnable", "bool", title: "Enable debug logging?", width:4)
     input("warnSuppress", "bool", title: "Suppress Warn Level Logging", width:4)
 

@@ -25,7 +25,9 @@
  *    2023-01-13                 v3.0.4 - Select format for restart formatted attribute
  *                               v3.0.5 - Missing zigbeeStatus generating warning message
  *    2023-01-14                 v3.0.6 - Delay baseData() on Initialize to cpature state correctly
- *                               v3.0.7 - hubversion to v2Cleanup, FreeMemoryUnit option
+ *                               v3.0.7 - hubversion to v2Cleanup, 
+ *					  FreeMemoryUnit option
+ *					  Add Update Check to Initialize if polled
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -171,6 +173,8 @@ void initialize() {
     if(security) cookie = getCookie()
     freeMemoryReq(cookie)
     runIn(5,"baseData")
+    if (settings["parm12"] != 0)
+        runIn(30,"updateCheckReq")
     if(!state?.v2Cleaned)
         v2Cleanup()
 }

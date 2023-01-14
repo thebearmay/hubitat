@@ -24,6 +24,7 @@
  *                               v3.0.3 - Add Uptime Descriptor 
  *    2023-01-13                 v3.0.4 - Select format for restart formatted attribute
  *                               v3.0.5 - Missing zigbeeStatus generating warning message
+ *    2023-01-14                 v3.0.6 - Delay baseData() on Initialize to cpature state correctly
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -31,7 +32,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.5"}
+static String version() {return "3.0.6"}
 
 metadata {
     definition (
@@ -167,7 +168,7 @@ void initialize() {
     updated()
     if(security) cookie = getCookie()
     freeMemoryReq(cookie)
-    baseData()
+    runIn(5,"baseData")
     if(!state?.v2Cleaned)
         v2Cleanup()
 }

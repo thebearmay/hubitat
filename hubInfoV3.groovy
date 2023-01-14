@@ -26,8 +26,8 @@
  *                               v3.0.5 - Missing zigbeeStatus generating warning message
  *    2023-01-14                 v3.0.6 - Delay baseData() on Initialize to cpature state correctly
  *                               v3.0.7 - hubversion to v2Cleanup, 
- *					  FreeMemoryUnit option
- *					  Add Update Check to Initialize if polled
+ *                    					  FreeMemoryUnit option
+ *					                      Add Update Check to Initialize if polled
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput

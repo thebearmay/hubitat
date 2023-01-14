@@ -25,6 +25,7 @@
  *    2023-01-13                 v3.0.4 - Select format for restart formatted attribute
  *                               v3.0.5 - Missing zigbeeStatus generating warning message
  *    2023-01-14                 v3.0.6 - Delay baseData() on Initialize to cpature state correctly
+ *                               v3.0.7 - hubversion to v2Cleanup, FreeMemoryUnit option
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -32,7 +33,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.6"}
+static String version() {return "3.0.7"}
 
 metadata {
     definition (
@@ -50,7 +51,7 @@ metadata {
         
         attribute "latitude", "string"
         attribute "longitude", "string"
-        attribute "hubVersion", "string"
+        //attribute "hubVersion", "string"
         attribute "id", "string"
         attribute "name", "string"
         //attribute "data", "string"
@@ -144,6 +145,7 @@ preferences {
         input("username", "string", title: "Hub Security Username", required: false, width:4)
         input("password", "password", title: "Hub Security Password", required: false, width:4)
     }
+    input("freeMemUnit", "enum", title: "Free Memory Unit", options:["KB","MB"], defaultValue:"KB", width:4)
     input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss", width:4)
     input("updSdfPref", "enum", title: "Date/Time Format for Last Updated", options:sdfList, defaultValue:"Milliseconds", width:4)
     input("rsrtSdfPref", "enum", title: "Date/Time Format for Hub Restart Formatted", options:sdfList, defaultValue:"yyyy-MM-dd HH:mm:ss", width:4)  
@@ -244,6 +246,7 @@ void v2Cleanup() {
     device.deleteCurrentState("data")
     device.deleteCurrentState("zwaveData")
     device.deleteCurrentState("nextPoll")
+    device.deleteCurrentState("hubVersion")
     state.v2Cleaned = true
 }
 
@@ -424,7 +427,10 @@ void getFreeMemory(resp, data) {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             Integer memWork = new Integer(resp.data.toString())
             if(debugEnable) log.debug memWork
-            updateAttr("freeMemory",memWork, "KB")
+            if(freeMemUnit == "MB")
+                updateAttr("freeMemory",(new Float(memWork/1024).round(2)), "MB")
+            else
+                updateAttr("freeMemory",memWork, "KB")
         }
     } catch(ignored) {
         def respStatus = resp.getStatus()
@@ -1246,7 +1252,8 @@ void removeUnused() {
                 }
             }
         }
-    }    
+    }
+    v2Cleanup()
 }
 
 @SuppressWarnings('unused')

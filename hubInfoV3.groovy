@@ -174,7 +174,7 @@ void initialize() {
     freeMemoryReq(cookie)
     runIn(5,"baseData")
     if (settings["parm12"] != 0)
-        runIn(30,"updateCheckReq")
+        runIn(30,"updateCheck")
     if(!state?.v2Cleaned)
         v2Cleanup()
 }

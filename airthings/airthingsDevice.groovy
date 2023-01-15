@@ -22,7 +22,7 @@
  *    30Nov2022    thebearmay    add option to force Integer values, add mold attribute
  *    16Dec2022    thebearmay    handle mismatched return data elements
  *    22Dec2022    thebearmay    hub security 
- *    11Jan2023    thebearmay    handle a data value error
+ *    15Jan2023    thebearmay    add descriptionText
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -134,7 +134,8 @@ def configure() {
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
-    sendEvent(name:aKey, value:aValue, unit:aUnit)
+    desc = "${aKey} level of ${aValue} detected"
+    sendEvent(name:aKey, value:aValue, unit:aUnit, descriptionText:desc)
 }
 
 void refresh() {

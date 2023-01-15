@@ -23,6 +23,7 @@
  *    16Dec2022    thebearmay    handle mismatched return data elements
  *    22Dec2022    thebearmay    hub security 
  *    15Jan2023    thebearmay    add descriptionText
+ *                               trap relayDeviceType
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -30,7 +31,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.16"}
+static String version() {return "0.0.17"}
 
 metadata {
     definition (
@@ -191,6 +192,9 @@ void dataRefresh(retData){
             case("mold")://mold risk index - integer 0-10
                 unit=""
                 if(forceInt) it.value = it.value.toFloat().toInteger()
+                break
+            case("relayDeviceType")://ignore
+                unit=""
                 break
             default:
                 unit=""

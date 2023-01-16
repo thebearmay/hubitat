@@ -14,10 +14,12 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- * 
+ * 2023-01--4	thebearmay	Initial release
+ * 2023-01-16	ucdscott	Added txtEnable logging, changed debugEnable preference to Hubitat de facto standard logEnable, updated Change History
+ *
  */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 metadata {
     definition (
@@ -42,10 +44,17 @@ metadata {
 }
 
 preferences {
-    input("devIP", "string", title: "IP of the Open Garage Device", width:4)
-    input("devPwd", "password", title: "Device Password", width:4)
-    input("pollRate","number", title: "Polling interval in seconds (0 to disable)", width:4)
-	input("debugEnable", "bool", title: "Enable debug logging?",width:4)
+    	input("devIP", "string", title: "IP of the Open Garage Device", width:4)
+    	input("devPwd", "password", title: "Device Password", width:4)
+    	input("pollRate","number", title: "Polling interval in seconds (0 to disable)", width:4)
+	input (name: "txtEnable", type: "bool", title: "Enable descriptionText logging", required: false, defaultValue: false)
+	input("logEnable", "bool", title: "Enable debug logging", defaultValue: false)
+}
+
+def logInfo(msg) {
+	if (txtEnable) {
+		log.info msg
+	}
 }
 
 def installed() {
@@ -57,10 +66,10 @@ def installed() {
 
 def updated(){
     log.trace "updated()"
-    if(debugEnable) 
+    if(logEnable) 
         runIn(1800,"logsOff")
     else 
-        unschedule("debugEnable")
+        unschedule("logEnable")
     if(pollRate > 0)
         runIn(pollRate, "poll")
     else
@@ -69,7 +78,7 @@ def updated(){
 }
 
 void open() {
-    if(debugEnable) log.debug "opening.."
+    if(logEnable) log.debug "opening.."
     httpGet(
         [
             uri: "http://$devIP",
@@ -84,7 +93,7 @@ void open() {
 }
 
 void close() {
-    if(debugEnable) log.debug "closing.."
+    if(logEnable) log.debug "closing.."
     httpGet(
         [
             uri: "http://$devIP",
@@ -99,7 +108,7 @@ void close() {
 }
 
 void toggleDoor() {
-    if(debugEnable) log.debug "toggle door.."
+    if(logEnable) log.debug "toggle door.."
     httpGet(
         [
             uri: "http://$devIP",
@@ -114,7 +123,7 @@ void toggleDoor() {
 }
 
 void rebootDevice() {
-    if(debugEnable) log.debug "rebooting.."
+    if(logEnable) log.debug "rebooting.."
     httpGet(
         [
             uri: "http://$devIP",
@@ -145,7 +154,7 @@ void poll(){
     ) { resp ->
         try{
             if (resp.getStatus() == 200){
-                if (debugEnable) 
+                if (logEnable) 
                     log.debug resp.data
                 try {
                     processJc((Map)resp.data)
@@ -165,14 +174,14 @@ void poll(){
 }
 
 HashMap respToMap(String rData){
-    if(debugEnable) log.debug rData
+    if(logEnable) log.debug rData
     rList = rData.substring(1,rData.size()-1).split(",")
-    if(debugEnable) log.debug rList
+    if(logEnable) log.debug rList
     rMap = [:]
     rList.each{
         rMap["${it.substring(0,it.indexOf(":")).trim()}"] = it.substring(it.indexOf(":")+1)
     }
-    if(debugEnable) log.debug rMap
+    if(logEnable) log.debug rMap
     
     return rMap
 }
@@ -180,16 +189,24 @@ HashMap respToMap(String rData){
 void processJc(dMap){
     updateAttr("distance", dMap.dist, "cm")
     if(dMap.door.toInteger() == 1)
-        updateAttr("door","open")
+        descriptionText = "${device.displayName} = open";
+        logInfo descriptionText
+	updateAttr("door","open")
     else
-        updateAttr("door", "closed")
+        descriptionText = "${device.displayName} = closed";
+        logInfo descriptionText
+	updateAttr("door", "closed")
     if(dMap.vehicle.toInteger() == 1)
-        updateAttr("vehStatus", "present")
+        descriptionText = "${device.displayName} vehStatus = present";
+        logInfo descriptionText
+	updateAttr("vehStatus", "present")
     else 
-        updateAttr("vehStatus", "not present")
+        descriptionText = "${device.displayName} vehStatus = not present";
+        logInfo descriptionText
+	updateAttr("vehStatus", "not present")
     updateAttr("rssi", dMap.rssi, "dBm")
 }
 
 void logsOff(){
-     device.updateSetting("debugEnable",[value:"false",type:"bool"])
+     device.updateSetting("logEnable",[value:"false",type:"bool"])
 }

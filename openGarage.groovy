@@ -188,23 +188,26 @@ HashMap respToMap(String rData){
 
 void processJc(dMap){
     updateAttr("distance", dMap.dist, "cm")
-    if(dMap.door.toInteger() == 1)
-        descriptionText = "${device.displayName} = open";
+   if(dMap.door.toInteger() == 1) {
+        descriptionText = "${device.displayName} = open"
         logInfo descriptionText
 	updateAttr("door","open")
-    else
-        descriptionText = "${device.displayName} = closed";
+   } else{
+        descriptionText = "${device.displayName} = closed"
         logInfo descriptionText
 	updateAttr("door", "closed")
-    if(dMap.vehicle.toInteger() == 1)
-        descriptionText = "${device.displayName} vehStatus = present";
+    }
+	    
+    if(dMap.vehicle.toInteger() == 1){
+        descriptionText = "${device.displayName} vehStatus = present"
         logInfo descriptionText
 	updateAttr("vehStatus", "present")
-    else 
-        descriptionText = "${device.displayName} vehStatus = not present";
+    } else {
+        descriptionText = "${device.displayName} vehStatus = not present"
         logInfo descriptionText
 	updateAttr("vehStatus", "not present")
-    updateAttr("rssi", dMap.rssi, "dBm")
+    	updateAttr("rssi", dMap.rssi, "dBm")
+    }
 }
 
 void logsOff(){

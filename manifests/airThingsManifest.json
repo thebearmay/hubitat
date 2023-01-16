@@ -1,7 +1,7 @@
 {
   "packageName": "Air Things View Plus API Integration",
   "author": "Jean P. May, Jr.",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2022-12-22",
   "releaseNotes": "22Dec22 - fix security login bug\n19Dec22 - Handle unknown returns better\n30Nov22 -Added option to force Integer values for most attributes, added mold index attribute\n21Oct22 - Made the template selection a drop down",

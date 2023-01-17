@@ -23,7 +23,7 @@ static String version()	{  return '0.0.2'  }
 
 metadata {
     definition (
-		name: "Open Garage", 
+		name: "OpenGarage", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
 	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/openGarage.groovy"
@@ -77,8 +77,9 @@ def updated(){
     
 }
 
+// HTTP GET to open relay
 void open() {
-    if(logEnable) log.debug "opening.."
+    if(txtEnable) log.info "opening relay..."
     httpGet(
         [
             uri: "http://$devIP",
@@ -92,8 +93,9 @@ void open() {
   
 }
 
+// HTTP GET to close relay. Ignored is door is already closed.
 void close() {
-    if(logEnable) log.debug "closing.."
+    if(txtEnable) log.info "closing relay..."
     httpGet(
         [
             uri: "http://$devIP",
@@ -107,8 +109,9 @@ void close() {
   
 }
 
+// HTTP GET to toggle relay
 void toggleDoor() {
-    if(logEnable) log.debug "toggle door.."
+    if(txtEnable) log.debug "toggling realy..."
     httpGet(
         [
             uri: "http://$devIP",
@@ -187,26 +190,31 @@ HashMap respToMap(String rData){
 }
 
 void processJc(dMap){
-    updateAttr("distance", dMap.dist, "cm")
-   if(dMap.door.toInteger() == 1) {
+   updateAttr("distance", dMap.dist, "cm")
+   updateAttr("rssi", dMap.rssi, "dBm")
+	
+   if(dMap.door.toInteger() == 1 && device.currentValue("door") != "open") {
         descriptionText = "${device.displayName} = open"
         logInfo descriptionText
 	updateAttr("door","open")
    } else{
-        descriptionText = "${device.displayName} = closed"
-        logInfo descriptionText
-	updateAttr("door", "closed")
+        if(dMap.door.toInteger() == 0 && device.currentValue("door") != "closed") {
+		descriptionText = "${device.displayName} = closed"
+        	logInfo descriptionText
+		updateAttr("door", "closed")
+	}
     }
 	    
-    if(dMap.vehicle.toInteger() == 1){
+    if(dMap.vehicle.toInteger() == 1 && device.currentValue("vehStatus") != "present"){
         descriptionText = "${device.displayName} vehStatus = present"
         logInfo descriptionText
 	updateAttr("vehStatus", "present")
     } else {
-        descriptionText = "${device.displayName} vehStatus = not present"
-        logInfo descriptionText
-	updateAttr("vehStatus", "not present")
-    	updateAttr("rssi", dMap.rssi, "dBm")
+	if(dMap.vehicle.toInteger() == 0 && device.currentValue("vehStatus") != "not present"){
+		descriptionText = "${device.displayName} vehStatus = not present"
+		logInfo descriptionText
+		updateAttr("vehStatus", "not present")
+	}
     }
 }
 

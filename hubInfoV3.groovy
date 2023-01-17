@@ -29,6 +29,7 @@
  *                    					  FreeMemoryUnit option
  *					                      Add Update Check to Initialize if polled
  *                               v3.0.8 - Fix 500 Error on device create
+ *    2023-01-16                 v3.0.9 - Delay initial freeMemory check for 8 seconds
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -36,7 +37,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.8"}
+static String version() {return "3.0.9"}
 
 metadata {
     definition (
@@ -171,13 +172,17 @@ void initialize() {
     log.info "Hub Information v${version()} initialized"
     restartCheck()
     updated()
-    if(security) cookie = getCookie()
-    freeMemoryReq(cookie)
+    runIn(8,"initMemory")
     runIn(5,"baseData")
     if (settings["parm12"] != 0)
         runIn(30,"updateCheck")
     if(!state?.v2Cleaned)
         v2Cleanup()
+}
+
+void initMemory(){
+    if(security) cookie = getCookie()
+    freeMemoryReq(cookie)    
 }
 
 void configure() {

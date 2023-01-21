@@ -30,6 +30,7 @@
  *					                      Add Update Check to Initialize if polled
  *                               v3.0.8 - Fix 500 Error on device create
  *    2023-01-16                 v3.0.9 - Delay initial freeMemory check for 8 seconds
+ *    2023-01-21                 v3.0.10 - lastUpdated conflict, renamed lastPollTime
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -37,7 +38,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.9"}
+static String version() {return "3.0.10"}
 
 metadata {
     definition (
@@ -66,7 +67,7 @@ metadata {
         attribute "localIP", "string"
         attribute "localSrvPortTCP", "string"
         attribute "uptime", "number"
-        attribute "lastUpdated", "string"
+        attribute "lastPollTime", "string"
         attribute "lastPoll", "string"
         attribute "lastHubRestart", "string"
         attribute "firmwareVersionString", "string"
@@ -365,10 +366,10 @@ void everyPoll(whichPoll=null){
 
     if(updSdfPref == null) device.updateSetting("updSdfPref",[value:"Milliseconds",type:"string"])
     if(updSdfPref == "Milliseconds" || updSdfPref == null) 
-        updateAttr("lastUpdated", new Date().getTime())
+        updateAttr("lastPollTime", new Date().getTime())
     else {
         SimpleDateFormat sdf = new SimpleDateFormat(updSdfPref)
-        updateAttr("lastUpdated", sdf.format(new Date().getTime()))
+        updateAttr("lastPollTime", sdf.format(new Date().getTime()))
     }
     if(whichPoll != null)
         updateAttr("lastPoll", whichPoll)

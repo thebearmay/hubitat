@@ -156,10 +156,10 @@ preferences {
     input("rsrtSdfPref", "enum", title: "Date/Time Format for Hub Restart Formatted", options:sdfList, defaultValue:"yyyy-MM-dd HH:mm:ss", width:4)  
     input("upTimeSep", "string", title: "Separator for Formatted Uptime", defaultValue: ", ", width:4)
     input("upTimeDesc", "enum", title: "Uptime Descriptors", defaultValue:"d/h/m/s", options:["d/h/m/s"," days/ hrs/ min/ sec"," days/ hours/ minutes/ seconds"])
-	input("pollRate1", "number", title: "Poll Rate 1 in minutes", defaultValue:0, submitOnChange: true, width:4) 
-	input("pollRate2", "number", title: "Poll Rate 2 in minutes", defaultValue:0, submitOnChange: true, width:4) 
-	input("pollRate3", "number", title: "Poll Rate 3 in minutes", defaultValue:0, submitOnChange: true, width:4) 
-    input("pollRate4", "number", title: "Poll Rate 4 in <b style='background-color:red'>&nbsp;hours&nbsp;</b>", defaultValue:0, submitOnChange: true, width:4) 
+	input("pollRate1", "number", title: "Poll Rate for Queue 1 in minutes", defaultValue:0, submitOnChange: true, width:4) 
+	input("pollRate2", "number", title: "Poll Rate for Queue 2 in minutes", defaultValue:0, submitOnChange: true, width:4) 
+	input("pollRate3", "number", title: "Poll Rate for Queue 3 in minutes", defaultValue:0, submitOnChange: true, width:4) 
+    input("pollRate4", "number", title: "Poll Rate for Queue 4 in <b style='background-color:red'>&nbsp;hours&nbsp;</b>", defaultValue:0, submitOnChange: true, width:4) 
 }
 @SuppressWarnings('unused')
 void installed() {

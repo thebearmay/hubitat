@@ -270,6 +270,16 @@
         "Monitoring",
         "Tools & Utilities"
        ]
+    },
+    {
+      "id":"f75a7ab6-64b1-46b7-9c6c-662b0be9b015",
+      "name":"File Manager Backup & Restore",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/fmBckResManifest.json",
+      "description":"Allows for the creation and restore of a compressed backup of all files contained in the Hub's local File Manager ",
+      "tags":[
+        "Tools & Utilities"
+       ]
     }
   ]
 }

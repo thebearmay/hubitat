@@ -1,0 +1,17 @@
+{
+ "packageName":"File Manager Backup & Restore",
+ "author":"Jean P. May, Jr.",
+ "version":"1.0.0",
+ "minimumHEVersion":"2.3.4.134",
+ "dateReleased":"2023-01-23",
+ "apps": [
+  {
+     "id":"02a524e9-fa20-4d48-8279-79d13c458474",
+     "name":"File Manager Backup & Restore",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/fmBckRestore.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

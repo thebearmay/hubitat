@@ -16,9 +16,10 @@
  *    2022-08-30        thebearmay    add file list for templates
  *    2022-09-05        thebearmay    add @room
  *    2023-01-05        thebearmay    Add filter option for template assignment
+ *    2023-01-23	thebearmay    change to singlethreaded to minimize number of files open 
 */
 
-static String version()	{  return '0.0.7'  }
+static String version()	{  return '0.0.8'  }
 
 
 definition (
@@ -29,6 +30,7 @@ definition (
 	category: 		"Utility",
 	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttDevMgr.groovy",
     installOnOpen:  true,
+	singleThreaded:true,
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""

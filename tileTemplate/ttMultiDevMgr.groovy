@@ -15,9 +15,10 @@
  *    2022-09-05        thebearmay    add @room
  *    2022-09-18        thebearmay    handle template read error
  *    2023-01-05        thebearmay    add a filter for template selection
+ *    2023-01-24	thebearmay    change to singlethreaded to minimize open files
 */
 
-static String version()	{  return '0.0.7'  }
+static String version()	{  return '0.0.8'  }
 
 
 definition (
@@ -28,6 +29,7 @@ definition (
 	category: 		"Utility",
 	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttMultiDevMgr.groovy",
     installOnOpen:  true,
+	singleThreaded:true,
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""

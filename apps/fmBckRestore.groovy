@@ -1,6 +1,20 @@
 /*
  * File Manager Backup 
  *
+ *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ *  Change History:
+ *
+ *    Date         Who           What
+ *    ----         ---           ----
+ *    27Jan2023    thebearmay    v1.1.0 Add Backup and Backup Purge scheduling    
  */
 import java.util.zip.*
 import java.util.zip.ZipOutputStream    
@@ -8,7 +22,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '1.0.0' }
+static String version()	{  return '1.1.0' }
 
 definition (
 	name: 			"File Manager Backup & Restore", 
@@ -81,8 +95,85 @@ def backupFM(){
             if(state?.createHgz){
                 createBackup()
                 state.createHgz = false
+            }          
+        }
+        section(title:"<h3>Frequency Management</h3>", hideable: true, hidden: true){
+            input "autoEnabled", "bool",title: "Automatic Backup Enabled", defaultValue: false, width:4
+            input "backupFreq", "enum", title: "Backup Frequency", options: [["86400":"Daily"], ["604800":"Weekly"], ["-1":"Monthly"]], width:4
+            input "backupTime", "time", title: "Time for Backup", width:4
+            input "firstBackup", "date", title: "Date of First Backup", width:4
+            numDays = ["Always"]
+            for(i=1;i<31;i++){
+                numDays.add(i)
             }
-            
+            input "retDays", "enum", title: "Days to Retain Backups", options:numDays, width:4
+            input "retTime", "time", title: "Time to Purge Backups", width:4
+            input "freqSave","button", title: "Save",width:4
+            if(autoEnabled) 
+                subNextBackup()
+            else
+                unschedule("createBackup")
+            unschedule("backupPurge")
+            if(retDays != null && retDays != "Always" && retTime != null) {
+                sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
+                rTime = sdf.parse(retTime)
+                hrs = rTime.getHours()
+                mins = rTime.getMinutes()
+                schedule("0 $mins $hrs ? * * *", "backupPurge")
+            }            
+        }        
+    }
+}
+
+void subNextBackup() {
+    if(!autoEnabled) return
+    if(backupTime == null || backupFreq == null || backupTime == null) {
+        log.error "Backup Scheduling information is incomplete"
+        return
+    }
+    sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
+    sdf2 = new SimpleDateFormat("yyyy-MM-dd")
+    tNow = new Date()
+    tPart = backupTime.substring(backupTime.indexOf("T")+1,backupTime.indexOf("T")+9)
+    if(tNow.before(sdf.parse("${firstBackup}T${tPart}"))){  //First run
+        long nextDate = sdf.parse("${firstBackup}T${tPart}").getTime()
+        long secs = ((nextDate - new Date().getTime())/1000).toInteger()+1
+        runIn(secs,"createBackup")
+    } else if(backupFreq != -1){ //old run calc from current date - daily or weekly 
+        wDate = new Date(new Date().getTime()+(backupFreq.toInteger()*1000))
+        dayPart = sdf2.format(wDate)
+        long nextDate = sdf.parse("${dayPart}T${tPart}").getTime()
+        long secs = ((nextDate - new Date().getTime())/1000).toInteger()+1
+        runIn(secs,"createBackup")
+    } else { //old run calc from current date - monthly
+        wDate = new Date()
+        MM = wDate.getMonth()
+        MM++
+        if(MM > 12) MM=1
+        YYYY = wDate.getYear()
+        DD = wDate.getDate()
+        dayPart = sdf2.format(new Date(YYYY,MM,DD))
+        long nextDate = sdf.parse("${dayPart}T${tPart}").getTime()
+        long secs = ((nextDate - new Date().getTime())/1000).toInteger()+1
+        runIn(secs,"createBackup")        
+    }  
+}
+
+void backupPurge() {
+    if(retDays == null || retDays == 'Always')
+        return
+    secondsBack = retDays.toInteger()*86400*1000
+    purgeDate = (long) (new Date().getTime() - secondsBack)
+    fList = listFiles('json').jStr
+ 
+    for (rec in fList.files) {
+        if(rec.name.contains(".hgz")){
+            if(debugEnabled) 
+                log.debug "${rec.name} Purge Date: $purgeDate File Date:${rec.date}"
+            if(rec.date.toLong() <= purgeDate)
+            if(debugEnabled)
+                log.debug "file delete ${rec.name}"
+            deleteHubFile("${rec.name.trim()}")
         }
     }
 }
@@ -92,7 +183,7 @@ def restoreFM(){
         section("<h3>Restore Data</h3>"){
 
             hgzList=[]
-            fList = listFiles()
+            fList = listFiles().fList
             if(!fList.toString().contains("$rFile")){
                 rFile = "No Selection"
                 rFileList = ""
@@ -112,7 +203,7 @@ def restoreFM(){
             }
             input "noOverWrite", "bool", title: "Do not overwrite existing files", submitOnChange: true
             if(rFile != null && rFile != "No Selection" && rFileList != null){   
-                input "reqRestore", "button", title: "<br>Restore from Backup", width:2
+                input "reqRestore", "button", title: "Restore from Backup", width:2
                 if(state?.restoreHgz){
                     if(rFile != null && rFile != "No Selection" && rFileList != null) restoreBackup("$rFile",rFileList)
                     rFile = "No Selection"
@@ -128,7 +219,7 @@ def restoreFM(){
 }
 
 void createBackup(){
-    fList = listFiles()
+    fList = listFiles().fList
     if(debugEnabled)log.debug "$fList"
     
     i=0
@@ -162,7 +253,10 @@ void createBackup(){
     
     zFileName = "${toCamelCase("fmb ${location.name}")}_${datePart}.hgz"
     uploadHubFile("$zFileName",fData) 
-    
+    if(autoEnabled) 
+        subNextBackup()
+    else
+        unschedule("createBackup")
 }
 
 String[] readHeader(restFile) {
@@ -304,7 +398,7 @@ String toCamelCase(init) {
 }
 
 @SuppressWarnings('unused')
-List<String> listFiles(){
+HashMap listFiles(retType='nameOnly'){
     if(security) cookie = securityLogin().cookie
     if(debugEnabled) log.debug "Getting list of files"
     uri = "http://${location.hub.localIP}:8080/hub/fileManager/json";
@@ -316,10 +410,11 @@ List<String> listFiles(){
     ]
     try {
         fileList = []
+        json = ''
         httpGet(params) { resp ->
             if (resp != null){
                 if(logEnable) log.debug "Found the files"
-                def json = resp.data
+                json = resp.data
                 if(debugEnabled) log.debug "$json"
                 for (rec in json.files) {
                     if(rec.type == 'file')
@@ -330,7 +425,10 @@ List<String> listFiles(){
             }
         }
         if(debugEnabled) log.debug fileList.sort()
-        return fileList.sort()
+        if(retType == 'json') 
+            return [jStr: json]
+        else
+            return [fList: fileList.sort()]
     } catch (e) {
         log.error e
     }
@@ -409,6 +507,8 @@ def appButtonHandler(btn) {
             break
         case "reqRestore":
             state.restoreHgz = true
+            break
+        case "freqSave":
             break
         default: 
             log.error "Undefined button $btn pushed"

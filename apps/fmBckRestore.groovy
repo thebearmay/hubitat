@@ -14,7 +14,8 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
- *    27Jan2023    thebearmay    v1.1.0 Add Backup and Backup Purge scheduling    
+ *    27Jan2023    thebearmay    v1.1.0 Add Backup and Backup Purge scheduling
+ *                               v1.1.1 Add a backup and download option
  */
 import java.util.zip.*
 import java.util.zip.ZipOutputStream    
@@ -22,7 +23,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '1.1.0' }
+static String version()	{  return '1.1.1' }
 
 definition (
 	name: 			"File Manager Backup & Restore", 
@@ -91,11 +92,25 @@ def backupFM(){
     dynamicPage (name: "backupFM", title: "<h2>File Manager Backup & Restore</h2><p style='font-size:small'>v${version()}</p>", install: false, uninstall: false) {
         section("<h3>Backup Management</h3>"){
             input "excludeHgz", "bool", title: "Exclude .hgz Files", defaultValue: true, submitOnChange: true, width:4
-            input "reqBackup", "button", title: "Create Backup File", width:4
+            input "dwnldBackup", "button", title: "<span style='color:white;font-weight:bold;'>Create and Download Backup</span>", width:3, backgroundColor:"green"
+            if(state?.download){
+                s2 = "Creating backup and downloading..."
+                paragraph s2                
+                createBackup()
+                pauseExecution(3000)
+                latest = getLatest()
+                if(debugEnabled) log.debug "$latest"
+                s2 = "<script type='text/javascript'>const anchor = document.createElement('a');anchor.href ='${location.hub.localIP}:8080/local}';anchor.download = '$latest';document.body.appendChild(anchor);anchor.click();document.body.removeChild(anchor);location.reload();</script>"
+                paragraph s2
+                state.download = false
+            }
+            input "reqBackup", "button", title: "Create Backup File", width:2
             if(state?.createHgz){
                 createBackup()
                 state.createHgz = false
-            }          
+            }
+
+          
         }
         section(title:"<h3>Frequency Management</h3>", hideable: true, hidden: true){
             input "autoEnabled", "bool",title: "Automatic Backup Enabled", defaultValue: false, width:4
@@ -108,7 +123,7 @@ def backupFM(){
             }
             input "retDays", "enum", title: "Days to Retain Backups", options:numDays, width:4
             input "retTime", "time", title: "Time to Purge Backups", width:4
-            input "freqSave","button", title: "Save",width:4
+            input "freqSave","button", title: "<span style='color:white;font-weight:bold;'>Save</span>",width:4, backgroundColor:"red"
             if(autoEnabled) 
                 subNextBackup()
             else
@@ -176,6 +191,23 @@ void backupPurge() {
             deleteHubFile("${rec.name.trim()}")
         }
     }
+}
+
+String getLatest() {
+    fList = listFiles('json').jStr
+    String latest = ''
+    long dCompare = 0
+    for(rec in fList.files){
+        if(rec.name.contains(".hgz")){
+            if(debubEnabled) 
+                log.debug "${rec.name} $dCompare ${rec.date}"
+            if(rec.date.toLong() > dCompare){
+                latest = rec.name
+                dCompare = rec.date.toLong()
+            }
+        }
+    }
+    return latest
 }
 
 def restoreFM(){
@@ -509,6 +541,9 @@ def appButtonHandler(btn) {
             state.restoreHgz = true
             break
         case "freqSave":
+            break
+        case "dwnldBackup":
+            state.download = true
             break
         default: 
             log.error "Undefined button $btn pushed"

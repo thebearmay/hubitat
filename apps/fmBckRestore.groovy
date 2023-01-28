@@ -16,6 +16,8 @@
  *    ----         ---           ----
  *    27Jan2023    thebearmay    v1.1.0 Add Backup and Backup Purge scheduling
  *                               v1.1.1 Add a backup and download option
+ *    28Jan2023                  v1.1.2 Create Location Event when backup taken/removed
+ *                                        Retention purge error fix
  */
 import java.util.zip.*
 import java.util.zip.ZipOutputStream    
@@ -93,9 +95,7 @@ def backupFM(){
         section("<h3>Backup Management</h3>"){
             input "excludeHgz", "bool", title: "Exclude .hgz Files", defaultValue: true, submitOnChange: true, width:4
             input "dwnldBackup", "button", title: "<span style='color:white;font-weight:bold;'>Create and Download Backup</span>", width:3, backgroundColor:"green"
-            if(state?.download){
-                s2 = "Creating backup and downloading..."
-                paragraph s2                
+            if(state?.download){              
                 createBackup()
                 pauseExecution(3000)
                 latest = getLatest()
@@ -108,6 +108,11 @@ def backupFM(){
             if(state?.createHgz){
                 createBackup()
                 state.createHgz = false
+            }
+            input "cleanNow", "button", title: "Check Retention", width:2
+            if(state?.runPurge) {
+                backupPurge()
+                state.runPurge = false
             }
 
           
@@ -180,17 +185,20 @@ void backupPurge() {
     secondsBack = retDays.toInteger()*86400*1000
     purgeDate = (long) (new Date().getTime() - secondsBack)
     fList = listFiles('json').jStr
- 
+    i=0
     for (rec in fList.files) {
         if(rec.name.contains(".hgz")){
-            if(debugEnabled) 
+            //if(debugEnabled) 
                 log.debug "${rec.name} Purge Date: $purgeDate File Date:${rec.date}"
-            if(rec.date.toLong() <= purgeDate)
-            if(debugEnabled)
-                log.debug "file delete ${rec.name}"
-            deleteHubFile("${rec.name.trim()}")
+            if(rec.date.toLong() <= purgeDate.toLong()){
+                if(debugEnabled)
+                    log.debug "file delete ${rec.name}"
+                deleteHubFile("${rec.name.trim()}")
+                i++
+            }
         }
     }
+    sendLocationEvent(name:"fmBackup", value:"cleanup", descriptionText:"FM Backup removed $i file(s) based on retention settings", eventType:"USER")
 }
 
 String getLatest() {
@@ -289,6 +297,7 @@ void createBackup(){
         subNextBackup()
     else
         unschedule("createBackup")
+    sendLocationEvent(name:"fmBackup", value:"created", descriptionText:"$zFileName FM Backup created")
 }
 
 String[] readHeader(restFile) {
@@ -311,7 +320,6 @@ String[] readHeader(restFile) {
     }
     return fList
 }
-
 
 void restoreBackup(restFile, fList){
     byte[] rData = downloadHubFile("$restFile")
@@ -544,6 +552,9 @@ def appButtonHandler(btn) {
             break
         case "dwnldBackup":
             state.download = true
+            break
+        case "cleanNow":
+            state.runPurge = true
             break
         default: 
             log.error "Undefined button $btn pushed"

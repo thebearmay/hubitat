@@ -188,7 +188,7 @@ void backupPurge() {
     i=0
     for (rec in fList.files) {
         if(rec.name.contains(".hgz")){
-            //if(debugEnabled) 
+            if(debugEnabled) 
                 log.debug "${rec.name} Purge Date: $purgeDate File Date:${rec.date}"
             if(rec.date.toLong() <= purgeDate.toLong()){
                 if(debugEnabled)

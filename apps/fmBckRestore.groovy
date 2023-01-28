@@ -25,7 +25,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '1.1.1' }
+static String version()	{  return '1.1.2' }
 
 definition (
 	name: 			"File Manager Backup & Restore", 

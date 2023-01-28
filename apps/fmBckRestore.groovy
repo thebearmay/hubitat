@@ -198,7 +198,7 @@ void backupPurge() {
             }
         }
     }
-    sendLocationEvent(name:"fmBackup", value:"cleanup", descriptionText:"FM Backup removed $i file(s) based on retention settings", eventType:"USER")
+    sendLocationEvent(name:"fmBackup", value:"cleanup", descriptionText:"FM Backup removed $i file(s) based on retention settings", type:"USER")
 }
 
 String getLatest() {
@@ -297,7 +297,7 @@ void createBackup(){
         subNextBackup()
     else
         unschedule("createBackup")
-    sendLocationEvent(name:"fmBackup", value:"created", descriptionText:"$zFileName FM Backup created")
+    sendLocationEvent(name:"fmBackup", value:"created", descriptionText:"$zFileName FM Backup created", type:"USER")
 }
 
 String[] readHeader(restFile) {

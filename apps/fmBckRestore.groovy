@@ -379,56 +379,6 @@ String[] readHeader(restFile) {
     return fList
 }
 
-/*void restoreBackup(restFile, fList){
-    byte[] rData = downloadHubFile("$restFile")
-    String rFile = new String(new String(rData))
-    i = 0
-    for(;i<rData.size();i++){
-        if(rData[i] == (byte)']') break
-    }
-    foundIt = i
-   //read header
-    fHeaderStr = new String(rData, "UTF-8").substring(0,foundIt+1)
-    def jSlurp = new JsonSlurper()
-    fHeader = jSlurp.parseText(fHeaderStr)
-    if(debugEnabled) log.debug "$fHeader"
-    Byte[] newByte = new Byte [rData.size()-(foundIt+1)]
-    j=0
-    for(i=foundIt+1;i<(rData.size());i++){
-        newByte[j]=rData[i]
-        j++
-    }
-    fTest = unzip(newByte)
-    if(debugEnabled)log.debug "${fTest[132611..132704]}"
-   
-    fStr = fList.toString()
-    fHeader.each {
-        if(it.fName != ">>>fEntryEnd>>>" && (fStr.contains("${it.fName}") || fStr.contains("All"))){
-            if(debugEnabled)log.debug "${it.fName} ${it.fStart.toInteger()} ${it.fEnd.toInteger()}"
-            
-            fLength = it.fEnd.toInteger()+1 - it.fStart.toInteger()
-            fOut = new Byte[fLength]
-            for(i=it.fStart.toInteger();i<fLength+it.fStart.toInteger();i++){
-                j=i-it.fStart.toInteger()
-                fOut[j]=fTest[i]
-                if(debugEnabled)log.debug "${fOut[j]} ${fTest[i]} $i $j"
-            }
-            if(debugEnabled)log.debug "$fOut"
-            bOut = new ByteArrayOutputStream();
-            bOut.write(fOut)
-            fOut2 = bOut.toByteArray()
-            if(debugEnabled)log.debug "$fOut2"
-            if(noOverWrite && fileExists("${it.fName}")){
-               tNow = new Date().getTime().toString()
-               it.fName = it.fName.replace(".","_$tNow.")
-            }
-            uploadHubFile("${it.fName}",fOut2)
-            if(debugEnabled)log.debug "${it.fName}"
-        }
-    }
-}
-*/
-
 static byte[] zip(byte[] uncompressedData) {
     ByteArrayOutputStream bos = null
     GZIPOutputStream gzipOS = null

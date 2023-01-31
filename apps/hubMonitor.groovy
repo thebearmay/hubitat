@@ -70,7 +70,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main")
 		    {
-                input "qryDevice", "device.HubInformation,device.HubInformationDriverV3", title: "Hubs to Monitor:", multiple: true, required: true, submitOnChange: true
+                input "qryDevice", "device.HubInformationDriverv3", title: "Hubs to Monitor:", multiple: true, required: true, submitOnChange: true
                 input "debugEnable", "bool", title: "Enable Debugging:", submitOnChange: true
                 if (qryDevice != null){
                     hubDevCheck = true

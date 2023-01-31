@@ -1,10 +1,10 @@
 {
  "packageName":"File Manager Backup & Restore",
  "author":"Jean P. May, Jr.",
- "version":"1.1.2",
+ "version":"1.2.0",
  "minimumHEVersion":"2.3.4.134",
  "dateReleased":"2023-01-23",
- "releaseNotes":"v1.1.2 - Retention fix, add location events, download on Safari fix\nv1.1.1 - Added a create backup and download button\nv1.1.0 - Added backup scheduling and backup retention logic\nv1.0.0 - Original Code",
+ "releaseNotes":"v1.2.0 - Rewrite the restore logic\nv1.1.2 - Retention fix, add location events, download on Safari fix\nv1.1.1 - Added a create backup and download button\nv1.1.0 - Added backup scheduling and backup retention logic\nv1.0.0 - Original Code",
  "apps": [
   {
      "id":"02a524e9-fa20-4d48-8279-79d13c458474",

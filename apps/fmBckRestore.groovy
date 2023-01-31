@@ -18,6 +18,7 @@
  *                               v1.1.1 Add a backup and download option
  *    28Jan2023                  v1.1.2 Create Location Event when backup taken/removed
  *                                        Retention purge error fix
+ *    31Jan2023                  v1.2.0 Rewrite restore logic to reduce time
  */
 import java.util.zip.*
 import java.util.zip.ZipOutputStream    
@@ -25,7 +26,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '1.1.2' }
+static String version()	{  return '1.2.0' }
 
 definition (
 	name: 			"File Manager Backup & Restore", 
@@ -258,6 +259,63 @@ def restoreFM(){
     }
 }
 
+void restoreBackup(restFile, fList){
+    long rStart = new Date().getTime()
+    byte[] rData = downloadHubFile("$restFile")
+    long rEnd = new Date().getTime()
+    if(debugEnabled) log.debug "Read time ${(rEnd-rStart)/1000} seconds"
+    String rFile = new String(new String(rData))
+    i = 0
+    for(;i<rData.size();i++){
+        if(rData[i] == (byte)']') break
+    }
+    foundIt = i
+   //read header
+    fHeaderStr = new String(rData, "UTF-8").substring(0,foundIt+1)
+    def jSlurp = new JsonSlurper()
+    fHeader = jSlurp.parseText(fHeaderStr)
+    if(debugEnabled) log.debug "$fHeader"
+    rEnd2 = new Date().getTime()  
+    if(debugEnabled) log.debug "Read Header ${(rEnd2-rEnd)/1000} seconds"      
+  
+    newByte = new ByteArrayOutputStream();
+    j=0
+    for(i=foundIt+1;i<(rData.size());i++){
+        newByte.write(rData[i])
+    }
+                      
+    fTest = unzip(newByte.toByteArray())
+
+    rEnd3 = new Date().getTime()
+    if(debugEnabled) log.debug "Unzip ${(rEnd3-rEnd2)/1000} seconds"    
+    fStr = fList.toString()
+    fHeader.each {
+        if(it.fName != ">>>fEntryEnd>>>" && (fStr.contains("${it.fName}") || fStr.contains("All"))){
+            if(debugEnabled)log.debug "${it.fName} ${it.fStart.toInteger()} ${it.fEnd.toInteger()}"
+            fLength = it.fEnd.toInteger()+1 - it.fStart.toInteger()
+            
+            bOut = new ByteArrayOutputStream();
+            for(i=it.fStart.toInteger();i<fLength+it.fStart.toInteger();i++){
+                bOut.write(fTest[i])
+            }
+
+            fOut2 = bOut.toByteArray()
+            if(debugEnabled)log.debug "$fOut2"
+            
+            if(noOverWrite && fileExists("${it.fName}")){
+               tNow = new Date().getTime().toString()
+               it.fName = it.fName.replace(".","_$tNow.")
+            }
+
+            uploadHubFile("${it.fName}",fOut2)
+            if(debugEnabled)log.debug "${it.fName}"
+            
+        }
+    }
+    rEnd4 = new Date().getTime()
+    if(debugEnabled) log.debug "Restore time ${(rEnd4-rEnd3)/1000} seconds, Total time ${(rEnd4-rEnd)/1000} seconds "
+}
+
 void createBackup(){
     fList = listFiles().fList
     if(debugEnabled)log.debug "$fList"
@@ -321,7 +379,7 @@ String[] readHeader(restFile) {
     return fList
 }
 
-void restoreBackup(restFile, fList){
+/*void restoreBackup(restFile, fList){
     byte[] rData = downloadHubFile("$restFile")
     String rFile = new String(new String(rData))
     i = 0
@@ -369,7 +427,7 @@ void restoreBackup(restFile, fList){
         }
     }
 }
-
+*/
 
 static byte[] zip(byte[] uncompressedData) {
     ByteArrayOutputStream bos = null
@@ -529,10 +587,10 @@ Boolean fileExists(fName){
             }
         }
     } catch (exception){
-        if (exception.message == "Not Found"){
-            if(debugEnabled) log.debug("File DOES NOT Exists for $fName)");
+        if (exception.message.toLowerCase().contains("not found")){
+            if(debugEnabled) log.debug "File DOES NOT Exists for $fName"
         } else {
-            log.error("Find file $fName) :: Connection Exception: ${exception.message}");
+            log.error "Find file $fName :: Connection Exception: ${exception.message}"
         }
         return false;
     }

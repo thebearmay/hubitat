@@ -24,6 +24,7 @@
  *    22Dec2022    thebearmay    hub security 
  *    15Jan2023    thebearmay    add descriptionText
  *                               trap relayDeviceType
+ *    01Feb2023                  Add a delay before building the html
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -31,7 +32,7 @@ import groovy.json.JsonSlurper
 #include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.17"}
+static String version() {return "0.0.18"}
 
 metadata {
     definition (
@@ -211,10 +212,12 @@ void dataRefresh(retData){
     }
     calcAbsHumidity()
     if(tileTemplate && tileTemplate != "No selection" && tileTemplate != "--No Selection--"){
-        tileHtml = genHtml(tileTemplate)
-        updateAttr("html","$tileHtml")
+        runIn(5, "buildHtml")          
     }
- 
+}
+void buildHtml(){
+    tileHtml = genHtml(tileTemplate)
+    updateAttr("html","$tileHtml") 
 }
 
 void calcAbsHumidity() {

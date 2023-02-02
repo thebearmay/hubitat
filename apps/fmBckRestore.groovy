@@ -19,6 +19,7 @@
  *    28Jan2023                  v1.1.2 Create Location Event when backup taken/removed
  *                                        Retention purge error fix
  *    31Jan2023                  v1.2.0 Rewrite restore logic to reduce time
+ *    02Feb2023                  v1.3.0 Add download endpoint
  */
 import java.util.zip.*
 import java.util.zip.ZipOutputStream    
@@ -26,7 +27,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '1.2.0' }
+static String version()	{  return '1.3.0' }
 
 definition (
 	name: 			"File Manager Backup & Restore", 
@@ -46,6 +47,12 @@ preferences {
     page name: "mainPage"
     page name: "backupFM"
     page name: "restoreFM"
+}
+
+mappings {
+    path("/latest") {
+        action: [GET: "remBackup"]
+    }
 }
 
 def installed() {
@@ -82,6 +89,15 @@ def mainPage(){
                     login = securityLogin()
                     paragraph "Login successful: ${login.result}\n${login.cookie}"
                 }
+            }
+            section("<h3>Backup Endpoint Information</h3>", hideable:true, hidden:true){
+                if(state.accessToken == null) createAccessToken()
+                paragraph "<b>Backup Endpoint:</b> ${getFullLocalApiServerUrl()}/latest?access_token=${state.accessToken}"
+                input "resetToken", "button", title:"Reset Token"
+                if(resetReq){
+                    resetReq = false
+                    createAccessToken()
+                }               
             }
             section("<h3>Change Application Name</h3>", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
@@ -314,6 +330,20 @@ void restoreBackup(restFile, fList){
     }
     rEnd4 = new Date().getTime()
     if(debugEnabled) log.debug "Restore time ${(rEnd4-rEnd3)/1000} seconds, Total time ${(rEnd4-rEnd)/1000} seconds "
+}
+
+def remBackup(){
+    createBackup()
+    pauseExecution(3000)
+    latestBkup = getLatest()
+    contentBlock = [
+        contentDisposition: "attachment; fileName:$latestBkup", 
+        contentType: "application/octet-stream", 
+        data:downloadHubFile("$latestBkup")
+    ]
+    
+    render(contentBlock)
+
 }
 
 void createBackup(){
@@ -563,6 +593,9 @@ def appButtonHandler(btn) {
             break
         case "cleanNow":
             state.runPurge = true
+            break
+        case "resetToken":
+            state.resetReq = true
             break
         default: 
             log.error "Undefined button $btn pushed"

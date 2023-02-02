@@ -34,6 +34,7 @@
  *    2023-01-23                 v3.0.11 - Change formatting date formatting description to match lastPollTime
  *    2023-02-01                 v3.0.12 - Add a try around the time zone code
  *    2023-02-02                 v3.0.13 - Add a null character check to time zone formatting
+ *                               v3.0.14 - US/Arizona timezone fix
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -41,7 +42,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.13"}
+static String version() {return "3.0.14"}
 
 metadata {
     definition (
@@ -315,15 +316,25 @@ void baseData(dummy=null){
             updateAttr(it, location["${it}"])
         else {
             try {
-                tzWork=location["timeZone"].toString().substring(location["timeZone"].toString().indexOf("TimeZone")+8)
-                tzWork = tzWork.replace("${0xFFFF}", "")
-                if(debugEnable)log.debug "1) $tzWork"
+                tzWork=location["timeZone"].toString()
+                if(tzWork.indexOf("TimeZone") > -1)
+                    tzWork=tzWork.substring(tzWork.indexOf("TimeZone")+8)
+                else // US/Arizona uses a shorter format
+                    tzWork=tzWork.substring(tzWork.indexOf("ZoneInfo")+8).replace("\"","")
+                if(debugEnable)
+                    log.debug "1) $tzWork"
                 tzWork=tzWork.replace("=",":\"")
-                if(debugEnable)log.debug "2) $tzWork"
+                if(debugEnable)
+                    log.debug "2) $tzWork"
                 tzWork=tzWork.replace(",","\",")
-                if(debugEnable)log.debug "3) $tzWork"
+                if(debugEnable)
+                    log.debug "3) $tzWork"
                 tzWork=tzWork.replace("]]","\"]")
-                if(debugEnable)log.debug "4) $tzWork"
+                if(debugEnable)
+                    log.debug "4) $tzWork"
+                tzWork=tzWork.replace("null]","\"]")
+                if(debugEnable)
+                    log.debug "5) $tzWork"
                 tzMap= (Map) evaluate(tzWork)
                 updateAttr("timeZone",JsonOutput.toJson(tzMap))
             } catch (e) {

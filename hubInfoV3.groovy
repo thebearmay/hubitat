@@ -31,8 +31,9 @@
  *                               v3.0.8 - Fix 500 Error on device create
  *    2023-01-16                 v3.0.9 - Delay initial freeMemory check for 8 seconds
  *    2023-01-21                 v3.0.10 - lastUpdated conflict, renamed lastPollTime
- *    2023-01-23                 v3.0.11 - Change formatting date formattinfg description to match lastPollTime
+ *    2023-01-23                 v3.0.11 - Change formatting date formatting description to match lastPollTime
  *    2023-02-01                 v3.0.12 - Add a try around the time zone code
+ *    2023-02-02                 v3.0.13 - Add a null character check to time zone formatting
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -40,7 +41,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.12"}
+static String version() {return "3.0.13"}
 
 metadata {
     definition (
@@ -315,7 +316,15 @@ void baseData(dummy=null){
         else {
             try {
                 tzWork=location["timeZone"].toString().substring(location["timeZone"].toString().indexOf("TimeZone")+8)
-                tzMap= (Map) evaluate(tzWork.replace("=",":\"").replace(",","\",").replace("]]","\"]"))
+                tzWork = tzWork.replace("${0xFFFF}", "")
+                if(debugEnable)log.debug "1) $tzWork"
+                tzWork=tzWork.replace("=",":\"")
+                if(debugEnable)log.debug "2) $tzWork"
+                tzWork=tzWork.replace(",","\",")
+                if(debugEnable)log.debug "3) $tzWork"
+                tzWork=tzWork.replace("]]","\"]")
+                if(debugEnable)log.debug "4) $tzWork"
+                tzMap= (Map) evaluate(tzWork)
                 updateAttr("timeZone",JsonOutput.toJson(tzMap))
             } catch (e) {
                 log.error "Time zone format error: ${location["timeZone"]}<br>$e" 
@@ -639,7 +648,7 @@ void parseZwave(String zString){
     
     if(start == -1 || end < 1 || zString.indexOf("starting up") > 0 ){ //empty or invalid string - possibly non-C7
         //updateAttr("zwaveData",null)
-        log.error "Invalid ZWave Data returned"
+        if(!warnSuppress) log.warn "Invalid ZWave Data returned"
     }else {
         wrkStr = zString.substring(start,end)
         wrkStr = wrkStr.replace("(","[")

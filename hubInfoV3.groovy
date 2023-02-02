@@ -31,6 +31,8 @@
  *                               v3.0.8 - Fix 500 Error on device create
  *    2023-01-16                 v3.0.9 - Delay initial freeMemory check for 8 seconds
  *    2023-01-21                 v3.0.10 - lastUpdated conflict, renamed lastPollTime
+ *    2023-01-23                 v3.0.11 - Change formatting date formattinfg description to match lastPollTime
+ *    2023-02-01                 v3.0.12 - Add a try around the time zone code
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -38,7 +40,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.10"}
+static String version() {return "3.0.12"}
 
 metadata {
     definition (
@@ -152,7 +154,7 @@ preferences {
     }
     input("freeMemUnit", "enum", title: "Free Memory Unit", options:["KB","MB"], defaultValue:"KB", width:4)
     input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss", width:4)
-    input("updSdfPref", "enum", title: "Date/Time Format for Last Updated", options:sdfList, defaultValue:"Milliseconds", width:4)
+    input("updSdfPref", "enum", title: "Date/Time Format for Last Poll Time", options:sdfList, defaultValue:"Milliseconds", width:4)
     input("rsrtSdfPref", "enum", title: "Date/Time Format for Hub Restart Formatted", options:sdfList, defaultValue:"yyyy-MM-dd HH:mm:ss", width:4)  
     input("upTimeSep", "string", title: "Separator for Formatted Uptime", defaultValue: ", ", width:4)
     input("upTimeDesc", "enum", title: "Uptime Descriptors", defaultValue:"d/h/m/s", options:["d/h/m/s"," days/ hrs/ min/ sec"," days/ hours/ minutes/ seconds"])
@@ -311,9 +313,13 @@ void baseData(dummy=null){
         if(it != "timeZone")
             updateAttr(it, location["${it}"])
         else {
-            tzWork=location["timeZone"].toString().substring(location["timeZone"].toString().indexOf("TimeZone")+8)
-            tzMap= (Map) evaluate(tzWork.replace("=",":\"").replace(",","\",").replace("]]","\"]"))
-            updateAttr("timeZone",JsonOutput.toJson(tzMap))
+            try {
+                tzWork=location["timeZone"].toString().substring(location["timeZone"].toString().indexOf("TimeZone")+8)
+                tzMap= (Map) evaluate(tzWork.replace("=",":\"").replace(",","\",").replace("]]","\"]"))
+                updateAttr("timeZone",JsonOutput.toJson(tzMap))
+            } catch (e) {
+                log.error "Time zone format error: ${location["timeZone"]}<br>$e" 
+            }
         }
     }
     

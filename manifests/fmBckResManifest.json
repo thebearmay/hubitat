@@ -11,7 +11,7 @@
      "name":"File Manager Backup & Restore",
      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/fmBckRestore.groovy",
      "required":true,
-     "oauth":false,
+     "oauth":true,
      "primary":true
   }
   ]

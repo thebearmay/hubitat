@@ -111,6 +111,7 @@ def outAction(){
             input "zbDisable", "enum", title: "Turn off the ZigBee Radio", options: [0,1,2,3], submitOnChange:true, width:4
             input "zwDisable", "enum", title: "Turn off the ZWave Radio", options: [0,1,2,3], submitOnChange:true, width:4
             input "appDisable", "enum", title: "Disable all Rules/Apps (except this one)", options: [0,1,2,3], submitOnChange:true, width:4
+            input "rebootHubO", "enum", title: "Shut down the hub", options: [0,1,2,3], submitOnChange:true, width:4
             input "shutdownHub", "enum", title: "Shut down the hub", options: [0,1,2,3], submitOnChange:true, width:4
            
         }           
@@ -215,6 +216,7 @@ void startOutage(){
     if(zbDisable > 0) runIn(delayList[zbDisable.toInteger()], "disableZb")
     if(zwDisable > 0) runIn(delayList[zwDisable.toInteger()], "disableZw")
     if(appDisable > 0) runIn(delayList[appDisable.toInteger()], "disableApps")
+   if(rebootHubO > 0) runIn(delayList[shutdownHub.toInteger()], "reboot")
     if(shutdownHub > 0) runIn(delayList[shutdownHub.toInteger()], "shutdown")
 }
 

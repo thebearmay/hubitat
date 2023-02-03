@@ -33,7 +33,7 @@ definition (
 	name: 			"File Manager Backup & Restore", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Logic Check .",
+	description: 	"File Manager Backup & Restore - provides a facility to create and manage the retention of backups for the File Manager. Also permits single/multi-file recover from a backup as well as a full retore.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/fmBckRestore.groovy",
     installOnOpen:  true,

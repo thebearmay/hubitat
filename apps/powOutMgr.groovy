@@ -63,7 +63,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
             section("<h3>Main</h3>"){
                 
-                input "triggerDevs", "capability.powerSource", title:"Devices with PowerSource to act as Triggers", submitOnChange:true
+                input "triggerDevs", "capability.powerSource", title:"Devices with PowerSource to act as Triggers", submitOnChange:true, multiple:true
                 if(triggerDevs != null) {
                     unsubscribe()
                     triggerDevs.each{

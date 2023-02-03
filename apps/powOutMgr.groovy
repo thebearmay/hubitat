@@ -198,7 +198,7 @@ void pollDevices(){
 }
 
 void startOutActions(){
-    if(state.outage == true) return
+    if(state.outage == true) return// already processed
     state.outage = true
     runIn(triggerDelay.toInteger()*60, "startOutage")
 }
@@ -231,7 +231,7 @@ void disableApps(){
 }
 
 void startUpActions(){
-    if(state.outage == false) return
+    if(state.outage == false) return //already started processing
     state.outage = false
     runIn(triggerDelay.toInteger()*60, "startRecover")
 }
@@ -244,7 +244,7 @@ void startRecover(){
     if(zbEnable) zbPost("enabled")
     if(zwEnable) zwPost("enabled")
     if(appEnable) appsPost("enable")
-    if(rebootHub) runIn(120,"reboot")
+    if(rebootHub) runIn(120,"reboot")//allow time for the other actions to complete
 }
 
 @SuppressWarnings('unused')

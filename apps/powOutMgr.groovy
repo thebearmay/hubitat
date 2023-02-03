@@ -59,7 +59,7 @@ void logsOff(){
 }
 
 def mainPage(){
-    dynamicPage (name: "mainPage", title: "<h2>File Manager Backup & Restore</h2><p style='font-size:small'>v${version()}</p>", install: true, uninstall: true) {
+    dynamicPage (name: "mainPage", title: "<h2>Power Outage Manager</h2><p style='font-size:small'>v${version()}</p>", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
             section("<h3>Main</h3>"){
                 
@@ -122,7 +122,7 @@ def upAction(){
         section("<h3></h3>"){
             input "zbEnable", "bool", title: "Turn on the ZigBee Radio", submitOnChange:true, width:4
             input "zwEnable", "bool", title: "Turn on the ZWave Radio", submitOnChange:true, width:4
-            input "appEnable", "bool", title: "Enable all Rules/Apps (except this one)", submitOnChange:true, width:4
+            input "appEnable", "bool", title: "Enable all Rules/Apps", submitOnChange:true, width:4
             input "rebootHub", "bool", title: "Reboot the hub", submitOnChange:true, width:4
         }           
     }
@@ -372,6 +372,7 @@ def appsPost(String eOrD){
     appList = getAppsList() 
     
     appList.each(){
+        if(it.id != this.getId()){
         try{
             params = [
                 uri: "http://127.0.0.1:8080/installedapp/disable",
@@ -387,6 +388,7 @@ def appsPost(String eOrD){
                 if(debugEnabled) log.debug "appsPost response: $resp.data"
     		}
         }catch (e){
+        }
         }
     }
 }

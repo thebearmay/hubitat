@@ -33,7 +33,7 @@ definition (
 	name: 			"File Manager Backup & Restore", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"File Manager Backup & Restore - provides a facility to create and manage the retention of backups for the File Manager. Also permits single/multi-file recover from a backup as well as a full retore.",
+	description: 	"File Manager Backup & Restore - provides a facility to create and manage the retention of backups for the File Manager.\n  Also permits single/multi-file recover from a backup as well as a full retore.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/fmBckRestore.groovy",
     installOnOpen:  true,
@@ -101,7 +101,7 @@ def mainPage(){
             }
             section("<h3>Change Application Name</h3>", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
-               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+               if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
             }            
         }
     }
@@ -140,7 +140,7 @@ def backupFM(){
             input "backupTime", "time", title: "Time for Backup", width:4
             input "firstBackup", "date", title: "Date of First Backup", width:4
             numDays = ["Always"]
-            for(i=1;i<31;i++){
+            for(i=0;i<31;i++){
                 numDays.add(i)
             }
             input "retDays", "enum", title: "Days to Retain Backups", options:numDays, width:4

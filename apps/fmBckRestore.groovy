@@ -20,6 +20,7 @@
  *                                        Retention purge error fix
  *    31Jan2023                  v1.2.0 Rewrite restore logic to reduce time
  *    02Feb2023                  v1.3.0 Add download endpoint
+ *    05Feb2023                  v1.3.1 Add Content Length to download endpoint
  */
 import java.util.zip.*
 import java.util.zip.ZipOutputStream    
@@ -27,7 +28,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '1.3.0' }
+static String version()	{  return '1.3.1' }
 
 definition (
 	name: 			"File Manager Backup & Restore", 
@@ -336,10 +337,12 @@ def remBackup(){
     createBackup()
     pauseExecution(3000)
     latestBkup = getLatest()
+    fData = downloadHubFile("$latestBkup")
     contentBlock = [
         contentDisposition: "attachment; fileName:$latestBkup", 
         contentType: "application/octet-stream", 
-        data:downloadHubFile("$latestBkup")
+        data:fData,
+        contentLength:fData.size()
     ]
     
     render(contentBlock)

@@ -16,7 +16,7 @@
  *    ----         ---           ----
 */
 
-static String version()	{  return '0.0.0' }
+static String version()	{  return '0.1.0' }
 
 definition (
 	name: 			"Power Outage Manager", 
@@ -108,12 +108,22 @@ def outAction(){
             
             paragraph "<b>Assign each of the below to a Response Queue, items assigned to Queue 0 will not be scheduled</b>"
             
+            appsList = [0:"All"]
+            getAppsList().each{
+                appsList["$it.id"]=it.title
+            }
+
+            
             input "zbDisable", "enum", title: "Turn off the ZigBee Radio", options: [0,1,2,3], submitOnChange:true, width:4
             input "zwDisable", "enum", title: "Turn off the ZWave Radio", options: [0,1,2,3], submitOnChange:true, width:4
-            input "appDisable", "enum", title: "Disable all Rules/Apps (except this one)", options: [0,1,2,3], submitOnChange:true, width:4
+            input "appDisable", "enum", title: "Disable Rules/Apps", options: [0,1,2,3], submitOnChange:true, width:4
+            if(appDisable == "0" || appDisable == null){
+                app.updateSetting("appDisableList",[value:"",type:"enum"])
+            }else {
+                input "appDisableList", "enum", title: "Select Rules/Apps", options: appsList, multiple:true, width:4, submitOnChange:true
+            }
             input "rebootHubO", "enum", title: "Reboot the hub", options: [0,1,2,3], submitOnChange:true, width:4
-            input "shutdownHub", "enum", title: "Shutdown the hub", options: [0,1,2,3], submitOnChange:true, width:4
-           
+            input "shutdownHub", "enum", title: "Shutdown the hub", options: [0,1,2,3], submitOnChange:true, width:4           
         }           
     }
 }
@@ -370,8 +380,13 @@ void shutdown() {
 def appsPost(String eOrD){
     if(eOrD == "enable") tOrF = false
     else tOrF = true
+    if(appDisableList.size() < 1)
+        return
+    if(appDisableList[0] == 0 || appDisableList[0] == "0")
+        appList = appDisableList
+    else
+        appList = getAppsList().id
     
-    appList = getAppsList() 
     
     appList.each(){
         if(it.id != this.getId()){

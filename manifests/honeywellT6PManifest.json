@@ -1,10 +1,10 @@
 {
   "packageName": "Advanced Honeywell T6 Pro",
   "author": "Jean P. May, Jr.",
-  "version": "1.2.17",
+  "version": "1.2.18",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-12-25",
-  "releaseNotes": "v1.2.17 - Fixes for Thermostat Scheduler\nv1.2.16 - add Humidity Calibration, refresh on setPoint change\nv1.2.15 - set initial humidity and temperature setting if null",
+  "dateReleased": "2023-02-06",
+  "releaseNotes": "v1.2.18 - capture powerSource on battery report or power applied\nv1.2.17 - Fixes for Thermostat Scheduler\nv1.2.16 - add Humidity Calibration, refresh on setPoint change\nv1.2.15 - set initial humidity and temperature setting if null",
   "drivers": [
     {
       "id": "69a73c40-e404-4773-aa75-1d73e009d8e4",

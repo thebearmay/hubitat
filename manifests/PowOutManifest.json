@@ -1,0 +1,18 @@
+{
+ "packageName":"Power Outage Manager",
+ "author":"Jean P. May, Jr.",
+ "version":"0.1.2",
+ "minimumHEVersion":"2.3.3.0",
+ "dateReleased":"2023-02-07",
+ "releaseNotes":"v0.1.2 - Beta Release",
+ "apps": [
+  {
+     "id":"3b776e16-ac8a-42a8-888c-e0c13b915e36",
+     "name":"Power Outage Manager",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/powOutMgr.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

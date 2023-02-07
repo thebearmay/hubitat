@@ -280,6 +280,16 @@
       "tags":[
         "Tools & Utilities"
        ]
+    },
+    {
+      "id":"8ca1acc6-888d-477f-8856-2ddef0f06a2c",
+      "name":"Power Outage Manager",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/powOutMgrManifest.json",
+      "description":"Monitors devices with Power Source capability and initiates actions when the powerSource attribute switches from battery to mains indicating a power outage.  Can also initiate actions when power is restored.",
+      "tags":[
+        "Monitoring"
+       ]
     }
   ]
 }

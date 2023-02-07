@@ -16,7 +16,6 @@
  *    ----         ---           ----
  *    18Oct2022    thebearmay    New Code
  *    23Nov2022    thebearmay    Fix Repository Entry
- *    24Jan2023    thebearmay	 remove quotes from booleans
 */
 
 static String version()	{  return '1.0.2'  }
@@ -77,7 +76,7 @@ definition (
 	name: 			"HPM Manifest Generator", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Generates the package manifest and the merged repository information for the Hubitat Package Manager",
+	description: 	"Air Things Allview Cloud Interface",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hpmManifestGen.groovy",
     installOnOpen:  true,
 	oauth: 			false,
@@ -323,7 +322,7 @@ void appButtonHandler(btn) {
             aText+="  {\n     \"id\":\"${GUID()}\",\n"
             aText+="     \"name\":\"$aName\",\n"
             aText+="     \"location\":\"$aLoc\",\n"
-            aText+="     \"required\":\aReq,\n"
+            aText+="     \"required\":$aReq,\n"
             aText+="     \"oauth\":$aOauth,\n"
             aText+="     \"primary\":$aPrimary\n  }"
             if(state.aText != null) state.aText += aText

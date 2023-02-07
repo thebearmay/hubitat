@@ -1,7 +1,7 @@
 {
   "packageName": "Tile Multi-Device Template Manager",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2023-01-05",
   "releaseNotes": "0.0.7 add a filter for template selection\n0.0.6 - handle tile template read error\n0.0.5 - add @room\n",
@@ -13,7 +13,7 @@
       "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttMultiDevMgr.groovy",
       "required": true,
       "oauth": false,
-      "primary": false
+      "primary": true
     }
   ],
   "drivers": [

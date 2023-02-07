@@ -15,6 +15,7 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    2023Jan07    thebearmay    v0.1.3 - Add trigger device refresh option on system restart
+ *                               v0.1.4 - Fix Security Prompt
 */
 
 static String version()	{  return '0.1.3' }
@@ -88,8 +89,11 @@ def mainPage(){
                 if (security) { 
                     input("username", "string", title: "Hub Security Username", required: false, submitOnChange: true)
                     input("password", "password", title: "Hub Security Password", required: false, submitOnChange: true)
-                    login = getCookie()
-                    paragraph "Login successful: ${login.result}\n${login.cookie}"
+                    if(username != null && password != null){
+                        login = getCookie()
+                        if(login.cookie != null)
+                            paragraph "Login successful: ${login.result}\n${login.cookie}"
+                    }
                 }
                 if(debugEnabled) runIn(1800,"logsOff") 
                 else unschedule("logsOff")

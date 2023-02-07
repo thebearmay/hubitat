@@ -14,9 +14,10 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
+ *    2023Jan07    thebearmay    v0.1.3 - Add trigger device refresh option on system restart
 */
 
-static String version()	{  return '0.1.2' }
+static String version()	{  return '0.1.3' }
 
 definition (
 	name: 			"Power Outage Manager", 
@@ -75,6 +76,7 @@ def mainPage(){
 
                 input "triggerDelay", "number", title:"<b>Number of minutes to delay before taking action</b>", defaultValue:0, width:3, submitOnChange:true
                 input "agreement", "number", title: "<b>Number of devices that must agree before taking action</b>", defaultValue:1, width:3, submitOnChange:true
+                input "refreshOnStart", "bool", title: "<b>Refresh Trigger Devices on System Start</b>", width:3, submitOnChange:true
                 input "notifyDev", "capability.notification", title: "Send notifications to", submitOnChange:true, multiple:true
                 input "notifyMsgOut", "string", title: "<b>Notification Message - Power Out</b>", defaultValue: "${app.getLabel()} - Power Outage Detected", submitOnChange:true
                 input "notifyMsgUp", "string", title: "<b>Notification Message - Power Restored</b>", defaultValue: "${app.getLabel()} - Power Restored", submitOnChange:true
@@ -177,9 +179,20 @@ void triggerOccurrence(evt){
 void systemStartCheck(evt){
     unschedule("reboot")
     unschedule("shutdown")
+    if(refreshOnStart){
+        refreshTriggers()
+        pauseExecution(3000)
+    }
     pollDevices() // verify the powerSource value in case it changed
     if(state.onBattery.size() >= agreement) startOutActions() // should only occur if something triggered a reboot during the outage or an outage occurred during reboot
     
+}
+
+void refreshTriggers(){
+    triggerDevs.each { dev ->
+        if(dev.hasCommand("refresh"))
+            dev.refresh()
+    }    
 }
 
 void pollDevices(){

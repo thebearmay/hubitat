@@ -15,10 +15,10 @@
  *    2022-09-05        thebearmay    add @room
  *    2022-09-18        thebearmay    handle template read error
  *    2023-01-05        thebearmay    add a filter for template selection
- *    2023-01-24	thebearmay    change to singlethreaded to minimize open files
+ *    2023-02-07        thebearmay    Allow the use of Hub Variables
 */
 
-static String version()	{  return '0.0.8'  }
+static String version()	{  return '0.1.0'  }
 
 
 definition (
@@ -29,8 +29,8 @@ definition (
 	category: 		"Utility",
 	importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/tileTemplate/ttMultiDevMgr.groovy",
     installOnOpen:  true,
-	singleThreaded:true,
 	oauth: 			false,
+    singleThreaded: true,
     iconUrl:        "",
     iconX2Url:      ""
 ) 
@@ -84,7 +84,10 @@ def mainPage(){
                     if (devList.size > 0){
                         devListE = []
                         devList.each {
-                            devListE.add("<a href='http://${location.hub.localIP}:8080/device/edit/$it' target='_blank'>$it</a>")                                     
+                            if("$it".isNumber())
+                                devListE.add("<a href='http://${location.hub.localIP}:8080/device/edit/$it' target='_blank'>$it</a>")
+                            else
+                                devListE.add("variable:$it")
                         }
                         state.validTemplate = true
                     } else devListE = 'No devices found <b>**Invalid Template**</b>'
@@ -99,6 +102,21 @@ def mainPage(){
                         subscribe(it, "altHtml", [filterEvents:true])
                     }
                     href "previewTemplate", title: "Template Preview", required: false
+                }
+                HashMap varMap = getAllGlobalVars()
+                List varListIn = []
+                
+                varMap.each {
+                    varListIn.add("$it.key")
+                }
+                input "varList", "enum", title: "Select variables to monitor:", options: varListIn.sort(), multiple: true, required: false, submitOnChange: true
+                if(varList != null) {
+                    removeAllInUseGlobalVar()
+                    varlist.each {
+                        var="variable:$it"
+                        subscribe(location,"$var", "altHtml")
+                        success = addInUseGlobalVar(it.toString())
+                    }                   
                 }
 
                 input "clearSettings", "button", title: "Clear previous settings"
@@ -154,7 +172,11 @@ List templateScan() {
                     vEnd = it.indexOf("%>")
 //                    log.debug "${it.indexOf(":")}"
                     if(it.indexOf(":") > -1 && it.indexOf(":") < vEnd){ //format of <%devId:attribute%>
-                        devList.add(it.substring(0,it.indexOf(":")).toLong())
+                        devId = it.substring(0,it.indexOf(":"))
+                        if(devId != "var")
+                            devList.add(devId.toLong())
+                        else
+                            devList.add(it.substring(it.indexOf(":"),vEnd))
                     }
                 }
             }
@@ -181,9 +203,12 @@ String altHtml(evt = "") {
                     vEnd = it.indexOf("%>")
                     if(it.indexOf(":") > -1 && it.indexOf(":") < vEnd){
 //                    if(it.indexOf(":") > -1){ //format of <%devId:attribute%>
-                        devId = it.substring(0,it.indexOf(":")).toLong()
-                        qryDevice.each{
-                            if(it.deviceId == devId) dev=it
+                        devId = it.substring(0,it.indexOf(":"))
+                        if(devId != "var") {
+                            devId = devId.toLong()
+                            qryDevice.each{
+                                if(it.deviceId == devId) dev=it
+                            }
                         }
                         vName = it.substring(it.indexOf(":")+1,it.indexOf('%>'))
                         //log.debug "$devId $vName"
@@ -198,6 +223,9 @@ String altHtml(evt = "") {
                         aVal = dev.properties.displayName
                     else if (vName == "@room" && dev != null)
                         aVal = dev.properties.roomName
+                    else if(devId=="var") {
+                        aVal = getGlobalVar("$vName").value
+                    }
                     else if(dev != null) {
                         aVal = dev.currentValue("$vName",true)
                         String attrUnit = dev.currentState("vName")?.unit

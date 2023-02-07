@@ -16,13 +16,13 @@
  *    ----         ---           ----
 */
 
-static String version()	{  return '0.1.1' }
+static String version()	{  return '0.1.2' }
 
 definition (
 	name: 			"Power Outage Manager", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Provides an interface to define actions to take when power goes down and is later restored.",
+	description: 	"Provides an interface to define actions to take when power goes down and when it is later restored.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/powOutMgr.groovy",
     installOnOpen:  true,
@@ -48,7 +48,7 @@ def installed() {
 def updated(){
 //	log.trace "updated()"
     if(!state?.isInstalled) { state?.isInstalled = true }
-	if(debugEnable) runIn(1800,logsOff)
+	if(debugEnabled) runIn(1800,logsOff)
 }
 
 def initialize(){
@@ -59,7 +59,7 @@ void logsOff(){
 }
 
 def mainPage(){
-    dynamicPage (name: "mainPage", title: "<h2>Power Outage Manager</h2><p style='font-size:small'>v${version()}</p>", install: true, uninstall: true) {
+    dynamicPage (name: "mainPage", title: "<style> h2{color:navy;}h3{color:navy;}</style><h2>Power Outage Manager</h2><p style='font-size:small;color:navy'>v${version()}</p>", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
             section("<h3>Main</h3>"){
                 
@@ -73,11 +73,11 @@ def mainPage(){
                 } else
                     unsubscribe()
 
-                input "triggerDelay", "number", title:"Number of minutes to delay before taking action", defaultValue:0, width:3, submitOnChange:true
-                input "agreement", "number", title: "Number of devices that must agree before taking action", defaultValue:1, width:3, submitOnChange:true
+                input "triggerDelay", "number", title:"<b>Number of minutes to delay before taking action</b>", defaultValue:0, width:3, submitOnChange:true
+                input "agreement", "number", title: "<b>Number of devices that must agree before taking action</b>", defaultValue:1, width:3, submitOnChange:true
                 input "notifyDev", "capability.notification", title: "Send notifications to", submitOnChange:true
-                input "notifyMsgOut", "string", title: "Notification Message - Power Out", defaultValue: "${app.getLabel()} - Power Outage Detected", submitOnChange:true
-                input "notifyMsgUp", "string", title: "Notification Message - Power Restored", defaultValue: "${app.getLabel()} - Power Restored", submitOnChange:true
+                input "notifyMsgOut", "string", title: "<b>Notification Message - Power Out</b>", defaultValue: "${app.getLabel()} - Power Outage Detected", submitOnChange:true
+                input "notifyMsgUp", "string", title: "<b>Notification Message - Power Restored</b>", defaultValue: "${app.getLabel()} - Power Restored", submitOnChange:true
                 
                 href "outAction", title: "Power Outage Actions", required: false, width:6, submitOnChange:true
                 href "upAction", title: "Power Restored Actions", required: false, width:6, submitOnChange:true
@@ -89,7 +89,7 @@ def mainPage(){
                     login = getCookie()
                     paragraph "Login successful: ${login.result}\n${login.cookie}"
                 }
-                if(debugEnable) runIn(1800,"logsOff") 
+                if(debugEnabled) runIn(1800,"logsOff") 
                 else unschedule("logsOff")
             }
 
@@ -102,12 +102,16 @@ def mainPage(){
 }
 
 def outAction(){
-    dynamicPage (name: "outAction", title: "<h2>Power Outage Actions</h2><p style='font-size:small'>v${version()}</p>", install: false, uninstall: false) {
-        section("<h3></h3>"){
-            input "oaDelay1", "number", title:"Minutes before executing actions selected for Outage Response Queue 1", submitOnChange:true, width:4
-            input "oaDelay2", "number", title:"Minutes before executing actions selected for Outage Response Queue 2", submitOnChange:true, width:4
-            input "oaDelay3", "number", title:"Minutes before executing actions selected for Outage Repsonse Queue 3", submitOnChange:true, width:4
-            
+    dynamicPage (name: "outAction", title: "<style> h2{color:navy;}h3{color:navy;}</style><h2>Power Outage Actions</h2><p style='font-size:small;color:navy'>v${version()}</p>", install: false, uninstall: false) {
+        section(title:"<h3>General Information<h3>",hideable:true,hidden:true){
+            paragraph "<p>Outage actions have 3 Outage Response Queues available. These queues allow for the desired actions to staggered to accommodate an ongoing outage. For example, when the outage is detected you may want to disable integrations that no longer are available.  Later you may want to disable other apps, or turn off the  radios, and if theoutage goes on long enough, you may want to shutdown the hub gracefully before the UPS runs out of power.</p><p>First step is to decide what your checkpoints are (how many minutes before taking each set of actions) and enter those. Then go to the bottom of the screen and assign actions to the queues - if you don't want to take an action noted, set its queue number to zero.  If you chose to disable apps, assigning the action to a queue will give you the option to select All apps or individal ones.</p>"
+        }
+        section("<h3>Queue Timers</h3>"){
+            input "oaDelay1", "number", title:"<b>Minutes before executing actions selected for Outage Response Queue 1</b>", submitOnChange:true, width:4
+            input "oaDelay2", "number", title:"<b>Minutes before executing actions selected for Outage Response Queue 2</b>", submitOnChange:true, width:4
+            input "oaDelay3", "number", title:"<b>Minutes before executing actions selected for Outage Repsonse Queue 3</b>", submitOnChange:true, width:4
+        }
+        section ("<h3>Queue Actions</h3>"){
             paragraph "<b>Assign each of the below to a Response Queue, items assigned to Queue 0 will not be scheduled</b>"
             
             appsList = [0:"All"]
@@ -131,7 +135,7 @@ def outAction(){
 }
 
 def upAction(){
-    dynamicPage (name: "upAction", title: "<h2>Power Restore Actions</h2><p style='font-size:small'>v${version()}</p>", install: false, uninstall: false) {
+    dynamicPage (name: "upAction", title: "<style> h2{color:navy;}h3{color:navy;}</style><h2>Power Restore Actions</h2><p style='font-size:small;color:navy'>v${version()}</p>", install: false, uninstall: false) {
         section("<h3></h3>"){
             input "zbEnable", "bool", title: "Turn on the ZigBee Radio", submitOnChange:true, width:4
             input "zwEnable", "bool", title: "Turn on the ZWave Radio", submitOnChange:true, width:4
@@ -142,7 +146,7 @@ def upAction(){
 }
 
 void triggerOccurrence(evt){
-    if(debugEnable) log.debug "Time: ${evt.unixTime} Device: ${evt.deviceId}:${evt.displayName} Value: ${evt.value}"
+    if(debugEnabled) log.debug "Time: ${evt.unixTime} Device: ${evt.deviceId}:${evt.displayName} Value: ${evt.value}"
     if(state.onMains == null) state.onMains = [:]  
     if(state.onBattery == null) state.onBattery = [:]
     
@@ -154,7 +158,7 @@ void triggerOccurrence(evt){
                 mainsTemp[it.key] = state.onMains[it.key]
         }
         state.onMains = mainsTemp       
-        if(debugEnable) log.debug "${state.onMains} <br> ${state.onBattery}"
+        if(debugEnabled) log.debug "${state.onMains} <br> ${state.onBattery}"
         if(state.onBattery.size() >= agreement) startOutActions()
     } else if(evt.value.toString().trim() == "mains") {
         state.onMains["dev${evt.deviceId}"] = true
@@ -165,7 +169,7 @@ void triggerOccurrence(evt){
         }
         state.onBattery = batteryTemp
            
-        if(debugEnable) log.debug "${state.onMains} <br> ${state.onBattery}"
+        if(debugEnabled) log.debug "${state.onMains} <br> ${state.onBattery}"
         if(state.onMains.size() >= agreement) startUpActions()
     }
 }
@@ -174,7 +178,7 @@ void systemStartCheck(evt){
     unschedule("reboot")
     unschedule("shutdown")
     pollDevices() // verify the powerSource value in case it changed
-    if(state.onBattery.size() >= agreement) startOutActions() // should only occur if something else triggered a reboot or an outage occurred during reboot
+    if(state.onBattery.size() >= agreement) startOutActions() // should only occur if something triggered a reboot during the outage or an outage occurred during reboot
     
 }
 
@@ -182,7 +186,7 @@ void pollDevices(){
     if(state.onMains == null) state.onMains = [:]  
     if(state.onBattery == null) state.onBattery = [:]
     triggerDevs.each { dev ->
-        if(debugEnable) log.debug dev.currentValue("powerSource")
+        if(debugEnabled) log.debug dev.currentValue("powerSource")
         switch (dev.currentValue("powerSource")){
             case "mains":
                 state.onMains["dev${dev.id}"] = true
@@ -197,7 +201,7 @@ void pollDevices(){
                 state.onBattery["dev${dev.id}"] = true
                 mainsTemp = [:]           
                 state.onMains.each{
-                    if(debugEnable) log.debug "${dev.id} ${it.key}"
+                    if(debugEnabled) log.debug "${dev.id} ${it.key}"
                     if(it.key != "dev${dev.id}"){
                         mainsTemp[it.key] = state.onBattery[it.key]
                     }
@@ -257,9 +261,9 @@ void startRecover(){
     notifyDev.each { 
       it.deviceNotification(notifyMsgUp)  
     } 
-    if(zbEnable) zbPost("enabled")
-    if(zwEnable) zwPost("enabled")
-    if(appEnable) appsPost("enable")
+    if(zbEnabled) zbPost("enabled")
+    if(zwEnabled) zwPost("enabled")
+    if(appEnabled) appsPost("enable")
     if(rebootHub) runIn(120,"reboot")//allow time for the other actions to complete
 }
 

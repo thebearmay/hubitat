@@ -16,7 +16,7 @@
  *    ----         ---           ----
 */
 
-static String version()	{  return '0.1.0' }
+static String version()	{  return '0.1.1' }
 
 definition (
 	name: 			"Power Outage Manager", 
@@ -89,6 +89,8 @@ def mainPage(){
                     login = getCookie()
                     paragraph "Login successful: ${login.result}\n${login.cookie}"
                 }
+                if(debugEnable) runIn(1800,"logsOff") 
+                else unschedule("logsOff")
             }
 
             section("<h3>Change Application Name</h3>", hideable: true, hidden: true){
@@ -140,7 +142,7 @@ def upAction(){
 }
 
 void triggerOccurrence(evt){
-    log.debug "Time: ${evt.unixTime} Device: ${evt.deviceId}:${evt.displayName} Value: ${evt.value}"
+    if(debugEnable) log.debug "Time: ${evt.unixTime} Device: ${evt.deviceId}:${evt.displayName} Value: ${evt.value}"
     if(state.onMains == null) state.onMains = [:]  
     if(state.onBattery == null) state.onBattery = [:]
     
@@ -152,7 +154,7 @@ void triggerOccurrence(evt){
                 mainsTemp[it.key] = state.onMains[it.key]
         }
         state.onMains = mainsTemp       
-        log.debug "${state.onMains} <br> ${state.onBattery}"
+        if(debugEnable) log.debug "${state.onMains} <br> ${state.onBattery}"
         if(state.onBattery.size() >= agreement) startOutActions()
     } else if(evt.value.toString().trim() == "mains") {
         state.onMains["dev${evt.deviceId}"] = true
@@ -163,7 +165,7 @@ void triggerOccurrence(evt){
         }
         state.onBattery = batteryTemp
            
-        log.debug "${state.onMains} <br> ${state.onBattery}"
+        if(debugEnable) log.debug "${state.onMains} <br> ${state.onBattery}"
         if(state.onMains.size() >= agreement) startUpActions()
     }
 }
@@ -177,8 +179,10 @@ void systemStartCheck(evt){
 }
 
 void pollDevices(){
+    if(state.onMains == null) state.onMains = [:]  
+    if(state.onBattery == null) state.onBattery = [:]
     triggerDevs.each { dev ->
-        log.debug dev.currentValue("powerSource")
+        if(debugEnable) log.debug dev.currentValue("powerSource")
         switch (dev.currentValue("powerSource")){
             case "mains":
                 state.onMains["dev${dev.id}"] = true
@@ -193,7 +197,7 @@ void pollDevices(){
                 state.onBattery["dev${dev.id}"] = true
                 mainsTemp = [:]           
                 state.onMains.each{
-                    log.debug "${dev.id} ${it.key}"
+                    if(debugEnable) log.debug "${dev.id} ${it.key}"
                     if(it.key != "dev${dev.id}"){
                         mainsTemp[it.key] = state.onBattery[it.key]
                     }
@@ -226,7 +230,7 @@ void startOutage(){
     if(zbDisable > 0) runIn(delayList[zbDisable.toInteger()], "disableZb")
     if(zwDisable > 0) runIn(delayList[zwDisable.toInteger()], "disableZw")
     if(appDisable > 0) runIn(delayList[appDisable.toInteger()], "disableApps")
-   if(rebootHubO > 0) runIn(delayList[shutdownHub.toInteger()], "reboot")
+    if(rebootHubO > 0) runIn(delayList[rebootHub.toInteger()], "reboot")
     if(shutdownHub > 0) runIn(delayList[shutdownHub.toInteger()], "shutdown")
 }
 

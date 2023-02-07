@@ -75,7 +75,7 @@ def mainPage(){
 
                 input "triggerDelay", "number", title:"<b>Number of minutes to delay before taking action</b>", defaultValue:0, width:3, submitOnChange:true
                 input "agreement", "number", title: "<b>Number of devices that must agree before taking action</b>", defaultValue:1, width:3, submitOnChange:true
-                input "notifyDev", "capability.notification", title: "Send notifications to", submitOnChange:true
+                input "notifyDev", "capability.notification", title: "Send notifications to", submitOnChange:true, multiple:true
                 input "notifyMsgOut", "string", title: "<b>Notification Message - Power Out</b>", defaultValue: "${app.getLabel()} - Power Outage Detected", submitOnChange:true
                 input "notifyMsgUp", "string", title: "<b>Notification Message - Power Restored</b>", defaultValue: "${app.getLabel()} - Power Restored", submitOnChange:true
                 

@@ -36,6 +36,7 @@
  *    2023-02-02                 v3.0.13 - Add a null character check to time zone formatting
  *                               v3.0.14 - US/Arizona timezone fix
  *    2023-02-13                 v3.0.15 - check for null SSID when hasWiFi true
+ *    2023-02-14                 v3.0.16 - add connectCapable
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -43,7 +44,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.15"}
+static String version() {return "3.0.16"}
 
 metadata {
     definition (
@@ -117,12 +118,13 @@ metadata {
 		attribute "sunset", "string"
         attribute "nextPoll", "string"
         //HE v2.3.4.126
-        attribute "connectType", "string" //Ethernet, WiFi, Dual
+        attribute "connectType", "string" //Ethernet, WiFi, Dual, Not Connected
         attribute "dnsServers", "string"
         attribute "staticIPJson", "string"
         attribute "lanIPAddr", "string"
         attribute "wirelessIP", "string"
         attribute "wifiNetwork", "string"
+        attribute "connectCapable", "string" //Ethernet, WiFi, Dual
         
 
         command "hiaUpdate", ["string"]
@@ -828,13 +830,13 @@ void getHub2Data(resp, data){
             if(h2Data.baseModel.zigbeeStatus == "false"){
                 updateAttr("zigbeeStatus2", "enabled")
                 if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "enabled" && !state.errorZigbeeMismatch ){
-                    log.warn "Zigbee Status has opposing values - radio was either turned off or crashed"
+                    //log.warn "Zigbee Status has opposing values - radio was either turned off or crashed"
                     state.errorZigbeeMismatch = true
                 } else state.errorZigbeeMismatch = false
             } else {
                 updateAttr("zigbeeStatus2", "disabled")
                 if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "disabled" && !state.errorZigbeeMismatch){
-                    log.warn "Zigbee Status has opposing values - radio was either turned off or crashed."
+                    //log.warn "Zigbee Status has opposing values - radio was either turned off or crashed."
                     state.errorZigbeeMismatch = true
                 } else state.errorZigbeeMismatch = false                    
             }
@@ -861,32 +863,45 @@ void getExtNetwork(resp, data){
             def jSlurp = new JsonSlurper()
             Map h2Data = (Map)jSlurp.parseText((String)resp.data)
             if(!h2Data.usingStaticIP)
-            updateAttr("staticIPJson", "{}")
+                updateAttr("staticIPJson", "{}")
             else {
                 jMap = [staticIP:"${h2Data.staticIP}", staticGateway:"${h2Data.staticGateway}", staticSubnetMask:"${h2Data.staticSubnetMask}",staticNameServers:"${h2Data.staticNameServers}"]
                 updateAttr("staticIPJson",JsonOutput.toJson(jMap))
             }
-            if(h2Data.hasEthernet && h2Data.hasWiFi && h2Data.wifiNetwork != null ){
-                updateAttr("connectType","Dual")
-                updateAttr("lanIPAddr", h2Data.lanAddr)    
-            } else if(h2Data.hasEthernet){
-                updateAttr("connectType","Ethernet")
+            
+            if(h2Data.hasEthernet && h2Data.hasWiFi)
+                updateAttr("connectCapable","Dual")
+            else if(h2Data.hasEthernet)
+                updateAttr("connectCapable","Ethernet")
+            else if (h2Data.hasWiFi)
+                updateAttr("connectCapable","WiFi")
+            else
+                updateAttr("connectCapable", "Unknown")
+            
+            if(lanIPAddr != null)
                 updateAttr("lanIPAddr", h2Data.lanAddr)
-            } else if(h2Data.hasWiFi)
-                updateAttr("connectType","WiFi")
-            if(h2Data.hasWiFi){
-				if(h2Data.wifiNetwork != null)
+            else
+                updateAttr("lanIPAddr", "None")
+            
+            if(h2Data.wlanAddr != null) 
+                updateAttr("wirelessIP",h2Data.wlanAddr)
+            else
+                updateAttr("wirelessIP","None")
+            
+            if(h2Data.wifiNetwork != null)
 					updateAttr("wifiNetwork", h2Data.wifiNetwork)
 				else 
 					updateAttr("wifiNetwork", "None")
-				if(h2Data.wlanAddr != null) 
-					updateAttr("wirelessIP",h2Data.wlanAddr)
-				else
-					updateAttr("wirelessIP", "None")
-            } else {
-                updateAttr("wifiNetwork", "None")
-                updateAttr("wirelessIP", "None")
-            }
+            
+            if(h2Data.wifiNetwork && h2Data.wlanAddr && h2Data.lanAddr)
+                updateAttr("connectType","Dual")
+            else if(h2Data.wifiNetwork && h2Data.wlanAddr)
+                updateAttr("connectType", "WiFi")
+            else if(h2Data.lanAddr)
+                updateAttr("connectType","Ethernet")
+            else
+                updateAttr("connectType","Not Connected")                
+        
             updateAttr("dnsServers", h2Data.dnsServers)
             updateAttr("lanIPAddr", h2Data.lanAddr)                           
         }

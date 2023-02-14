@@ -1,10 +1,10 @@
 {
  "packageName":"Hub Information Driver v3",
  "author":"Jean P. May, Jr.",
- "version":"3.0.16",
+ "version":"3.0.17",
  "minimumHEVersion":"2.2.8.141",
  "dateReleased":"2023-02-14",
- "releaseNotes":"v3.0.16 - add connectCapable\nv3.0.15 - make sure has SSID before designate Dual mode\nv3.0.14 - Fixed US/Arizona timezone format exception\nv3.0.13 - timezone string with null\nv3.0.12 - add an error trap to baseData\nv3.0.11 - date format description change\nv3.0.10 - lastUpdated -> lastPollTime\nv3.0.9 - fine tuning\nv3.0.8 - Fix 500 Error on device create\nv3.0.7 - add hubVersion to v2Cleanup, add freeMemoryUnit option\nv3.0.6 - delay baseData on Initialize\nv3.0.5 - missing zigbeeStatus not handled error\nv3.0.4 - Add select option to format the hub restart date/time\nv3.0.3 - Add Uptime Descriptors option\nv3.0.2 - zigbeeStatus/Status2 mismatch, turn off debug after 30 mins, add Remove Unused attributes\nv3.0.1 - Poll4 bug fix\nv3.0.0 -Rewrite of the original Hub Information Driver",
+ "releaseNotes":"v3.0.17 - handle html error at startup\nv3.0.16 - add connectCapable\nv3.0.15 - make sure has SSID before designate Dual mode\nv3.0.14 - Fixed US/Arizona timezone format exception\nv3.0.13 - timezone string with null\nv3.0.12 - add an error trap to baseData\nv3.0.11 - date format description change\nv3.0.10 - lastUpdated -> lastPollTime\nv3.0.9 - fine tuning\nv3.0.8 - Fix 500 Error on device create\nv3.0.7 - add hubVersion to v2Cleanup, add freeMemoryUnit option\nv3.0.6 - delay baseData on Initialize\nv3.0.5 - missing zigbeeStatus not handled error\nv3.0.4 - Add select option to format the hub restart date/time\nv3.0.3 - Add Uptime Descriptors option\nv3.0.2 - zigbeeStatus/Status2 mismatch, turn off debug after 30 mins, add Remove Unused attributes\nv3.0.1 - Poll4 bug fix\nv3.0.0 -Rewrite of the original Hub Information Driver",
  "documentationLink":"https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html",
  "communityLink":"https://community.hubitat.com/t/coming-soon-hub-information-driver-v3/109902",
  "drivers": [

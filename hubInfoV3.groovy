@@ -37,6 +37,7 @@
  *                               v3.0.14 - US/Arizona timezone fix
  *    2023-02-13                 v3.0.15 - check for null SSID when hasWiFi true
  *    2023-02-14                 v3.0.16 - add connectCapable
+ *                               v3.0.17 - Check for html conflict at startup
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -44,7 +45,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.16"}
+static String version() {return "3.0.17"}
 
 metadata {
     definition (
@@ -829,13 +830,13 @@ void getHub2Data(resp, data){
                 updateAttr("zwaveStatus","disabled")
             if(h2Data.baseModel.zigbeeStatus == "false"){
                 updateAttr("zigbeeStatus2", "enabled")
-                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "enabled" && !state.errorZigbeeMismatch ){
+                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "enabled" && "${state.errorZigbeeMismatch}" == "false" ){
                     //log.warn "Zigbee Status has opposing values - radio was either turned off or crashed"
                     state.errorZigbeeMismatch = true
                 } else state.errorZigbeeMismatch = false
             } else {
                 updateAttr("zigbeeStatus2", "disabled")
-                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "disabled" && !state.errorZigbeeMismatch){
+                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "disabled" && "${state.errorZigbeeMismatch}" == "false"){
                     //log.warn "Zigbee Status has opposing values - radio was either turned off or crashed."
                     state.errorZigbeeMismatch = true
                 } else state.errorZigbeeMismatch = false                    
@@ -1121,7 +1122,16 @@ void createHtml(){
         else html += it
     }
     if (debugEnable) log.debug html
-    updateAttr("html", html)
+    if(!html.contains("support.hubitat.com")){
+        updateAttr("html", html)
+        state.htmlError = false
+    }else {
+        updateAttr("html", "<h2>Hub Not Ready</h2><p>Please hit Initialize, or wait for next poll</p><p style='font-size:smaller'>${new Date()}</p>")
+        if("${state.htmlError}" != "true"){
+            state.htmlError = true
+            runIn(20,"initialize")
+        }
+    }
 }
 
 @SuppressWarnings('unused')

@@ -24,16 +24,20 @@
  *    04Oct2022    thebearmay    combine write methods
  *    01Nov2022    thebearmay    add file delete
  *    05Nov2022    thebearmay	 exist attribute instantiate
- *    08Dec2022    thebearmat    Fix typo in fileDelete method
+ *    08Dec2022    thebearmay    Fix typo in fileDelete method
+ *    17Feb2023    thebearmay    add lastFileWritten and lastFileWrittenTimeStamp
 */
 
 import java.net.URLEncoder
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import java.text.SimpleDateFormat
+
+@Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]
 
 @SuppressWarnings('unused')
-static String version() {return "0.2.6"}
+static String version() {return "0.2.7"}
 
 metadata {
     definition (
@@ -50,6 +54,9 @@ metadata {
         attribute "exist", "string"
         attribute "fileList", "string"
         attribute "fileContent", "string"
+        attribute "lastFileWritten", "string"
+        attribute "lastFileWrittenTimeStamp", "string"
+        
  
         command "writeFile",[[name:"fileName", type:"STRING", description:"File Manager Destination Name"],
                              [name:"writeString", type:"STRING", description:"String to Store"]
@@ -88,9 +95,10 @@ preferences {
         input("username", "string", title: "Hub Security Username", required: false)
         input("password", "password", title: "Hub Security Password", required: false)
     }
-    input("debugEnabled", "bool", title: "Enable debug logging?")
-    input("logResponses", "bool", title: "Log Responses to Commands")
-    input("allowAttrib", "bool", title: "Allow a TEMPORARY attribute for File Contents\n<b>If you use this set Event and State History to 1</b>")
+    input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
+    input("logResponses", "bool", title: "Log Responses to Commands", width:4)
+    input("sdfFormat", "enum", title: "Date/Time format", options: sdfList, submitOnChange:true, width:4)
+    input("allowAttrib", "bool", title: "Allow a TEMPORARY attribute for File Contents\n<b>If you use this set Event and State History to 1</b>", width:4)
  
 }
 
@@ -504,6 +512,14 @@ Boolean writeImageFile(String fName, byte[] fData, String imageType) {
 		httpPost(params) { resp ->
             if(debugEnabled) log.debug "writeImageFile ${resp.properties}"
             log.info "${resp.data.success} ${resp.data.status}"
+            updateAttr("lastFileWritten", "$fName")
+            if(sdfFormat == null) device.updateSetting("sdfFormat",[value:"Milliseconds",type:"string"])
+            if(sdfFormat == "Milliseconds" || sdfFormat == null) 
+                updateAttr("lastFileWrittenTimeStamp", new Date().getTime())
+            else {
+                SimpleDateFormat sdf = new SimpleDateFormat(sdfFormat)
+                updateAttr("lastFileWrittenTimeStamp", sdf.format(new Date().getTime()))
+            }
             return resp.data.success == 'true' ? true:false
 		}
 	}

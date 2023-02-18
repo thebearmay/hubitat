@@ -14,11 +14,12 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
- *    2023Jan07    thebearmay    v0.1.3 - Add trigger device refresh option on system restart
+ *    07Jan2023    thebearmay    v0.1.3 - Add trigger device refresh option on system restart
  *                               v0.1.4 - Fix Security Prompt
+ *    18Jan2023                  v0.1.5 - Add presence sensors as trigger
 */
 
-static String version()	{  return '0.1.3' }
+static String version()	{  return '0.1.5' }
 
 definition (
 	name: 			"Power Outage Manager", 
@@ -65,18 +66,26 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
             section("<h3>Main</h3>"){
                 
-                input "triggerDevs", "capability.powerSource", title:"Devices with PowerSource to act as Triggers", submitOnChange:true, multiple:true
+                input "triggerDevs", "capability.powerSource,capability.presenceSensor", title:"Devices with PowerSource/Presence to act as Triggers", submitOnChange:true, multiple:true
                 if(triggerDevs != null) {
                     unsubscribe()
+                    state.onMains=[:]
+                    state.onBattery=[:]
                     triggerDevs.each{
-                        subscribe(it, "powerSource", "triggerOccurrence")
+                       // if(it.hasCapability("powerSource"))
+                            subscribe(it, "powerSource", "triggerOccurrence")
+                       // else if(it.hasCapability("presenceSensor"))
+                            subscribe(it, "presence", "triggerOccurrence")
                     }
                     subscribe(location, "systemStart", "systemStartCheck")
+                    pollDevices()
+                    paragraph "<b>On Mains:</b> ${state.onMains.size()} <b>On Battery:</b> ${state.onBattery.size()}"
                 } else
                     unsubscribe()
-
                 input "triggerDelay", "number", title:"<b>Number of minutes to delay before taking action</b>", defaultValue:0, width:3, submitOnChange:true
                 input "agreement", "number", title: "<b>Number of devices that must agree before taking action</b>", defaultValue:1, width:3, submitOnChange:true
+                if(agreement != null && (triggerDevs == null || agreement.toInteger() > triggerDevs.size()))
+                   paragraph "<span style='font-weight:bold;background-color:red'>Agreement count ($agreement) exceeds number of devices (${triggerDevs==null ? 0:triggerDevs.size()}) - trigger will never occur</span>"
                 input "refreshOnStart", "bool", title: "<b>Refresh Trigger Devices on System Start</b>", width:3, submitOnChange:true
                 input "notifyDev", "capability.notification", title: "Send notifications to", submitOnChange:true, multiple:true
                 input "notifyMsgOut", "string", title: "<b>Notification Message - Power Out</b>", defaultValue: "${app.getLabel()} - Power Outage Detected", submitOnChange:true
@@ -116,6 +125,7 @@ def outAction(){
             input "oaDelay1", "number", title:"<b>Minutes before executing actions selected for Outage Response Queue 1</b>", submitOnChange:true, width:4
             input "oaDelay2", "number", title:"<b>Minutes before executing actions selected for Outage Response Queue 2</b>", submitOnChange:true, width:4
             input "oaDelay3", "number", title:"<b>Minutes before executing actions selected for Outage Repsonse Queue 3</b>", submitOnChange:true, width:4
+            
         }
         section ("<h3>Queue Actions</h3>"){
             paragraph "<b>Assign each of the below to a Response Queue, items assigned to Queue 0 will not be scheduled</b>"
@@ -135,7 +145,7 @@ def outAction(){
                 input "appDisableList", "enum", title: "Select Rules/Apps", options: appsList, multiple:true, width:4, submitOnChange:true
             }
             input "rebootHubO", "enum", title: "Reboot the hub", options: [0,1,2,3], submitOnChange:true, width:4
-            input "shutdownHub", "enum", title: "Shutdown the hub", options: [0,1,2,3], submitOnChange:true, width:4           
+            input "shutdownHub", "enum", title: "Shutdown the hub", options: [0,1,2,3], submitOnChange:true, width:4
         }           
     }
 }
@@ -156,7 +166,7 @@ void triggerOccurrence(evt){
     if(state.onMains == null) state.onMains = [:]  
     if(state.onBattery == null) state.onBattery = [:]
     
-    if(evt.value.toString().trim() == "battery") {
+    if(evt.value.toString().trim() == "battery" || evt.value.toString().trim() == "not present") {
         state.onBattery["dev${evt.deviceId}"] = true
         mainsTemp = [:]
         state.onMains.each{
@@ -166,12 +176,12 @@ void triggerOccurrence(evt){
         state.onMains = mainsTemp       
         if(debugEnabled) log.debug "${state.onMains} <br> ${state.onBattery}"
         if(state.onBattery.size() >= agreement) startOutActions()
-    } else if(evt.value.toString().trim() == "mains") {
+    } else if(evt.value.toString().trim() == "mains" || evt.value.toString().trim() == "present") {
         state.onMains["dev${evt.deviceId}"] = true
         batteryTemp = [:]
         state.onBattery.each{
             if(it.key != "dev${evt.deviceId}")
-                mainsTemp[it.key] = state.onBattery[it.key]
+                batteryTemp[it.key] = state.onBattery[it.key]
         }
         state.onBattery = batteryTemp
            
@@ -204,30 +214,24 @@ void pollDevices(){
     if(state.onBattery == null) state.onBattery = [:]
     triggerDevs.each { dev ->
         if(debugEnabled) log.debug dev.currentValue("powerSource")
-        switch (dev.currentValue("powerSource")){
-            case "mains":
+        if(dev.currentValue("powerSource") == "mains" || dev.currentValue("presence") == "present"){
                 state.onMains["dev${dev.id}"] = true
                 batteryTemp = [:]
                 state.onBattery.each{
                     if(it.key != "dev${dev.id}")
-                        batteryTemp[it.key] = state.onMains[it.key]
+                        batteryTemp[it.key] = state.onBattery[it.key]
                 }
                 state.onBattery = batteryTemp
-                break
-            case "battery":
+        } else if(dev.currentValue("powerSource") == "battery" || dev.currentValue("presence") == "not present"){
                 state.onBattery["dev${dev.id}"] = true
                 mainsTemp = [:]           
                 state.onMains.each{
                     if(debugEnabled) log.debug "${dev.id} ${it.key}"
                     if(it.key != "dev${dev.id}"){
-                        mainsTemp[it.key] = state.onBattery[it.key]
+                        mainsTemp[it.key] = state.onMains[it.key]
                     }
                 }
                 state.onMains = mainsTemp
-                break
-            default:
-                log.error "Invalid Value"
-                break
         }
         
     }

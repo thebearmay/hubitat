@@ -17,9 +17,12 @@
  *    07Jan2023    thebearmay    v0.1.3 - Add trigger device refresh option on system restart
  *                               v0.1.4 - Fix Security Prompt
  *    18Jan2023                  v0.1.5 - Add presence sensors as trigger
+ *    21Feb2023                  v0.2.0 - Add device on/off capabilities
+ *                                        Add RM interface 
 */
 
-static String version()	{  return '0.1.5' }
+import hubitat.helper.RMUtils
+static String version()	{  return '0.2.0' }
 
 definition (
 	name: 			"Power Outage Manager", 
@@ -72,32 +75,37 @@ def mainPage(){
                     state.onMains=[:]
                     state.onBattery=[:]
                     triggerDevs.each{
-                       // if(it.hasCapability("powerSource"))
+                       if(it.hasCapability("PowerSource"))
                             subscribe(it, "powerSource", "triggerOccurrence")
-                       // else if(it.hasCapability("presenceSensor"))
+                       else if(it.hasCapability("PresenceSensor"))
                             subscribe(it, "presence", "triggerOccurrence")
                     }
                     subscribe(location, "systemStart", "systemStartCheck")
                     pollDevices()
                     paragraph "<b>On Mains:</b> ${state.onMains.size()} <b>On Battery:</b> ${state.onBattery.size()}"
-                } else
+                } else {
                     unsubscribe()
+                    state.onMains = [:]
+                    state.onBattery = [:]
+                }
                 input "triggerDelay", "number", title:"<b>Number of minutes to delay before taking action</b>", defaultValue:0, width:3, submitOnChange:true
                 input "agreement", "number", title: "<b>Number of devices that must agree before taking action</b>", defaultValue:1, width:3, submitOnChange:true
-                if(agreement != null && (triggerDevs == null || agreement.toInteger() > triggerDevs.size()))
-                   paragraph "<span style='font-weight:bold;background-color:red'>Agreement count ($agreement) exceeds number of devices (${triggerDevs==null ? 0:triggerDevs.size()}) - trigger will never occur</span>"
+                if(agreement != null && (triggerDevs == null || agreement.toInteger() > triggerDevs.size())){
+                    paragraph "<span style='font-weight:bold;background-color:red'>Agreement count ($agreement) exceeds number of devices (${triggerDevs==null ? 0:triggerDevs.size()}) - trigger will never occur</span>"
+                    state.outage = false
+                }
                 input "refreshOnStart", "bool", title: "<b>Refresh Trigger Devices on System Start</b>", width:3, submitOnChange:true
                 input "notifyDev", "capability.notification", title: "Send notifications to", submitOnChange:true, multiple:true
-                input "notifyMsgOut", "string", title: "<b>Notification Message - Power Out</b>", defaultValue: "${app.getLabel()} - Power Outage Detected", submitOnChange:true
-                input "notifyMsgUp", "string", title: "<b>Notification Message - Power Restored</b>", defaultValue: "${app.getLabel()} - Power Restored", submitOnChange:true
+                input "notifyMsgOut", "text", title: "<b>Notification Message - Power Out</b>", defaultValue: "${app.getLabel()} - Power Outage Detected", submitOnChange:true
+                input "notifyMsgUp", "text", title: "<b>Notification Message - Power Restored</b>", defaultValue: "${app.getLabel()} - Power Restored", submitOnChange:true
                 
-                href "outAction", title: "Power Outage Actions", required: false, width:6, submitOnChange:true
-                href "upAction", title: "Power Restored Actions", required: false, width:6, submitOnChange:true
-                input "debugEnabled", "bool", title: "Turn on Debug Logging", submitOnChange:true
-                input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
+                href "outAction", title: "<b>Power Outage Actions</b>", required: false, width:6, submitOnChange:true
+                href "upAction", title: "<b>Power Restored Actions</b>", required: false, width:6, submitOnChange:true
+                input "debugEnabled", "bool", title: "<b>Turn on Debug Logging</b>", submitOnChange:true
+                input("security", "bool", title: "<b>Hub Security Enabled</b>", defaultValue: false, submitOnChange: true)
                 if (security) { 
-                    input("username", "string", title: "Hub Security Username", required: false, submitOnChange: true)
-                    input("password", "password", title: "Hub Security Password", required: false, submitOnChange: true)
+                    input("username", "text", title: "<b>Hub Security Username</b>", required: false, submitOnChange: true)
+                    input("password", "password", title: "<b>Hub Security Password</b>", required: false, submitOnChange: true)
                     if(username != null && password != null){
                         login = getCookie()
                         if(login.cookie != null)
@@ -144,6 +152,19 @@ def outAction(){
             }else {
                 input "appDisableList", "enum", title: "Select Rules/Apps", options: appsList, multiple:true, width:4, submitOnChange:true
             }
+            input "turnOffDevs","enum", title: "Turn off Devices", options: [0,1,2,3], submitOnChange:true, width:4
+            if(turnOffDevs == "0" || turnOffDevs == null){
+                app.updateSetting("turnOffDevsList",[value:"-1",type:"capability.switch"])
+                app.updateSetting("turnOnDevsList1",[value:"-1",type:"capability.switch"])
+                app.updateSetting("turnOnDevsList2",[value:"-1",type:"capability.switch"])
+            }else {
+                input "turnOffDevsList", "capability.switch", title: "Devices to turn off", multiple: true, width:4, submitOnChange:true
+            }
+            input "rmRuleO", "enum", title:"Run a RM Rule", options: [0,1,2,3], submitOnChange:true,width:4
+            if(rmRuleO) {
+                rList = RMUtils.getRuleList("5.0")
+                input "rmRuleOList", "enum", title: "Rule(s) to run", options: rList, submitOnChange:true, width:4, multiple:true
+            }
             input "rebootHubO", "enum", title: "Reboot the hub", options: [0,1,2,3], submitOnChange:true, width:4
             input "shutdownHub", "enum", title: "Shutdown the hub", options: [0,1,2,3], submitOnChange:true, width:4
         }           
@@ -153,10 +174,31 @@ def outAction(){
 def upAction(){
     dynamicPage (name: "upAction", title: "<style> h2{color:navy;}h3{color:navy;}</style><h2>Power Restore Actions</h2><p style='font-size:small;color:navy'>v${version()}</p>", install: false, uninstall: false) {
         section("<h3></h3>"){
-            input "zbEnable", "bool", title: "Turn on the ZigBee Radio", submitOnChange:true, width:4
-            input "zwEnable", "bool", title: "Turn on the ZWave Radio", submitOnChange:true, width:4
-            input "appEnable", "bool", title: "Enable all Rules/Apps", submitOnChange:true, width:4
-            input "rebootHub", "bool", title: "Reboot the hub", submitOnChange:true, width:4
+            input "zbEnable", "bool", title: "<b>Turn on the ZigBee Radio</b>", submitOnChange:true, width:4
+            input "zwEnable", "bool", title: "<b>Turn on the ZWave Radio</b>", submitOnChange:true, width:4
+            input "appEnable", "bool", title: "<b>Enable all Rules/Apps</b>", submitOnChange:true, width:4
+            input "rebootHub", "bool", title: "<b>Reboot the hub (2 minutes after trigger delay)</b>", submitOnChange:true, width:4
+            if(turnOffDevs != "0" && turnOffDevs != null){
+                if(turnOnDevsList1 == null){
+                    app.updateSetting("turnOnDevsList1",[value:turnOffDevsList,type:"capability.switch"])
+                    app.updateSetting("onDelay1",[value:0,type:"number"])
+                }
+                if(turnOnDevsList2 == null){
+                    app.updateSetting("turnOnDevsList2",[value:turnOffDevsList,type:"capability.switch"])
+                    app.updateSetting("onDelay2",[value:0,type:"number"])
+                }
+                input("onDelay1", "number", title:"<b>Delay in minutes before turning on first set of devices, zero to disable</b>", submitOnChange:true, width:4)
+                if(onDelay1)
+                    input("turnOnDevsList1", "capability.switch",title:"<b>First set of Devices to Turn On</b>", constraints:turnOffDevsList, multiple:true, submitOnChange:true, width:4)
+                input("onDelay2", "number", title:"<b>Delay in minutes before turning on second set of devices, zero to disable</b>", submitOnChange:true, width:4)
+                if(onDelay2)
+                    input("turnOnDevsList2", "capability.switch",title:"<b>Second set of Devices to Turn On</b>", multiple:true, submitOnChange:true, width:4)
+            }
+            input "rmRuleR", "number", title:"<b>Delay in minutes before running RM Rule(s), zero to disable", submitOnChange:true,width:4
+            if(rmRuleR) {
+                rList = RMUtils.getRuleList("5.0")
+                input "rmRuleRList", "enum", title: "Rule(s) to run", options: rList, submitOnChange:true, multiple:true
+            }
         }           
     }
 }
@@ -255,8 +297,10 @@ void startOutage(){
     if(zbDisable > 0) runIn(delayList[zbDisable.toInteger()], "disableZb")
     if(zwDisable > 0) runIn(delayList[zwDisable.toInteger()], "disableZw")
     if(appDisable > 0) runIn(delayList[appDisable.toInteger()], "disableApps")
+    if(turnOffDevs > 0) runIn(delayList[turnOffDevs.toInteger()], "devsOff")
     if(rebootHubO > 0) runIn(delayList[rebootHub.toInteger()], "reboot")
     if(shutdownHub > 0) runIn(delayList[shutdownHub.toInteger()], "shutdown")
+    if(rmRuleO) runIn(delayList[rmRuleO.toInteger()], "outageRunRM")
 }
 
 void disableZb(){
@@ -270,6 +314,19 @@ void disableZw(){
 void disableApps(){
     appsPost("disable")
 }
+
+void devsOff() {
+    turnOffDevsList.each {
+        it.off()
+    }
+}
+
+void outageRunRM(){
+    rmRuleOList.each{
+        RMUtils.sendAction([it.toInteger()],"runRuleAct", app.getLabel(), "5.0")
+    }
+}
+
 
 void startUpActions(){
     if(state.outage == false) return //already started processing
@@ -286,6 +343,9 @@ void startRecover(){
     if(zwEnabled) zwPost("enabled")
     if(appEnabled) appsPost("enable")
     if(rebootHub) runIn(120,"reboot")//allow time for the other actions to complete
+    if(onDelay1)  runIn(onDelay1.toInteger()*60,"devicesOn1")
+    if(onDelay2)  runIn(onDelay2.toInteger()*60,"devicesOn2")
+    if(rmRuleR)   runIn(rmRuleR.toInteger()*60,"restorerunRM")
 }
 
 @SuppressWarnings('unused')
@@ -439,6 +499,12 @@ def appsPost(String eOrD){
     }
 }
 
+void restoreRunRM(){
+    rmRuleRList.each{
+        RMUtils.sendAction([it.toInteger()],"runRuleAct", app.getLabel(), "5.0")
+    }
+}
+
 HashMap [] getAppsList() { 
 
 	def params = [
@@ -465,4 +531,16 @@ HashMap [] getAppsList() {
         log.error(getExceptionMessageWithLine(e))
 	}
     return allAppsList
+}
+
+void devicesOn1(){
+    turnOnDevsList1.each{
+        it.on()
+    }
+}
+
+void devicesOn2(){
+    turnOnDevsList2.each{
+        it.on()
+    }
 }

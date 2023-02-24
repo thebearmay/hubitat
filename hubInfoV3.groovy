@@ -38,6 +38,7 @@
  *    2023-02-13                 v3.0.15 - check for null SSID when hasWiFi true
  *    2023-02-14                 v3.0.16 - add connectCapable
  *                               v3.0.17 - Check for html conflict at startup
+ *    2023-02-23                 v3.0.18 - Add html attribute output file option
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -45,7 +46,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.17"}
+static String version() {return "3.0.18"}
 
 metadata {
     definition (
@@ -151,6 +152,8 @@ preferences {
     input("remUnused", "bool", title: "Remove unused attributes", defaultValue: false, submitOnChange: true, width:4)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true, width:4)
     input("alternateHtml", "string", title: "Template file for HTML attribute", submitOnChange: true, defaultValue: "hubInfoTemplate.res", width:4)
+    input("htmlOutput", "string", title: "HTML Attribute Output for > 1024 characters", submitOnChange:true, defaultValue:"hubInfoOutput.html", width:4)
+    input("forceFileOutput","bool", title:"Always use Output file for HTML Attribute", submitOnChange:true, width:4)
     input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true, width:4)
     input("allowReboot","bool", title: "Allow Hub to be shutdown or rebooted", defaultValue: false, submitOnChange: true, width:4)
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
@@ -249,6 +252,10 @@ void updated(){
 		runIn(pollRate4*60*60, "poll4")	
     if(debugEnable)
         runIn(1800,"logsOff")
+    
+    if(htmlOutput == null) 
+        device.updateSetting("htmlOutput",[value:"hubInfoOutput.html",type:"string"])
+    device.updateSetting("htmlOutput",[value:toCamelCase(htmlOutput),type:"string"])
 
     if(remUnused) removeUnused()
 }
@@ -1125,6 +1132,12 @@ void createHtml(){
     if(!html.contains("support.hubitat.com")){
         updateAttr("html", html)
         state.htmlError = false
+        if(html.size() > 1024 || forceFileOutput){
+            if(htmlFileOutput == null) htmlFileOutput = "hubInfoOutput.html"
+            writeFile(htmlFileOutput, html)
+            updateAttr("html","<a href='http://${location.hub.localIP}/local/$htmlFileOutput'>Link to attribute data</a>")
+        } else
+            updateAttr("html", html)
     }else {
         updateAttr("html", "<h2>Hub Not Ready</h2><p>Please hit Initialize, or wait for next poll</p><p style='font-size:smaller'>${new Date()}</p>")
         if("${state.htmlError}" != "true"){
@@ -1329,6 +1342,26 @@ void removeUnused() {
 String getUnitFromState(String attrName){
    	return device.currentState(attrName)?.unit
 }
+
+@SuppressWarnings('unused')
+String toCamelCase(init) {
+    if (init == null)
+        return null;
+
+    String ret = ""
+    List word = init.split(" ")
+    if(word.size == 1)
+        return init
+    word.each{
+        ret+=Character.toUpperCase(it.charAt(0))
+        ret+=it.substring(1).toLowerCase()        
+    }
+    ret="${Character.toLowerCase(ret.charAt(0))}${ret.substring(1)}"
+
+    if(debugEnabled) log.debug "toCamelCase return $ret"
+    return ret;
+}
+
 
 @SuppressWarnings('unused')
 void logsOff(){

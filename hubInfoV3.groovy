@@ -39,6 +39,7 @@
  *    2023-02-14                 v3.0.16 - add connectCapable
  *                               v3.0.17 - Check for html conflict at startup
  *    2023-02-23                 v3.0.18 - Add html attribute output file option
+ *    2023-02-27                 v3.0.19 - Add 15 minute averages for CPU Load, CPU Percentage, and Free Memory
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -46,7 +47,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.18"}
+static String version() {return "3.0.19"}
 
 metadata {
     definition (
@@ -64,10 +65,8 @@ metadata {
         
         attribute "latitude", "string"
         attribute "longitude", "string"
-        //attribute "hubVersion", "string"
         attribute "id", "string"
         attribute "name", "string"
-        //attribute "data", "string"
         attribute "zigbeeId", "string"
         attribute "zigbeeEui", "string"
         attribute "hardwareID", "string"
@@ -127,6 +126,9 @@ metadata {
         attribute "wirelessIP", "string"
         attribute "wifiNetwork", "string"
         attribute "connectCapable", "string" //Ethernet, WiFi, Dual
+        attribute "cpu15Min", "number"
+        attribute "cpu15Pct", "number"
+        attribute "freeMem15", "number"
         
 
         command "hiaUpdate", ["string"]
@@ -483,6 +485,58 @@ void getFreeMemory(resp, data) {
     } catch(ignored) {
         def respStatus = resp.getStatus()
         if (!warnSuppress) log.warn "getFreeMem httpResp = $respStatus but returned invalid data, will retry next cycle"    
+    }
+}
+
+void fifteenMinute(cookie){
+    if(location.hub.uptime < 900) { //if the hub hasn't been up 15 minutes use current 5 min values
+        updateAttr("cpu15Min",device.currentValue("cpu5Min",true))
+        updateAttr("cpu15Pct",device.currentValue("cpuPct",true),"%")
+        updateAttr("freeMem15",device.currentValue("freeMemory",true))        
+        return
+    }
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/advanced/freeOSMemoryHistory",
+        headers: ["Cookie": cookie]
+    ]
+    if (debugEnable) log.debug params
+    asynchttpGet("get15Min", params)        
+}
+
+void get15Min(resp, data){
+    String loadWork
+    List<String> loadRec = []
+    try {
+        if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+            loadWork = resp.data.toString()
+        }
+    } catch(ignored) {
+        def respStatus = resp.getStatus()
+        if (!warnSuppress) log.warn "get15min httpResp = $respStatus but returned invalid data, will retry next cycle"    
+    }
+    if (loadWork) {
+        Integer lineCount = 0
+        loadWork.eachLine{
+            lineCount++
+        }
+        Integer lineCount2 = 0
+        Double cpuWork = 0.0
+        Long memWork = 0
+        loadWork.eachLine{
+            lineCount2++
+            if(lineCount2 > lineCount-3){
+                workSplit = it.split(",")
+                cpuWork+=workSplit[2].toDouble()
+                memWork+=workSplit[1].toLong()
+            }
+        }
+        memWork/=3
+        cpuWork/=3                   
+        updateAttr("cpu15Min",cpuWork.round(2))
+        cpuWork = (cpuWork/4.0D)*100.0D //Load / #Cores - if cores change will need adjusted to reflect
+        updateAttr("cpu15Pct",cpuWork.round(2),"%")
+        updateAttr("freeMem15",memWork)
     }
 }
 
@@ -1383,6 +1437,7 @@ void logsOff(){
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
-[parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]]]
+[parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
+[parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]]]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

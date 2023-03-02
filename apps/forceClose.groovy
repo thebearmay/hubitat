@@ -69,7 +69,7 @@ def mainPage(){
                 } else {
                     removeDevice()
                 }				
-                if (qryDevice != null || qryDevice2 != null) href "deviceCharacteristics", title: "Send Close-Inactive Event", required: false
+                if (qryDevice != null || qryDevide2 != null) href "deviceCharacteristics", title: "Send Close-Inactive Event", required: false
 		    }
 	    } else {
 		    section("") {
@@ -111,8 +111,8 @@ def addDevice() {
 }
 
 def removeDevice(){
-	unsubscribe()
-  deleteChildDevice("cscButton001")
+    unsubscribe()
+    if(this.getChildDevice("cscButton001")) deleteChildDevice("cscButton001")
 }
 
 

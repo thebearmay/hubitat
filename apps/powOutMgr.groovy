@@ -19,10 +19,11 @@
  *    18Jan2023                  v0.1.5 - Add presence sensors as trigger
  *    21Feb2023                  v0.2.0 - Add device on/off capabilities
  *                                        Add RM interface 
+ *    05Mar2023                  v0.2.1 - Fix typo
 */
 
 import hubitat.helper.RMUtils
-static String version()	{  return '0.2.0' }
+static String version()	{  return '0.2.1' }
 
 definition (
 	name: 			"Power Outage Manager", 
@@ -291,6 +292,9 @@ void startOutage(){
       it.deviceNotification(notifyMsgOut)  
     }     
     delayList = []
+    if(oaDelay1 == null) oaDelay1 = 0
+    if(oaDelay2 == null) oaDelay2 = 0
+    if(oaDelay3 == null) oaDelay3 = 0
     delayList[1] = oaDelay1.toInteger()*60
     delayList[2] = oaDelay2.toInteger()*60
     delayList[3] = oaDelay3.toInteger()*60
@@ -345,7 +349,7 @@ void startRecover(){
     if(rebootHub) runIn(120,"reboot")//allow time for the other actions to complete
     if(onDelay1)  runIn(onDelay1.toInteger()*60,"devicesOn1")
     if(onDelay2)  runIn(onDelay2.toInteger()*60,"devicesOn2")
-    if(rmRuleR)   runIn(rmRuleR.toInteger()*60,"restorerunRM")
+    if(rmRuleR)   runIn(rmRuleR.toInteger()*60,"restoreRunRM")
 }
 
 @SuppressWarnings('unused')

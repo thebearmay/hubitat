@@ -130,6 +130,7 @@ metadata {
         attribute "cpu15Min", "number"
         attribute "cpu15Pct", "number"
         attribute "freeMem15", "number"
+	attribute "cloud", "string"
         
 
         command "hiaUpdate", ["string"]

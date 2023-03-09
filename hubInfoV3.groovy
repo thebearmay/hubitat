@@ -40,6 +40,7 @@
  *                               v3.0.17 - Check for html conflict at startup
  *    2023-02-23                 v3.0.18 - Add html attribute output file option
  *    2023-02-27                 v3.0.19 - Add 15 minute averages for CPU Load, CPU Percentage, and Free Memory
+ *    2023-03-09                 v3.0.20 - Add cloud connection check
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -47,7 +48,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.19"}
+static String version() {return "3.0.20"}
 
 metadata {
     definition (
@@ -151,6 +152,8 @@ preferences {
             input ("${it.key}", "enum", title: "<div class='tTip'>${pMap.desc}<span class='tTipText'>${pMap.attributeList}</span></div>", options:pollList, submitOnChange:true, width:4, defaultValue:"0")
         }
 	}
+    if(parm16 != null && parm16 != 0 && parm16 != "0")
+        input("makerInfo", "string", title: "MakerApi or Dashboard URL string", submitOnChange: true)
     input("remUnused", "bool", title: "Remove unused attributes", defaultValue: false, submitOnChange: true, width:4)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true, width:4)
     input("alternateHtml", "string", title: "Template file for HTML attribute", submitOnChange: true, defaultValue: "hubInfoTemplate.res", width:4)
@@ -1025,6 +1028,39 @@ void getZigbeeStack(resp, data) {
             updateAttr("zigbeeStack","new")      
     } catch(ignore) { }
 }
+
+void checkCloud(cookie){
+    if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/")) {
+        updateAttr("cloud", "invalid endpoint")
+        return
+    }
+    if(!makerInfo.contains("dashboard")){
+        makerInfo=makerInfo.replace("[Device ID]","${device.deviceId}")
+        cType="maker"
+        dId="${device.deviceId}"
+    } else {
+        cType="dashboard"
+        dId=makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?'))
+    }
+    params = [
+       uri    : makerInfo,
+       headers: [Accept:"application/json"]
+    ]
+    log.debug "$params"
+    asynchttpGet("getCloudReturn", params, [cType:"$cType",dId:"$dId"]) 
+}
+
+void getCloudReturn(resp, data){
+    if(data.cType == "maker"){
+        if("${resp.json.id}" == "${device.deviceId}")
+            updateAttr("cloud", "connected")
+        else
+            updateAttr("cloud", "not connected")
+    }else if(makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?')) == data["dId"]) {
+        updateAttr("cloud", "connected")
+    }else 
+        updateAttr("cloud", "not connected")        
+}
                      
 
 @SuppressWarnings('unused')
@@ -1424,7 +1460,8 @@ void logsOff(){
 
 @Field static String minFwVersion = "2.2.8.141"
 @Field static List <String> pollList = ["0", "1", "2", "3", "4"]
-@Field static prefList = [[parm01:[desc:"CPU Temperature Polling", attributeList:"temperatureF, temperatureC, temperature", method:"cpuTemperatureReq"]],
+@Field static prefList = [
+[parm01:[desc:"CPU Temperature Polling", attributeList:"temperatureF, temperatureC, temperature", method:"cpuTemperatureReq"]],
 [parm02:[desc:"Free Memory Polling", attributeList:"freeMemory", method:"freeMemoryReq"]],
 [parm03:[desc:"CPU Load Polling", attributeList:"cpuLoad, cpuPct", method:"cpuLoadReq"]],
 [parm04:[desc:"DB Size Polling", attributeList:"dbSize", method:"dbSizeReq"]],
@@ -1438,6 +1475,8 @@ void logsOff(){
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
-[parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]]]    
+[parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
+[parm16:[desc:"Check Cloud Connection",attributeList:"cloud", method:"checkCloud"]] 
+]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

@@ -41,6 +41,7 @@
  *    2023-02-23                 v3.0.18 - Add html attribute output file option
  *    2023-02-27                 v3.0.19 - Add 15 minute averages for CPU Load, CPU Percentage, and Free Memory
  *    2023-03-09                 v3.0.20 - Add cloud connection check
+ *                               v3.0.21 - Modify the cloud check to allow a user specified device
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -48,7 +49,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.20"}
+static String version() {return "3.0.21"}
 
 metadata {
     definition (
@@ -130,8 +131,7 @@ metadata {
         attribute "cpu15Min", "number"
         attribute "cpu15Pct", "number"
         attribute "freeMem15", "number"
-	attribute "cloud", "string"
-        
+        attribute "cloud", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -1035,10 +1035,13 @@ void checkCloud(cookie){
         updateAttr("cloud", "invalid endpoint")
         return
     }
+    if(makerInfo.contains("Device ID"))
+      makerInfo=makerInfo.replace("[Device ID]","${device.deviceId}")
+   
     if(!makerInfo.contains("dashboard")){
-        makerInfo=makerInfo.replace("[Device ID]","${device.deviceId}")
         cType="maker"
-        dId="${device.deviceId}"
+        dId=makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?'))
+
     } else {
         cType="dashboard"
         dId=makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?'))
@@ -1047,20 +1050,21 @@ void checkCloud(cookie){
        uri    : makerInfo,
        headers: [Accept:"application/json"]
     ]
-    //log.debug "$params"
+    log.debug "$params"
     asynchttpGet("getCloudReturn", params, [cType:"$cType",dId:"$dId"]) 
 }
 
 void getCloudReturn(resp, data){
-    if(data.cType == "maker"){
-        if("${resp.json.id}" == "${device.deviceId}")
+    try{
+        if(resp.status == 200 && makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?')) == "${data["dId"]}") {
             updateAttr("cloud", "connected")
-        else
+        } else {
             updateAttr("cloud", "not connected")
-    }else if(makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?')) == data["dId"]) {
-        updateAttr("cloud", "connected")
-    }else 
-        updateAttr("cloud", "not connected")        
+        } 
+    } catch (EX) {
+        updateAttr("cloud", "not connected")
+    }
+        
 }
                      
 

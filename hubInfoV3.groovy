@@ -969,8 +969,7 @@ void getExtNetwork(resp, data){
                 updateAttr("connectType","Ethernet")
             else
                 updateAttr("connectType","Not Connected")                
-        
-            updateAttr("dnsServers", h2Data.dnsServers)
+            
             updateAttr("lanIPAddr", h2Data.lanAddr)
             
             dnsList = []
@@ -987,6 +986,7 @@ void getExtNetwork(resp, data){
                 dnsList.add("$it")
             }
             checkDns(dnsList)
+            updateAttr("dnsServers", dnsList)
 
         }
     }catch (ex) {

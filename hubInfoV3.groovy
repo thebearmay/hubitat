@@ -42,6 +42,7 @@
  *    2023-02-27                 v3.0.19 - Add 15 minute averages for CPU Load, CPU Percentage, and Free Memory
  *    2023-03-09                 v3.0.20 - Add cloud connection check
  *                               v3.0.21 - Modify the cloud check to allow a user specified device
+ *    2023-03-10                 v3.0.22 - Add dnsStatus check
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -49,7 +50,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.21"}
+static String version() {return "3.0.22"}
 
 metadata {
     definition (
@@ -132,6 +133,7 @@ metadata {
         attribute "cpu15Pct", "number"
         attribute "freeMem15", "number"
         attribute "cloud", "string"
+        attribute "dnsStatus", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -969,10 +971,48 @@ void getExtNetwork(resp, data){
                 updateAttr("connectType","Not Connected")                
         
             updateAttr("dnsServers", h2Data.dnsServers)
-            updateAttr("lanIPAddr", h2Data.lanAddr)                           
+            updateAttr("lanIPAddr", h2Data.lanAddr)
+            
+            dnsList = []
+            if(h2Data.usingStaticIP){
+                h2Data.staticNameServers.each{
+                    dnsList.add("$it")
+                }
+            }else {
+                h2Data.dhcpNameServers.each{
+                    dnsList.add("$it")
+                }
+            }
+            h2Data.dnsServers.each{
+                dnsList.add("$it")
+            }
+            checkDns(dnsList)
+
         }
     }catch (ex) {
         if (!warnSuppress) log.warn ex
+    }
+}
+
+void checkDns(dnsList) {
+    if(dnsList == null){
+        updateAttr("dnsStatus","inactive")
+        return
+    }
+        
+    for(i=0;i<dnsList.size();i++){
+        hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(dnsList[i],1)
+        int pTran = pingData.packetsTransmitted.toInteger()
+        if (pTran == 0){ // 2.2.7.121 bug returns all zeroes on not found
+            pingData.packetsTransmitted = numPings
+            pingData.packetLoss = 100
+        }
+        if (pingData.packetLoss < 100){               
+            updateAttr("dnsStatus","active")
+            i=dnsList.size()
+        } else {         
+            updateAttr("dnsStatus","inactive")
+        }
     }
 }
 
@@ -1476,7 +1516,7 @@ void logsOff(){
 [parm08:[desc:"Time Sync Server Address", attributeList:"ntpServer", method:"ntpServerReq"]],
 [parm09:[desc:"Additional Subnets", attributeList:"ipSubnetsAllowed", method:"ipSubnetsReq"]],
 [parm10:[desc:"Hub Mesh Data", attributeList:"hubMeshData, hubMeshCount", method:"hubMeshReq"]],
-[parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork", method:"extNetworkReq"]],
+[parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],

@@ -1050,7 +1050,7 @@ void checkCloud(cookie){
        uri    : makerInfo,
        headers: [Accept:"application/json"]
     ]
-    log.debug "$params"
+    //log.debug "$params"
     asynchttpGet("getCloudReturn", params, [cType:"$cType",dId:"$dId"]) 
 }
 

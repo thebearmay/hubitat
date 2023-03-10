@@ -985,6 +985,7 @@ void getExtNetwork(resp, data){
             h2Data.dnsServers.each{
                 dnsList.add("$it")
             }
+            dnsList = dnsList.unique()
             checkDns(dnsList)
             updateAttr("dnsServers", dnsList)
 

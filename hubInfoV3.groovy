@@ -145,8 +145,8 @@ metadata {
 }
 preferences {
     if(state?.errorMinVersion || state?.errorMinVersion == "true") 
-        input("errMsg", "string", title:"<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>")
-    input("quickref","string", title:"$ttStyleStr<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html' target='_blank'>Quick Reference v${version()}</a>")
+        input("errMsg", "hidden", title:"<b>Minimum Version Error</b>",description:"<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>")
+    input("quickref","hidden", title:"$ttStyleStr<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html' target='_blank'>Quick Reference v${version()}</a>")
     input("debugEnable", "bool", title: "Enable debug logging?", width:4)
     input("warnSuppress", "bool", title: "Suppress Warn Level Logging", width:4)
 

@@ -43,6 +43,7 @@
  *    2023-03-09                 v3.0.20 - Add cloud connection check
  *                               v3.0.21 - Modify the cloud check to allow a user specified device
  *    2023-03-10                 v3.0.22 - Add dnsStatus check
+ *    2023-03-14                 v3.0.23 - Change Font to red/bold if Cloud URL is blank or does not contain cloud.hubitat
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -50,7 +51,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.22"}
+static String version() {return "3.0.23"}
 
 metadata {
     definition (
@@ -156,7 +157,7 @@ preferences {
         }
 	}
     if(parm16 != null && parm16 != 0 && parm16 != "0")
-        input("makerInfo", "string", title: "MakerApi or Dashboard URL string", submitOnChange: true)
+        input("makerInfo", "string", title: "<span style='$cloudFontStyle'>MakerApi or Dashboard URL string</span>", submitOnChange: true)
     input("remUnused", "bool", title: "Remove unused attributes", defaultValue: false, submitOnChange: true, width:4)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true, width:4)
     input("alternateHtml", "string", title: "Template file for HTML attribute", submitOnChange: true, defaultValue: "hubInfoTemplate.res", width:4)
@@ -264,6 +265,10 @@ void updated(){
     if(htmlOutput == null) 
         device.updateSetting("htmlOutput",[value:"hubInfoOutput.html",type:"string"])
     device.updateSetting("htmlOutput",[value:toCamelCase(htmlOutput),type:"string"])
+    if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/"))
+        cloudFontStyle = 'font-weight:bold;color:red'
+    else
+        cloudFontStyle = ''
 
     if(remUnused) removeUnused()
 }
@@ -1074,6 +1079,7 @@ void getZigbeeStack(resp, data) {
 void checkCloud(cookie){
     if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/")) {
         updateAttr("cloud", "invalid endpoint")
+        cloudFontStyle = 'font-weight:bold;color:red'
         return
     }
     if(makerInfo.contains("Device ID"))
@@ -1504,6 +1510,7 @@ void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }
 
+@Field static String cloudFontStyle = ''
 @Field static String minFwVersion = "2.2.8.141"
 @Field static List <String> pollList = ["0", "1", "2", "3", "4"]
 @Field static prefList = [

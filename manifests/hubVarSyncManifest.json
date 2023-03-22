@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Variable Sync",
   "author": "Jean P. May, Jr.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minimumHEVersion": "2.2.9.0",
-  "dateReleased": "2022-03-19",
-  "releaseNotes": "1.0.2 - add arming replace in addition to armed for HSM\n1.0.1 - handle resync failure due to remote rebooting\n1.0.0 - Move to Release Status\n0.1.15 - add resync at restart option, code cleanup",
+  "dateReleased": "2023-03-22",
+  "releaseNotes": "1.0.3 - Handle a 408 on send\n1.0.2 - add arming replace in addition to armed for HSM\n1.0.1 - handle resync failure due to remote rebooting\n1.0.0 - Move to Release Status\n0.1.15 - add resync at restart option, code cleanup",
   "apps": [
     {
       "id": "95c9119e-c074-41e8-b54c-5843d93c0127",

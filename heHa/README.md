@@ -6,7 +6,7 @@ For homes where automation of the environment has become the expected condition 
 
 <b>From Hubitat</b>
   1.	Hub Protection Cloud Backups
-  2.	Spare C7 Hub 
+  2.	Spare C8 Hub 
 
 <b>Community Supplied Apps</b>
 
@@ -21,22 +21,20 @@ For homes where automation of the environment has become the expected condition 
 <b>Initial</b>
 
   1.	Power up and register the spare hub.
-  2.	Turn off the ZWave and Zigbee radios on the spare hub
-  3.	Install and configure the Failover Manager app and, if desired, the optional File Manager Sync and Variable Sync apps on the production hub.
-  4.	Create a Cloud Backup of the production hub and restore it on the spare hub.
-  5.	Temporarily turn off the Zigbee Radio on the production hub
-  6.	Pair all of the Zigbee devices with the spare hub.
-  7.	Turn off the Zigbee radio on the spare hub.
-  8.	Turn on the Zigbee radio on the production hub.
-  9.  Check the configuration of the Failover Manager app, and then      
+  2.	Install and configure the Failover Manager app and, if desired, the optional File Manager Sync and Variable Sync apps on the production hub.
+  4.	Create a Cloud Backup of the production hub
+  5.  Turn off both radios on the production hub
+  6.  Restore the Cloud Backup on the spare hub selecting all radios and the local file system.
+  7.  Check the configuration of the Failover Manager app, and then      
     a. Press the button to disable all apps on the spare hub      
     b. Toggle the <i>Turn off all radios and start monitoring heartbeat</i> switch
+  8.  Turn on both radios on the production hub 
 
 <b>Ongoing Maintenance</b>
 
   1.	Periodically take a backup from production and restore it to the spare to capture any rule or application changes.
-  2.	After adding a new device to production do a Cloud Backup of production and restore it to the spare; if a zigbee device pair the device to the spare afterwards.
-  3.	Re-initialize the Hub Failover app by doing 9(a) above.
+  2.	After adding a new device to production do a Cloud Backup of production and restore it to the spare.
+  3.	Re-initialize the Hub Failover app by doing 7(a) & 7(b) above.
 
   <b>In Operation</b>
 

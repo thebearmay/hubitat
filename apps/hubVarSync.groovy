@@ -30,9 +30,10 @@
  *                             Change to Release Status - v1.0.0
  *    08Feb22    thebearmay    Retry resync request if remote hub returns a web page instead of correct response (remote is rebooting)
  *    19Mar22    thebearmay    Handle arming instead of armed for HSM
+ *    22Mar23    thebearmay    Handle a 408 error on a send
 */
 
-static String version()	{  return '1.0.2'  }
+static String version()	{  return '1.0.3'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -279,8 +280,11 @@ void getResp(resp, data) {
             if(resp.data)
                 atomicState.returnString = resp.json
             else atomicState.returnString = "{\"value\":\"Null Data Set\", \"status\":\"${resp.getStatus()}\"}"
-        } else 
+        } else {
             atomicState.returnString =  "{\"status\":\"${resp.getStatus()}\"}"
+            if(resp.getStatus()== 408) 
+                runIn(10, "resyncProc")
+        }
     } catch (Exception ex) {
         atomicState.returnString = ex.message
         if(data['cmd'] == 'resync'  && resp.data.substring(0,3) == '<!d') //remote hub returned a web page (it is rebooting), resend sync request

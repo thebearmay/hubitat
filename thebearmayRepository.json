@@ -290,6 +290,17 @@
       "tags":[
         "Monitoring"
        ]
+    },
+    {
+      "id":"6fcd0f87-848b-4fc7-a0e4-209cf0fb7762",
+      "name":"Node Red Server Information Driver",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/nrServerInfoManifest.json",
+      "description":"Node Red Server Information Driver creates a virtual device to accept and store input from node-red-contrib-device-stat, node-red-contrib-cpu.  ",
+      "tags":[
+        "Dashboards",
+        "Misc. Devices"
+       ]
     }
   ]
 }

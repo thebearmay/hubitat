@@ -1,0 +1,16 @@
+{
+ "packageName":"Node Red Server Information Driver",
+ "author":"Jean P. May, Jr.",
+ "version":"0.0.1",
+ "minimumHEVersion":"2.2.8.141",
+ "dateReleased":"2023-03-23",
+ "releaseNotes":"v0.0.1 - Original Version",
+ "drivers": [
+  {
+     "id":"aaef39c3-9f78-4c57-89c3-174abd07cc0f",
+     "name":"Node Red Server Information",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/nrServerInfo.groovy",
+     "required":"true"
+  }
+  ]
+}

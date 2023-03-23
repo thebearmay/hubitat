@@ -10,7 +10,7 @@
      "id":"aaef39c3-9f78-4c57-89c3-174abd07cc0f",
      "name":"Node Red Server Information",
      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/nrServerInfo.groovy",
-     "required":"true"
+     "required":true
   }
   ]
 }

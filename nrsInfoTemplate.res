@@ -1,6 +1,6 @@
 <table>
 <tr><td>CPU %</td><td><%cpuUsage%></td></tr>
-<tr><td>CPU Load</td><td><%cpuAvgLoad%></td></tr>
+<tr><td>CPU Load</td><td><%cpu5mLoad%></td></tr>
 <tr><td>Temperature</td><td><%temperature%></td></tr>
 <tr><td>Tx</td><td><%tx%></td></tr>
 <tr><td>Rx</td><td><%rx%></td></tr>

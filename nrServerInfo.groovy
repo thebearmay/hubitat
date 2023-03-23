@@ -14,7 +14,8 @@
  *
  *    Date         Who            What
  *    ----         ---            ----
- *    23Mar2023    thebearmay     Original version 0.0.
+ *    23Mar2023    thebearmay     Original version 0.0.1
+ *                                v0.0.2 split out cpuLoad into 5, 10 & 15min
 */
 
 import java.text.SimpleDateFormat
@@ -23,7 +24,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -46,6 +47,9 @@ metadata {
         attribute "swapUsed", "number"
         attribute "swapFree", "number"
         attribute "cpuAvgLoad", "number"
+        attribute "cpu5mLoad", "number"
+        attribute "cpu10mLoad", "number"
+        attribute "cpu15mLoad", "number"
         attribute "tx", "number"
         attribute "rx", "number"
         attribute "formattedUptime", "string"
@@ -123,7 +127,9 @@ void jsonUpdate(String jsonString){
     updateAttr("tx", nrData.nw.eth0.tx)
     
     Float aLoad=(nrData.load[0]+nrData.load[1]+nrData.load[2])/3
-    
+    updateAttr("cpu5mLoad",nrData.load[0])
+    updateAttr("cpu10mLoad",nrData.load[1])
+    updateAttr("cpu15mLoad",nrData.load[2])
     updateAttr("cpuAvgLoad", aLoad.round(2))
     if(attribEnable) 
         createHtml()         

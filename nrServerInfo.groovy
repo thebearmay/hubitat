@@ -16,6 +16,7 @@
  *    ----         ---            ----
  *    23Mar2023    thebearmay     Original version 0.0.1
  *                                v0.0.2 split out cpuLoad into 5, 10 & 15min
+ *    24Mar2023                   v0.0.3 added Refresh capability (requires a receiving node on NodeRed)
 */
 
 import java.text.SimpleDateFormat
@@ -24,7 +25,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.2"}
+static String version() {return "0.0.3"}
 
 metadata {
     definition (
@@ -38,6 +39,7 @@ metadata {
         capability "Initialize"
         capability "Sensor"
         capability "TemperatureMeasurement"
+        capability "Refresh"
        
         attribute "cpuUsage", "number"
         attribute "temperature", "number"
@@ -56,6 +58,7 @@ metadata {
         attribute "lastRestart", "string"
         attribute "lastRestartFormatted", "string"
         attribute "html", "string"
+        attribute "refreshRequested","string"
         
         
         command "setUsage", ["number"]
@@ -95,10 +98,13 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
-
+void refresh(){
+    updateAttr("refreshRequested","true")
+}
 
 void setUsage(usageAmt){
     updateAttr("cpuUsage", usageAmt, "%")
+    updateAttr("refreshRequested","false")
     if(attribEnable) 
         createHtml()        
 }
@@ -109,6 +115,7 @@ void setTemp(tempCel){
         updateAttr("temperature",String.format("%.1f", celsiusToFahrenheit(tempCel)),"°F")
     else
         updateAttr("temperature",String.format("%.1f",tempCel),"°C")
+    updateAttr("refreshRequested","false")
     if(attribEnable) 
         createHtml()     
 }
@@ -131,6 +138,7 @@ void jsonUpdate(String jsonString){
     updateAttr("cpu10mLoad",nrData.load[1])
     updateAttr("cpu15mLoad",nrData.load[2])
     updateAttr("cpuAvgLoad", aLoad.round(2))
+    updateAttr("refreshRequested","false")
     if(attribEnable) 
         createHtml()         
 }

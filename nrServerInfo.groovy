@@ -17,6 +17,7 @@
  *    23Mar2023    thebearmay     Original version 0.0.1
  *                                v0.0.2 split out cpuLoad into 5, 10 & 15min
  *    24Mar2023                   v0.0.3 added Refresh capability (requires a receiving node on NodeRed)
+ *    26Mar2023                   v0.0.4 handle JSON string without memory values
 */
 
 import java.text.SimpleDateFormat
@@ -25,7 +26,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.3"}
+static String version() {return "0.0.4"}
 
 metadata {
     definition (
@@ -121,15 +122,20 @@ void setTemp(tempCel){
 }
 
 void jsonUpdate(String jsonString){
+    //log.debug "$jsonString"
     def jSlurp = new JsonSlurper()
     Map nrData = (Map)jSlurp.parseText(jsonString)
     uptime = nrData.uptime.toInteger()
     updateAttr("uptime",uptime)
     formatUptime(uptime)
-    updateAttr("memUsed", String.format("%.1f",nrData.mem.used.toInteger()/1024),"MB")
-    updateAttr("memFree", String.format("%.1f",nrData.mem.free.toInteger()/1024),"MB")
-    updateAttr("swapUsed", String.format("%.1f",nrData.mem.swapused.toInteger()/1024),"MB")
-    updateAttr("swapFree", String.format("%.1f",nrData.mem.swapfree.toInteger()/1024),"MB")
+    if(nrData.mem.used)
+        updateAttr("memUsed", String.format("%.1f",nrData.mem?.used.toInteger()/1024),"MB")
+    if(nrData.mem.free)
+        updateAttr("memFree", String.format("%.1f",nrData.mem?.free.toInteger()/1024),"MB")
+    if(nrData.mem.swapused)
+        updateAttr("swapUsed", String.format("%.1f",nrData.mem?.swapused.toInteger()/1024),"MB")
+    if(nrData.mem.swapfree)
+        updateAttr("swapFree", String.format("%.1f",nrData.mem?.swapfree.toInteger()/1024),"MB")
     updateAttr("rx", nrData.nw.eth0.rx)
     updateAttr("tx", nrData.nw.eth0.tx)
     

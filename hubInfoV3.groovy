@@ -45,6 +45,7 @@
  *    2023-03-10                 v3.0.22 - Add dnsStatus check
  *    2023-03-14                 v3.0.23 - Change Font to red/bold if Cloud URL is blank or does not contain cloud.hubitat
  *    2023-03-25                 v3.0.24 - Add Zigbee Stack check back in
+ *    2023-03-28                 v3.0.25 - Check attribute values for startup message
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -52,7 +53,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.24"}
+static String version() {return "3.0.25"}
 
 metadata {
     definition (
@@ -433,6 +434,8 @@ void everyPoll(whichPoll=null){
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
     aValue = aValue.toString()
+    if(aValue.contains("Your hub is starting up"))
+       return
 /*    if(aValue.length() > 1024) {
         log.error "Attribute value for $aKey exceeds 1024, current size = ${aValue.length()}, truncating to 1024..."
         aValue = aValue.substring(0,1023)

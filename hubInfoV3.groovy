@@ -46,6 +46,7 @@
  *    2023-03-14                 v3.0.23 - Change Font to red/bold if Cloud URL is blank or does not contain cloud.hubitat
  *    2023-03-25                 v3.0.24 - Add Zigbee Stack check back in
  *    2023-03-28                 v3.0.25 - Check attribute values for startup message
+ *    2023-03-29                 v3.0.26 - Remove Zigbee Stack check as the endpoint is no longer available
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -53,7 +54,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.25"}
+static String version() {return "3.0.26"}
 
 metadata {
     definition (
@@ -115,7 +116,7 @@ metadata {
         attribute "ipSubnetsAllowed", "string"
         attribute "zigbeeStatus", "string"
         attribute "zigbeeStatus2", "string"
-        attribute "zigbeeStack", "string"
+        //attribute "zigbeeStack", "string"
         attribute "zwaveStatus", "string"
         attribute "hubAlerts", "string"
         attribute "hubMeshData", "string"
@@ -1061,7 +1062,7 @@ void getUpdateCheck(resp, data) {
     }
 
 }
-
+/*
 void zigbeeStackReq(cookie){
     params = [
         uri: "http://127.0.0.1:8080",
@@ -1079,7 +1080,7 @@ void getZigbeeStack(resp, data) {
             updateAttr("zigbeeStack","new")      
     } catch(ignore) { }
 }
-
+*/
 void checkCloud(cookie){
     if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/")) {
         updateAttr("cloud", "invalid endpoint")
@@ -1533,8 +1534,7 @@ void logsOff(){
 [parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
-[parm16:[desc:"Check Cloud Connection",attributeList:"cloud", method:"checkCloud"]],
-[parm17:[desc:"Check Zigbee Stack", attributeList:"zigbeeStack", method:"zigbeeStackReq"]]
+[parm16:[desc:"Check Cloud Connection",attributeList:"cloud", method:"checkCloud"]]
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

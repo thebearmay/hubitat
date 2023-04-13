@@ -205,6 +205,7 @@ void updateThermostat() {
 
     modeStr=["off","heat","cool","auto","emergency heat"]
     circStr=["auto","on","circulate"]
+    equipmentStatusStr=["0", "cool", "overcool for dehum", "heat", "fan", "idle"]
     fanSpd=["low","medium","high"]
 	id = device.properties.data["daiID"]
 	if(debugEnabled) log.debug "Using ID:$id"
@@ -244,6 +245,7 @@ void updateThermostat() {
     updateAttr("humidity",devDetail.humIndoor,"%")
     updateAttr("humidOutdoor",devDetail.humOutdoor,"%")
     updateAttr("geofencingAway",devDetail.geofencingAway)
+    updateAttr("equipmentStatus",equipmentStatusStr[devDetail.equipmentStatus.toInteger()])
 }
 
 void sendPut(command, bodyMap){

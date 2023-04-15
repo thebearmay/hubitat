@@ -393,6 +393,8 @@ void setThermostatMode(tmode){
         heat()
     else if(tmode == "cool")
         cool()
+    else if(tmode == "off")
+        off()
     else
         emergencyHeat()
 }

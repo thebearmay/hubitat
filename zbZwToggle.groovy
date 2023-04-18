@@ -1,4 +1,4 @@
-/* Get Authorization
+/* Zigbee/Zwave toggle buttons
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -12,7 +12,7 @@
  *  Change History:
  *	Date		Who		        Description
  *	----------	-------------	----------------------------------------------------------------------------
- *
+ *  18Apr2023    thebearmay      change zigbee "enabled" to "on"
 */
 
 import java.text.SimpleDateFormat
@@ -20,7 +20,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -79,7 +79,7 @@ void push(btnNum){
             refresh()
             break
         case 2://Zigbee Enable
-            zbPost("enabled")
+            zbPost("on")//("enabled")
             break
         case 4://Zwave Enable
             zwPost("enabled")

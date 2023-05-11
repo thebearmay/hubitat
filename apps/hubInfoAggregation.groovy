@@ -19,9 +19,10 @@
  *    2022-04-12        thebearmay    typo in memory warning
  *    2022-12-30        thebearmay    error when removing child device that doesn't exist
  *    2023-01-11        thebearmay    allow for V3
+ *    2024-05-11        thebearmay    limit to V3 drivers
  */
 
-static String version()	{  return '1.0.9'  }
+static String version()	{  return '1.0.10'  }
 
 
 definition (
@@ -68,7 +69,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main")
 		    {
-                input "qryDevice", "device.HubInformatin,device.HubInformationV3", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
+                input "qryDevice", "device.HubInformationDriverv3", title: "Devices of Interest:", multiple: true, required: true, submitOnChange: true
                 if (qryDevice != null){
                     hubDevCheck = true
                    // qryDevice.each{

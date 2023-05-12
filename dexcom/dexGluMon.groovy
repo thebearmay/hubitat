@@ -38,7 +38,7 @@ metadata {
     }
 }
 preferences {
-    input("glucoseRange", "number", title: "Glucose Data Lookback Seconds", defaultValue: 600, submitOnChange: true, width:4)
+    input("glucoseRange", "number", title: "Glucose Data Poll Interval in Seconds", defaultValue: 600, submitOnChange: true, width:4)
 
 }
                          
@@ -56,7 +56,9 @@ void configure() {
 }
 
 void updated(){
-    updateAttr("dbg", apiUri)   
+    unschedule("getGlucose")
+    if(glucoseRange > 0) 
+        runIn(glucoseRange, "getGlucose")
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
@@ -68,5 +70,9 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 }
 
 void getGlucose() {
+    if(glucoseRange == 0) 
+        glucoseRange = 600
     parent.getGlucose(device.deviceNetworkId, glucoseRange)
+    if(glucoseRange > 0) 
+        runIn(glucoseRange, "getGlucose")
 }

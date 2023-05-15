@@ -16,7 +16,7 @@
  *    ----        ---            ----
 */
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -32,14 +32,17 @@ metadata {
         attribute "glucoseTrend", "string"
         attribute "glucoseRate", "string"
         attribute "glucoseStatus", "string"
+        attribute "alertJson", "string"
         
         command "getGlucose"
+        command "getAlert"
         
     }
 }
 preferences {
-    input("glucoseRange", "number", title: "Glucose Data Poll Interval in Seconds", defaultValue: 600, submitOnChange: true, width:4)
-
+    input("glucoseRange", "number", title: "Glucose Data Poll Interval in Seconds", submitOnChange: true, width:4)
+    input("alertRange", "number", title: "Alert Poll Interval in Seconds", submitOnChange: true, width:4)
+    input("debugEnable", "bool", title: "Enable debug logging?", width:4)
 }
                          
 @SuppressWarnings('unused')
@@ -59,6 +62,12 @@ void updated(){
     unschedule("getGlucose")
     if(glucoseRange > 0) 
         runIn(glucoseRange, "getGlucose")
+    unschedule("getAlert")
+    if(alertRange > 0) 
+        runIn(alertRange, "getGlucose")
+    unschedule("logsOff")
+    if(debugEnabled)
+        runIn(1800,"logsOff")
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
@@ -70,9 +79,26 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 }
 
 void getGlucose() {
-    if(glucoseRange == 0) 
-        glucoseRange = 600
-    parent.getGlucose(device.deviceNetworkId, glucoseRange)
+    if(glucoseRange == null || glucoseRange == 0) 
+        gRange = 600
+    else
+        gRange = glucoseRange
+    parent.getGlucose(device.deviceNetworkId, gRange)
     if(glucoseRange > 0) 
         runIn(glucoseRange, "getGlucose")
+}
+
+void getAlert() {
+    if(alertRange == null || alertRange == 0) 
+        aRange = 600
+    else
+        aRange = alertRange
+    parent.getAlert(device.deviceNetworkId, aRange)
+    if(alertRange > 0) 
+        runIn(alertRange, "getAlert")
+}
+
+@SuppressWarnings('unused')
+void logsOff(){
+     device.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }

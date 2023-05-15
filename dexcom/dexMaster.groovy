@@ -22,7 +22,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 definition (
 	name: 			"Dexcom Master", 
@@ -97,15 +97,15 @@ def mainPage(){
                 input "resetToken", "button", title:"Reset Token"
                 paragraph "<b>Redirect URL</b>: ${getFullApiServerUrl()}/a?access_token=${state.accessToken}&"
                 paragraph "<small>${"${getFullApiServerUrl()}/a?access_token=${state.accessToken}&".size()} characters</small>"
-                input "tinyUrl", "string", title:"<b>Redirect Override</b>", description:"Use TinyUrl or similar if redirect exceeds 129 characters", submitOnChange: true, width:4
+                input "tinyUrl", "string", title:"<b>Redirect Override</b>", description:"Use TinyUrl or similar if redirect exceeds 128 characters", submitOnChange: true, width:4
                 input "initAuth", "button", title: "Get Dexcom Auth Token"
                 if (state.iAuthReq){
                     state.iAuthReq = false
                     redirect = URLEncoder.encode("${getFullApiServerUrl()}/a?access_token=${state.accessToken}&", "UTF-8")                
                     
-                    state.redirect = URLEncoder.encode("$tinyUrl","UTF-8") ?: redirect 
+                    state.redirect =  tinyUrl ? URLEncoder.encode("$tinyUrl","UTF-8") : redirect 
                     
-                    iaUri = "$apiUri/v2/oauth2/login?client_id=$dexClient&redirect_uri=${URLEncoder.encode("$tinyUrl","UTF-8")?:redirect}&response_type=code&scope=offline_access"
+                    iaUri = "$apiUri/v2/oauth2/login?client_id=$dexClient&redirect_uri=${tinyUrl ? URLEncoder.encode("$tinyUrl","UTF-8") : redirect }&response_type=code&scope=offline_access"
                     if(debugEnabled) paragraph iaUri
                     paragraph "<script>window.open('$iaUri',target='_blank');</script>"
                 }

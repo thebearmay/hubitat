@@ -22,7 +22,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 definition (
 	name: 			"Dexcom Master", 
@@ -42,7 +42,7 @@ preferences {
 }
 
 mappings {
-    path("/Re"){
+    path("/"){
         action: [POST: "authReturn",
                  GET: "authReturn"]
     }
@@ -87,11 +87,11 @@ def mainPage(){
                 if(state.accessToken == null) createAccessToken()
                     paragraph "<b>Access Token: </b>${state.accessToken}"
                 input "resetToken", "button", title:"Reset Token"
-                paragraph "<b>Redirect URL</b>: ${getFullApiServerUrl()}/Re?access_token=${state.accessToken}&"
+                paragraph "<b>Redirect URL</b>: ${getFullApiServerUrl()}/?access_token=${state.accessToken}&"
                 input "initAuth", "button", title: "Get Dexcom Auth Token"
                 if (state.iAuthReq){
                     state.iAuthReq = false
-                    redirect = URLEncoder.encode("${getFullApiServerUrl()}/Re?access_token=${state.accessToken}&", "UTF-8")
+                    redirect = URLEncoder.encode("${getFullApiServerUrl()}/?access_token=${state.accessToken}&", "UTF-8")
                     state.redirect = redirect
                     iaUri = "$apiUri/v2/oauth2/login?client_id=$dexClient&redirect_uri=$redirect&response_type=code&scope=offline_access"
                     if(debugEnabled) paragraph iaUri
@@ -181,7 +181,7 @@ def getRefresh(){
             state.tExpire = lastRefresh + 7190000 // actual refresh interval is 7200 seconds
         }
     } catch (ex) {
-        log.error "getRefresh: $ex <br> $resp.properties"
+        log.error "getRefresh: $ex"
     }
 }
 
@@ -237,6 +237,8 @@ void getGlucose(DNI, glucoseRange) {
    // /v3/users/self/egvs
     if(new Date().getTime() > (Long)state.tExpire)
         getRefresh()
+    if(glucoseRange == null || glucoseRange < 1)
+        glucoseRange = 600
     Long eDate = new Date().getTime()
     Long sDate = eDate - (Long) glucoseRange
     
@@ -244,6 +246,8 @@ void getGlucose(DNI, glucoseRange) {
     
     startDate = URLEncoder.encode(sdf.format(new Date(sDate)),"UTF-8")
     endDate = URLEncoder.encode(sdf.format(new Date(eDate)), "UTF-8")
+    
+    if(debugEnabled) log.debug "start: $startDate end: $endDate"
     
     Map requestParams =
 	[
@@ -258,10 +262,12 @@ void getGlucose(DNI, glucoseRange) {
 }
 
 def processGlucose(resp, data){
+    if(debugEnabled) 
+        log.debug resp.properties
     try { 
         DNI = data['dni']
         chd = getChildDevice("$DNI")
-        if (resp.json.records) {
+        if (resp?.json?.records) {
             chd.updateAttr("glucose", resp.json.records[0].value, resp.json.records[0].unit)
             chd.updateAttr("glucoseStatus", resp.json.records[0].status)
             chd.updateAttr("glucoseTrend", resp.json.records[0].trend)
@@ -271,7 +277,57 @@ def processGlucose(resp, data){
         }
             
     } catch (ex) {
-        log.error "Get Glucose: $ex <br> $resp.properties"
+        log.error "Get Glucose: $ex <br> ${resp?.properties}"
+    }
+    
+}
+
+void getAlert(DNI, alertRange) {
+   // /v3/users/self/alerts
+    if(new Date().getTime() > (Long)state.tExpire)
+        getRefresh()
+    if(alertRange == null || alertRange < 1)
+        alertRange = 600
+    Long eDate = new Date().getTime()
+    Long sDate = eDate - (Long) alertRange
+    
+    sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
+    
+    startDate = URLEncoder.encode(sdf.format(new Date(sDate)),"UTF-8")
+    endDate = URLEncoder.encode(sdf.format(new Date(eDate)), "UTF-8")
+    
+    if(debugEnabled) log.debug "start: $startDate end: $endDate"
+    
+    Map requestParams =
+	[
+        uri: "$apiUri/v3/users/self/alerts?startDate=$startDate&endDate=$endDate",
+        headers: [
+            "Authorization" : "Bearer $state.dexAccessToken",
+            "Accept" : 'application/json'
+        ]
+	]
+    log.debug "$requestParams"
+    asynchttpGet("processAlerts",requestParams, [dni:DNI])    
+}
+
+def processAlerts(resp, data){
+    if(debugEnabled) 
+        log.debug resp.properties
+    try { 
+        DNI = data['dni']
+        chd = getChildDevice("$DNI")
+        if (resp?.json?.records) {
+            alertList = []
+            resp.json.records.each{
+                alertList.add(["${it.alertName}":"${it.alertStatus}"])
+            }
+            chd.updateAttr("alertJson", JsonOutput.toJson(alertList))
+        } else {
+            alertJson = JsonOutput.toJson(["noAlerts":"unknown"])
+            chd.updateAttr("alertJson", alertJson)
+        }            
+    } catch (ex) {
+        log.error "Get Alerts: $ex <br> ${resp?.properties}"
     }
     
 }

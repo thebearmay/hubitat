@@ -22,7 +22,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 definition (
 	name: 			"Dexcom Master", 
@@ -46,6 +46,14 @@ mappings {
         action: [POST: "authReturn",
                  GET: "authReturn"]
     }
+    path("/a"){
+        action: [POST: "authReturn",
+                 GET: "authReturn"]
+    }
+    path(""){
+        action: [POST: "authReturn",
+                 GET: "authReturn"]
+    }    
 }
 
 void installed() {
@@ -87,13 +95,17 @@ def mainPage(){
                 if(state.accessToken == null) createAccessToken()
                     paragraph "<b>Access Token: </b>${state.accessToken}"
                 input "resetToken", "button", title:"Reset Token"
-                paragraph "<b>Redirect URL</b>: ${getFullApiServerUrl()}/?access_token=${state.accessToken}&"
+                paragraph "<b>Redirect URL</b>: ${getFullApiServerUrl()}/a?access_token=${state.accessToken}&"
+                paragraph "<small>${"${getFullApiServerUrl()}/a?access_token=${state.accessToken}&".size()} characters</small>"
+                input "tinyUrl", "string", title:"<b>Redirect Override</b>", description:"Use TinyUrl or similar if redirect exceeds 129 characters", submitOnChange: true, width:4
                 input "initAuth", "button", title: "Get Dexcom Auth Token"
                 if (state.iAuthReq){
                     state.iAuthReq = false
-                    redirect = URLEncoder.encode("${getFullApiServerUrl()}/?access_token=${state.accessToken}&", "UTF-8")
-                    state.redirect = redirect
-                    iaUri = "$apiUri/v2/oauth2/login?client_id=$dexClient&redirect_uri=$redirect&response_type=code&scope=offline_access"
+                    redirect = URLEncoder.encode("${getFullApiServerUrl()}/a?access_token=${state.accessToken}&", "UTF-8")                
+                    
+                    state.redirect = URLEncoder.encode("$tinyUrl","UTF-8") ?: redirect 
+                    
+                    iaUri = "$apiUri/v2/oauth2/login?client_id=$dexClient&redirect_uri=${URLEncoder.encode("$tinyUrl","UTF-8")?:redirect}&response_type=code&scope=offline_access"
                     if(debugEnabled) paragraph iaUri
                     paragraph "<script>window.open('$iaUri',target='_blank');</script>"
                 }

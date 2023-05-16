@@ -42,18 +42,11 @@ preferences {
 }
 
 mappings {
-    path("/"){
-        action: [POST: "authReturn",
-                 GET: "authReturn"]
-    }
     path("/a"){
         action: [POST: "authReturn",
                  GET: "authReturn"]
     }
-    path(""){
-        action: [POST: "authReturn",
-                 GET: "authReturn"]
-    }    
+
 }
 
 void installed() {
@@ -93,13 +86,14 @@ def mainPage(){
             }
             section("<h2>Dexcom Authorization</h2>", hideable: false, hidden: false){
                 if(state.accessToken == null) createAccessToken()
-                    paragraph "<b>Access Token: </b>${state.accessToken}"
+                    paragraph "<b>Hubitat Access Token: </b>${state.accessToken}"
                 input "resetToken", "button", title:"Reset Hubitat Token"
                 paragraph "<b>Redirect URL</b>: ${getFullApiServerUrl()}/a?access_token=${state.accessToken}&"
                 paragraph "<small>${"${getFullApiServerUrl()}/a?access_token=${state.accessToken}&".size()} characters</small>"
                 input "tinyUrl", "string", title:"<b>Redirect Override</b>", description:"Use TinyUrl or similar if redirect exceeds 128 characters", submitOnChange: true, width:4
                 input "initAuth", "button", title: "Get Dexcom Auth Token"
                 if (state.iAuthReq){
+                    state.devCount = 0
                     state.iAuthReq = false
                     redirect = URLEncoder.encode("${getFullApiServerUrl()}/a?access_token=${state.accessToken}&", "UTF-8")                
                     
@@ -159,7 +153,7 @@ def getSecondAuth(){
         log.debug "$requestParams"
     try {
         httpPost(requestParams) { resp ->
-            log.debug 'secondAuth'
+            if(debugEnabled) log.debug 'secondAuth'
             state.dexAccessToken = resp.data.access_token
             state.refreshToken = resp.data.refresh_token
             lastRefresh = new Date().getTime()
@@ -189,7 +183,7 @@ def getRefresh(){
         log.debug "$requestParams"
     try {
         httpPost(requestParams) { resp ->
-            log.debug 'getRefresh'
+            if(debugEnabled) log.debug 'getRefresh'
             state.dexAccessToken = resp.data.access_token
             state.refreshToken = resp.data.refresh_token
             lastRefresh = new Date().getTime()
@@ -202,7 +196,7 @@ def getRefresh(){
 }
 
 def authReturn(){
-    log.debug params
+    if(debugEnabled) log.debug params
     pMap = (HashMap) params
     if (params['?code']) //sandbox
         state.dexAuthCode = params['?code']
@@ -257,7 +251,7 @@ void getGlucose(DNI, glucoseRange) {
     if(glucoseRange == null || glucoseRange < 1)
         glucoseRange = 600
     Long eDate = new Date().getTime()
-    Long sDate = eDate - (Long) glucoseRange
+    Long sDate = eDate - ((Long) glucoseRange * 1000)
     
     sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
     
@@ -274,7 +268,7 @@ void getGlucose(DNI, glucoseRange) {
             "Accept" : 'application/json'
         ]
 	]
-    log.debug "$requestParams"
+    if(debugEnabled) log.debug "$requestParams"
     asynchttpGet("processGlucose",requestParams, [dni:DNI])    
 }
 
@@ -301,12 +295,13 @@ def processGlucose(resp, data){
 
 void getAlert(DNI, alertRange) {
    // /v3/users/self/alerts
+
     if(new Date().getTime() > (Long)state.tExpire)
         getRefresh()
     if(alertRange == null || alertRange < 1)
         alertRange = 600
     Long eDate = new Date().getTime()
-    Long sDate = eDate - (Long) alertRange
+    Long sDate = eDate - ((Long) alertRange * 1000)
     
     sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
     
@@ -323,7 +318,7 @@ void getAlert(DNI, alertRange) {
             "Accept" : 'application/json'
         ]
 	]
-    log.debug "$requestParams"
+    if(debugEnabled) log.debug "$requestParams"
     asynchttpGet("processAlerts",requestParams, [dni:DNI])    
 }
 

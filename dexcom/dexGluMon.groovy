@@ -79,6 +79,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 }
 
 void getGlucose() {
+    if(debugEnabled) log.debug "glucose range: $glucoseRange"
     if(glucoseRange == null || glucoseRange == 0) 
         gRange = 600
     else
@@ -89,6 +90,7 @@ void getGlucose() {
 }
 
 void getAlert() {
+    if(debugEnabled) log.debug "alert range: $alertRange"
     if(alertRange == null || alertRange == 0) 
         aRange = 600
     else

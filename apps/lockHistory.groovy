@@ -19,10 +19,11 @@
  *    2021-05-04    thebearmay    2.2.7.x changes
  *    2021-12-28    thebearmay    return State as a map
  *    2022-06-20    thebearmay    remove embedded sections
+ *    2023-05-16    thebearmat    allow leading zeros in code
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.2.2'  }
+static String version()	{  return '0.2.3'  }
 
 
 definition (
@@ -32,6 +33,7 @@ definition (
 	description: 	"Display a history of the events for locks, allows side-by-side display of multiple devices for comparisons",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/lockHistory.groovy",
+    installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""
@@ -193,14 +195,28 @@ def altName(){
                 paragraph dispTable
         }            
         section ("Alternate Names Details", hideable: false, hidden: false) { 
-                input "slotNum", "number", title: "Slot Number:", submitOnChange:true
+                input "slotNum", "string", title: "Slot Number:", submitOnChange:true
                 input "slotName", "string", title: "Name to Display:", submitOnChange:true
                 if(slotName && slotNum) input "saveName", "button", title:"Save"
                 if(slotNum) input "deleteName", "button", title:"Delete"
+            if(state.saveNm){
+                state.saveNm = false
+                state.altNames["$slotNum"]="$slotName"
+                if(slotNum) app.updateSetting("slotNum",[type:"string",value:""])
+                if(slotName) app.updateSetting("slotName",[type:"string",value:""])
+                paragraph "<script>location.reload();</script>"
             }
-            section (""){   
-                href "mainPage", title: "Return", required: false
+            if(state.delNm) {
+                state.delNm = false
+                state.altNames.remove(slotNum)
+                if(slotNum) app.updateSetting("slotNum",[type:"string",value:""])
+                paragraph "<script>location.reload();</script>"
             }
+                    
+        }
+        section (""){   
+            href "mainPage", title: "Return", required: false
+        }
     }
 }
 
@@ -232,12 +248,10 @@ def appButtonHandler(btn) {
             lockHistory()
             break
         case "saveName":
-            state.altNames.put(slotNum.toString(), slotName.toString())
-            altName()
+            state.saveNm = true
             break
         case "deleteName":
-            state.altNames.remove(slotNum.toString())
-            altName()
+            state.delNm = true
             break
         default: 
             log.error "Undefined button $btn pushed"

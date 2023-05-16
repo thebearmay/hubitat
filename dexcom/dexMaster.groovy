@@ -22,7 +22,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 
 definition (
 	name: 			"Dexcom Master", 
@@ -82,7 +82,7 @@ def mainPage(){
             section("Main") {
 
                 input "apiUri", "enum", title: "<b>API URI</b>", options:[["https://api.dexcom.eu":"EU"],["https://api.dexcom.jp":"Japan"],["https://api.dexcom.com":"US"],["https://sandbox-api.dexcom.com":"Sandbox"]], description:"Select API Location", submitOnChange: true, width:4
-                input "dexClient", "string", title:"<b>App Client Id</b><br />Obtain an App Client Id from Dexcom by <a href='https://developer.dexcom.com/user/register'>registering</a> as a developer", submitOnChange: true, width:4
+                input "dexClient", "string", title:"<b>App Client Id</b><br />Obtain an App Client Id from Dexcom by <a href='https://developer.dexcom.com/user/register' target='_blank'>registering</a> as a developer", submitOnChange: true, width:4
                 input "dexSecret", "password", title:"<b>App Client Secret</b>", description:"Enter Secret obtained from the Dexcom App registration", submitOnChange:true, width:4
                 input "debugEnabled", "bool", title:"<b>Enable Debug</b>", submitOnChange:true, width:4
                 if(debugEnabled) {
@@ -94,7 +94,7 @@ def mainPage(){
             section("<h2>Dexcom Authorization</h2>", hideable: false, hidden: false){
                 if(state.accessToken == null) createAccessToken()
                     paragraph "<b>Access Token: </b>${state.accessToken}"
-                input "resetToken", "button", title:"Reset Token"
+                input "resetToken", "button", title:"Reset Hubitat Token"
                 paragraph "<b>Redirect URL</b>: ${getFullApiServerUrl()}/a?access_token=${state.accessToken}&"
                 paragraph "<small>${"${getFullApiServerUrl()}/a?access_token=${state.accessToken}&".size()} characters</small>"
                 input "tinyUrl", "string", title:"<b>Redirect Override</b>", description:"Use TinyUrl or similar if redirect exceeds 128 characters", submitOnChange: true, width:4
@@ -109,6 +109,7 @@ def mainPage(){
                     if(debugEnabled) paragraph iaUri
                     paragraph "<script>window.open('$iaUri',target='_blank');</script>"
                 }
+                /*
                 if(state.dexAuthCode){ 
                     input "secondAuth", "button", title: "Get Dexcom Authorization"
                     if(state.secAuth == true || state.secAuth == 'true'){
@@ -124,7 +125,9 @@ def mainPage(){
                     }
                     if (state.devCount)
                     paragraph "${state.devCount} Device(s) Created"
-                }
+                }*/
+                if (state.devCount)
+                    paragraph "Authorization Received - ${state.devCount} Device(s) Created"
             }
             section("Reset Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
@@ -162,6 +165,7 @@ def getSecondAuth(){
             lastRefresh = new Date().getTime()
             state.lastRefresh = lastRefresh
             state.tExpire = lastRefresh + 7190000 // actual refresh interval is 7200 seconds
+            getDevices()
         }
     } catch (ex) {
         log.error "secondAuth: $ex"
@@ -206,6 +210,7 @@ def authReturn(){
         state.dexAuthCode = params['code']
     else 
         log.error "Unknown response with parameters $params"
+    runIn(5,'getSecondAuth')
     render contentType:'application/json', data:'{"status":200}',status:200
 }
 

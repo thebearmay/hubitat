@@ -301,6 +301,18 @@
         "Dashboards",
         "Misc. Devices"
        ]
+    },
+    {
+      "id":"dfd717fd-bb02-4e32-bf65-3a43a57a8556",
+      "name":"Sensor Groups+ (Resurrected)",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/SensorGroupsPlus/main/SensorGroupsPlus.json",
+      "description":"App for grouping sensors",
+      "tags":[
+        "Automations & Groups",
+        "Multi Sensors",
+        "Tools & Utilities"
+       ]
     }
   ]
 }

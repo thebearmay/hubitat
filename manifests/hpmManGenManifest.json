@@ -4,6 +4,7 @@
  "version":"1.0.3",
  "minimumHEVersion":"2.3.0.1",
  "dateReleased":"2023-07-25",
+ "releaseNotes": "v1.03 - handle a missing repository instead generating an error",
  "bundles": [
   {
      "id":"84f8db21-a1d6-4ca1-8604-759457146a72",

@@ -16,9 +16,10 @@
  *    ----         ---           ----
  *    18Oct2022    thebearmay    New Code
  *    23Nov2022    thebearmay    Fix Repository Entry
+ *    15Jul2023    thebearmay    Handle error finding repository 
 */
 
-static String version()	{  return '1.0.2'  }
+static String version()	{  return '1.0.3'  }
 
 import java.text.SimpleDateFormat
 #include thebearmay.localFileMethods
@@ -251,30 +252,34 @@ def mainPage(){
                 input "genRepos", "button", title: "Generate Merged Repository"                
                 if(state.genRepos) {
                     reposWork = readExtFile("$reposLoc")
-                    reposWork = reposWork.substring(0,reposWork.size()-3)
-                    reposWork = reposWork.substring(0,reposWork.lastIndexOf("}")+1)
-                    reposWork +=",\n    {\n"
-                    reposWork += "      \"id\":\"${GUID()}\",\n"
-                    reposWork += "      \"name\":\"$packageName\",\n"
-                    reposWork += "      \"category\":\"$reposCat\",\n"
-                    reposWork += "      \"location\":\"$reposManLoc\",\n"
-                    reposWork += "      \"description\":\"$reposDesc\""
-                    if(reposTag != null) {
-                        firstTag = true
-                        reposWork += ",\n      \"tags\":["
-                        reposTag.each{
-                            if(firstTag) {
-                                firstTag = false
-                                reposWork += "\n        \"$it\""
-                            } else
-                                reposWork +=",\n        \"$it\""
+                    if(reposWork) {
+                        reposWork = reposWork.substring(0,reposWork.size()-3)
+                        reposWork = reposWork.substring(0,reposWork.lastIndexOf("}")+1)
+                        reposWork +=",\n    {\n"
+                        reposWork += "      \"id\":\"${GUID()}\",\n"
+                        reposWork += "      \"name\":\"$packageName\",\n"
+                        reposWork += "      \"category\":\"$reposCat\",\n"
+                        reposWork += "      \"location\":\"$reposManLoc\",\n"
+                        reposWork += "      \"description\":\"$reposDesc\""
+                        if(reposTag != null) {
+                            firstTag = true
+                            reposWork += ",\n      \"tags\":["
+                            reposTag.each{
+                                if(firstTag) {
+                                    firstTag = false
+                                    reposWork += "\n        \"$it\""
+                                } else
+                                    reposWork +=",\n        \"$it\""
+                            }
+                            reposWork +="\n       ]\n"
                         }
-                        reposWork +="\n       ]\n"
+                        else
+                            reposWork += "\n"                    
+                        reposWork += "    }\n  ]\n}"
+                        paragraph "<pre>$reposWork</pre>"
                     }
-                    else
-                        reposWork += "\n"                    
-                    reposWork += "    }\n  ]\n}"
-                    paragraph "<pre>$reposWork</pre>"
+                        else 
+                            paragraph '<pre>{  "author": "Unknown",\n"gitHubUrl": "https://github.com/unknown",\n"packages": [\n]\n}</pre>'
                     state.genRepos = false
                 }
             }

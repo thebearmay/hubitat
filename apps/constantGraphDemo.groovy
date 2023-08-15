@@ -22,7 +22,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 definition (
 	name: 			"ConstantGraph Demo", 

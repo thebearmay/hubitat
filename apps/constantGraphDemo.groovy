@@ -109,7 +109,7 @@ def mainPage(){
 }
 
 void sendDataEvt(evt){
-    sendData(true)
+    sendData(3)
 }
 
 
@@ -133,8 +133,8 @@ void sendData(retry=3) {
 }
 
 def dataReturn(resp, data){
-    //if(debugEnabled) 
-    log.debug "dataReturn:<br>${resp.properties}<br>${data['retry']}"
+    if(debugEnabled) 
+    	log.debug "dataReturn:<br>${resp.properties}<br>${data['retry']}"
     if(resp.status == 408 && data['retry'] > 0 ) {
         retry = data['retry'] - 1
         sendData(retry)

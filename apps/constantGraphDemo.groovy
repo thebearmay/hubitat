@@ -12,8 +12,9 @@
  *
  *  Change History:
  *
- *    Date        Who           What
- *    ----        ---           ----
+ *    Date         Who           What
+ *    ----         ---           ----
+ *    21Aug2023    thebearmay    Enable multi-device
  *
 */
 import groovy.transform.Field
@@ -22,7 +23,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 definition (
 	name: 			"ConstantGraph Demo", 
@@ -75,22 +76,34 @@ def mainPage(){
             
             }
             section("<h3>Device Selection</h3>", hideable: true, hidden: false){
-                input "devSelected", "capability.*",title:"Select device to share", submitOnChange:true,multiple:false
-                attribList = []
-                if(devSelected){
-                    sortedList = devSelected.properties.currentStates
-                    sortedList.each {
-                        attribList.add(it.name)                    
+                input "devSelected", "capability.*",title:"Select device to share", submitOnChange:true,multiple:true
+                unsubscribe()
+                if(devSelected){                    
+                    devSelected.each{ d ->
+                        input "attrib-${d.name}", "enum", title: "Select Attribute to report for $d", options: d.properties.currentStates.name.sort(), submitOnChange: true, multiple: false, width:4
                     }
-                    input "attrib", "enum", title: "Select Attribute to report", options: attribList.sort(), submitOnChange: true, multiple: false, width:4
-                    unsubscribe()
-                    if(devSelected && attrib)
-                       subscribe(devSelected,attrib,"sendDataEvt")
-                
-                    input "test", "button", title:"Test Send Data"
+                    settings.each{ s ->
+                        //log.debug "$s"
+                        if("$s".indexOf("attrib-") >  -1) {
+                            dName = "$s".split("-")[1]
+                            dName= dName.substring(0,dName.indexOf("="))
+                            devSelected.each { d -> 
+                                if ("${d.name}" == "$dName")
+                                    subscribe(d,s.value,"sendDataEvt")
+                            }
+                        }
+                    }
+/*                    input "test", "button", title:"Test Send Data"
                     if(state.testSend == true){
                         state.testSend == false
-                        sendData()
+                        sendData([evt:[d)
+                    }
+*/
+                } else {
+                    settings.each{ s ->
+                        if("$s".indexOf("attrib-") >  -1) {
+                            app.removeSetting(s.key)
+                        }
                     }
                 }
             }
@@ -109,13 +122,10 @@ def mainPage(){
 }
 
 void sendDataEvt(evt){
-    sendData(3)
-}
-
-
-void sendData(retry=3) {
-    dataMap = [app:"Hubitat Demo", version: "${version()}", channels:[[id:99, v:"${devSelected.currentValue(attrib)}", name:"$attrib"]]]
+    if(debugEnabled) log.debug "evt : <br>${evt.properties}"
+    dataMap = [app:"Hubitat Demo", version: "${version()}", channels:[[id:"${evt.deviceId}", v:"${evt.value}", name:"${evt.name}"]]]
     def bodyText = JsonOutput.toJson(dataMap)
+    if(debugEnabled) log.debug "$bodyText"
     Map requestParams =
 	[
         uri: "https://data.mongodb-api.com/app/constantgraph-iwfeg/endpoint/http/data",
@@ -135,10 +145,6 @@ void sendData(retry=3) {
 def dataReturn(resp, data){
     if(debugEnabled) 
     	log.debug "dataReturn:<br>${resp.properties}<br>${data['retry']}"
-    if(resp.status == 408 && data['retry'] > 0 ) {
-        retry = data['retry'] - 1
-        sendData(retry)
-    }
 }
 
 

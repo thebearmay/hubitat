@@ -15,6 +15,7 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    21Aug2023    thebearmay    Enable multi-device
+ *    22Aug2023    thebearmay    Enable multi-attribute and channel selection
  *
 */
 import groovy.transform.Field
@@ -23,7 +24,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 definition (
 	name: 			"ConstantGraph Demo", 
@@ -80,7 +81,7 @@ def mainPage(){
                 unsubscribe()
                 if(devSelected){                    
                     devSelected.each{ d ->
-                        input "attrib-${d.name}", "enum", title: "Select Attribute to report for $d", options: d.properties.currentStates.name.sort(), submitOnChange: true, multiple: false, width:4
+                        input "attrib-${d.name}", "enum", title: "Select Attribute to report for $d", options: d.properties.currentStates.name.sort(), submitOnChange: true, multiple: true, width:4
                     }
                     settings.each{ s ->
                         //log.debug "$s"
@@ -88,8 +89,12 @@ def mainPage(){
                             dName = "$s".split("-")[1]
                             dName= dName.substring(0,dName.indexOf("="))
                             devSelected.each { d -> 
-                                if ("${d.name}" == "$dName")
-                                    subscribe(d,s.value,"sendDataEvt")
+                                if ("${d.name}" == "$dName") {
+                                    s.value.each { v ->
+                                        subscribe(d,v,"sendDataEvt")
+                                        input "channel-${d.id}-$v","number", title:"Select Channel for $d-$v",submitOnChange:true, width:4
+                                    }
+                                }
                             }
                         }
                     }
@@ -101,7 +106,7 @@ def mainPage(){
 */
                 } else {
                     settings.each{ s ->
-                        if("$s".indexOf("attrib-") >  -1) {
+                        if("$s".indexOf("attrib-") >  -1 || "$s".indexOf("channel-") >  -1 ) {
                             app.removeSetting(s.key)
                         }
                     }
@@ -110,7 +115,7 @@ def mainPage(){
             
             section("Reset Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
-               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+               if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
            }
 
 	    } else {
@@ -123,7 +128,17 @@ def mainPage(){
 
 void sendDataEvt(evt){
     if(debugEnabled) log.debug "evt : <br>${evt.properties}"
-    dataMap = [app:"Hubitat Demo", version: "${version()}", channels:[[id:"${evt.deviceId}", v:"${evt.value}", name:"${evt.name}"]]]
+    channel = 0
+    settings.each{ s ->
+        if("$s".indexOf("channel-") >  -1) {
+            sSplit = "$s".split("-")
+            if(debugEnabled) log.debug "$sSplit"
+            if(sSplit[1] == "${evt.deviceId}" && sSplit[2].substring(0,sSplit[2].indexOf("=")) == "${evt.name}")
+                channel = s.value            
+        }
+    }
+    if(debugEnabled)log.debug "Channel: $channel Attribute: ${evt.name}"
+    dataMap = [app:"${app.getLabel()}", version: "${version()}", channels:[[id:"$channel", v:"${evt.value}", name:"${evt.name}"]]]//id:"${evt.deviceId}"
     def bodyText = JsonOutput.toJson(dataMap)
     if(debugEnabled) log.debug "$bodyText"
     Map requestParams =
@@ -139,12 +154,12 @@ void sendDataEvt(evt){
 	]
     if(debugEnabled) 
         log.debug "$requestParams"
-    asynchttpPost("dataReturn",requestParams,[retry:retry])    
+    asynchttpPost("dataReturn",requestParams)    
 }
 
 def dataReturn(resp, data){
     if(debugEnabled) 
-    	log.debug "dataReturn:<br>${resp.properties}<br>${data['retry']}"
+    	log.debug "dataReturn:<br>${resp.properties}}"
 }
 
 

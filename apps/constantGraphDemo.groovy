@@ -16,6 +16,7 @@
  *    ----         ---           ----
  *    21Aug2023    thebearmay    Enable multi-device
  *    22Aug2023    thebearmay    Enable multi-attribute and channel selection
+ *    24Aug2023    thebearmay    Remove the use of the substring, reset attributes & channels when device list changes
  *
 */
 import groovy.transform.Field
@@ -24,7 +25,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 
 definition (
 	name: 			"ConstantGraph Demo", 
@@ -68,7 +69,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') { 
 
             section("Main") {
-                input "apiKey", "string", title: "<b>API Key from <a href='https://www.constantgraph.com/account' target='_blank'>ConstantGraph</a></b>", description:"Enter API Key", submitOnChange: true, width:4
+                input "apiKey", "password", title: "<b>API Key from <a href='https://www.constantgraph.com/account' target='_blank'>ConstantGraph</a></b>", description:"Enter API Key", submitOnChange: true, width:4
                 input "debugEnabled", "bool", title:"<b>Enable Debug</b>", submitOnChange:true, width:4
                 if(debugEnabled) {
                     unschedule()
@@ -77,17 +78,31 @@ def mainPage(){
             
             }
             section("<h3>Device Selection</h3>", hideable: true, hidden: false){
+                if(!state.devHold) {
+                    if(devSelected) 
+                        state.devHold = "$devSelected"
+                    else
+                        state.devHold=[]
+                }
                 input "devSelected", "capability.*",title:"Select device to share", submitOnChange:true,multiple:true
                 unsubscribe()
-                if(devSelected){                    
+                if(devSelected){
                     devSelected.each{ d ->
                         input "attrib-${d.name}", "enum", title: "Select Attribute to report for $d", options: d.properties.currentStates.name.sort(), submitOnChange: true, multiple: true, width:4
+                    }
+                    if("$devSelected"!="${state.devHold}"){
+                        state.devHold = "$devSelected"
+                        settings.each{ s1 ->
+                            if("$s1".indexOf("attrib-") >  -1 || "$s1".indexOf("channel-") >  -1 ) {
+                                app.removeSetting(s1.key)
+                            }
+                        }
                     }
                     settings.each{ s ->
                         //log.debug "$s"
                         if("$s".indexOf("attrib-") >  -1) {
-                            dName = "$s".split("-")[1]
-                            dName= dName.substring(0,dName.indexOf("="))
+                            dName = "${s.key}".split("-")[1]
+                            //dName= dName.substring(0,dName.indexOf("="))
                             devSelected.each { d -> 
                                 if ("${d.name}" == "$dName") {
                                     s.value.each { v ->
@@ -131,9 +146,9 @@ void sendDataEvt(evt){
     channel = 0
     settings.each{ s ->
         if("$s".indexOf("channel-") >  -1) {
-            sSplit = "$s".split("-")
+            sSplit = "${s.key}".split("-")
             if(debugEnabled) log.debug "$sSplit"
-            if(sSplit[1] == "${evt.deviceId}" && sSplit[2].substring(0,sSplit[2].indexOf("=")) == "${evt.name}")
+            if(sSplit[1] == "${evt.deviceId}" && sSplit[2] == "${evt.name}")
                 channel = s.value            
         }
     }

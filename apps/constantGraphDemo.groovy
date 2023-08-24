@@ -17,6 +17,7 @@
  *    21Aug2023    thebearmay    Enable multi-device
  *    22Aug2023    thebearmay    Enable multi-attribute and channel selection
  *    24Aug2023    thebearmay    Remove the use of the substring, reset attributes & channels when device list changes
+ *                               Refined the reset logic for attributes and channels
  *
 */
 import groovy.transform.Field
@@ -25,7 +26,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.5'  }
+static String version()	{  return '0.0.6'  }
 
 definition (
 	name: 			"ConstantGraph Demo", 
@@ -93,8 +94,25 @@ def mainPage(){
                     if("$devSelected"!="${state.devHold}"){
                         state.devHold = "$devSelected"
                         settings.each{ s1 ->
-                            if("$s1".indexOf("attrib-") >  -1 || "$s1".indexOf("channel-") >  -1 ) {
-                                app.removeSetting(s1.key)
+                            if("$s1".indexOf("attrib-") >  -1 ) {
+                                devName = "${s1.key}".split("-")[1]
+                                validDev = false
+                                devSelected.each { d2 -> 
+                                    if ("${d2.name}" == "$devName") {
+                                        validDev = true
+                                    }
+                                }
+                                if(!validDev) app.removeSetting(s1.key)
+                            }
+                            if("$s1".indexOf("channel-") >  -1){
+                                devID = "${s1.key}".split("-")[1]
+                                validDev = false
+                                devSelected.each { d2 -> 
+                                    if ("${d2.id}" == "$devID") {
+                                        validDev = true
+                                    }
+                                }
+                                if(!validDev) app.removeSetting(s1.key)                                
                             }
                         }
                     }

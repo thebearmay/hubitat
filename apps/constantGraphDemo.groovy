@@ -18,6 +18,7 @@
  *    22Aug2023    thebearmay    Enable multi-attribute and channel selection
  *    24Aug2023    thebearmay    Remove the use of the substring, reset attributes & channels when device list changes
  *                               Refined the reset logic for attributes and channels
+ *                               Send Channel Name (attribute name) and Device number
  *
 */
 import groovy.transform.Field
@@ -26,7 +27,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.7'  }
 
 definition (
 	name: 			"ConstantGraph Demo", 
@@ -171,7 +172,7 @@ void sendDataEvt(evt){
         }
     }
     if(debugEnabled)log.debug "Channel: $channel Attribute: ${evt.name}"
-    dataMap = [app:"${app.getLabel()}", version: "${version()}", channels:[[id:"$channel", v:"${evt.value}", name:"${evt.name}"]]]//id:"${evt.deviceId}"
+    dataMap = [app:"${app.getLabel()}", version: "${version()}", channels:[[id:"$channel", v:"${evt.value}", Name:"${evt.name}", Device:"${evt.deviceId}"]]]
     def bodyText = JsonOutput.toJson(dataMap)
     if(debugEnabled) log.debug "$bodyText"
     Map requestParams =

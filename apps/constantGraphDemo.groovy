@@ -19,6 +19,7 @@
  *    24Aug2023    thebearmay    Remove the use of the substring, reset attributes & channels when device list changes
  *                               Refined the reset logic for attributes and channels
  *                               Send Channel Name (attribute name) and Device number
+ *    25Aug2023    thebearmay    Send Device config information
  *
 */
 import groovy.transform.Field
@@ -27,7 +28,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 
-static String version()	{  return '0.0.7'  }
+static String version()	{  return '0.0.8'  }
 
 definition (
 	name: 			"ConstantGraph Demo", 
@@ -132,12 +133,12 @@ def mainPage(){
                             }
                         }
                     }
-/*                    input "test", "button", title:"Test Send Data"
-                    if(state.testSend == true){
-                        state.testSend == false
-                        sendData([evt:[d)
+                    input "config", "button", title:"Send Device Config Data"
+                    if(state.configSend == true){
+                        state.configSend == false
+                        sendConfigData()
                     }
-*/
+
                 } else {
                     settings.each{ s ->
                         if("$s".indexOf("attrib-") >  -1 || "$s".indexOf("channel-") >  -1 ) {
@@ -196,11 +197,64 @@ def dataReturn(resp, data){
     	log.debug "dataReturn:<br>${resp.properties}}"
 }
 
+void sendConfigData(){
+    dMap = []
+    devSelected.each{ d ->
+        if(debugEnabled) log.debug "Name:${d.name}, Number:${d.id}"
+        dMap+=[Name:"${d.name}", Number:"${d.id}", Room:"${d.roomName?d.roomName:'Unknown'}"]
+    }
+    dMap = [Devices:dMap]
+    vMap = []
+    settings.each{ s ->
+        if("$s".indexOf("channel-") >  -1) {
+            channel = s.value
+            devId = "${s.key}".split("-")[1]
+            cName = "${s.key}".split("-")[2]
+            vMap+=[Id:"$channel", Name:"$cName", Device:"$devId" ]
+        }
+    }
+    vMap=[Variables:vMap]    
+    
+    def bodyText = JsonOutput.toJson(dMap)
+    if(debugEnabled) log.debug "$bodyText"
+    Map requestParams =
+	[
+        uri: "https://data.mongodb-api.com/app/constantgraph-iwfeg/endpoint/http/config",
+        "requestContentType" : "application/json",
+        "contentType": "application/json",
+        headers: [
+            "X-Api-Key" :"$apiKey"
+        ],
+        body: "$bodyText",
+        timeout:100
+	]
+    if(debugEnabled) 
+        log.debug "$requestParams"
+    asynchttpPost("dataReturn",requestParams)
+    
+    bodyText = JsonOutput.toJson(vMap)
+    if(debugEnabled) log.debug "$bodyText"
+    requestParams =
+	[
+        uri: "https://data.mongodb-api.com/app/constantgraph-iwfeg/endpoint/http/config",
+        "requestContentType" : "application/json",
+        "contentType": "application/json",
+        headers: [
+            "X-Api-Key" :"$apiKey"
+        ],
+        body: "$bodyText",
+        timeout:100
+	]
+
+    if(debugEnabled) 
+        log.debug "$requestParams"
+    asynchttpPost("dataReturn",requestParams) 
+}    
 
 void appButtonHandler(btn) {
     switch(btn) {
-        case "test":
-            state.testSend = true
+        case "config":
+            state.configSend = true
             break
         default: 
             log.error "Undefined button $btn pushed"

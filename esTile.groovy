@@ -97,7 +97,7 @@ void processPage(){
         log.error "Echo Speaks not Installed"
     }
     pData=readPage("http://127.0.0.1:8080/installedapp/status/$app")
-    log.debug "pData: $pData"
+
     dWork = pData.substring(pData.indexOf('refreshCookieDays'),pData.indexOf('refreshCookieDays')+500)
     dWork.replace('<','')
     dWork=dWork.split(' ')
@@ -311,7 +311,7 @@ String readPage(fName){
             }
         }
     } catch (exception) {
-        log.error "Read Ext Error: ${exception.message}"
+        log.error "Read Page Error: ${exception.message}"
         return null;
     }
 }

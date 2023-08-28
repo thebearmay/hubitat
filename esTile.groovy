@@ -1,5 +1,20 @@
  /*  Echo Speaks Tile
-
+ *
+ *
+ *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ *  Change History:
+ *
+ *    Date         Who           What
+ *    ----         ---           ----
+ *    28Aug2023    thebearmay    HE 2.3.6.x changes
  */
 
 import java.text.SimpleDateFormat
@@ -12,7 +27,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.1"}
+static String version() {return "0.0.2"}
 
 metadata {
     definition (
@@ -80,9 +95,9 @@ void processPage(){
     app = findPage()
     if(app==-1) {
         log.error "Echo Speaks not Installed"
-        return
     }
     pData=readPage("http://127.0.0.1:8080/installedapp/status/$app")
+    log.debug "pData: $pData"
     dWork = pData.substring(pData.indexOf('refreshCookieDays'),pData.indexOf('refreshCookieDays')+500)
     dWork.replace('<','')
     dWork=dWork.split(' ')
@@ -110,37 +125,32 @@ void processPage(){
 Integer findPage(){
 
 	def params = [
-		uri: "http://127.0.0.1:8080/installedapp/list",
-		textParser: true
-	  ]
+		uri: "http://127.0.0.1:8080/hub2/appsList",
+	    contentType: "application/json",
+        followRedirects: false,
+        textParser: false
+    ]
 	
-	def allAppsList = []
-    def allAppNames = []
+    appId = -1
 	try {
-		httpGet(params) { resp ->    
-			def matcherText = resp.data.text.replace("\n","").replace("\r","")
-			def matcher = matcherText.findAll(/(<tr class="app-row" data-app-id="[^<>]+">.*?<\/tr>)/).each {
-				def allFields = it.findAll(/(<td .*?<\/td>)/) // { match,f -> return f } 
-				def id = it.find(/data-app-id="([^"]+)"/) { match,i -> return i.trim() }
-				def title = allFields[0].find(/data-order="([^"]+)/) { match,t -> return t.trim() }
-				allAppsList += [id:id,title:title]
-                allAppNames << title
-			}
+		httpGet(params) { resp ->  
+            appId = -1
+            if(debugEnabled) log.debug "GET: ${resp.data.apps}"
+            resp.data.apps.each {a ->
+                if(debugEnabled) log.debug "${a.data.type}"
+                if("${a.data.type}" == "Echo Speaks") {
+                    appId = a.data.id
+                    if(debugEnabled) log.debug "Found it ${a.data.id}"
+                }
+            }
+        }
 
-		}
 	} catch (e) {
 		log.error "Error retrieving installed apps: ${e}"
         log.error(getExceptionMessageWithLine(e))
 	}
     
-    for(i=0;i < allAppsList.size();i++) { 
-        if(allAppsList[i].title == 'Echo Speaks') {
-            //log.debug "Found it"
-            return allAppsList[i].id.toInteger()
-            break
-        }
-    }
-    return -1
+    return appId
 }
 
 void createServerMap(sData){
@@ -202,7 +212,7 @@ void refreshHTML(){
     
     wkStr2+="<tr><td>Last Refresh: ${device.currentValue("tmFromAtRrsh",true)} ago</td></tr>"
     if(nextDate > tNow){
-        wkStr2+="<tr><td>Next Refresh: ${device.currentValue("tm2NewAtRfrsh")}</td></tr>"
+        wkStr2+="<tr><td>Next Refresh: ${device.currentValue("tm2NewAtRfrsh",true)}</td></tr>"
     } else {
         wkStr2+="<tr><td style='color:red;font-weight:bold'>Missed Refresh: ${sdf.format(nextDate)}</td></tr>"
     }

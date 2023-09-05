@@ -17,11 +17,12 @@
  *    ----         ---           ----
  *    09Dec2022    thebearmay    Original Code
  *    11Dec2022    thebearmay    add room lookup
+ *    05Sep2023    thebearmay    2.3.6.x changes (Note: full JSON for rooms is at /hub2/roomsList)
 */
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-static String version() {return "1.0.1"}
+static String version() {return "1.0.2"}
 
 metadata {
     definition (
@@ -97,37 +98,28 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 }
 
 void getRoomList(){
-    respData = readPage("http://127.0.0.1:8080/room/list")
-    recs = respData.split("\n")
-    if (debugEnabled) log.debug recs.size()
+    respData = readPage("http://127.0.0.1:8080/hub2/devicesList")
+    if (debugEnabled) log.debug "${respData}"
+    def jSlurp = new JsonSlurper()
+    Map recs = (Map)jSlurp.parseText((String)respData)
     roomList = [:]
     devRoomList = [:]
     devNameList = [:]
     roomImageList = [:]
-    recs.each {
-        if(it.contains('/room/edit/') && it.contains('gridRoomLink')){
-            found = it.indexOf('/room/edit/')
-            rName = it.substring(it.indexOf(">")+1,it.lastIndexOf("<"))
-            rNum=it.substring(found+11, it.indexOf('"', found))
-            roomList["$rName"]="$rNum"
-            currRoom = rNum
+    recs.devices.each {
+        if(it.data.roomId == 0 || it.data.roomName == null){
+            it.data.roomName = "No Room Assigned"
         }
-        if(it.contains('/device/edit/') && it.contains('gridRoomDeviceLink')){
-            found = it.indexOf('/device/edit/')
-            dName = it.substring(it.indexOf(">")+1,it.lastIndexOf("<"))
-            dNum=it.substring(found+13, it.indexOf('"', found))
-            devRoomList["$dNum"]="$currRoom"
-            devNameList["$dNum"]="$dName"
-        }
-        if(it.contains('/room/image/') && it.contains('listRoomImage')){
-            found = it.indexOf('/room/image/')
-            iNum=it.substring(found+12, it.indexOf('"', found))
-            roomImageList["$iNum"]="true"
-        }
+      
+        roomList["${it.data.roomName}"]="${it.data.roomId}"
+        currRoom = it.data.roomId
+        devRoomList["${it.data.id}"]="$currRoom"
+        devNameList["${it.data.id}"]="${it.data.name}"
+        imageTest = readPage("http://127.0.0.1:8080/room/image/${it.data.roomId}")
+        if(imageTest.size() != 1207)
+            roomImageList["${it.data.roomId}"]="true"                                 
+        
     }
-//    updateAttr("roomList",roomList) 
-//    updateAttr("devRoomList",devRoomList)
-//    updateAttr("devNameList",devNameList)
     buildRoomJSON(roomList,devRoomList,devNameList,roomImageList)
 }
 

@@ -15,6 +15,7 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    28Aug2023    thebearmay    HE 2.3.6.x changes
+ *    11Sep2023    thebearmay    Add server attribute option
  */
 
 import java.text.SimpleDateFormat
@@ -23,11 +24,11 @@ import groovy.transform.Field
 @Field static final String okSymFLD       = "\u2713"
 @Field static final String notOkSymFLD    = "<span style='color:red'>\u2715</span>"
 @Field static final String sBLANK         = ''
-
+@Field static String minFwVersion = "2.3.6.121"
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.2"}
+static String version() {return "0.0.3"}
 
 metadata {
     definition (
@@ -46,6 +47,8 @@ metadata {
         attribute "amazonDomain","string"
         attribute "tm2NewAtRfrsh", "string"
         attribute "tmFromAtRrsh", "string"
+        attribute "serverLocation", "string"
+        attribute "anError","string"
         
         attribute "html","string"
         attribute "htmlAlt", "string"
@@ -56,6 +59,9 @@ metadata {
 }
 
 preferences {
+    if(location.hub.firmwareVersionString < minFwVersion){
+        input("errMsg", "hidden", title:"<b>Minimum Version Error</b>",description:"<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>", width:8)
+    }
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false, width:4)
@@ -67,13 +73,22 @@ preferences {
 
 @SuppressWarnings('unused')
 def installed() {
-
+    if(location.hub.firmwareVersionString < minFwVersion){
+        updateAttr("anError","<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>")
+    } else 
+        device.deleteCurrentState("anError")
+        
 }
 void updateAttr(String aKey, aValue, String aUnit = ""){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
 void refresh(){
+    if(location.hub.firmwareVersionString < minFwVersion){
+        updateAttr("anError","<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>")
+        return
+    } else
+        device.deleteCurrentState("anError")
     processPage()
     refreshHTML()
     if(pollRate == null)
@@ -195,10 +210,13 @@ void refreshHTML(){
     }
     wkStr+="</td></tr><tr><th>Server Data</th></tr>"
     wkStr+="<tr><td>Heroku: "
-    if(serverData.onHeroku == "true")
-       wkStr+=okSymFLD
-    else
+    if(serverData.onHeroku == "true"){
+        wkStr+=okSymFLD
+        updateAttr("serverLocation","Heroku")
+    } else {
         wkStr+=notOkSymFLD
+        updateAttr("serverLocation","Local")
+    }
     wkStr+="</td></tr><tr><td>Local Server: "
     if(serverData.isLocal == "true")
        wkStr+=okSymFLD

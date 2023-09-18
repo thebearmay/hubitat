@@ -16,6 +16,7 @@
  *    ----         ---           ----
  *    28Aug2023    thebearmay    HE 2.3.6.x changes
  *    11Sep2023    thebearmay    Add server attribute option
+ *    18Sep2023    thebearmay    Add Debug Logging option
  */
 
 import java.text.SimpleDateFormat
@@ -28,7 +29,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.3"}
+static String version() {return "0.0.4"} 
 
 metadata {
     definition (
@@ -59,6 +60,7 @@ metadata {
 }
 
 preferences {
+    input("vDisp", "hidden", title:"Driver Version",description:"<b>v${version()}</b>")
     if(location.hub.firmwareVersionString < minFwVersion){
         input("errMsg", "hidden", title:"<b>Minimum Version Error</b>",description:"<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>", width:8)
     }
@@ -68,6 +70,7 @@ preferences {
         input("password", "password", title: "Hub Security Password", required: false, width:4)
     }
     input("pollRate","number", title:"Poll rate (in minutes) Disable:0):", defaultValue:720, submitOnChange:true, width:4)
+    input("debugEnabled","bool", title:"Enable Debug Logging", defaultValue:false, submitOnChange:true, width:4)
 
 }
 
@@ -105,6 +108,8 @@ def updated(){
     if(pollRate > 0) {
         runIn(pollRate*60,"refresh")
     }
+    if(debugEnabled)
+        runIn(1800,"logsOff")
 }
 void processPage(){
     app = findPage()
@@ -114,9 +119,11 @@ void processPage(){
     pData=readPage("http://127.0.0.1:8080/installedapp/status/$app")
 
     dWork = pData.substring(pData.indexOf('refreshCookieDays'),pData.indexOf('refreshCookieDays')+500)
+    if(debuEnabled) "Refresh Days Work: <br> $dWork"
     dWork.replace('<','')
     dWork=dWork.split(' ')
     dWork.each{
+        if(debugEnable) "Refresh Split Each: $it"
         if(it.isNumber()) updateAttr("cookieRefreshDays",it.toInteger())
     }
     dWork = pData.substring(pData.indexOf('serverDataMap'),pData.indexOf('serverDataMap')+800)
@@ -124,15 +131,22 @@ void processPage(){
    
     createServerMap(dWork)
     if(pData.indexOf("cookieData") >-1){
+        if(debugEnabled) log.debug "Found Cookie Data"
         updateAttr("cookieData",true)
-        if(pData.indexOf("csrf") > -1)
+        if(pData.indexOf("csrf") > -1){
             updateAttr("csrf", true)
+            if(debugEnabled) log.debug "Found csrf"
+        }
     }
     dWork = pData.substring(pData.indexOf('amazonDomain'),pData.indexOf('amazonDomain')+300)
+    if(debugEnabled) log.debug "Amazon Domain Raw: $dWork"
     dWork.replace('<','')
     dWork=dWork.split(' ')
     dWork.each{
-        if(it.contains(".")) updateAttr("amazonDomain",it.trim())
+        if(it.contains(".")){
+            updateAttr("amazonDomain",it.trim())
+            if(debugEnabled) log.debug "Amazon Domain: ${it.trim()}"
+        }
     }
 
 }
@@ -169,14 +183,17 @@ Integer findPage(){
 }
 
 void createServerMap(sData){
+    if(debugEnabled) "Server Data Raw: $sData"
     sWork = sData.replace("&#x3D;",'\":\"')
     sWork = sWork.replace(', ','","')
     sWork = sWork.replace('{','{\"')
-    sWork = sWork.replace('}','\"}') 
+    sWork = sWork.replace('}','\"}')
+    if(debugEnabled)  log.debug "Server Information: $sWork"
     updateAttr("serverData", sWork)
 }
 
 void refreshHTML(){
+    if(debugEnabled)  log.debug "Refreshing HTML"
     Long tNow = new Date().getTime()
     def jSlurp = new JsonSlurper()
     serverData = jSlurp.parseText(device.currentValue("serverData",true))
@@ -249,7 +266,7 @@ void refreshHTML(){
     wkStr2+="<tr><td>Domain: ${device.currentValue("amazonDomain",true)}</td></tr>"
     wkStr2+="</table>"
     updateAttr("htmlAlt",wkStr2)
-    
+    if(debugEnabled)  log.debug "HTML Refresh complete"    
 }
 
 String nextCookieRefreshDur() {
@@ -368,4 +385,9 @@ HashMap securityLogin(){
             cookie = null
     }
 	return [result: result, cookie: cookie]
+}
+
+@SuppressWarnings('unused')
+void logsOff(){
+     device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }

@@ -1,10 +1,10 @@
 {
   "packageName": "Tile Multi-Device Template Manager",
   "author": "Jean P. May, Jr.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2023-01-05",
-  "releaseNotes": "0.1.0 - Allow hub variables to be included\n0.0.8 - singleThreaded to minimize open files\n0.0.7 add a filter for template selection\n0.0.6 - handle tile template read error\n0.0.5 - add @room\n",
+  "dateReleased": "2023-09-20",
+  "releaseNotes": "0.1.1 - Address screen lock issue\n0.1.0 - Allow hub variables to be included\n0.0.8 - singleThreaded to minimize open files\n0.0.7 add a filter for template selection\n0.0.6 - handle tile template read error\n0.0.5 - add @room\n",
   "apps": [
     {
       "id": "a8bf2ba9-caba-4222-a6b8-cde4c4c87848",

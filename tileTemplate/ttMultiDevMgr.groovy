@@ -16,9 +16,10 @@
  *    2022-09-18        thebearmay    handle template read error
  *    2023-01-05        thebearmay    add a filter for template selection
  *    2023-02-07        thebearmay    Allow the use of Hub Variables
+ *    2023-09-20        thebearmay    Security screen lock issue
 */
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.1.1'  }
 
 
 definition (
@@ -60,7 +61,7 @@ void logsOff(){
 }
 
 def mainPage(){
-    dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
+    dynamicPage (name: "mainPage", title: "<h3 style='color:blue'>${app.getLabel()}<br /><span style='font-size:small'>v${version()}</span></h3>", install: true, uninstall: true) {
       	if (app.getInstallationState() == 'COMPLETE') {   
 	    	section("Main") {
                 
@@ -77,7 +78,7 @@ def mainPage(){
                 else
                     fList = listFiles()
                 
-                input "templateName", "enum", title: "<b>Template to Process</b>", required: true, width:5, submitOnUpdate:true, options:fList
+                input "templateName", "enum", title: "<b>Template to Process</b>", required: false, width:5, submitOnUpdate:true, options:fList
                 input "templateCheck", "button", title:"Check Template"
                 if(templateName != null && state?.tCheck == true) {
                     List devList = templateScan()

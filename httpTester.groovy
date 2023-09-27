@@ -16,10 +16,11 @@
  *    ----        ---            ----
  *    2021-05-21  thebearmay	 Original version 0.1.0
  *    2022-10-31  thebearmay     add more options for headers, etc.
+ *    2023-09-27                 Add text=parser option
  *
  */
 
-static String version()	{  return '0.2.0'  }
+static String version()	{  return '0.2.1'  }
 
 
 metadata {
@@ -46,6 +47,7 @@ preferences {
     input "contentR", "string", title: "Request Content Type", submitOnChange: true
     input "headerBlock", "string", title: "Headers, comma separated", submitOnChange: true
     input "bodyText", "string", title: "Body text (usually JSON)"
+    input "tParser", "bool", title: "Text Parser", submitOnChange: true, defaultValue:true
     input("debugEnable", "bool", title: "Enable debug logging?")
         input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
@@ -93,10 +95,12 @@ def send(){
             ]
         ) { resp -> cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0) }
     }
+    sendEvent(name:"respReturn",value:".")
     params = [
         uri: path,
         contentType: "$contentT",
         requestContentType: contentR ?"$contentR" : "*/*",
+        textParser: tParser ? "true":"$tParser",
         headers: [:]
     ]
     if(cookie) params.headers.put("Cookie", cookie)

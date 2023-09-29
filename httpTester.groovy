@@ -17,11 +17,14 @@
  *    2021-05-21  thebearmay	 Original version 0.1.0
  *    2022-10-31  thebearmay     add more options for headers, etc.
  *    2023-09-27                 Add text=parser option
+ *    2023-09-28                 XML to JSON
  *
  */
+import groovy.transform.Field
+import groovy.json.JsonOutput
 
-static String version()	{  return '0.2.1'  }
 
+static String version()	{  return '0.2.2'  }
 
 metadata {
     definition (
@@ -126,14 +129,23 @@ def sendHandler(resp, data) {
     try {
 	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
 		    strWork = resp.data.toString()
-    		//if(debugEnable)
-            log.debug strWork
+    	    if(debugEnable)
+                log.debug "$strWork<br>Type:${resp.headers["Content-Type"]}"
+           if(resp.headers["Content-Type"].contains("xml")) {
+                strWork = JsonOutput.toJson(convertToMap(new XmlSlurper().parseText(strWork)))
+            }
 	        sendEvent(name:"respReturn",value:strWork)
   	    }
     } catch(Exception ex) { 
         log.error "$ex"
     } 
 
+}
+
+def convertToMap(nodes) {
+    nodes.children().collectEntries { 
+        [ it.name(), it.childNodes() ? convertToMap(it) : it.text() ] 
+    }
 }
 
 def updated(){

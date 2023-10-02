@@ -24,7 +24,7 @@ import groovy.transform.Field
 import groovy.json.JsonOutput
 
 
-static String version()	{  return '0.2.2'  }
+static String version()	{  return '0.2.3'  }
 
 metadata {
     definition (
@@ -116,7 +116,7 @@ def send(){
     }
     if(bodyText) params.put("body", "$bodyText")
     
-    log.debug "$postGet $params"
+    if(debugEnabled) log.debug "$postGet $params"
     if(postGet == "POST")
         asynchttpPost("sendHandler", params)
     else
@@ -125,27 +125,52 @@ def send(){
 }
 
 def sendHandler(resp, data) {
-    log.debug "Response: ${resp.properties}"
+    if(debugEnabled) log.debug "Response: ${resp.properties}"
+    
+    def xmlStr="""<Response Status="OK">
+	<Item Name="Guid">{adasdasdasdae-3421-dase-1dd}</Item>
+	<Item Name="Version">324234</Item>
+</Response>"""    
+    
     try {
 	    if(resp.getStatus() == 200 || resp.getStatus() == 207) {
 		    strWork = resp.data.toString()
-    	    if(debugEnable)
-                log.debug "$strWork<br>Type:${resp.headers["Content-Type"]}"
-           if(resp.headers["Content-Type"].contains("xml")) {
-                strWork = JsonOutput.toJson(convertToMap(new XmlSlurper().parseText(strWork)))
+    	    if(debugEnable) log.debug "$strWork<br>Type:${resp.headers["Content-Type"]}"
+            if(resp.headers["Content-Type"].contains("xml")) {
+            //strWork = xmlStr
+                xmlNodes= new XmlParser().parseText(strWork)//.children()
+
+                mapVal=[:]
+                if(xmlNodes.attributes())
+                    mapVal+=xmlNodes.attributes()
+                xmlNodes.each {
+                    aMap=[:]
+                    cMap=[:]
+                    it.children().each {
+                        if(!it.class.toString().contains('String')) 
+                            cMap.put(it?.name(),it.value().toString().replace("[","").replace("]",""))
+                        else 
+                            cMap.put("value",it.value.toString().replace("[","").replace("]",""))                  
+                    }
+                    if(it.attributes()){
+                        sWork = it?.name()+it.attributes().toString().replace("[","_").replace(":","_").replace("]","")
+                        mapVal.put(sWork,cMap)
+                    } else 
+                    if(it?.name()) 
+                        mapVal.put(it?.name(),cMap)
+                    else
+                        mapVal+=cMap                        
+                    }
+
+                if (debugEnabled) log.debug "${mapVal}"
+                strWork = JsonOutput.toJson(mapVal)
             }
-	        sendEvent(name:"respReturn",value:strWork)
-  	    }
+            sendEvent(name:"respReturn",value:strWork)
+        }
     } catch(Exception ex) { 
         log.error "$ex"
     } 
 
-}
-
-def convertToMap(nodes) {
-    nodes.children().collectEntries { 
-        [ it.name(), it.childNodes() ? convertToMap(it) : it.text() ] 
-    }
 }
 
 def updated(){

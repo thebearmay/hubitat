@@ -48,7 +48,7 @@ metadata {
                         [name:"headerBlock", type:"STRING", description:"Headers, comma separated", title:"Headers"],
                         [name:"bodyText", type:"STRING", description:"Body Text (usually JSON)", title:"Body Text"]
                         ]
-        command "test"
+        //command "test"
     
     }   
 }

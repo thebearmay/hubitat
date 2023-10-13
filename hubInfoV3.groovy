@@ -47,6 +47,7 @@
  *    2023-03-25                 v3.0.24 - Add Zigbee Stack check back in
  *    2023-03-28                 v3.0.25 - Check attribute values for startup message
  *    2023-03-29                 v3.0.26 - Remove Zigbee Stack check as the endpoint is no longer available
+ *    2023-10-13                 v3.0.27 - add lanSpeed attribute 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -54,7 +55,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.26"}
+static String version() {return "3.0.27"}
 
 metadata {
     definition (
@@ -138,6 +139,7 @@ metadata {
         attribute "freeMem15", "number"
         attribute "cloud", "string"
         attribute "dnsStatus", "string"
+        attribute "lanSpeed", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -998,6 +1000,7 @@ void getExtNetwork(resp, data){
             dnsList = dnsList.unique()
             checkDns(dnsList)
             updateAttr("dnsServers", dnsList)
+            updateAttr("lanSpeed", h2Data.lanAutonegStatus)
 
         }
     }catch (ex) {
@@ -1529,7 +1532,7 @@ void logsOff(){
 [parm08:[desc:"Time Sync Server Address", attributeList:"ntpServer", method:"ntpServerReq"]],
 [parm09:[desc:"Additional Subnets", attributeList:"ipSubnetsAllowed", method:"ipSubnetsReq"]],
 [parm10:[desc:"Hub Mesh Data", attributeList:"hubMeshData, hubMeshCount", method:"hubMeshReq"]],
-[parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus", method:"extNetworkReq"]],
+[parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],

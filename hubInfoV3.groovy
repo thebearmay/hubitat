@@ -47,7 +47,8 @@
  *    2023-03-25                 v3.0.24 - Add Zigbee Stack check back in
  *    2023-03-28                 v3.0.25 - Check attribute values for startup message
  *    2023-03-29                 v3.0.26 - Remove Zigbee Stack check as the endpoint is no longer available
- *    2023-10-13                 v3.0.27 - add lanSpeed attribute 
+ *    2023-10-13                 v3.0.27 - add lanSpeed attribute
+ *    2023-10-20                 v3.0.28 - add zigbeeInfo endpoint data if HE>= 2.3.6.1
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -55,7 +56,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.27"}
+static String version() {return "3.0.28"}
 
 metadata {
     definition (
@@ -140,6 +141,9 @@ metadata {
         attribute "cloud", "string"
         attribute "dnsStatus", "string"
         attribute "lanSpeed", "string"
+        attribute "zigbeePower", "number"
+        attribute "zigbeePan", "string"
+        attribute "zigbeeExtPan", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -397,6 +401,9 @@ void baseData(dummy=null){
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
 
+    if(location.hub.firmwareVersionString > "2.3.6.1")
+        extendedZigbee()
+    
     everyPoll("baseData")
 }
 
@@ -1121,7 +1128,33 @@ void getCloudReturn(resp, data){
     }
         
 }
-                     
+
+void extendedZigbee(){
+    if(security) cookie = getCookie()
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub2/zigbeeInfo",
+        headers: ["Cookie": cookie]
+    ]
+    if (debugEnabled) log.debug params
+    asynchttpGet("getExtendedZigbee", params)    
+}    
+
+void getExtendedZigbee(resp, data){
+    try{
+        def jSlurp = new JsonSlurper()
+        Map zbData = (Map)jSlurp.parseText((String)resp.data)
+        updateAttr("zigbeeStatus","${zbData.networkState}".toLowerCase())
+        updateAttr("zigbeePower",zbData.powerLevel)
+        if(zbData?.pan) updateAttr("zigbeePan",zbData.pan)
+        if(zbData?.epan) updateAttr("zigbeeExtPan",zbData.epan)
+    } catch (EX) {
+        log.error "$EX"
+    }
+        
+}
+
+
 
 @SuppressWarnings('unused')
 boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement

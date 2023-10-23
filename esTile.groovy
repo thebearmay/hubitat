@@ -17,6 +17,7 @@
  *    28Aug2023    thebearmay    HE 2.3.6.x changes
  *    11Sep2023    thebearmay    Add server attribute option
  *    18Sep2023    thebearmay    Add Debug Logging option
+ *    23Oct2023    thebearmay    Add serverIp as an atttribute
  */
 
 import java.text.SimpleDateFormat
@@ -29,7 +30,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.4"} 
+static String version() {return "0.0.5"} 
 
 metadata {
     definition (
@@ -50,6 +51,7 @@ metadata {
         attribute "tmFromAtRrsh", "string"
         attribute "serverLocation", "string"
         attribute "anError","string"
+        attribute "serverIp","string"
         
         attribute "html","string"
         attribute "htmlAlt", "string"
@@ -240,6 +242,7 @@ void refreshHTML(){
     else
         wkStr+=notOkSymFLD
     wkStr+="</td></tr><tr><td>Server IP: ${serverData.serverHost}</td></tr>"
+    updateAttr("serverIp","${serverData.serverHost}".substring(7))
     wkStr+="<tr><td>Domain: ${device.currentValue("amazonDomain",true)}</td></tr>"
     
     wkStr+="</table>"
@@ -389,5 +392,5 @@ HashMap securityLogin(){
 
 @SuppressWarnings('unused')
 void logsOff(){
-     device.updateSetting("debugEnable",[value:"false",type:"bool"])
+     device.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }

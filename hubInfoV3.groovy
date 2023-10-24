@@ -49,6 +49,7 @@
  *    2023-03-29                 v3.0.26 - Remove Zigbee Stack check as the endpoint is no longer available
  *    2023-10-13                 v3.0.27 - add lanSpeed attribute
  *    2023-10-20                 v3.0.28 - add zigbeeInfo endpoint data if HE>= 2.3.6.1
+ *    2023-10-24                 v3.0.29 - HE 2.3.7.x zigbee endpoint change
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -56,7 +57,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.28"}
+static String version() {return "3.0.29"}
 
 metadata {
     definition (
@@ -1131,9 +1132,13 @@ void getCloudReturn(resp, data){
 
 void extendedZigbee(){
     if(security) cookie = getCookie()
+    if(location.hub.firmwareVersionString > "2.3.7.1")
+        zPath = "/hub/zigbeeDetails/json"
+    else
+        zPath = "/hub2/zigbeeInfo"
     params = [
         uri    : "http://127.0.0.1:8080",
-        path   : "/hub2/zigbeeInfo",
+        path   : zPath,
         headers: ["Cookie": cookie]
     ]
     if (debugEnabled) log.debug params

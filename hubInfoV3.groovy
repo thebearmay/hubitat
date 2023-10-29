@@ -50,6 +50,7 @@
  *    2023-10-13                 v3.0.27 - add lanSpeed attribute
  *    2023-10-20                 v3.0.28 - add zigbeeInfo endpoint data if HE>= 2.3.6.1
  *    2023-10-24                 v3.0.29 - HE 2.3.7.x zigbee endpoint change
+ *    2023-10-24                 v3.0.30 - Add Matter attributes
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -57,7 +58,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.29"}
+static String version() {return "3.0.30"}
 
 metadata {
     definition (
@@ -145,6 +146,8 @@ metadata {
         attribute "zigbeePower", "number"
         attribute "zigbeePan", "string"
         attribute "zigbeeExtPan", "string"
+        attribute "matterEnabled", "string"
+        attribute "matterStatus", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -917,16 +920,8 @@ void getHub2Data(resp, data){
                 updateAttr("zwaveStatus","disabled")
             if(h2Data.baseModel.zigbeeStatus == "false"){
                 updateAttr("zigbeeStatus2", "enabled")
-                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "enabled" && "${state.errorZigbeeMismatch}" == "false" ){
-                    //log.warn "Zigbee Status has opposing values - radio was either turned off or crashed"
-                    state.errorZigbeeMismatch = true
-                } else state.errorZigbeeMismatch = false
             } else {
-                updateAttr("zigbeeStatus2", "disabled")
-                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "disabled" && "${state.errorZigbeeMismatch}" == "false"){
-                    //log.warn "Zigbee Status has opposing values - radio was either turned off or crashed."
-                    state.errorZigbeeMismatch = true
-                } else state.errorZigbeeMismatch = false                    
+                updateAttr("zigbeeStatus2", "disabled")                 
             }
             if(debugEnable) log.debug "securityInUse"
             updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
@@ -1159,7 +1154,31 @@ void getExtendedZigbee(resp, data){
         
 }
 
+void checkMatter(cookie){
+    if(location.hub.firmwareVersionString < "2.3.7.1" || getHubVersion() != "C-8")
+        return
+    
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/matterDetails/json",
+        headers: ["Cookie": cookie]
+    ]
+    if (debugEnabled) log.debug params
+    asynchttpGet("getMatter", params) 
+    
+}
 
+void getMatter(resp, data){
+    try{
+        def jSlurp = new JsonSlurper()
+        Map mData = (Map)jSlurp.parseText((String)resp.data)
+        updateAttr("matterStatus","${mData.networkState}".toLowerCase())
+        updateAttr("matterEnabled",mData.enabled)
+    } catch (EX) {
+        log.error "$EX"
+    }
+        
+}
 
 @SuppressWarnings('unused')
 boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement
@@ -1575,7 +1594,8 @@ void logsOff(){
 [parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
-[parm16:[desc:"Check Cloud Connection",attributeList:"cloud", method:"checkCloud"]]
+[parm16:[desc:"Check Cloud Connection",attributeList:"cloud", method:"checkCloud"]],
+[parm17:[desc:"Matter Status (C8 only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]]    
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

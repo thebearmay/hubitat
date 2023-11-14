@@ -51,6 +51,7 @@
  *    2023-10-20                 v3.0.28 - add zigbeeInfo endpoint data if HE>= 2.3.6.1
  *    2023-10-24                 v3.0.29 - HE 2.3.7.x zigbee endpoint change
  *    2023-10-24                 v3.0.30 - Add Matter attributes
+ *    2023-11-14                 v3.0.31 - Suppress error on extended Zigbee/Matter reads if hub not ready
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -58,7 +59,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.30"}
+static String version() {return "3.0.31"}
 
 metadata {
     definition (
@@ -1149,7 +1150,7 @@ void getExtendedZigbee(resp, data){
         if(zbData?.pan) updateAttr("zigbeePan",zbData.pan)
         if(zbData?.epan) updateAttr("zigbeeExtPan",zbData.epan)
     } catch (EX) {
-        log.error "$EX"
+        //log.error "$EX"
     }
         
 }
@@ -1175,7 +1176,7 @@ void getMatter(resp, data){
         updateAttr("matterStatus","${mData.networkState}".toLowerCase())
         updateAttr("matterEnabled",mData.enabled)
     } catch (EX) {
-        log.error "$EX"
+        //log.error "$EX"
     }
         
 }

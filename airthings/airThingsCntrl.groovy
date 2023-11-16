@@ -116,7 +116,7 @@ def mainPage(){
                     getChildDevices().each{
                         chdList.add("$it")
                     }
-                    log.debug chdList
+                    //log.debug chdList
                     input "removeChild", "enum", title:"<b>Remove child device</b>", defaultValue:"None", submitOnChange:true, options:chdList
                     if(removeChild ){
                         getChildDevices().each{

@@ -15,9 +15,10 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    16Oct2022    thebearmay    Code cleanup
+ *    16Nov2023    thebearmay    Allow removal of a child device outside of app uninstall
 */
 
-static String version()	{  return '0.1.4'  }
+static String version()	{  return '0.1.5'  }
 import groovy.transform.Field
 import java.net.URLEncoder
 import groovy.json.JsonOutput
@@ -98,11 +99,39 @@ def mainPage(){
                     if (state.numberDevices == null) state.numberDevices = 0
                     paragraph "Found ${state.numberDevices} devices"
                 }
-            }            
+            } 
+            section("<b><u>Child Device Maintenance</u></b>"){
+                /*input "forceCreate","button", title: "Force Device Creation"
+                if(state?.forceCreatePushed) {
+                    state.forceCreatePushed = false
+                    createChildDev("Air-FC001", "Forced", "Air-FC001", "Virtual")
+                    createChildDev("Air-FC002", "Forced", "Air-FC002", "Virtual")
+                    if(!state.numberDevices) 
+                        state.numberDevices = 2
+                    else
+                        state.numberDevices+=2
+                }*/
+                if (state?.numberDevices > 0){
+                    chdList = []
+                    getChildDevices().each{
+                        chdList.add("$it")
+                    }
+                    log.debug chdList
+                    input "removeChild", "enum", title:"<b>Remove child device</b>", defaultValue:"None", submitOnChange:true, options:chdList
+                    if(removeChild ){
+                        getChildDevices().each{
+                            if("$it" == "$removeChild")
+                                deleteChildDevice(it.getDeviceNetworkId())
+                        }
+                        app.updateSetting("removeChild",[value:null,type:"enum"])
+                    }
+                    
+                }
+            }
 
            section("Reset Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
-               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+               if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
            }
 
 	    } else {
@@ -150,6 +179,8 @@ void getAuth(command){
 // Begin API
 
 def apiGet (command){
+    if(!state.tokenExpires)
+        return
     if(new Date().getTime().toLong() >= state?.tokenExpires?.toLong() - 3000) //if token has expired or is within 3 seconds of expiring
         getAuth("reAuth")
     // commands should take the form "devices/${devId}/optionalParams
@@ -229,7 +260,10 @@ void appButtonHandler(btn) {
               break
           case ("devBtn"):
               state.devBtnPushed = true
-              break        
+              break
+          case ("forceCreate"):
+              state.forceCreatePushed = true
+              break
           default: 
               if(debugEnabled) log.error "Undefined button $btn pushed"
               break

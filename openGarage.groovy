@@ -111,7 +111,7 @@ void close() {
 
 // HTTP GET to toggle relay
 void toggleDoor() {
-    if(txtEnable) log.debug "toggling realy..."
+    if(txtEnable) log.debug "toggling relay..."
     httpGet(
         [
             uri: "http://$devIP",

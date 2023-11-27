@@ -41,6 +41,18 @@
  *    2023-02-23                 v3.0.18 - Add html attribute output file option
  *    2023-02-27                 v3.0.19 - Add 15 minute averages for CPU Load, CPU Percentage, and Free Memory
  *    2023-03-09                 v3.0.20 - Add cloud connection check
+ *                               v3.0.21 - Modify the cloud check to allow a user specified device
+ *    2023-03-10                 v3.0.22 - Add dnsStatus check
+ *    2023-03-14                 v3.0.23 - Change Font to red/bold if Cloud URL is blank or does not contain cloud.hubitat
+ *    2023-03-25                 v3.0.24 - Add Zigbee Stack check back in
+ *    2023-03-28                 v3.0.25 - Check attribute values for startup message
+ *    2023-03-29                 v3.0.26 - Remove Zigbee Stack check as the endpoint is no longer available
+ *    2023-10-13                 v3.0.27 - add lanSpeed attribute
+ *    2023-10-20                 v3.0.28 - add zigbeeInfo endpoint data if HE>= 2.3.6.1
+ *    2023-10-24                 v3.0.29 - HE 2.3.7.x zigbee endpoint change
+ *    2023-10-24                 v3.0.30 - Add Matter attributes
+ *    2023-11-14                 v3.0.31 - Suppress error on extended Zigbee/Matter reads if hub not ready
+ *    2023-11-27                 v3.0.32 - Reboot with Rebuild Option
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -48,7 +60,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.20"}
+static String version() {return "3.0.32"}
 
 metadata {
     definition (
@@ -110,7 +122,7 @@ metadata {
         attribute "ipSubnetsAllowed", "string"
         attribute "zigbeeStatus", "string"
         attribute "zigbeeStatus2", "string"
-        attribute "zigbeeStack", "string"
+        //attribute "zigbeeStack", "string"
         attribute "zwaveStatus", "string"
         attribute "hubAlerts", "string"
         attribute "hubMeshData", "string"
@@ -131,9 +143,17 @@ metadata {
         attribute "cpu15Pct", "number"
         attribute "freeMem15", "number"
         attribute "cloud", "string"
+        attribute "dnsStatus", "string"
+        attribute "lanSpeed", "string"
+        attribute "zigbeePower", "number"
+        attribute "zigbeePan", "string"
+        attribute "zigbeeExtPan", "string"
+        attribute "matterEnabled", "string"
+        attribute "matterStatus", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
+        command "rebootW_Rebuild"
         command "shutdown"
         command "updateCheck"
         command "removeUnused"
@@ -141,8 +161,8 @@ metadata {
 }
 preferences {
     if(state?.errorMinVersion || state?.errorMinVersion == "true") 
-        input("errMsg", "string", title:"<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>")
-    input("quickref","string", title:"$ttStyleStr<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html' target='_blank'>Quick Reference v${version()}</a>")
+        input("errMsg", "hidden", title:"<b>Minimum Version Error</b>",description:"<span style='background-color:red;font-weight:bold;color:black;'>Hub does not meet the minimum of HEv$minFwVersion</span>")
+    input("quickref","hidden", title:"$ttStyleStr<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html' target='_blank'>Quick Reference v${version()}</a>")
     input("debugEnable", "bool", title: "Enable debug logging?", width:4)
     input("warnSuppress", "bool", title: "Suppress Warn Level Logging", width:4)
 
@@ -153,7 +173,7 @@ preferences {
         }
 	}
     if(parm16 != null && parm16 != 0 && parm16 != "0")
-        input("makerInfo", "string", title: "MakerApi or Dashboard URL string", submitOnChange: true)
+        input("makerInfo", "string", title: "<span style='$cloudFontStyle'>MakerApi or Dashboard URL string</span>", submitOnChange: true)
     input("remUnused", "bool", title: "Remove unused attributes", defaultValue: false, submitOnChange: true, width:4)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true, width:4)
     input("alternateHtml", "string", title: "Template file for HTML attribute", submitOnChange: true, defaultValue: "hubInfoTemplate.res", width:4)
@@ -261,6 +281,10 @@ void updated(){
     if(htmlOutput == null) 
         device.updateSetting("htmlOutput",[value:"hubInfoOutput.html",type:"string"])
     device.updateSetting("htmlOutput",[value:toCamelCase(htmlOutput),type:"string"])
+    if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/"))
+        cloudFontStyle = 'font-weight:bold;color:red'
+    else
+        cloudFontStyle = ''
 
     if(remUnused) removeUnused()
 }
@@ -384,6 +408,9 @@ void baseData(dummy=null){
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
 
+    if(location.hub.firmwareVersionString > "2.3.6.1")
+        extendedZigbee()
+    
     everyPoll("baseData")
 }
 
@@ -424,6 +451,8 @@ void everyPoll(whichPoll=null){
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
     aValue = aValue.toString()
+    if(aValue.contains("Your hub is starting up"))
+       return
 /*    if(aValue.length() > 1024) {
         log.error "Attribute value for $aKey exceeds 1024, current size = ${aValue.length()}, truncating to 1024..."
         aValue = aValue.substring(0,1023)
@@ -894,16 +923,8 @@ void getHub2Data(resp, data){
                 updateAttr("zwaveStatus","disabled")
             if(h2Data.baseModel.zigbeeStatus == "false"){
                 updateAttr("zigbeeStatus2", "enabled")
-                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "enabled" && "${state.errorZigbeeMismatch}" == "false" ){
-                    //log.warn "Zigbee Status has opposing values - radio was either turned off or crashed"
-                    state.errorZigbeeMismatch = true
-                } else state.errorZigbeeMismatch = false
             } else {
-                updateAttr("zigbeeStatus2", "disabled")
-                if (device.currentValue("zigbeeStatus", true) != null && device.currentValue("zigbeeStatus", true) != "disabled" && "${state.errorZigbeeMismatch}" == "false"){
-                    //log.warn "Zigbee Status has opposing values - radio was either turned off or crashed."
-                    state.errorZigbeeMismatch = true
-                } else state.errorZigbeeMismatch = false                    
+                updateAttr("zigbeeStatus2", "disabled")                 
             }
             if(debugEnable) log.debug "securityInUse"
             updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
@@ -966,12 +987,52 @@ void getExtNetwork(resp, data){
                 updateAttr("connectType","Ethernet")
             else
                 updateAttr("connectType","Not Connected")                
-        
-            updateAttr("dnsServers", h2Data.dnsServers)
-            updateAttr("lanIPAddr", h2Data.lanAddr)                           
+            
+            updateAttr("lanIPAddr", h2Data.lanAddr)
+            
+            dnsList = []
+            if(h2Data.usingStaticIP){
+                h2Data.staticNameServers.each{
+                    dnsList.add("$it")
+                }
+            }else {
+                h2Data.dhcpNameServers.each{
+                    dnsList.add("$it")
+                }
+            }
+            h2Data.dnsServers.each{
+                dnsList.add("$it")
+            }
+            dnsList = dnsList.unique()
+            checkDns(dnsList)
+            updateAttr("dnsServers", dnsList)
+            updateAttr("lanSpeed", h2Data.lanAutonegStatus)
+
         }
     }catch (ex) {
         if (!warnSuppress) log.warn ex
+    }
+}
+
+void checkDns(dnsList) {
+    if(dnsList == null){
+        updateAttr("dnsStatus","inactive")
+        return
+    }
+        
+    for(i=0;i<dnsList.size();i++){
+        hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(dnsList[i],1)
+        int pTran = pingData.packetsTransmitted.toInteger()
+        if (pTran == 0){ // 2.2.7.121 bug returns all zeroes on not found
+            pingData.packetsTransmitted = numPings
+            pingData.packetLoss = 100
+        }
+        if (pingData.packetLoss < 100){               
+            updateAttr("dnsStatus","active")
+            i=dnsList.size()
+        } else {         
+            updateAttr("dnsStatus","inactive")
+        }
     }
 }
 
@@ -1010,7 +1071,7 @@ void getUpdateCheck(resp, data) {
     }
 
 }
-
+/*
 void zigbeeStackReq(cookie){
     params = [
         uri: "http://127.0.0.1:8080",
@@ -1028,14 +1089,17 @@ void getZigbeeStack(resp, data) {
             updateAttr("zigbeeStack","new")      
     } catch(ignore) { }
 }
-
+*/
 void checkCloud(cookie){
     if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/")) {
         updateAttr("cloud", "invalid endpoint")
+        cloudFontStyle = 'font-weight:bold;color:red'
         return
     }
+    if(makerInfo.contains("Device ID"))
+      makerInfo=makerInfo.replace("[Device ID]","${device.deviceId}")
+   
     if(!makerInfo.contains("dashboard")){
-        //makerInfo=makerInfo.replace("[Device ID]","${device.deviceId}")
         cType="maker"
         dId=makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?'))
 
@@ -1047,23 +1111,77 @@ void checkCloud(cookie){
        uri    : makerInfo,
        headers: [Accept:"application/json"]
     ]
-    log.debug "$params"
+    //log.debug "$params"
     asynchttpGet("getCloudReturn", params, [cType:"$cType",dId:"$dId"]) 
 }
 
 void getCloudReturn(resp, data){
-/*    if(data.cType == "maker"){
-        if("${resp.json.id}" == "${device.deviceId}")
+    try{
+        if(resp.status == 200 && makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?')) == "${data["dId"]}") {
             updateAttr("cloud", "connected")
-        else
+        } else {
             updateAttr("cloud", "not connected")
-    }else */
-    if(makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?')) == data["dId"]) {
-        updateAttr("cloud", "connected")
-    }else 
-        updateAttr("cloud", "not connected")        
+        } 
+    } catch (EX) {
+        updateAttr("cloud", "not connected")
+    }
+        
 }
-                     
+
+void extendedZigbee(){
+    if(security) cookie = getCookie()
+    if(location.hub.firmwareVersionString > "2.3.7.1")
+        zPath = "/hub/zigbeeDetails/json"
+    else
+        zPath = "/hub2/zigbeeInfo"
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : zPath,
+        headers: ["Cookie": cookie]
+    ]
+    if (debugEnabled) log.debug params
+    asynchttpGet("getExtendedZigbee", params)    
+}    
+
+void getExtendedZigbee(resp, data){
+    try{
+        def jSlurp = new JsonSlurper()
+        Map zbData = (Map)jSlurp.parseText((String)resp.data)
+        updateAttr("zigbeeStatus","${zbData.networkState}".toLowerCase())
+        updateAttr("zigbeePower",zbData.powerLevel)
+        if(zbData?.pan) updateAttr("zigbeePan",zbData.pan)
+        if(zbData?.epan) updateAttr("zigbeeExtPan",zbData.epan)
+    } catch (EX) {
+        //log.error "$EX"
+    }
+        
+}
+
+void checkMatter(cookie){
+    if(location.hub.firmwareVersionString < "2.3.7.1" || getHubVersion() != "C-8")
+        return
+    
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/matterDetails/json",
+        headers: ["Cookie": cookie]
+    ]
+    if (debugEnabled) log.debug params
+    asynchttpGet("getMatter", params) 
+    
+}
+
+void getMatter(resp, data){
+    try{
+        def jSlurp = new JsonSlurper()
+        Map mData = (Map)jSlurp.parseText((String)resp.data)
+        updateAttr("matterStatus","${mData.networkState}".toLowerCase())
+        updateAttr("matterEnabled",mData.enabled)
+    } catch (EX) {
+        //log.error "$EX"
+    }
+        
+}
 
 @SuppressWarnings('unused')
 boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement
@@ -1340,6 +1458,32 @@ void reboot() {
 }
 
 @SuppressWarnings('unused')
+void rebootW_Rebuild() {
+    if(!allowReboot){
+        log.error "Reboot was requested, but allowReboot was set to false"
+        return
+    }
+    if(location.hub.firmwareVersionString < "2.3.7.122"){
+        log.error "Reboot with rebuild was requested, but failed HE min version."
+        return        
+    }
+    log.info "Hub Reboot requested"
+    // start - Modified from dman2306 Rebooter app
+    String cookie=(String)null
+    if(security) cookie = getCookie()
+	httpPost(
+		[
+			uri: "http://127.0.0.1:8080",
+			path: "/hub/rebuildDatabaseAndReboot",
+			headers:[
+				"Cookie": cookie
+			]
+		]
+	) {		resp ->	} 
+    // end - Modified from dman2306 Rebooter app
+}
+
+@SuppressWarnings('unused')
 void shutdown() {
     if(!allowReboot){
         log.error "Shutdown was requested, but allowReboot/Shutdown was set to false"
@@ -1460,6 +1604,7 @@ void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }
 
+@Field static String cloudFontStyle = ''
 @Field static String minFwVersion = "2.2.8.141"
 @Field static List <String> pollList = ["0", "1", "2", "3", "4"]
 @Field static prefList = [
@@ -1473,12 +1618,13 @@ void logsOff(){
 [parm08:[desc:"Time Sync Server Address", attributeList:"ntpServer", method:"ntpServerReq"]],
 [parm09:[desc:"Additional Subnets", attributeList:"ipSubnetsAllowed", method:"ipSubnetsReq"]],
 [parm10:[desc:"Hub Mesh Data", attributeList:"hubMeshData, hubMeshCount", method:"hubMeshReq"]],
-[parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork", method:"extNetworkReq"]],
+[parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
-[parm16:[desc:"Check Cloud Connection",attributeList:"cloud", method:"checkCloud"]] 
+[parm16:[desc:"Check Cloud Connection",attributeList:"cloud", method:"checkCloud"]],
+[parm17:[desc:"Matter Status (C8 only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]]    
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

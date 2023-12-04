@@ -245,11 +245,11 @@ void calcAbsHumidity() {
     updateAttr("absHumidity", absHumidityR, "g/m<sup>3</sup>")
 }
 
-/*void test(){
+void test(){
     x=[:]
     x.data = [pm25:235]
     dataRefresh(x)
-}*/
+}
 
 void calcPm25Aqi(pm25Val){
     if(debugEnabled) log.debug "calcPm25Aqi($pm25Val)"
@@ -274,7 +274,7 @@ void calcPm25Aqi(pm25Val){
     for (i=0;i<aqiLevel.size();i++){
         if(debugEnabled) log.debug "$aLevel:${aqiLevel[i].max}"
         if(aLevel <= aqiLevel[i].max){
-            pm25AqiText = "<span color='${aqiLevel[i].color}'>${aqiLevel[i].name}</span>"
+            pm25AqiText = "<span style='color:${aqiLevel[i].color}'>${aqiLevel[i].name}</span>"
             updateAttr("pm25AqiText",pm25AqiText)
             break
         }

@@ -1,10 +1,10 @@
 {
   "packageName": "Air Things View Plus API Integration",
   "author": "Jean P. May, Jr.",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2023-11-16",
-  "releaseNotes": "16Nov23 - Allow removal of a child device outside of app uninstall\n22Dec22 - fix security login bug\n19Dec22 - Handle unknown returns better\n30Nov22 -Added option to force Integer values for most attributes, added mold index attribute\n21Oct22 - Made the template selection a drop down",
+  "dateReleased": "2023-12-08",
+  "releaseNotes": "08Dec23 - add pm25Aqi and pm25AqiText\n16Nov23 - Allow removal of a child device outside of app uninstall\n22Dec22 - fix security login bug\n19Dec22 - Handle unknown returns better\n30Nov22 -Added option to force Integer values for most attributes, added mold index attribute\n21Oct22 - Made the template selection a drop down",
   "documentationLink": "https://github.com/thebearmay/hubitat/blob/main/airthings/README.md",
   "communityLink": "https://community.hubitat.com/t/air-things-view-plus/94434",
   "bundles": [

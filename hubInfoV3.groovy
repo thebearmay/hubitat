@@ -52,6 +52,7 @@
  *    2023-10-24                 v3.0.29 - HE 2.3.7.x zigbee endpoint change
  *    2023-10-24                 v3.0.30 - Add Matter attributes
  *    2023-11-14                 v3.0.31 - Suppress error on extended Zigbee/Matter reads if hub not ready
+ *    2023-11-27                 v3.0.32 - Reboot with Rebuild Option
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -59,7 +60,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.31"}
+static String version() {return "3.0.32"}
 
 metadata {
     definition (
@@ -152,6 +153,7 @@ metadata {
 
         command "hiaUpdate", ["string"]
         command "reboot"
+        command "rebootW_Rebuild"
         command "shutdown"
         command "updateCheck"
         command "removeUnused"
@@ -1447,6 +1449,32 @@ void reboot() {
 		[
 			uri: "http://127.0.0.1:8080",
 			path: "/hub/reboot",
+			headers:[
+				"Cookie": cookie
+			]
+		]
+	) {		resp ->	} 
+    // end - Modified from dman2306 Rebooter app
+}
+
+@SuppressWarnings('unused')
+void rebootW_Rebuild() {
+    if(!allowReboot){
+        log.error "Reboot was requested, but allowReboot was set to false"
+        return
+    }
+    if(location.hub.firmwareVersionString < "2.3.7.122"){
+        log.error "Reboot with rebuild was requested, but failed HE min version."
+        return        
+    }
+    log.info "Hub Reboot requested"
+    // start - Modified from dman2306 Rebooter app
+    String cookie=(String)null
+    if(security) cookie = getCookie()
+	httpPost(
+		[
+			uri: "http://127.0.0.1:8080",
+			path: "/hub/rebuildDatabaseAndReboot",
 			headers:[
 				"Cookie": cookie
 			]

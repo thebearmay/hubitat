@@ -15,7 +15,8 @@
  *    Date        Who            What
  *    ----        ---            ----
  *    21Dec2023   thebearmay    Initialize at install
-
+ *                              Add text color option
+ *
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -23,7 +24,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "1.0.1"}
+static String version() {return "1.0.2"}
 
 metadata {
     definition (
@@ -39,6 +40,7 @@ metadata {
 }
 preferences {
     //input("upTimeDesc", "enum", title: "Uptime Descriptors", defaultValue:"d/h/m/s", options:["d/h/m/s"," days/ hrs/ min/ sec"," days/ hours/ minutes/ seconds"])
+    input("textColor","string",title: "Text Color", submitOnChange:true)
 }
 @SuppressWarnings('unused')
 void installed() {
@@ -58,6 +60,7 @@ void initialize() {
 
 void updated(){
     if(debugEnable) log.debug "updated"
+    initialize()
 
 }
 
@@ -73,7 +76,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 def genHtml(sTime){
     //utD=upTimeDesc.split("/")
     html="""
-<span id='upTimeElement'>Initializing...</span>
+<span style='color:$textColor' id='upTimeElement'>Initializing...</span>
  <script type='text/javascript'>
 
         setInterval(utimer,1000,parseInt($sTime/1000));

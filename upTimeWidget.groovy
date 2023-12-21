@@ -14,6 +14,7 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
+ *    21Dec2023   thebearmay    Initialize at install
 
 */
 import java.text.SimpleDateFormat
@@ -22,7 +23,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "1.0.0"}
+static String version() {return "1.0.1"}
 
 metadata {
     definition (
@@ -41,7 +42,8 @@ preferences {
 }
 @SuppressWarnings('unused')
 void installed() {
-    log.trace "installed()"
+    log.trace "Uptime Widget v${version()} installed()"
+    initialize()
 
 }
 
@@ -69,7 +71,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 }
 
 def genHtml(sTime){
-    utD=upTimeDesc.split("/")
+    //utD=upTimeDesc.split("/")
     html="""
 <span id='upTimeElement'>Initializing...</span>
  <script type='text/javascript'>

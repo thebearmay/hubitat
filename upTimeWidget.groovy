@@ -33,7 +33,7 @@ metadata {
     ) {
         capability "Actuator"
         capability "Initialize"
-        attribute "html", "string    
+        attribute "html", "string"    
       }   
 }
 preferences {

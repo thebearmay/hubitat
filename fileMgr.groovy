@@ -26,6 +26,7 @@
  *    05Nov2022    thebearmay	 exist attribute instantiate
  *    08Dec2022    thebearmay    Fix typo in fileDelete method
  *    17Feb2023    thebearmay    add lastFileWritten and lastFileWrittenTimeStamp
+ *    29Dec2923    thebearmay    Append File to create if doesn't exist
 */
 
 import java.net.URLEncoder
@@ -37,7 +38,7 @@ import java.text.SimpleDateFormat
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]
 
 @SuppressWarnings('unused')
-static String version() {return "0.2.7"}
+static String version() {return "0.2.8"}
 
 metadata {
     definition (
@@ -261,7 +262,7 @@ String readFile(fName){
         }
     } catch (exception) {
         log.error "Read Error: ${exception.message}"
-        return null;
+        return null
     }
 }
 
@@ -274,9 +275,9 @@ def appendFile(fName,newData,Closure closure) {
 Boolean appendFile(fName,newData){
     try {
         fileData = (String) readFile(fName)
-        if(fileData.length()>0) 
+        if(fileData?.length()>0) 
             fileData = fileData.substring(0,fileData.length()-1)
-        else fileData = " "
+        else fileData = ""
         return writeFile(fName,fileData+newData)
     } catch (exception){
         if (exception.message == "Not Found"){

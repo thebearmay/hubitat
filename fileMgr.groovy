@@ -26,7 +26,8 @@
  *    05Nov2022    thebearmay	 exist attribute instantiate
  *    08Dec2022    thebearmay    Fix typo in fileDelete method
  *    17Feb2023    thebearmay    add lastFileWritten and lastFileWrittenTimeStamp
- *    29Dec2923    thebearmay    Append File to create if doesn't exist
+ *    29Dec2023    thebearmay    Append File to create if doesn't exist
+ *    03Jan2023    thebearmay    convert \n in strings to the newline character for write file and append file commands
 */
 
 import java.net.URLEncoder
@@ -38,7 +39,7 @@ import java.text.SimpleDateFormat
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]
 
 @SuppressWarnings('unused')
-static String version() {return "0.2.8"}
+static String version() {return "0.2.9"}
 
 metadata {
     definition (
@@ -325,6 +326,8 @@ def writeFile(String fName, String fData, Closure closure) {
 
 @SuppressWarnings('unused')
 Boolean writeFile(String fName, String fData) {
+    fData = fData.replace("\\n","\n")
+    log.debug fData
     byte[] fDataB = fData.getBytes("UTF-8")
     return writeImageFile(fName, fDataB, "text/html")   
 }

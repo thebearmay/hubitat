@@ -53,6 +53,7 @@
  *    2023-10-24                 v3.0.30 - Add Matter attributes
  *    2023-11-14                 v3.0.31 - Suppress error on extended Zigbee/Matter reads if hub not ready
  *    2023-11-27                 v3.0.32 - Reboot with Rebuild Option
+ *    2024-01-05                 v3.0.33 - Use file methods instead of endpoints if available
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -60,7 +61,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.32"}
+static String version() {return "3.0.33"}
 
 metadata {
     definition (
@@ -1263,6 +1264,23 @@ String readExtFile(fName){
 @SuppressWarnings('unused')
 Boolean fileExists(fName){
     if(fName == null) return false
+    try{
+        if(location.hub.firmwareVersionString >= "2.3.4.134"){
+            byte[] rData = downloadHubFile("$fName")
+            fContent = new String(rData, "UTF-8")
+            if(fContent.size() > 0) {
+                if(debugEnable) log.debug "File Exist: true"
+                return true;
+            } else {
+                if(debugEnable) log.debug "File Exist: false"
+                return false;                
+            }
+        }
+    } catch (ex) {
+        log.error "$fName - $ex"
+        return false
+    }    
+    
     uri = "http://${location.hub.localIP}:8080/local/${fName}";
 
      def params = [
@@ -1275,7 +1293,7 @@ Boolean fileExists(fName){
                 if(debugEnable) log.debug "File Exist: true"
                 return true;
             } else {
-                if(debugEnable) log.debug "File Exist: true"
+                if(debugEnable) log.debug "File Exist: false"
                 return false
             }
         }
@@ -1359,6 +1377,15 @@ void createHtml(){
 
 @SuppressWarnings('unused')
 String readFile(fName){
+    try{
+        if(location.hub.firmwareVersionString >= "2.3.4.134"){
+            byte[] rData = downloadHubFile("$fName")
+            return new String(rData, "UTF-8")
+        }
+    } catch (ex) {
+        log.error "$fName - $ex"
+    }
+    
     if(security) cookie = getCookie()
     uri = "http://${location.hub.localIP}:8080/local/${fName}"
 
@@ -1397,6 +1424,12 @@ String readFile(fName){
 }
 @SuppressWarnings('unused')
 Boolean writeFile(String fName, String fData) {
+    if(location.hub.firmwareVersionString >= "2.3.4.134"){
+        wData = fData.getBytes("UTF-8")
+        uploadHubFile("$fName",wData)
+        return true
+    }
+    
     now = new Date()
     String encodedString = "thebearmay$now".bytes.encodeBase64().toString(); 
     
@@ -1442,7 +1475,6 @@ void reboot() {
         return
     }
     log.info "Hub Reboot requested"
-    // start - Modified from dman2306 Rebooter app
     String cookie=(String)null
     if(security) cookie = getCookie()
 	httpPost(
@@ -1454,7 +1486,6 @@ void reboot() {
 			]
 		]
 	) {		resp ->	} 
-    // end - Modified from dman2306 Rebooter app
 }
 
 @SuppressWarnings('unused')
@@ -1468,7 +1499,6 @@ void rebootW_Rebuild() {
         return        
     }
     log.info "Hub Reboot requested"
-    // start - Modified from dman2306 Rebooter app
     String cookie=(String)null
     if(security) cookie = getCookie()
 	httpPost(
@@ -1480,7 +1510,6 @@ void rebootW_Rebuild() {
 			]
 		]
 	) {		resp ->	} 
-    // end - Modified from dman2306 Rebooter app
 }
 
 @SuppressWarnings('unused')
@@ -1489,8 +1518,7 @@ void shutdown() {
         log.error "Shutdown was requested, but allowReboot/Shutdown was set to false"
         return
     }
-    log.info "Hub Reboot requested"
-    // start - Modified from dman2306 Rebooter app
+    log.info "Hub Shutdown requested"
     String cookie=(String)null
     if(security) cookie = getCookie()
 	httpPost(
@@ -1502,7 +1530,7 @@ void shutdown() {
 			]
 		]
 	) {		resp ->	} 
-    // end - Modified from dman2306 Rebooter app
+
 }
                    
 void formatUptime(){
@@ -1553,8 +1581,6 @@ void restartCheck() {
         updateAttr("lastHubRestartFormatted", sdf.format(upDate.getTime()))
     }
     
-//    SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-//    updateAttr("lastHubRestartFormatted",sdf.format(upDate))
 }
 
 void removeUnused() {

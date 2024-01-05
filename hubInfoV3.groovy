@@ -54,6 +54,7 @@
  *    2023-11-14                 v3.0.31 - Suppress error on extended Zigbee/Matter reads if hub not ready
  *    2023-11-27                 v3.0.32 - Reboot with Rebuild Option
  *    2024-01-05                 v3.0.33 - Use file methods instead of endpoints if available
+ *                               v3.0.34 - Reboot with Log Purge, Rebuild changes
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -61,7 +62,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.33"}
+static String version() {return "3.0.34"}
 
 metadata {
     definition (
@@ -155,6 +156,7 @@ metadata {
         command "hiaUpdate", ["string"]
         command "reboot"
         command "rebootW_Rebuild"
+        command "rebootPurgeLogs"
         command "shutdown"
         command "updateCheck"
         command "removeUnused"
@@ -1498,16 +1500,55 @@ void rebootW_Rebuild() {
         log.error "Reboot with rebuild was requested, but failed HE min version."
         return        
     }
-    log.info "Hub Reboot requested"
+    log.info "Hub Reboot with Rebuild requested"
+    String cookie=(String)null
+    if(security) cookie = getCookie()
+    if(location.hub.firmwareVersionString < "2.3.7.14"){
+    	httpPost(
+	    	[
+		    	uri: "http://127.0.0.1:8080",
+			    path: "/hub/rebuildDatabaseAndReboot",
+      			headers:[
+	    			"Cookie": cookie
+		    	]
+    		]
+	    ) {		resp ->	} 
+    } else {
+        httpPost(
+		[
+			uri: "http://127.0.0.1:8080",
+			path: "/hub/reboot",
+			headers:[
+				"Cookie": cookie,
+                "Content-Type": "application/x-www-form-urlencoded"
+			],
+            body:[rebuildDatabase:"true"] 
+	    ]
+    	) {		resp ->	} 
+    }
+}
+
+void rebootPurgeLogs() {
+    if(!allowReboot){
+        log.error "Reboot was requested, but allowReboot was set to false"
+        return
+    }
+    if(location.hub.firmwareVersionString < "2.3.7.140"){
+        log.error "Reboot with Purge was requested, but failed HE min version."
+        return        
+    }
+    log.info "Hub Reboot & Log Purge requested"
     String cookie=(String)null
     if(security) cookie = getCookie()
 	httpPost(
 		[
 			uri: "http://127.0.0.1:8080",
-			path: "/hub/rebuildDatabaseAndReboot",
+			path: "/hub/reboot",
 			headers:[
-				"Cookie": cookie
-			]
+				"Cookie": cookie,
+                "Content-Type": "application/x-www-form-urlencoded"
+			],
+            body:[purgeLogs:"true"] 
 		]
 	) {		resp ->	} 
 }

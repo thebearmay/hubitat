@@ -11,9 +11,9 @@
  *  2022-09-14  thebearmay   port over to Hubitat
  *  2022-09-16	thebearmay   Fix thermostatOperatingState
  *  2022-10-04  thebearmay   Add permanent hold and return to schedule
- * 
+ *  2024-01-21  thebearmay   Add supportedThermostatModes
  */
-static String version()	{  return '1.0.2'  }
+static String version()	{  return '1.0.3'  }
 
 metadata {
     definition (name: "Nexia Thermostat", 
@@ -35,6 +35,7 @@ metadata {
         attribute "outdoorTemperature", "number"
         attribute "thermostatOperatingState", "string"
         attribute "holdStatus", "string"
+	attribute "supportedThermostatModes", "string"    
     }
 }
 
@@ -77,6 +78,7 @@ def updated() {
             
 }
 def initialize(){
+    sendevent(name:'supportedThermostatModes', '["auto", "off", "heat", "emergency heat", "cool"]')
     poll()
 }
 

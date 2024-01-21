@@ -78,7 +78,7 @@ def updated() {
             
 }
 def initialize(){
-    sendevent(name:'supportedThermostatModes', '["auto", "off", "heat", "emergency heat", "cool"]')
+    sendEvent(name:'supportedThermostatModes', value:'["auto", "off", "heat", "emergency heat", "cool"]')
     poll()
 }
 

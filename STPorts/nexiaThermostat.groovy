@@ -28,6 +28,7 @@ metadata {
         capability "Polling"
         capability "Sensor"
         capability "Refresh"
+        capability "Initialize"	    
         command "setTemperature", [[name:"Temperature*", type:"number", description:"Temperature in Degrees Fahrenheit"]]
         command "setHold", [[name:"holdType", type:"ENUM", constraints:["Permanent Hold","Return to Schedule"]]]
 

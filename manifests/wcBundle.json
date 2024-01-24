@@ -1,6 +1,14 @@
-  {
+{
+ "packageName":"webCoRE Bundle",
+ "author":"Jean P. May, Jr.",
+ "version":"1.0.89",
+ "dateReleased":"2024-01-24",
+ "bundles": [
+{
      "id":"5a9d706e-20c2-4ac3-855f-ad32febbcb47",
      "name":"webCoRE Bundle",
      "location":"https://github.com/thebearmay/hubitat/raw/main/bundles/webCore.zip",
      "required":true
   }
+ ]
+}

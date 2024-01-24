@@ -313,16 +313,6 @@
         "Multi Sensors",
         "Tools & Utilities"
        ]
-    },
-    {
-      "id":"3ad087b1-9e81-4c1f-b863-087319ddc3d8",
-      "name":"webCoRE Bundle",
-      "category":"Utility",
-      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/wcBundle.json",
-      "description":"webCoRE Bundle Test",
-      "tags":[
-        "Automations & Groups"
-       ]
     }
   ]
 }

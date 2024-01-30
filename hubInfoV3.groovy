@@ -56,6 +56,7 @@
  *    2024-01-05                 v3.0.33 - Use file methods instead of endpoints if available
  *                               v3.0.34 - Reboot with Log Purge, Rebuild changes
  *    2024-01-09                 v3.0.35 - Allow Matter attributes for C-5, C-7, and C-8
+ *    2024-01-30                 v3.0.36 - C8-Pro revision check
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -1193,6 +1194,7 @@ boolean isCompatible(Integer minLevel) { //check to see if the hub version meets
     String model = getHubVersion()
     String[] tokens = model.split('-')
     String revision = tokens.last()
+    if(revision.contains('Pro')) revision = 9
     return (Integer.parseInt(revision) >= minLevel)
 }
 

@@ -1164,7 +1164,7 @@ void getExtendedZigbee(resp, data){
 
 void checkMatter(cookie){
     hubModel = getHubVersion()
-    if(!(hubModel == "C-5" || hubModel == "C-7" || hubModel == "C-8"))
+    if(!(hubModel == "C-5" || hubModel == "C-7" || hubModel == "C-8" || hubModel == "C-8 Pro"))
         return
     
     params = [

@@ -64,7 +64,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.36"}
+static String version() {return "3.0.35"}
 
 metadata {
     definition (
@@ -1163,8 +1163,7 @@ void getExtendedZigbee(resp, data){
 }
 
 void checkMatter(cookie){
-    hubModel = getHubVersion()
-    if(!(hubModel == "C-5" || hubModel == "C-7" || hubModel == "C-8" || hubModel == "C-8 Pro"))
+    if(!isCompatible(5))
         return
     
     params = [

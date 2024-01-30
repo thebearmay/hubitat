@@ -10,4 +10,5 @@
 <tr><td>Temperature</td><td><%temperature%></td></tr>
 <tr><td>ZB Channel</td><td><%zigbeeChannel%></td></tr>
 <tr><td>ZW Radio/SDK</td><td><%zwaveVersion%> / <%zwaveSDKVersion%></td></tr>
+<tr><td>Matter Enabled/Status</td><td><%matterEnabled%> / <%matterStatus%></td></tr>
 </table>

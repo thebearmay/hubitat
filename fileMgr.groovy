@@ -27,8 +27,9 @@
  *    08Dec2022    thebearmay    Fix typo in fileDelete method
  *    17Feb2023    thebearmay    add lastFileWritten and lastFileWrittenTimeStamp
  *    29Dec2023    thebearmay    Append File to create if doesn't exist
- *    03Jan2023    thebearmay    convert \n in strings to the newline character for write file and append file commands
- *    08Jan2023	   thebearmay	 missed a debug line
+ *    03Jan2024    thebearmay    convert \n in strings to the newline character for write file and append file commands
+ *    08Jan2024	   thebearmay	 missed a debug line
+ *    08Feb2024    thebearmay    try block around image read
 */
 
 import java.net.URLEncoder
@@ -40,7 +41,7 @@ import java.text.SimpleDateFormat
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]
 
 @SuppressWarnings('unused')
-static String version() {return "0.2.10"}
+static String version() {return "0.2.11"}
 
 metadata {
     definition (
@@ -431,7 +432,8 @@ List<String> listFiles(){
 @SuppressWarnings('unused')
 def uploadImage(imagePath, oName){
     imageData = readImage(imagePath)
-    writeImageFile(oName, imageData.iContent, imageData.iType)
+    if(imageData.iType != 'Error')
+        writeImageFile(oName, imageData.iContent, imageData.iType)
 }
 
 @SuppressWarnings('unused')
@@ -459,24 +461,29 @@ HashMap readImage(imagePath){
     if(security) cookie = securityLogin().cookie   
 
     if(debugEnabled) log.debug "Getting Image $imagePath"
-    httpGet([
-        uri: "$imagePath",
-        contentType: "*/*",
-        headers: [
-            "Cookie": cookie
-        ],
-        textParser: false]){ response ->
-            if(debugEnabled) log.debug "${response.properties}"
-            imageData = response.data 
-            if(debugEnabled) log.debug "Image Size (${imageData.available()} ${response.headers['Content-Length']})"
+    try{
+        httpGet([
+            uri: "$imagePath",
+            contentType: "*/*",
+            headers: [
+                "Cookie": cookie
+            ],
+            textParser: false]){ response ->
+                if(debugEnabled) log.debug "${response.properties}"
+                imageData = response.data 
+                if(debugEnabled) log.debug "Image Size (${imageData.available()} ${response.headers['Content-Length']})"
 
-            def bSize = imageData.available()
-            def imageType = response.contentType 
-            byte[] imageArr = new byte[bSize]
-            imageData.read(imageArr, 0, bSize)
-            if(debugEnabled) log.debug "Image size: ${imageArr.length} Type:$imageType"  
-            return [iContent: imageArr, iType: imageType]
-        }    
+                def bSize = imageData.available()
+                def imageType = response.contentType 
+                byte[] imageArr = new byte[bSize]
+                imageData.read(imageArr, 0, bSize)
+                if(debugEnabled) log.debug "Image size: ${imageArr.length} Type:$imageType"  
+                return [iContent: imageArr, iType: imageType]
+            }
+    }catch (ex){
+        log.error ex.message
+        return [iContent:null, iType:'Error']
+    }
 }
 
 @SuppressWarnings('unused')

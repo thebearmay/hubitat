@@ -56,7 +56,8 @@
  *    2024-01-05                 v3.0.33 - Use file methods instead of endpoints if available
  *                               v3.0.34 - Reboot with Log Purge, Rebuild changes
  *    2024-01-09                 v3.0.35 - Allow Matter attributes for C-5, C-7, and C-8
- *    2024-03-07                 v3.0.36 - add /hub/advanced/zipgatewayVersion endpoint
+ *				 v3.0.36 - Allow C-8 Pro to pass Compatibility checks
+ *    2024-03-07                 v3.0.37- add /hub/advanced/zipgatewayVersion endpoint
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -64,7 +65,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.36"}
+static String version() {return "3.0.37"}
 
 metadata {
     definition (

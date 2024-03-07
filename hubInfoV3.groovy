@@ -56,7 +56,7 @@
  *    2024-01-05                 v3.0.33 - Use file methods instead of endpoints if available
  *                               v3.0.34 - Reboot with Log Purge, Rebuild changes
  *    2024-01-09                 v3.0.35 - Allow Matter attributes for C-5, C-7, and C-8
- *    2024-01-30                 v3.0.36 - C8-Pro revision check
+ *    2024-03-07                 v3.0.36 - add /hub/advanced/zipgatewayVersion endpoint
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -768,8 +768,21 @@ void parseZwave(String zString){
         wrkStr = wrkStr.replace(")","]")
 
         HashMap zMap = (HashMap)evaluate(wrkStr)
+
+        if(location.hub.firmwareVersionString < "2.3.8.124")
+            updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
+        else {
+            params = [
+                uri    : "http://127.0.0.1:8080",
+                path   : "/hub/advanced/zipgatewayVersion",
+                headers: ["Cookie": cookie]           
+            ]
+            httpGet(params) { resp ->
+                updateAttr("zwaveSDKVersion",resp.data)
+            }
+        }
+            
         
-        updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
         updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}.${zMap?.hardwareVersion}")
     }
 }
@@ -1163,7 +1176,8 @@ void getExtendedZigbee(resp, data){
 }
 
 void checkMatter(cookie){
-    if(!isCompatible(5))
+    hubModel = getHubVersion()
+    if(!(hubModel == "C-5" || hubModel == "C-7" || hubModel == "C-8"))
         return
     
     params = [
@@ -1193,7 +1207,6 @@ boolean isCompatible(Integer minLevel) { //check to see if the hub version meets
     String model = getHubVersion()
     String[] tokens = model.split('-')
     String revision = tokens.last()
-    if(revision.contains('Pro')) revision = 9
     return (Integer.parseInt(revision) >= minLevel)
 }
 

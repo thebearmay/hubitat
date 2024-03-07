@@ -778,6 +778,7 @@ void parseZwave(String zString){
                 headers: ["Cookie": cookie]           
             ]
             httpGet(params) { resp ->
+                log.debug "${resp.data}"
                 updateAttr("zwaveSDKVersion",resp.data)
             }
         }
@@ -1207,6 +1208,7 @@ boolean isCompatible(Integer minLevel) { //check to see if the hub version meets
     String model = getHubVersion()
     String[] tokens = model.split('-')
     String revision = tokens.last()
+    if(revision.contains('Pro')) revision = 9
     return (Integer.parseInt(revision) >= minLevel)
 }
 

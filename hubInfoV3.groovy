@@ -778,7 +778,6 @@ void parseZwave(String zString){
                 headers: ["Cookie": cookie]           
             ]
             httpGet(params) { resp ->
-                log.debug "${resp.data}"
                 updateAttr("zwaveSDKVersion",resp.data)
             }
         }

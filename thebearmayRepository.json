@@ -3,17 +3,6 @@
   "gitHubUrl": "https://github.com/thebearmay/hubitat",
   "packages": [
     {
-      "id": "95a9ea0a-ce4a-42a1-bd56-2860c6766367",
-      "name": "Hubitat Hub Information Device",
-      "category": "Convenience",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubInfoManifest.json",
-      "description": "Device driver that provides access to the basic hub and location information about the hub.  Has an option to allow polling to report hub temperature and memory.",
-      "tags": [
-        "Misc. Devices",
-        "Monitoring"
-      ]
-    },
-    {
       "id": "812cb3c9-3b67-47f4-aac2-05dc85e0e505",
       "name": "Notification Tile Device",
       "category": "Convenience",
@@ -32,13 +21,6 @@
       "tags": [
         "Misc. Devices"
       ]
-    },
-    {
-      "id": "10e2afdc-0dee-429a-b5fd-24d884d5b917",
-      "name": "HubConnect Hub Information Driver",
-      "category": "Integrations",
-      "location": "https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubInfo-HubConnectManifest.json",
-      "description": "Hub Information Driver stub for HubConnect v2"
     },
     {
       "id": "dc44dda5-e732-4c3d-9eea-f4efec8f7d3f",

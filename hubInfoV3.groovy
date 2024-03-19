@@ -56,8 +56,9 @@
  *    2024-01-05                 v3.0.33 - Use file methods instead of endpoints if available
  *                               v3.0.34 - Reboot with Log Purge, Rebuild changes
  *    2024-01-09                 v3.0.35 - Allow Matter attributes for C-5, C-7, and C-8
- *				 v3.0.36 - Allow C-8 Pro to pass Compatibility checks
- *    2024-03-07                 v3.0.37- add /hub/advanced/zipgatewayVersion endpoint
+ *				                 v3.0.36 - Allow C-8 Pro to pass Compatibility checks
+ *    2024-03-07                 v3.0.37 - add /hub/advanced/zipgatewayVersion endpoint
+ *    2024-03-19                 v3.0.38 - add pCloud (passive cloud check)
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -148,6 +149,7 @@ metadata {
         attribute "cpu15Pct", "number"
         attribute "freeMem15", "number"
         attribute "cloud", "string"
+        attribute "pCloud", "string"
         attribute "dnsStatus", "string"
         attribute "lanSpeed", "string"
         attribute "zigbeePower", "number"
@@ -947,6 +949,11 @@ void getHub2Data(resp, data){
             }
             if(debugEnable) log.debug "securityInUse"
             updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
+            if(!h2Data.baseModel.cloudDisconnected){
+                updateAttr("pCloud", "connected")
+            } else {
+                updateAttr("pCloud", "not connected")
+            }
             if(debugEnable) log.debug "h2 security check"
             if((!security || password == null || username == null) && h2Data.baseModel.userLoggedin == true){
                 log.error "Hub using Security but credentials not supplied"
@@ -1705,10 +1712,10 @@ void logsOff(){
 [parm10:[desc:"Hub Mesh Data", attributeList:"hubMeshData, hubMeshCount", method:"hubMeshReq"]],
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
-[parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
+[parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud, securityInUse", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
-[parm16:[desc:"Check Cloud Connection",attributeList:"cloud", method:"checkCloud"]],
+[parm16:[desc:"Active Cloud Connection Check",attributeList:"cloud", method:"checkCloud"]],
 [parm17:[desc:"Matter Status (C-5/7/8 only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]]    
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"

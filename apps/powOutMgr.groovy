@@ -23,10 +23,11 @@
  *    20Mar2024                  v0.2.2 - unschedule pending actions if power is restored
  *                                        update Apps List logic to reflect new UI
  *    20Mar2024                  v0.2.3 - Add PowerMeter with healthStatus offline/online
+ * 				 v0.2.4 - handle null queue selections
 */
 
 import hubitat.helper.RMUtils
-static String version()	{  return '0.2.2' }
+static String version()	{  return '0.2.4' }
 
 definition (
 	name: 			"Power Outage Manager", 
@@ -303,6 +304,14 @@ void startOutage(){
     delayList[1] = oaDelay1.toInteger()*60
     delayList[2] = oaDelay2.toInteger()*60
     delayList[3] = oaDelay3.toInteger()*60
+    if(zbDisable == null) zbDisable = 0
+    if(zwDisable == null) zwDisable = 0
+    if(appDisable == null) appDisable = 0
+    if(turnOffDevs == null) turnOffDevs = 0
+    if(rebootHubO == null) rebootHubO = 0 
+    if(shutdownHub == null) shutdownHub = 0    
+    if(rmRuleO == null) rmRuleO = 0
+    
     
     if(zbDisable.toInteger() > 0) runIn(delayList[zbDisable.toInteger()], "disableZb")
     if(zwDisable.toInteger() > 0) runIn(delayList[zwDisable.toInteger()], "disableZw")

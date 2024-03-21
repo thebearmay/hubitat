@@ -12,12 +12,12 @@
  *
  *  Change History:
  *
- *    Date        Who           What
- *    ----        ---           ----
- *   
+ *	Date        Who           What
+ * 	----        ---           ----
+ *	21Mar2024   thebearmay	Update the applist endpoint for the new UI	
 */
 
-static String version()	{  return '1.0.0'}
+static String version()	{  return '1.0.1'}
 
 import java.text.SimpleDateFormat
 import java.util.Date

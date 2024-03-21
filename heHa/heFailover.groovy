@@ -14,7 +14,7 @@
  *
  *	Date        Who           What
  * 	----        ---           ----
- *	21Mar2024   thebearmay	Update the applist endpoint for the new UI	
+ *	21Mar2024   thebearmay    Update the applist endpoint for the new UI	
 */
 
 static String version()	{  return '1.0.1'}
@@ -323,24 +323,22 @@ def appsPost(String eOrD, String aId){
 
 def getAppsList() { 
  //   if (security)
-
 	def params = [
-		uri: "http://127.0.0.1:8080/installedapp/list",
-		textParser: true
+		uri: "http://127.0.0.1:8080/hub2/appsList",
+        headers: [
+            accept:"application/json"
+        ],
+		textParser: false
 	  ]
 	
 	def allAppsList = []
     def allAppNames = []
 	try {
-		httpGet(params) { resp ->    
-			def matcherText = resp.data.text.replace("\n","").replace("\r","")
-			def matcher = matcherText.findAll(/(<tr class="app-row" data-app-id="[^<>]+">.*?<\/tr>)/).each {
-				def allFields = it.findAll(/(<td .*?<\/td>)/) // { match,f -> return f } 
-				def id = it.find(/data-app-id="([^"]+)"/) { match,i -> return i.trim() }
-				def title = allFields[0].find(/data-order="([^"]+)/) { match,t -> return t.trim() }
-				allAppsList += [id:id,title:title]
-                allAppNames << title
-			}
+		httpGet(params) { resp ->   
+            resp.data.apps.data.each {
+				allAppsList.add([id:it.id,title:it.name])
+                allAppNames.add( it.name )               
+            }
 
 		}
 	} catch (e) {

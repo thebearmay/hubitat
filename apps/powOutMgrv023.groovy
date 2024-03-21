@@ -73,7 +73,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
             section("<h3>Main</h3>"){
                 
-                input "triggerDevs", "capability.powerSource,capability.presenceSensor,capability.powermeter", title:"Devices with PowerSource/Presence to act as Triggers", submitOnChange:true, multiple:true
+                input "triggerDevs", "capability.powerSource,capability.presenceSensor,capability.powerMeter", title:"Devices with PowerSource/Presence to act as Triggers", submitOnChange:true, multiple:true
                 if(triggerDevs != null) {
                     unsubscribe()
                     state.onMains=[:]

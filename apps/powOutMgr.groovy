@@ -20,10 +20,12 @@
  *    21Feb2023                  v0.2.0 - Add device on/off capabilities
  *                                        Add RM interface 
  *    05Mar2023                  v0.2.1 - Fix typo
+ *    20Mar2024                  v0.2.2 - unschedule pending actions if power is restored
+ *                                        update Apps List logic to reflect new UI
 */
 
 import hubitat.helper.RMUtils
-static String version()	{  return '0.2.1' }
+static String version()	{  return '0.2.2' }
 
 definition (
 	name: 			"Power Outage Manager", 

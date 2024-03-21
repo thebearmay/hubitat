@@ -22,6 +22,7 @@
  *    05Mar2023                  v0.2.1 - Fix typo
  *    20Mar2024                  v0.2.2 - unschedule pending actions if power is restored
  *                                        update Apps List logic to reflect new UI
+ *    20Mar2024                  v0.2.3 - Add PowerMeter with healthStatus offline/online
 */
 
 import hubitat.helper.RMUtils
@@ -72,7 +73,7 @@ def mainPage(){
       	if (app.getInstallationState() == 'COMPLETE') {   
             section("<h3>Main</h3>"){
                 
-                input "triggerDevs", "capability.powerSource,capability.presenceSensor", title:"Devices with PowerSource/Presence to act as Triggers", submitOnChange:true, multiple:true
+                input "triggerDevs", "capability.powerSource,capability.presenceSensor,capability.powerMeter", title:"Devices with PowerSource/Presence to act as Triggers", submitOnChange:true, multiple:true
                 if(triggerDevs != null) {
                     unsubscribe()
                     state.onMains=[:]
@@ -82,6 +83,8 @@ def mainPage(){
                             subscribe(it, "powerSource", "triggerOccurrence")
                        else if(it.hasCapability("PresenceSensor"))
                             subscribe(it, "presence", "triggerOccurrence")
+                       else if(it.hasCapability("PowerMeter"))
+                            subscribe(it, "healthStatus", "triggerOccurrence")
                     }
                     subscribe(location, "systemStart", "systemStartCheck")
                     pollDevices()
@@ -211,7 +214,7 @@ void triggerOccurrence(evt){
     if(state.onMains == null) state.onMains = [:]  
     if(state.onBattery == null) state.onBattery = [:]
     
-    if(evt.value.toString().trim() == "battery" || evt.value.toString().trim() == "not present") {
+    if(evt.value.toString().trim() == "battery" || evt.value.toString().trim() == "not present" || evt.value.toString().trim() == "offline") {
         state.onBattery["dev${evt.deviceId}"] = true
         mainsTemp = [:]
         state.onMains.each{
@@ -221,7 +224,7 @@ void triggerOccurrence(evt){
         state.onMains = mainsTemp       
         if(debugEnabled) log.debug "${state.onMains} <br> ${state.onBattery}"
         if(state.onBattery.size() >= agreement) startOutActions()
-    } else if(evt.value.toString().trim() == "mains" || evt.value.toString().trim() == "present") {
+    } else if(evt.value.toString().trim() == "mains" || evt.value.toString().trim() == "present"|| evt.value.toString().trim() == "online") {
         state.onMains["dev${evt.deviceId}"] = true
         batteryTemp = [:]
         state.onBattery.each{
@@ -259,7 +262,7 @@ void pollDevices(){
     if(state.onBattery == null) state.onBattery = [:]
     triggerDevs.each { dev ->
         if(debugEnabled) log.debug dev.currentValue("powerSource")
-        if(dev.currentValue("powerSource") == "mains" || dev.currentValue("presence") == "present"){
+        if(dev.currentValue("powerSource") == "mains" || dev.currentValue("presence") == "present"|| dev.currentValue.toString().trim() == "online"){
                 state.onMains["dev${dev.id}"] = true
                 batteryTemp = [:]
                 state.onBattery.each{
@@ -267,7 +270,7 @@ void pollDevices(){
                         batteryTemp[it.key] = state.onBattery[it.key]
                 }
                 state.onBattery = batteryTemp
-        } else if(dev.currentValue("powerSource") == "battery" || dev.currentValue("presence") == "not present"){
+        } else if(dev.currentValue("powerSource") == "battery" || dev.currentValue("presence") == "not present" || dev.currentValue.toString().trim() == "offline"){
                 state.onBattery["dev${dev.id}"] = true
                 mainsTemp = [:]           
                 state.onMains.each{

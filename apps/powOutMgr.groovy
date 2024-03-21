@@ -298,13 +298,14 @@ void startOutage(){
     delayList[1] = oaDelay1.toInteger()*60
     delayList[2] = oaDelay2.toInteger()*60
     delayList[3] = oaDelay3.toInteger()*60
-    if(zbDisable > 0) runIn(delayList[zbDisable.toInteger()], "disableZb")
-    if(zwDisable > 0) runIn(delayList[zwDisable.toInteger()], "disableZw")
-    if(appDisable > 0) runIn(delayList[appDisable.toInteger()], "disableApps")
-    if(turnOffDevs > 0) runIn(delayList[turnOffDevs.toInteger()], "devsOff")
-    if(rebootHubO > 0) runIn(delayList[rebootHub.toInteger()], "reboot")
-    if(shutdownHub > 0) runIn(delayList[shutdownHub.toInteger()], "shutdown")
-    if(rmRuleO) runIn(delayList[rmRuleO.toInteger()], "outageRunRM")
+    
+    if(zbDisable.toInteger() > 0) runIn(delayList[zbDisable.toInteger()], "disableZb")
+    if(zwDisable.toInteger() > 0) runIn(delayList[zwDisable.toInteger()], "disableZw")
+    if(appDisable.toInteger() > 0) runIn(delayList[appDisable.toInteger()], "disableApps")
+    if(turnOffDevs.toInteger() > 0) runIn(delayList[turnOffDevs.toInteger()], "devsOff")
+    if(rebootHubO.toInteger() > 0) runIn(delayList[rebootHub.toInteger()], "reboot")
+    if(shutdownHub.toInteger() > 0) runIn(delayList[shutdownHub.toInteger()], "shutdown")
+    if(rmRuleO.toInteger()) runIn(delayList[rmRuleO.toInteger()], "outageRunRM")
 }
 
 void disableZb(){
@@ -334,15 +335,19 @@ void outageRunRM(){
 
 void startUpActions(){
     if(state.outage == false) return //already started processing
+    unschedule() //stop any pending shutdown activity
     state.outage = false
     runIn(triggerDelay.toInteger()*60, "startRecover")
 }
 
 void startRecover(){
     if(state.outage) return //check if conditions have changed to outage
+    
+
     notifyDev.each { 
       it.deviceNotification(notifyMsgUp)  
     } 
+    
     if(zbEnabled) zbPost("enabled")
     if(zwEnabled) zwPost("enabled")
     if(appEnabled) appsPost("enable")
@@ -510,30 +515,29 @@ void restoreRunRM(){
 }
 
 HashMap [] getAppsList() { 
-
 	def params = [
-		uri: "http://127.0.0.1:8080/installedapp/list",
-		textParser: true
+		uri: "http://127.0.0.1:8080/hub2/appsList",
+        headers: [
+            accept:"application/json"
+        ],
+		textParser: false
 	  ]
 	
 	def allAppsList = []
     def allAppNames = []
 	try {
-		httpGet(params) { resp ->    
-			def matcherText = resp.data.text.replace("\n","").replace("\r","")
-			def matcher = matcherText.findAll(/(<tr class="app-row" data-app-id="[^<>]+">.*?<\/tr>)/).each {
-				def allFields = it.findAll(/(<td .*?<\/td>)/) // { match,f -> return f } 
-				def id = it.find(/data-app-id="([^"]+)"/) { match,i -> return i.trim() }
-				def title = allFields[0].find(/data-order="([^"]+)/) { match,t -> return t.trim() }
-				allAppsList += [id:id,title:title]
-                allAppNames << title
-			}
+		httpGet(params) { resp ->   
+            resp.data.apps.data.each {
+				allAppsList.add([id:it.id,title:it.name])
+                allAppNames.add( it.name )               
+            }
 
 		}
 	} catch (e) {
 		log.error "Error retrieving installed apps: ${e}"
         log.error(getExceptionMessageWithLine(e))
 	}
+    
     return allAppsList
 }
 

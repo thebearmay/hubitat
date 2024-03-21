@@ -262,7 +262,7 @@ void pollDevices(){
     if(state.onBattery == null) state.onBattery = [:]
     triggerDevs.each { dev ->
         if(debugEnabled) log.debug dev.currentValue("powerSource")
-        if(dev.currentValue("powerSource") == "mains" || dev.currentValue("presence") == "present"|| evt.currentValue.toString().trim() == "online"){
+        if(dev.currentValue("powerSource") == "mains" || dev.currentValue("presence") == "present"|| dev.currentValue.toString().trim() == "online"){
                 state.onMains["dev${dev.id}"] = true
                 batteryTemp = [:]
                 state.onBattery.each{
@@ -270,7 +270,7 @@ void pollDevices(){
                         batteryTemp[it.key] = state.onBattery[it.key]
                 }
                 state.onBattery = batteryTemp
-        } else if(dev.currentValue("powerSource") == "battery" || dev.currentValue("presence") == "not present" || evt.currentValue.toString().trim() == "offline"){
+        } else if(dev.currentValue("powerSource") == "battery" || dev.currentValue("presence") == "not present" || dev.currentValue.toString().trim() == "offline"){
                 state.onBattery["dev${dev.id}"] = true
                 mainsTemp = [:]           
                 state.onMains.each{

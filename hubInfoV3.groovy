@@ -518,10 +518,16 @@ void getFreeMemory(resp, data) {
     try {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             Integer memWork = new Integer(resp.data.toString())
-            if(debugEnable) log.debug memWork
+            if(debugEnable) 
+                log.debug "Free Memory $memWork"
             if(freeMemUnit == "Dynamic"){
-                if(memwork > 1048576) freeMemUnit = "GB"               
-                else if(memWork > 150000) freeMemUnit = "MB"
+                if(memWork > 1048575){ 
+                    freeMemUnit = "GB"
+                    if(debugEnable) log.debug "unit is $freeMemUnit"
+                }else if(memWork > 150000){
+                    freeMemUnit = "MB"
+                    if(debugEnable) log.debug "unit is $freeMemUnit"
+                }
                 else freeMemUnit = "KB"
             }
                                

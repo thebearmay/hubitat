@@ -60,6 +60,7 @@
  *    2024-03-07                 v3.0.37 - add /hub/advanced/zipgatewayVersion endpoint
  *    2024-03-19                 v3.0.38 - add pCloud (passive cloud check)
  *    2024-03-28                 v3.0.39 - add GB option for memory display
+ *                               v3.0.40 - Dynamic unit option for memory display
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -67,7 +68,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.37"}
+static String version() {return "3.0.40"}
 
 metadata {
     definition (
@@ -195,7 +196,7 @@ preferences {
         input("username", "string", title: "Hub Security Username", required: false, width:4)
         input("password", "password", title: "Hub Security Password", required: false, width:4)
     }
-    input("freeMemUnit", "enum", title: "Free Memory Unit", options:["KB","MB","GB"], defaultValue:"KB", width:4)
+    input("freeMemUnit", "enum", title: "Free Memory Unit", options:["KB","MB","GB","Dynamic"], defaultValue:"KB", width:4)
     input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss", width:4)
     input("updSdfPref", "enum", title: "Date/Time Format for Last Poll Time", options:sdfList, defaultValue:"Milliseconds", width:4)
     input("rsrtSdfPref", "enum", title: "Date/Time Format for Hub Restart Formatted", options:sdfList, defaultValue:"yyyy-MM-dd HH:mm:ss", width:4)  
@@ -518,6 +519,12 @@ void getFreeMemory(resp, data) {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             Integer memWork = new Integer(resp.data.toString())
             if(debugEnable) log.debug memWork
+            if(freeMemUnit == "Dynamic"){
+                if(memwork > 1048576) freeMemUnit = "GB"               
+                else if(memWork > 150000) freeMemUnit = "MB"
+                else freeMemUnit = "KB"
+            }
+                               
             if(freeMemUnit == "GB")
                 updateAttr("freeMemory",(new Float(memWork/1024/1024).round(2)), "GB")
             else

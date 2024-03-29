@@ -23,7 +23,7 @@
  *    2024-03-29        thebearmay    add units to output
  */
 
-static String version()	{  return '1.0.11'  }
+static String version()	{  return '1.0.12'  }
 
 
 definition (

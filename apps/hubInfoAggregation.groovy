@@ -19,7 +19,8 @@
  *    2022-04-12        thebearmay    typo in memory warning
  *    2022-12-30        thebearmay    error when removing child device that doesn't exist
  *    2023-01-11        thebearmay    allow for V3
- *    2023-05-11        thebearmay    limit to V3 drivers
+ *    2024-05-11        thebearmay    limit to V3 drivers
+ *    2024-03-29        thebearmay    add units to output
  */
 
 static String version()	{  return '1.0.12'  }
@@ -87,10 +88,10 @@ def mainPage(){
                         }
                         input "overwrite", "bool", title:"Overwrite Hub Info (2.6.0+ required) html attribute(s)", defaultValue: false
                         if(createChild || overwrite){
-			    unsubscribe()
-			    qryDevice.each{
-                            	subscribe(it, "uptime", "refreshDevice")
-			    }
+			                unsubscribe()
+			                qryDevice.each{
+                                subscribe(it, "uptime", "refreshDevice")
+			                }
                             refreshDevice()
                         } else unsubscribe()
                         href "hubAlerts", title: "Configure Hub Alerts", required: false
@@ -199,7 +200,13 @@ String buildTable() {
             if(settings["$replacement"]) htmlWork+="<tr><th>${settings[replacement]}</th>"
             else htmlWork+="<tr><th>$it</th>"
             for(i=0;i<qryDevice.size();i++){
-                htmlWork += '<td>'+qryDevice[i].currentValue("$it",true)+'</td>'
+                aUnit = ""
+                aUnit = qryDevice[i].currentState(it)?.unit
+                //log.debug "$it $aUnit"
+                if(aUnit != null)
+                    htmlWork += '<td>'+qryDevice[i].currentValue("$it",true)+"$aUnit"+'</td>'
+                else
+                    htmlWork += '<td>'+qryDevice[i].currentValue("$it",true)+'</td>'
             }
             htmlWork+='</tr>'
         }

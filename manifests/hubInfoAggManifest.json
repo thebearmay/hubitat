@@ -1,10 +1,10 @@
 {
   "packageName": "Hub Information Aggregation",
   "author": "Jean P. May, Jr.",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2023-01-11",
-  "releaseNotes": "1.0.11 - allow for Hub Info v3\n1.0.8 - error deleting child device if does not exist\n1.0.6 - typo in memory warning\n1.0.5 - use local file space to allow tiles over 1024\n1.0.3 - Keep in sync with Hub Info\n1.0.2 - reflect HE API changes from Hub Info Device\n1.0.1 - Add alert for Hub Update Status\n1.0.0 - Add IP change to the alerts, default alert values, move to release status",
+  "dateReleased": "2023-03-29",
+  "releaseNotes": "1.0.12 - add units to the output html\n1.0.11 - allow for Hub Info v3\n1.0.8 - error deleting child device if does not exist\n1.0.6 - typo in memory warning\n1.0.5 - use local file space to allow tiles over 1024\n1.0.3 - Keep in sync with Hub Info\n1.0.2 - reflect HE API changes from Hub Info Device\n1.0.1 - Add alert for Hub Update Status\n1.0.0 - Add IP change to the alerts, default alert values, move to release status",
   "apps": [
     {
       "id": "24466ca8-d09d-4b43-92d1-8805b75c97ff",

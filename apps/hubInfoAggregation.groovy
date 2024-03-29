@@ -22,7 +22,7 @@
  *    2023-05-11        thebearmay    limit to V3 drivers
  */
 
-static String version()	{  return '1.0.10'  }
+static String version()	{  return '1.0.12'  }
 
 
 definition (

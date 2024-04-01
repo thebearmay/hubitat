@@ -44,3 +44,4 @@ def updated(){
 
 void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
+}

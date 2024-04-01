@@ -15,7 +15,7 @@ definition (
 	name: 			"Hub Proxy Server", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Image Server",
+	description: 	"Hub Proxy Image Server",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxxxx.groovy",
     installOnOpen:  true,

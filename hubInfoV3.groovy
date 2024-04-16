@@ -61,6 +61,7 @@
  *    2024-03-19                 v3.0.38 - add pCloud (passive cloud check)
  *    2024-03-28                 v3.0.39 - add GB option for memory display
  *                               v3.0.40 - Dynamic unit option for memory display
+ *    2024-04-16                 v3.0.41 - lanspeed source change
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -68,7 +69,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.40"}
+static String version() {return "3.0.41"}
 
 metadata {
     definition (
@@ -1049,7 +1050,10 @@ void getExtNetwork(resp, data){
             dnsList = dnsList.unique()
             checkDns(dnsList)
             updateAttr("dnsServers", dnsList)
-            updateAttr("lanSpeed", h2Data.lanAutonegStatus)
+            if(h2Data.lanAutoneg == 'AUTONEG')
+                updateAttr("lanSpeed","Auto","mbps")
+            else
+                updateAttr("lanSpeed", "100","mbps")
 
         }
     }catch (ex) {
@@ -1100,6 +1104,11 @@ void getUpdateCheck(resp, data) {
     try {
         if (resp.status == 200) {
             def jSlurp = new JsonSlurper()
+            /*/Temporary capture
+            tempStr = readFile("updateLog.txt")
+            tempStr+="\n${resp.data}"
+            writeFile("updateLog.txt",tempStr)
+            /*/
             Map resMap = (Map)jSlurp.parseText((String)resp.data)
             if(resMap.status == "NO_UPDATE_AVAILABLE")
                 updateAttr("hubUpdateStatus","Current")

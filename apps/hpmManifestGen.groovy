@@ -16,7 +16,8 @@
  *    ----         ---           ----
  *    18Oct2022    thebearmay    New Code
  *    23Nov2022    thebearmay    Fix Repository Entry
- *    15Jul2023    thebearmay    Handle error finding repository 
+ *    15Jul2023    thebearmay    Handle error finding repository
+ *    03May2024    thebearmay    Fix namespace not being stored 
 */
 
 static String version()	{  return '1.0.3'  }
@@ -77,7 +78,7 @@ definition (
 	name: 			"HPM Manifest Generator", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Air Things Allview Cloud Interface",
+	description: 	"HPM Manifest Generator",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hpmManifestGen.groovy",
     installOnOpen:  true,
 	oauth: 			false,
@@ -312,6 +313,7 @@ void appButtonHandler(btn) {
             else bText = ""
             bText+="  {\n     \"id\":\"${GUID()}\",\n"
             bText+="     \"name\":\"$bName\",\n"
+            bText+="     \"namespace\":\"$bNameSp\",\n"        
             bText+="     \"location\":\"$bLoc\",\n"
             bText+="     \"required\":$bReq\n  }"
             if(state.bText != null) state.bText += bText
@@ -326,6 +328,7 @@ void appButtonHandler(btn) {
             else aText = ""
             aText+="  {\n     \"id\":\"${GUID()}\",\n"
             aText+="     \"name\":\"$aName\",\n"
+            aText+="     \"namespace\":\"$aNameSp\",\n"        
             aText+="     \"location\":\"$aLoc\",\n"
             aText+="     \"required\":$aReq,\n"
             aText+="     \"oauth\":$aOauth,\n"
@@ -342,6 +345,7 @@ void appButtonHandler(btn) {
             else dText = ""
             dText+="  {\n     \"id\":\"${GUID()}\",\n"
             dText+="     \"name\":\"$dName\",\n"
+            dText+="     \"namespace\":\"$dNameSp\",\n"        
             dText+="     \"location\":\"$dLoc\",\n"
             dText+="     \"required\":$dReq\n  }"
             if(state.dText != null) state.dText += dText

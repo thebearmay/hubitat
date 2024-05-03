@@ -1,10 +1,10 @@
 {
  "packageName":"HPM Manifest Generator",
  "author":"Jean P. May, Jr.",
- "version":"1.0.3",
+ "version":"1.0.4",
  "minimumHEVersion":"2.3.0.1",
- "dateReleased":"2023-07-25",
- "releaseNotes": "v1.03 - handle a missing repository instead generating an error",
+ "dateReleased":"2024-05-03",
+ "releaseNotes": "v1.04 - fix namespace not being stored\nv1.03 - handle a missing repository instead generating an error",
  "bundles": [
   {
      "id":"84f8db21-a1d6-4ca1-8604-759457146a72",

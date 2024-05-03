@@ -20,7 +20,7 @@
  *    03May2024    thebearmay    Fix namespace not being stored 
 */
 
-static String version()	{  return '1.0.3'  }
+static String version()	{  return '1.0.4'  }
 
 import java.text.SimpleDateFormat
 #include thebearmay.localFileMethods

@@ -63,6 +63,7 @@
  *                               v3.0.40 - Dynamic unit option for memory display
  *    2024-04-16                 v3.0.41 - lanspeed source change
  *.   2024-05-07                 v3.0.42 - fix C8 Pro failing Matter compatibility check
+ *    2024-06-08                 v3.0.43 - Add a delayed base data check on initialization
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -70,7 +71,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.42"}
+static String version() {return "3.0.43"}
 
 metadata {
     definition (
@@ -161,6 +162,7 @@ metadata {
         attribute "zigbeeExtPan", "string"
         attribute "matterEnabled", "string"
         attribute "matterStatus", "string"
+        attribute "releaseNotesUrl", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -218,15 +220,16 @@ void installed() {
 }
 
 void initialize() {
-    log.info "Hub Information v${version()} initialized"
     restartCheck()
     updated()
-    runIn(8,"initMemory")
-    runIn(5,"baseData")
+    runIn(30,"initMemory")
     if (settings["parm12"] != 0)
         runIn(30,"updateCheck")
     if(!state?.v2Cleaned)
         v2Cleanup()
+    log.info "Hub Information v${version()} initialized"
+    runIn(120,"baseData")
+
 }
 
 void initMemory(){
@@ -242,6 +245,7 @@ void configure() {
 }
 
 void updated(){
+    baseData()
     if(debugEnable) log.debug "updated"
 	unschedule()
 	state.poll1 = []

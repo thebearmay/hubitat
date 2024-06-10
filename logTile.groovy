@@ -24,7 +24,7 @@ import hubitat.device.HubAction
 import hubitat.device.Protocol
 import java.time.*
 
-static String version()	{  return '1.0.0'  }
+static String version()	{  return '1.0.1'  }
 
 @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy HH:mm:ss:SSS","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss","dd/MM/yyyy HH:mm:ss:SSS", "MM/dd/yyyy HH:mm:ss","MM/dd/yyyy HH:mm:ss:SSS", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "MM/dd h:mma", "HH:mm", "H:mm","h:mma", "None"]
 
@@ -44,7 +44,6 @@ metadata {
 		capability "Initialize"
 
 		attribute "hmtl", "STRING"
-		attribute "hmtlH", "STRING"
 
 	}   
 }
@@ -73,18 +72,18 @@ void updated(){
 		{
 		state.lastLimit=5
 		wkTile=device.currentValue("hmtl")
-		int x = wkTile.lastIndexOf('</span>');	
+		int x = wkTile.lastIndexOf('</div>');	
 		if (x>0)										//if there is anything in tile, adjust for v2.0.0
 			{
 			msgFilled=5
-			int i = wkTile.lastIndexOf('<br /> </span>');	
+			int i = wkTile.lastIndexOf('<br /> </div>');	
 			if (debugEnable) log.debug "at While i: ${i} ${msgFilled}"
 			while (i>0 && msgFilled>0)
 				{
 				if (debugEnable) log.debug "in loop i: ${i} ${msgFilled}"
 				msgFilled--
-				wkTile = wkTile.substring(0, i) + '</span>'
-				i = wkTile.lastIndexOf('<br /> </span>');
+				wkTile = wkTile.substring(0, i) + '</div>'
+				i = wkTile.lastIndexOf('<br /> </div>');
 				if (debugEnable) log.debug "out loop i: ${i} ${msgFilled}"
 				}
 			if (debugEnable) log.debug "done While i: ${i} ${msgFilled}"
@@ -109,7 +108,7 @@ void updated(){
 		int i = wkTile.lastIndexOf('<br />');
 		while (i != -1 && msgFilled > settings.msgLimit.toInteger())
 			{
-			wkTile = wkTile.substring(0, i) + '</span>';
+			wkTile = wkTile.substring(0, i) + '</div>';
 			msgFilled--
 			i = wkTile.lastIndexOf('<br />');
 			if (debugEnable) log.debug "looping on shrink msgCount ${msgFilled}"
@@ -117,17 +116,14 @@ void updated(){
 		state.msgCount=msgFilled
 		sendEvent(name:"hmtl", value:wkTile)
 		}
-	
-	if (!settings.create5H)
-		sendEvent(name:"hmtlH", value:'<span class="hmtl"></span>')
+
 	state.lastLimit=settings.msgLimit	
 }
 
 void configure() {
 	log.trace "configure()"
 	if(msgLimit == null) device.updateSetting("msgLimit",[value:5,type:"number"])
-	sendEvent(name:"hmtl", value:'<span class="hmtl"></span>')
-	sendEvent(name:"hmtlH", value:'<span class="hmtl"></span>')
+	sendEvent(name:"hmtl", value:'<div class="hmtl" style="text-align:left"></div>')
 	state.msgCount=0
 	runIn(5, "connect")
 }
@@ -151,9 +147,9 @@ void logReceived(notification, timeStamp){
 	//	insert new message at beginning	of hmtl string
 		msgFilled = state.msgCount.toInteger()
 		if (msgFilled>0)
-			wkTile=device.currentValue("hmtl").replace('<span class="hmtl">','<span class="hmtl">' + notification + '<br />')
+			wkTile=device.currentValue("hmtl").replace('<div class="hmtl" style="text-align:left">','<div class="hmtl" style="text-align:left">' + notification + '<br />')
 		else
-			wkTile=device.currentValue("hmtl").replace('<span class="hmtl">','<span class="hmtl">' + notification)
+			wkTile=device.currentValue("hmtl").replace('<div class="hmtl" style="text-align:left">','<div class="hmtl" style="text-align:left">' + notification)
 
 	//	when msg count exceeds limit, purge last message
 		if (debugEnable) log.debug "logReceived msgFilled: ${msgFilled} msgLimit: ${settings.msgLimit}" 
@@ -163,7 +159,7 @@ void logReceived(notification, timeStamp){
 			{
 			int i = wkTile.lastIndexOf('<br />');
 			if (i != -1) 
-				wkTile = wkTile.substring(0, i) + '</span>';
+				wkTile = wkTile.substring(0, i) + '</div>';
 			}
 
 	//	Ensure tile length is less than 1024 and hopefully stop loops
@@ -174,12 +170,12 @@ void logReceived(notification, timeStamp){
 			int i = wkTile.lastIndexOf('<br />');
 			if (i != -1) 
 				{
-				wkTile = wkTile.substring(0, i) + '</span>';
+				wkTile = wkTile.substring(0, i) + '</div>';
 				msgFilled--
 				}
 			else
 				{
-				wkTile='<span class="hmtl"></span>'
+				wkTile='<div class="hmtl" style="text-align:left"></div>'
 				msgFilled=0
 				}
 			wkLen=wkTile.length()

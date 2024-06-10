@@ -53,7 +53,6 @@ preferences {
 	input("sdfPref", "enum", title: "Date/Time Format", options:sdfList, defaultValue:"ddMMMyyyy HH:mm:ss:SSS")
 	input("leadingDate", "bool", title:"Use leading date instead of trailing")
 	input("msgLimit", "number", title:"Number of messages from 5 to 20",defaultValue:5, range:5..20)
-	input("create5H", "bool", title: "Create horizontal message tile?")
 
 }
 

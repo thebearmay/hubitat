@@ -43,7 +43,7 @@ metadata {
 		capability "Configuration"
 		capability "Initialize"
 
-		attribute "hmtl", "STRING"
+		attribute "html", "STRING"
 
 	}   
 }
@@ -67,11 +67,11 @@ void updated(){
 	if (debugEnable) log.trace "updated()"
 	if(debugEnable) runIn(1800,logsOff)
 
-// V2.0.2 When converting from original version set state variables, adjust html in hmtl to make it work with V2.0.0+	
+// V2.0.2 When converting from original version set state variables, adjust html in html to make it work with V2.0.0+	
 	if (state?.msgCount == null)
 		{
 		state.lastLimit=5
-		wkTile=device.currentValue("hmtl")
+		wkTile=device.currentValue("html")
 		int x = wkTile.lastIndexOf('</div>');	
 		if (x>0)										//if there is anything in tile, adjust for v2.0.0
 			{
@@ -87,7 +87,7 @@ void updated(){
 				if (debugEnable) log.debug "out loop i: ${i} ${msgFilled}"
 				}
 			if (debugEnable) log.debug "done While i: ${i} ${msgFilled}"
-			sendEvent(name:"hmtl", value:wkTile)
+			sendEvent(name:"html", value:wkTile)
 			state.msgCount=msgFilled
 			}
 		else
@@ -102,7 +102,7 @@ void updated(){
 // V2.0.3 When new msgLimit less than prior(state) msgLimit adjust message and state values	
 	if (state?.lastLimit.toInteger()>settings.msgLimit.toInteger())
 		{
-		wkTile=device.currentValue("hmtl")
+		wkTile=device.currentValue("html")
 		msgFilled=state.msgCount.toInteger()
 		if (debugEnable) log.debug "Shinking tile count lastLimit ${state.lastLimit} newLimit ${settings.msgLimit} msgCount ${msgFilled}"
 		int i = wkTile.lastIndexOf('<br />');
@@ -114,7 +114,7 @@ void updated(){
 			if (debugEnable) log.debug "looping on shrink msgCount ${msgFilled}"
 			}
 		state.msgCount=msgFilled
-		sendEvent(name:"hmtl", value:wkTile)
+		sendEvent(name:"html", value:wkTile)
 		}
 
 	state.lastLimit=settings.msgLimit	
@@ -123,7 +123,7 @@ void updated(){
 void configure() {
 	log.trace "configure()"
 	if(msgLimit == null) device.updateSetting("msgLimit",[value:5,type:"number"])
-	sendEvent(name:"hmtl", value:'<div class="hmtl" style="text-align:left"></div>')
+	sendEvent(name:"html", value:'<div class="html" style="text-align:left"></div>')
 	state.msgCount=0
 	runIn(5, "connect")
 }
@@ -144,12 +144,12 @@ void logReceived(notification, timeStamp){
 			notification += " " + sdf.format(timeStamp)
     }
 
-	//	insert new message at beginning	of hmtl string
+	//	insert new message at beginning	of html string
 		msgFilled = state.msgCount.toInteger()
 		if (msgFilled>0)
-			wkTile=device.currentValue("hmtl").replace('<div class="hmtl" style="text-align:left">','<div class="hmtl" style="text-align:left">' + notification + '<br />')
+			wkTile=device.currentValue("html").replace('<div class="html" style="text-align:left">','<div class="html" style="text-align:left">' + notification + '<br />')
 		else
-			wkTile=device.currentValue("hmtl").replace('<div class="hmtl" style="text-align:left">','<div class="hmtl" style="text-align:left">' + notification)
+			wkTile=device.currentValue("html").replace('<div class="html" style="text-align:left">','<div class="html" style="text-align:left">' + notification)
 
 	//	when msg count exceeds limit, purge last message
 		if (debugEnable) log.debug "logReceived msgFilled: ${msgFilled} msgLimit: ${settings.msgLimit}" 
@@ -175,7 +175,7 @@ void logReceived(notification, timeStamp){
 				}
 			else
 				{
-				wkTile='<div class="hmtl" style="text-align:left"></div>'
+				wkTile='<div class="html" style="text-align:left"></div>'
 				msgFilled=0
 				}
 			wkLen=wkTile.length()
@@ -183,10 +183,10 @@ void logReceived(notification, timeStamp){
 			}
 
 	//	Update attributes and state
-		sendEvent(name:"hmtl", value: wkTile)
+		sendEvent(name:"html", value: wkTile)
 		state.msgCount = msgFilled
 		if (settings.create5H)
-			sendEvent(name:"hmtlH", value: " ** "+wkTile.replaceAll("<br />"," ** ")+" ** ")
+			sendEvent(name:"htmlH", value: " ** "+wkTile.replaceAll("<br />"," ** ")+" ** ")
 	}    
 
 void logsOff(){

@@ -15,7 +15,8 @@
 *    Date        Who            What
 *    ----        ---            ----
 *    2024-06-10  thebearmay     combine Maverrick85's InfluxDB Logger code with the Notification Tile to create a logging tile	
-*    2024-06-11                 Add color to Info logging 
+*    2024-06-11                 Add color to Info logging
+*                               Change name escaping to use the HTML version
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
@@ -25,7 +26,7 @@ import hubitat.device.HubAction
 import hubitat.device.Protocol
 import java.time.*
 
-static String version()	{  return '1.0.2'  }
+static String version()	{  return '1.0.3'  }
 
 @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy HH:mm:ss:SSS","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss","dd/MM/yyyy HH:mm:ss:SSS", "MM/dd/yyyy HH:mm:ss","MM/dd/yyyy HH:mm:ss:SSS", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "MM/dd h:mma", "HH:mm", "H:mm","h:mma", "None"]
 
@@ -185,8 +186,7 @@ void logReceived(notification, timeStamp){
 	//	Update attributes and state
 		sendEvent(name:"html", value: wkTile)
 		state.msgCount = msgFilled
-		if (settings.create5H)
-			sendEvent(name:"htmlH", value: " ** "+wkTile.replaceAll("<br />"," ** ")+" ** ")
+
 	}    
 
 void logsOff(){
@@ -205,7 +205,7 @@ void parse(String description) {
     def descData = new JsonSlurper().parseText(description)
 
     if ("${descData.id}" != "${device.id}") {
-        String name = escapeStringForInfluxDB(descData.name)
+        String name = escapeStringHTMlforMsg(descData.name)
         String message = escapeStringHTMlforMsg(descData.msg)
         //        String msg = '"' + descData.msg + '"'
         //String msg = '"' + message + '"'

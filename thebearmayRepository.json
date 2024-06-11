@@ -288,6 +288,16 @@
         "Multi Sensors",
         "Tools & Utilities"
        ]
+    },
+    {
+      "id":"69a499bc-f667-4092-a1dd-ec210cb221e6",
+      "name":"Hubitat Log Display Tile",
+      "category":"Notifications",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/logTileManifest.json",
+      "description":"Creates a dashboard tile to display Hubitat Log information",
+      "tags":[
+        "Dashboards"
+       ]
     }
   ]
 }

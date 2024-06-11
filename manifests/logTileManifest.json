@@ -1,0 +1,17 @@
+{
+ "packageName":"Hubitat Log Display Tile",
+ "author":"Jean P. May, Jr.",
+ "version":"1.0.2",
+ "minimumHEVersion":"2.3.7.00",
+ "dateReleased":"2024-06-11",
+ "releaseNotes":"v1.0.2 - Initial release",
+ "drivers": [
+  {
+     "id":"d18d5681-7197-4903-b31f-07a6263cd54f",
+     "name":"Hubitat Log Tile",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/logTile.groovy",
+     "required":true
+  }
+  ]
+}

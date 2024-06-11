@@ -16,7 +16,9 @@
 *    ----        ---            ----
 *    2024-06-10  thebearmay     combine Maverrick85's InfluxDB Logger code with the Notification Tile to create a logging tile	
 *    2024-06-11                 Add color to Info logging
-*                               Change name escaping to use the HTML version
+*                               v1.0.3 Change name escaping to use the HTML version
+*                               v1.0.4 Minor code cleanup
+*
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
@@ -26,7 +28,7 @@ import hubitat.device.HubAction
 import hubitat.device.Protocol
 import java.time.*
 
-static String version()	{  return '1.0.3'  }
+static String version()	{  return '1.0.4'  }
 
 @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy HH:mm:ss:SSS","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss","dd/MM/yyyy HH:mm:ss:SSS", "MM/dd/yyyy HH:mm:ss","MM/dd/yyyy HH:mm:ss:SSS", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "MM/dd h:mma", "HH:mm", "H:mm","h:mma", "None"]
 
@@ -46,6 +48,8 @@ metadata {
 		capability "Initialize"
 
 		attribute "html", "STRING"
+        
+        command "disconnect"
 
 	}   
 }
@@ -207,8 +211,6 @@ void parse(String description) {
     if ("${descData.id}" != "${device.id}") {
         String name = escapeStringHTMlforMsg(descData.name)
         String message = escapeStringHTMlforMsg(descData.msg)
-        //        String msg = '"' + descData.msg + '"'
-        //String msg = '"' + message + '"'
         String timestmp = '"' + descData.time + '"'
         String id = descData.id.toString()
         switch (descData.level) {
@@ -230,7 +232,7 @@ void parse(String description) {
                 severity = "<span style='background-color:red;color:black'>err</span>"
                 break
             case 'warn':
-                severity = "<span style='background-color:yellow;color:black'>warning</span>"
+                severity = "<span style='background-color:yellow;color:black'>warn</span>"
                 break
             case 'info':
                 severity = "<span style='background-color:#DDBD9E;color:black'>info</span>"
@@ -252,7 +254,7 @@ void parse(String description) {
 }
     
 void connect() {
-    if (logEnable) { log.debug "attempting connection" }
+    if (debugEnable) { log.debug "attempting connection" }
     try {
         interfaces.webSocket.connect("http://localhost:8080/logsocket")
         pauseExecution(1000)
@@ -268,7 +270,7 @@ void disconnect() {
 
 void webSocketStatus(String message) {
     // handle error messages and reconnect
-    if (logEnable) { log.debug "Got status ${message}" }
+    if (debugEnable) { log.debug "Got status ${message}" }
     if (message.startsWith("failure")) {
         // reconnect in a little bit
         runIn(5, connect)

@@ -1,10 +1,10 @@
 {
  "packageName":"Hubitat Log Display Tile",
  "author":"Jean P. May, Jr.",
- "version":"1.0.3",
+ "version":"1.0.4",
  "minimumHEVersion":"2.3.7.00",
  "dateReleased":"2024-06-11",
- "releaseNotes":"v1.0.3 - Minor cleanup, process device/app name differently\nv1.0.2 - Initial release",
+ "releaseNotes":"v1.0.4 - More code cleanup\nv1.0.3 - Minor cleanup, process device/app name differently\nv1.0.2 - Initial release",
  "drivers": [
   {
      "id":"d18d5681-7197-4903-b31f-07a6263cd54f",

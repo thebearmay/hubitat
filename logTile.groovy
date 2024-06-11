@@ -15,6 +15,7 @@
 *    Date        Who            What
 *    ----        ---            ----
 *    2024-06-10  thebearmay     combine Maverrick85's InfluxDB Logger code with the Notification Tile to create a logging tile	
+*    2024-06-11                 Add color to Info logging 
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
@@ -24,7 +25,7 @@ import hubitat.device.HubAction
 import hubitat.device.Protocol
 import java.time.*
 
-static String version()	{  return '1.0.1'  }
+static String version()	{  return '1.0.2'  }
 
 @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy HH:mm:ss:SSS","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss","dd/MM/yyyy HH:mm:ss:SSS", "MM/dd/yyyy HH:mm:ss","MM/dd/yyyy HH:mm:ss:SSS", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "MM/dd h:mma", "HH:mm", "H:mm","h:mma", "None"]
 
@@ -226,16 +227,16 @@ void parse(String description) {
 
         switch (descData.level) {
             case 'error':
-                severity = "<span style='background-color:red'>err</span>"
+                severity = "<span style='background-color:red;color:black'>err</span>"
                 break
             case 'warn':
-                severity = "<span style='background-color:yellow'>warning</span>"
+                severity = "<span style='background-color:yellow;color:black'>warning</span>"
                 break
             case 'info':
-                severity = "info"
+                severity = "<span style='background-color:#DDBD9E;color:black'>info</span>"
                 break
             default :
-                severity = "<span style='background-color:lightBlue'>debug</span>"
+                severity = "<span style='background-color:lightBlue;color:black'>debug</span>"
         }
         String level = descData.level.toString()
         String type = descData.type.toString()

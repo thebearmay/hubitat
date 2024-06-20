@@ -34,7 +34,6 @@ metadata {
         
                           
         command "checkSpeed", [[name:"url*", type:"STRING", description:"URL to download from", title:"URL"]]
-        command "test"
     
     }   
 }

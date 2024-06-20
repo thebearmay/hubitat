@@ -12,14 +12,14 @@
  *
  *  Change History:
  *
- *    Date        Who            What
- *    ----        ---            ----
- *    
+ *    Date         Who           What
+ *    ----         ---           --------------------------------------
+ *    20Jun2024    thebearmay    Round the result to 2 places
  *
  */
 import groovy.transform.Field
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 metadata {
     definition (
@@ -87,7 +87,7 @@ def checkSpeed(url){
                } 
                if(debugEnabled) log.debug "${delim.size()} bytes read" 
                tEnd = new Date().getTime()
-               result = "Start Time: $tStart<br>End Time: $tEnd<br>File Size: ${delim.size()} bytes<br>Download Speed: ${((delim.size()*8)/(tEnd-tStart))} mbps"
+               result = "Start Time: $tStart<br>End Time: $tEnd<br>File Size: ${delim.size()} bytes<br>Download Speed: ${((delim.size()*8)/(tEnd-tStart)).toFloat().round(2)} mbps"
                updateAttr("result", result)
             }
             else {

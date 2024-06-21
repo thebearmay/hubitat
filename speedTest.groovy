@@ -87,7 +87,7 @@ def checkSpeed(url){
                    tEnd = new Date().getTime()
                    totTime = (tEnd-tStart)/100
                    mBits = (dataSize*8)/1000
-                   result = "Start Time: $tStart<br>End Time: $tEnd<br>Total Time(seconds): $totTime<br>File Size: $dataSize bytes (${mBits.toFloat().round(2)} mbits)<br>Download Speed: ${((mBits/totTime)).toFloat().round(2)} mbps"
+                   result = "Start Time: $tStart<br>End Time: $tEnd<br>Total Time(seconds): $totTime<br>File Size: $dataSize bytes (${mBits.toFloat().round(2)} mbits)<br>Download Speed: ${((mBits/totTime)).toFloat().round(2)} Mbps"
                    updateAttr("result", result)
                 }
                 else {
@@ -122,7 +122,7 @@ void readImage(url){
             totTime = (tEnd-tStart)/100
             mBits = (imageArr.length*8)/1000
             if(debugEnabled) log.debug "Image size: ${imageArr.length} Type:$imageType" 
-                result = "Start Time: $tStart<br>End Time: $tEnd<br>Total Time(seconds): $totTime<br>File Size: ${imageArr.length} bytes (${(mBits).toFloat().round(2)} mbits)<br>Download Speed: ${(mBits/totTime).toFloat().round(2)} mbps"
+                result = "Start Time: $tStart<br>End Time: $tEnd<br>Total Time(seconds): $totTime<br>File Size: ${imageArr.length} bytes (${(mBits).toFloat().round(2)} mbits)<br>Download Speed: ${(mBits/totTime).toFloat().round(2)} Mbps"
             updateAttr("result", result)
             //return [iContent: imageArr, iType: imageType]
         }    

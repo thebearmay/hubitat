@@ -159,7 +159,7 @@ void createChildDevices(){
         if(debugEnabled) log.debug "${it.properties}"
         if(debugEnabled) log.debug "add child device ${it.id}"
         devDetail = getDevDetail("$it.id")        
-        dev = addChildDevice("thebearmay", "Daikin Thermostat", "${it.id}", [name:"$it.name",label:"$it.name",model:"$it.model", firmware:"$it.firmwareVersion", isComponent:false])
+        dev = addChildDevice("thebearmay", "Daikin One Thermostat", "${it.id}", [name:"$it.name",label:"$it.name",model:"$it.model", firmware:"$it.firmwareVersion", isComponent:false])
         updateChild("$it.id", "C")
 //    }
 }

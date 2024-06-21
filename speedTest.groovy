@@ -15,11 +15,12 @@
  *    Date         Who           What
  *    ----         ---           --------------------------------------
  *    20Jun2024    thebearmay    Round the result to 2 places
+ *    21Jun2024                  Separate image and text downloads
  *
  */
 import groovy.transform.Field
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 metadata {
     definition (
@@ -71,33 +72,60 @@ def test(){
 def checkSpeed(url){
     if(debugEnabled)
         log.debug "checking speed for $url"
+    fileExt = url.substring(url.lastIndexOf(".")+1)
     updateAttr("result","Test Running")
-    try {
-        tStart = new Date().getTime()
-        httpGet(url) { resp ->
-            if(resp!= null) {
-               int i = 0
-               String delim = ""
-               i = resp.data.read() 
-               while (i != -1){
-                   char c = (char) i
-                   delim+=c
-                   i = resp.data.read() 
-                   if(delim.size()%1000 == 0) updateAttr("result","Still Running - Downloaded ${delim.size()}")
-               } 
-               if(debugEnabled) log.debug "${delim.size()} bytes read" 
-               tEnd = new Date().getTime()
-               result = "Start Time: $tStart<br>End Time: $tEnd<br>File Size: ${delim.size()} bytes<br>Download Speed: ${((delim.size()*8)/(tEnd-tStart)).toFloat().round(2)} mbps"
-               updateAttr("result", result)
+    imageType = ['gif','jpg','png', 'svg']
+    if(fileExt in imageType)
+        readImage(url)
+    else {
+        try {
+            tStart = new Date().getTime()
+            httpGet([uri: url, textParser: true]) { resp ->
+                if(resp!= null) {
+                    dataSize = """${resp.data}""".size()
+                   //if(debugEnabled) log.debug "$dataSize bytes read" 
+                   tEnd = new Date().getTime()
+                   totTime = (tEnd-tStart)/100
+                   mBits = (dataSize*8)/1000
+                   result = "Start Time: $tStart<br>End Time: $tEnd<br>Total Time(seconds): $totTime<br>File Size: $dataSize bytes (${mBits.toFloat().round(2)} mbits)<br>Download Speed: ${((mBits/totTime)).toFloat().round(2)} mbps"
+                   updateAttr("result", result)
+                }
+                else {
+                    updateAttr("result", "Null Response")
+                }
             }
-            else {
-                updateAttr("result", "Null Response")
-            }
+        } catch (exception) {
+            log.error "Read Error: ${exception.message}"
+            updateAttr("result", exception.message)
         }
-    } catch (exception) {
-        log.error "Read Ext Error: ${exception.message}"
-        updateAttr("result", exception.message)
     }
+}
+
+void readImage(url){ 
+    def imageData
+
+    if(debugEnabled) log.debug "Getting Image $imagePath"
+    tStart = new Date().getTime()
+    httpGet([
+        uri: "$url",
+        contentType: "*/*",
+        textParser: false]){ response ->
+            if(debugEnabled) log.debug "${response.properties}"
+            imageData = response.data 
+            if(debugEnabled) log.debug "Image Size (${imageData.available()} ${response.headers['Content-Length']})"
+
+            def bSize = imageData.available()
+            def imageType = response.contentType 
+            byte[] imageArr = new byte[bSize]
+            imageData.read(imageArr, 0, bSize)
+            tEnd = new Date().getTime()
+            totTime = (tEnd-tStart)/100
+            mBits = (imageArr.length*8)/1000
+            if(debugEnabled) log.debug "Image size: ${imageArr.length} Type:$imageType" 
+                result = "Start Time: $tStart<br>End Time: $tEnd<br>Total Time(seconds): $totTime<br>File Size: ${imageArr.length} bytes (${(mBits).toFloat().round(2)} mbits)<br>Download Speed: ${(mBits/totTime).toFloat().round(2)} mbps"
+            updateAttr("result", result)
+            //return [iContent: imageArr, iType: imageType]
+        }    
 }
     
 def updated(){

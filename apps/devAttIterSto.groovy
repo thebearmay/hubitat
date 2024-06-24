@@ -18,7 +18,7 @@
     
 
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
@@ -183,7 +183,7 @@ void reportAttr(){
     }
     fileContents = ""
     if(fileRecords.size() <= numIter - 1)
-        inx = 1
+        inx = 0
     else
         inx = fileRecords.size() - numIter 
     i=0

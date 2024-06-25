@@ -298,6 +298,17 @@
       "tags":[
         "Dashboards"
        ]
+    },
+    {
+      "id":"dbafc780-234d-4ef8-b01e-62b639559bd1",
+      "name":"Device Attribute Iterative Storage ",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/devAttIterStoManifest.json",
+      "description":"Maintains a set number of iterations of attribute and computed min/max/avg values in the Hubitat Local File Manager.",
+      "tags":[
+        "Monitoring",
+        "Tools & Utilities"
+       ]
     }
   ]
 }

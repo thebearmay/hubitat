@@ -14,11 +14,12 @@
  *    Date          Who          Description
  *    ----------   ------------  ------------------------------------------------
  *    24Jun2024    thebearmay    Original Code
+ *    25Jun2025                  add Restart button, Max/Min/Avg options
  */
     
 
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
@@ -26,7 +27,7 @@ static String version()	{  return '0.0.2'  }
 
 
 definition (
-	name: 			"Device Attribute Iteration Storage", 
+	name: 			"Device Attribute Iterative Storage", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
 	description: 	"Store a set number of attribute values based on pre-determined cycle.",
@@ -41,6 +42,7 @@ definition (
 preferences {
     page name: "mainPage"
     page name: "attrSelect"
+    page name: "compAttr"
 
 }
 mappings {
@@ -73,21 +75,25 @@ def mainPage(){
              input "qryDevice", "capability.*", title: "Device Selection:", multiple: false, required: true, submitOnChange: true
              if (qryDevice != null) {
                  href "attrSelect", title: "Attribute Selection", required: false
+                 href "compAttr", title: "Computed Values (Max/Min/Avg)", required: false
                  input ("numIter","number",title:"Number of Iterations to Retain", submitOnChange: true, width:4)
                  input ("intType", "enum", title:"Reporting Interval Type", options: ["Minutes", "Hours", "Days"], submitOnChange: true, width:4)
                  input ("intVal", "number", title: "Reporting Interval Length", submitOnChange: true, width:4)
-                 checkSubscriptions()
+                 
                  input ("stoLocation","string",title: "Local file name to use for Storage (will add .CSV)", submitOnChange:true, width:4)
+                 
                  if(stoLocation != null) {
-                     input ("createFile", "button", title: "Create File")
+                     input ("createFile", "button", title: "Create File", width:4)
                      if(state.fileCreateReq) {
+                         purgeOldStates()
+                         checkSubscriptions()
                          state.fileCreateReq = false
                          fName = toCamelCase(stoLocation)+".csv"
                          app.updateSetting("stoLocation",[value:"${fName}",type:"string"])
                          initString = "\"timeStamp\""
                          valString ="\"${new Date().getTime()}\""
                          state.each {
-                             if(it.key != "isInstalled" && it.key != "fileCreateReq"){
+                             if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart" && !it.key.contains('count')){
                                  initString+=","
                                  valString+=","
                                  initString+= "\"${it.key}\""
@@ -97,6 +103,11 @@ def mainPage(){
                          bArray = (initString+"\n"+valString+"\n").getBytes("UTF-8")                       
                          uploadHubFile("${fName}",bArray)
                          scheduleReport()                         
+                     }
+                     input ("restart", "button", title: "Restart Reporting", width:4)
+                     if(state.rptRestart) {
+                         state.rptRestart = false
+                         scheduleReport()
                      }
                  }
              }
@@ -128,7 +139,30 @@ def attrSelect(){
           }
           sortedList=attrList.sort()
           sortedList.each{
-              input "da-$it", "bool", title: "$it", required: false, defaultValue: false
+              input "da-$it", "bool", title: "$it", required: false, defaultValue: false, width:4
+          }
+
+
+          paragraph "<p>$strWork</p>"
+       }
+    }
+}
+
+def compAttr(){
+    dynamicPage (name: "compAttr", title: "Computed Values (Max/Min/Avg)", install: false, uninstall: false) {
+	  section(""){
+          String strWork = ""
+          dev = qryDevice
+          def attrList=[]
+          dev.supportedAttributes.each{
+              if(it.dataType == "NUMBER")
+                  attrList.add(it.toString())
+          }
+          sortedList=attrList.sort()
+          sortedList.each{
+              input "ca-max-$it", "bool", title: "$it Max", required: false, defaultValue: false, width:4
+              input "ca-min-$it", "bool", title: "$it Min", required: false, defaultValue: false, width:4
+              input "ca-avg-$it", "bool", title: "$it Avg", required: false, defaultValue: false, width:4
           }
 
 
@@ -142,14 +176,38 @@ void checkSubscriptions(){
     settings.each{
         if(it.value==true && it.toString().substring(0,3) == 'da-'){
             subscribe(qryDevice,"${it.key.substring(3,)}","holdValue")
-            if(!state["${it.key.substring(3,)}"]) state["${it.key.substring(3,)}"] = qryDevice.currentValue("${it.key.substring(3,)}")
+            state["${it.key.substring(3,)}"] = qryDevice.currentValue("${it.key.substring(3,)}")
+        }
+        if(it.value==true && it.toString().substring(0,3) == 'ca-'){
+            subscribe(qryDevice,"${it.key.substring(7,)}","holdValue")
+            state["${it.key.substring(7,)}"] = qryDevice.currentValue("${it.key.substring(7,)}")
+            state["${it.key.substring(3,)}"] = qryDevice.currentValue("${it.key.substring(7,)}")
+            if("${it.key.substring(3,6)}" == "avg") {
+                state["${it.key.substring(3,)}-count"] = 1
+            }
         }
     }
-    subscribe("location", "systemStart","scheduleReport")
+    subscribe(location, "systemStart","scheduleReport")
 }
 
 void holdValue(evt) {
+    if(degubEnabled) log.debug "entering holdValue<br>${evt.properties}"
     state["${evt.name}"] = evt.value
+    
+    if(debugEnabled) log.debug "1 ${state["min-${evt.name}"]} ${evt.getNumericValue()}"
+    if(state["min-${evt.name}"] && evt.getNumericValue() < state["min-${evt.name}"]) 
+        state["min-${evt.name}"] = evt.getNumericValue()
+    
+    if(debugEnabled) log.debug "2"
+    if(state["max-${evt.name}"] && evt.getNumericValue() > state["max-${evt.name}"]) 
+        state["max-${evt.name}"] = evt.getNumericValue()
+    
+    if(debugEnabled) log.debug "3"
+    if(state["avg-${evt.name}"] ) {
+        state["avg-${evt.name}"] += evt.getNumericValue()
+        state["avg-${evt.name}-count"]++        
+    }
+    if(debugEnabled) log.debug "finished holdValue"
 }
 
 void scheduleReport(){
@@ -170,9 +228,19 @@ void scheduleReport(){
 void reportAttr(){
     valString ="\"${new Date().getTime()}\""
     state.each {
-        if(it.key != "isInstalled" && it.key != "fileCreateReq"){
-            valString+=","
-            valString+="\"${it.value}\""
+        if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart"){
+            if(!it.key.contains('avg') && !it.key.contains('count')) {
+                valString+=","
+                valString+="\"${it.value}\""
+            } else if(it.key.contains('avg-') && !it.key.contains('count')) {
+                valString+=","
+                valString+="\"${(it.value/state["${it.key}-count"]).toFloat().round(2)}\""
+                state["${it.key}-count"] = 1  
+                state["${it.key}"] = state["${it.key.substring(4,)}"]
+            }
+            if(it.key.contains('min-') || it.key.contains('max-') )
+               state["${it.key}"] = state["${it.key.substring(4,)}"]
+               
         }
     }
     fileRecords = (new String (downloadHubFile("${stoLocation}"))).split("\n")
@@ -198,6 +266,16 @@ void reportAttr(){
     scheduleReport()
 }
 
+void purgeOldStates(){
+    oldState = state
+    state = [:]
+    oldState.each{
+        if(it.key == "isInstalled" || it.key == "fileCreateReq" || it.key == "rptRestart" || settings["da-${it.key}"] || settings["ca-${it.key}"] ){
+            state.put(it.key, it.value)
+        }
+    }
+}
+
 String toCamelCase(init) {
     if (init == null)
         return null;
@@ -220,6 +298,9 @@ def appButtonHandler(btn) {
     switch(btn) {    
         case "createFile":
             state.fileCreateReq = true
+            break
+        case "restart":
+            state.rptRestart = true
             break
         default: 
             log.error "Undefined button $btn pushed"

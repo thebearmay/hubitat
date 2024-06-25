@@ -1,0 +1,20 @@
+{
+ "packageName":"Device Attribute Iterative Storage ",
+ "author":"Jean P. May, Jr.",
+ "version":"0.0.3",
+ "minimumHEVersion":"2.3.7.00",
+ "dateReleased":"2024-06-25",
+ "releaseNotes":"v0.0.3 - Added Min/Max/Avg computed values for numeric attributes",
+ "communityLink":"https://community.hubitat.com/t/early-beta-device-attribute-iterative-storage-rrd/139786",
+ "apps": [
+  {
+     "id":"145c71e8-231e-4b69-b563-fef314cc3892",
+     "name":"Device Attribute Iterative Storage",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devAttIterSto.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

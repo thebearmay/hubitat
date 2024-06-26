@@ -1,10 +1,10 @@
 {
  "packageName":"Device Attribute Iterative Storage ",
  "author":"Jean P. May, Jr.",
- "version":"0.0.3",
+ "version":"0.0.4",
  "minimumHEVersion":"2.3.7.00",
- "dateReleased":"2024-06-25",
- "releaseNotes":"v0.0.3 - Added Min/Max/Avg computed values for numeric attributes",
+ "dateReleased":"2024-06-26",
+ "releaseNotes":"v0.0.4 - Fixed bug causing computed value reporting to crash\nv0.0.3 - Added Min/Max/Avg computed values for numeric attributes",
  "communityLink":"https://community.hubitat.com/t/early-beta-device-attribute-iterative-storage-rrd/139786",
  "apps": [
   {

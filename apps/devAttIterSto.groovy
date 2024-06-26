@@ -14,12 +14,13 @@
  *    Date          Who          Description
  *    ----------   ------------  ------------------------------------------------
  *    24Jun2024    thebearmay    Original Code
- *    25Jun2025                  add Restart button, Max/Min/Avg options
+ *    25Jun2024                  Add Restart button, Max/Min/Avg options
+ *    26Jun2024                  Fix bug in computed reporting
  */
     
 
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
@@ -236,10 +237,10 @@ void reportAttr(){
                 valString+=","
                 valString+="\"${(it.value/state["${it.key}-count"]).toFloat().round(2)}\""
                 state["${it.key}-count"] = 1  
-                state["${it.key}"] = state["${it.key.substring(4,)}"]
+                state["${it.key}"] = state["${it.key.substring(4,)}"].toFloat()
             }
             if(it.key.contains('min-') || it.key.contains('max-') )
-               state["${it.key}"] = state["${it.key.substring(4,)}"]
+               state["${it.key}"] = state["${it.key.substring(4,)}"].toFloat()
                
         }
     }

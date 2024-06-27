@@ -8,15 +8,6 @@
  "communityLink":"https://community.hubitat.com/t/early-beta-device-attribute-iterative-storage-rrd/139786",
  "apps": [
     {
-     "id":"145c71e8-231e-4b69-b563-fef314cc3892",
-     "name":"Device Attribute Iterative Storage - Acquisition",
-     "namespace":"thebearmay",
-     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devAttIterSto.groovy",
-     "required":true,
-     "oauth":false,
-     "primary":false
-  },
-  {
      "id":"17ac25f2-82dc-4857-ac98-1bbbf4a8a20e",
      "name":"Device Attribute Iterative Storage - UI",
      "namespace":"thebearmay",
@@ -24,6 +15,15 @@
      "required":true,
      "oauth":false,
      "primary":true
-  }
+  },
+    {
+     "id":"145c71e8-231e-4b69-b563-fef314cc3892",
+     "name":"Device Attribute Iterative Storage - Acquisition",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devAttIterSto.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":false
+    }
   ]
 }

@@ -11,7 +11,7 @@
      "id":"17ac25f2-82dc-4857-ac98-1bbbf4a8a20e",
      "name":"Device Attribute Iterative Storage - UI",
      "namespace":"thebearmay",
-     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devAttIterSto.groovy",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devAttIterStoUI.groovy",
      "required":true,
      "oauth":false,
      "primary":true

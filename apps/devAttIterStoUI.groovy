@@ -117,7 +117,7 @@ String listTable() {
         attrList = ""
         i=0
         it.state.sort().each {
-            if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart"){
+            if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart" && !it.key.contains("-count")){
                 if(i>0) attrList+= ", "
                 attrList += it.key
                 i++

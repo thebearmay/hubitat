@@ -1,15 +1,24 @@
 {
  "packageName":"Device Attribute Iterative Storage ",
  "author":"Jean P. May, Jr.",
- "version":"0.0.4",
+ "version":"24.06.27.01",
  "minimumHEVersion":"2.3.7.00",
- "dateReleased":"2024-06-26",
- "releaseNotes":"v0.0.4 - Fixed bug causing computed value reporting to crash\nv0.0.3 - Added Min/Max/Avg computed values for numeric attributes",
+ "dateReleased":"2024-06-27",
+ "releaseNotes":"v24.06.27.01 - Introduction of v0.0.1 of the UI, v0.0.5 of the Acquisition code includes changes for the UI and adds Value Change as an Interval Type ",
  "communityLink":"https://community.hubitat.com/t/early-beta-device-attribute-iterative-storage-rrd/139786",
  "apps": [
-  {
+    {
      "id":"145c71e8-231e-4b69-b563-fef314cc3892",
-     "name":"Device Attribute Iterative Storage",
+     "name":"Device Attribute Iterative Storage - Acquisition",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devAttIterSto.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":false
+  },
+  {
+     "id":"17ac25f2-82dc-4857-ac98-1bbbf4a8a20e",
+     "name":"Device Attribute Iterative Storage - UI",
      "namespace":"thebearmay",
      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devAttIterSto.groovy",
      "required":true,

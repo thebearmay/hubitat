@@ -14,13 +14,14 @@
  *    Date          Who          Description
  *    ----------   ------------  ------------------------------------------------
  *    24Jun2024    thebearmay    Original Code
- *    25Jun2024                  Add Restart button, Max/Min/Avg options
+ *    25Jun2024                  add Restart button, Max/Min/Avg options
  *    26Jun2024                  Fix bug in computed reporting
+ *    27Jun2024                  Changes to interface with the UI app, Value interval, purge unused preferences
  */
     
 
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
@@ -28,12 +29,13 @@ static String version()	{  return '0.0.4'  }
 
 
 definition (
-	name: 			"Device Attribute Iterative Storage", 
+	name: 			"Device Attribute Iterative Storage - Acquisition", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
 	description: 	"Store a set number of attribute values based on pre-determined cycle.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devAttIterSto.groovy",
+    parent:         "thebearmay:Device Attribute Iterative Storage - UI",
     installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",
@@ -70,7 +72,7 @@ void logsOff(){
 }
 
 def mainPage(){
-    dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
+    dynamicPage (name: "mainPage", title: "", install: true, uninstall: false) {
       	if (app.getInstallationState() == 'COMPLETE') {   
           section(name:"itDetail",title:"Iteration Retention Details", hideable: true, hidden: false){
              input "qryDevice", "capability.*", title: "Device Selection:", multiple: false, required: true, submitOnChange: true
@@ -78,7 +80,7 @@ def mainPage(){
                  href "attrSelect", title: "Attribute Selection", required: false
                  href "compAttr", title: "Computed Values (Max/Min/Avg)", required: false
                  input ("numIter","number",title:"Number of Iterations to Retain", submitOnChange: true, width:4)
-                 input ("intType", "enum", title:"Reporting Interval Type", options: ["Minutes", "Hours", "Days"], submitOnChange: true, width:4)
+                 input ("intType", "enum", title:"Reporting Interval Type", options: ["Minutes", "Hours", "Days","Value Change"], submitOnChange: true, width:4)
                  input ("intVal", "number", title: "Reporting Interval Length", submitOnChange: true, width:4)
                  
                  input ("stoLocation","string",title: "Local file name to use for Storage (will add .CSV)", submitOnChange:true, width:4)
@@ -93,7 +95,7 @@ def mainPage(){
                          app.updateSetting("stoLocation",[value:"${fName}",type:"string"])
                          initString = "\"timeStamp\""
                          valString ="\"${new Date().getTime()}\""
-                         state.each {
+                         state.sort().each {
                              if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart" && !it.key.contains('count')){
                                  initString+=","
                                  valString+=","
@@ -209,6 +211,7 @@ void holdValue(evt) {
         state["avg-${evt.name}-count"]++        
     }
     if(debugEnabled) log.debug "finished holdValue"
+    if(intType == "Value Change") reportAttr()
 }
 
 void scheduleReport(){
@@ -223,12 +226,17 @@ void scheduleReport(){
             mult = 60*60*24
             break
     }
-    runIn(mult*intVal, reportAttr)
+    if(intType != "Value Change")
+        runIn(mult*intVal, reportAttr)
+}
+
+def getPref(keyVal){
+    return settings["$keyVal"]
 }
 
 void reportAttr(){
     valString ="\"${new Date().getTime()}\""
-    state.each {
+    state.sort()each {
         if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart"){
             if(!it.key.contains('avg') && !it.key.contains('count')) {
                 valString+=","
@@ -274,6 +282,10 @@ void purgeOldStates(){
         if(it.key == "isInstalled" || it.key == "fileCreateReq" || it.key == "rptRestart" || settings["da-${it.key}"] || settings["ca-${it.key}"] ){
             state.put(it.key, it.value)
         }
+    }
+    settings.each{
+        if(!(it.value))
+            app.removeSetting("$it.key")
     }
 }
 

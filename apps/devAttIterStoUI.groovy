@@ -14,11 +14,12 @@
  *    Date          Who          Description
  *    ----------   ------------  ------------------------------------------------
  *    27Jun2024    thebearmay    Original Code
+ *    28Jun2024                  Small UI tweaks
  */
     
 
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
@@ -98,13 +99,13 @@ String listTable() {
     ArrayList<String> tHead = ["","Name","Device","Attributes","Interval","Output File","<i style='font-size:1.125rem' class='material-icons he-bin'></i>"]
     String X = "<i class='he-checkbox-checked'></i>"
     String O = "<i class='he-checkbox-unchecked'></i>"
-//    List ssList = getSmartList()
+    String settingsIcon = "<i class='material-icons app-column-info-icon' style='font-size: 24px;'>settings_applications</i>"
+    String removeIcon = "<i class='material-icons he-bin'></i>"
 
-//    if (!ssList) { return "$ICON_WARN_O15  <strong>SmartStart List is Empty:</strong> Add to SmartStart using the Edit/Add Page or the Mobile App"}
 
     String str = "<script src='https://code.iconify.design/iconify-icon/1.0.0/iconify-icon.min.js'></script>"
-    str += "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px }" +
-            "</style><div style='overflow-x:auto'><table class='mdl-data-table tstat-col' style=';border:2px solid black'>" +
+    str += "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px } tr {border-right:2px solid black;}" +
+            "</style><div style='overflow-x:auto'><table class='mdl-data-table tstat-col' style='border-left:2px solid black;border-top:2px solid black;'>" +
             "<thead><tr style='border-bottom:2px solid black'>"
     //str += "<th style='font-size:0.8rem !important;border-right:2px solid black'><strong>Enabled</strong></th>" +
             "<th style='text-align:left'><strong>Name</strong></th>"
@@ -112,7 +113,7 @@ String listTable() {
     str += "</tr></thead>"
     
     getChildApps().each{      
-        str += "<tr><td></td><td><a href='http://${location.hub.localIP}:8080/installedapp/configure/${it.id}/mainPage', target='#blank'>${it.label}</a></td>"
+        str += "<tr><td><a href='http://${location.hub.localIP}:8080/installedapp/status/${it.id}' target='_blank'>$settingsIcon</a></td><td><a href='http://${location.hub.localIP}:8080/installedapp/configure/${it.id}/mainPage', target='_blank'>${it.label}</a></td>"
         str += "<td>${it.getPref('qryDevice')}</td>"
         attrList = ""
         i=0
@@ -130,12 +131,12 @@ String listTable() {
             wkStr = "Value"
         str += "<td>$wkStr</td>"
         str += "<td><a href='http://${location.hub.localIP}:8080/local/${it.getPref('stoLocation')}'>${it.getPref('stoLocation')}</a></td>"
-        String remSto = buttonLink("remSto${it.id}", "<i class='material-icons he-bin'></i>", "#ff0000", "6px")
+        String remSto = buttonLink("remSto${it.id}", "$removeIcon", "#ff0000", "6px")
         str += "<td>$remSto</td></tr>"
     }
 
     String addSto = buttonLink("addSto", "<b>＋</b>", "#007009", "25px")
-    str += "<tr><td title='Add new storage definition' style='padding:0px 0px;border:2px solid black'>$addSto</td><td style='color:#007009;font-weight:bold;border:none'>&larr;Add new storage definition</td></tr>"
+    str += "<tr style='border-top:2px solid black;border-right:none'><td title='Add new storage definition' style='padding:0px 0px;border:2px solid black'>$addSto</td><td style='color:#007009;font-weight:bold;border:none'>&larr;Add new storage definition</td></tr>"
     str += "</table></div>"
 
 

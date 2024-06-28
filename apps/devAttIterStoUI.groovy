@@ -1,4 +1,4 @@
-/*
+/*  Device Attribute Iterative Storage - UI
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -13,13 +13,14 @@
  *
  *    Date          Who          Description
  *    ----------   ------------  ------------------------------------------------
- *    27Jun2024    thebearmay    Original Code
- *    28Jun2024                  Small UI tweaks
+ *    27Jun2024    thebearmay    v0.0.1 Original Code
+ *    28Jun2024                  v0.0.2 Small UI tweaks
+ *                               v0.0.3 Make device reference a link
  */
     
 
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
@@ -114,7 +115,7 @@ String listTable() {
     
     getChildApps().each{      
         str += "<tr><td><a href='http://${location.hub.localIP}:8080/installedapp/status/${it.id}' target='_blank'>$settingsIcon</a></td><td><a href='http://${location.hub.localIP}:8080/installedapp/configure/${it.id}/mainPage', target='_blank'>${it.label}</a></td>"
-        str += "<td>${it.getPref('qryDevice')}</td>"
+        str += "<td><a href='http://${location.hub.localIP}:8080/device/edit/${it.getPref('qryDevice').id}' target='_blank'>${it.getPref('qryDevice')}</a></td>"
         attrList = ""
         i=0
         it.state.sort().each {

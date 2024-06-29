@@ -278,7 +278,7 @@ void calcPm25Aqi(pm25Val){
         : a < 55.5 ? lerp( 35.5,  55.4, 101, 150, a)
         : a < 125.5 ? lerp( 55.5, 125.4, 151, 200, a)
         : a < 225.5 ? lerp(150.5, 225.4, 201, 300, a)
-        : a < 500.5 ? lerp(225.5, 500.4, 301, 500, a)
+        : a < 325.5 ? lerp(225.5, 325.4, 301, 500, a)
         : 500// values above 500 are considered beyond AQI
     if(debugEnabled) log.debug "lerp returned $c"
     Float aLevel = Math.floor(10 * c) / 10

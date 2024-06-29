@@ -43,9 +43,10 @@ metadata {
         importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/airthings/airthingsDevice.groovy"
     ) {
         capability "Actuator"
-        capability "Initialize"
+        capability "AirQuality"
         capability "Battery"
         capability "CarbonDioxideMeasurement"
+        capability "Initialize"
         capability "PressureMeasurement"
         capability "Refresh"
         capability "RelativeHumidityMeasurement"
@@ -282,6 +283,7 @@ void calcPm25Aqi(pm25Val){
     if(debugEnabled) log.debug "lerp returned $c"
     Float aLevel = Math.floor(10 * c) / 10
     updateAttr("pm25Aqi",aLevel)
+    updateAttr("airQualityIndex",aLevel.toInteger())
     for (i=0;i<aqiLevel.size();i++){
         if(debugEnabled) log.debug "$aLevel:${aqiLevel[i].max}"
         if(aLevel <= aqiLevel[i].max){

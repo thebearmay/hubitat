@@ -28,6 +28,7 @@
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
+import groovy.transform.Field
 #include thebearmay.localFileMethods
 #include thebearmay.templateProcessing
 
@@ -256,27 +257,30 @@ void test(val){
     dataRefresh(x)
 }
 
+
+@Field static final aqiLevel = [[max: 50,  color: "green", name: "Good"],
+                                [max: 100, color: "yellow", name: "Moderate"],
+                                [max: 150, color: "orange", name: "Unhealthy for sensitive groups"],
+                                [max: 200, color: "red", name: "Unhealthy"],
+                                [max: 300, color: "purple", name: "Very unhealthy"],
+                                [max: 500, color: "maroon", name: "Hazardous"]]
+
 void calcPm25Aqi(pm25Val){
-    if(debugEnabled) 
+    if(debugEnabled)
         log.debug "calcPm25Aqi($pm25Val)"
-    aqiLevel = [[max: 50,  color: "green", name: "Good"],
-                [max: 100, color: "yellow", name: "Moderate"],
-                [max: 150, color: "orange", name: "Unhealthy for sensitive groups"],
-                [max: 200, color: "red", name: "Unhealthy"],
-                [max: 300, color: "purple", name: "Very unhealthy"],
-                [max: 500, color: "maroon", name: "Hazardous"]]
-    a = pm25Val.toFloat();
-    c = a < 0 ? 0 // values below 0 are considered beyond AQI
-        : a < 12.1 ? lerp(  0.0,  12.0,   0,  50, a)
+    Float a = pm25Val.toFloat();
+
+    // breakpoints - February 7, 2024 update as per https://www.epa.gov/system/files/documents/2024-02/pm-naaqs-air-quality-index-fact-sheet.pdf
+    Float c = a < 0 ? 0 // values below 0 are considered beyond AQI
+        : a < 9.1 ? lerp(  0.0,  9.0,   0,  50, a)
         : a < 35.5 ? lerp( 12.1,  35.4,  51, 100, a)
         : a < 55.5 ? lerp( 35.5,  55.4, 101, 150, a)
-        : a < 150.5 ? lerp( 55.5, 150.4, 151, 200, a)
-        : a < 250.5 ? lerp(150.5, 250.4, 201, 300, a)
-        : a < 350.5 ? lerp(250.5, 350.4, 301, 400, a)
-        : a < 500.5 ? lerp(350.5, 500.4, 401, 500, a)
+        : a < 125.5 ? lerp( 55.5, 125.4, 151, 200, a)
+        : a < 225.5 ? lerp(150.5, 225.4, 201, 300, a)
+        : a < 500.5 ? lerp(225.5, 500.4, 301, 500, a)
         : 500// values above 500 are considered beyond AQI
     if(debugEnabled) log.debug "lerp returned $c"
-    aLevel = Math.floor(10 * c) / 10
+    Float aLevel = Math.floor(10 * c) / 10
     updateAttr("pm25Aqi",aLevel)
     for (i=0;i<aqiLevel.size();i++){
         if(debugEnabled) log.debug "$aLevel:${aqiLevel[i].max}"
@@ -286,8 +290,6 @@ void calcPm25Aqi(pm25Val){
             break
         }
     }
-
-
 }
 
 float lerp(plo, phi, ilo, ihi, p) {

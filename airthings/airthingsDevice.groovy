@@ -1,6 +1,6 @@
 /*
  * Air Things Device
- * 
+ *
  *
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -21,13 +21,14 @@
  *                               add absHumidity
  *    30Nov2022    thebearmay    add option to force Integer values, add mold attribute
  *    16Dec2022    thebearmay    handle mismatched return data elements
- *    22Dec2022    thebearmay    hub security 
+ *    22Dec2022    thebearmay    hub security
  *    15Jan2023    thebearmay    add descriptionText
  *                               trap relayDeviceType
- *    04Dec2023    thebearmay    PM25 -> AQI 
+ *    04Dec2023    thebearmay    PM25 -> AQI
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
+import groovy.transform.Field
 #include thebearmay.localFileMethods
 #include thebearmay.templateProcessing
 
@@ -36,25 +37,24 @@ static String version() {return "0.0.18a"}
 
 metadata {
     definition (
-        name: "Air Things Device", 
-        namespace: "thebearmay", 
+        name: "Air Things Device",
+        namespace: "thebearmay",
         author: "Jean P. May, Jr.",
         importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/airthings/airthingsDevice.groovy"
     ) {
         capability "Actuator"
-        capability "Initialize"
+        capability "AirQuality"
         capability "Battery"
         capability "CarbonDioxideMeasurement"
+        capability "Initialize"
+        capability "PressureMeasurement"
+        capability "Refresh"
         capability "RelativeHumidityMeasurement"
         capability "TemperatureMeasurement"
- 
+
         attribute "radonShortTermAvg", "number"
-        attribute "humidity", "number"
-        attribute "pressure", "number"
         attribute "co2", "number"
         attribute "voc", "number"
-        attribute "temperature", "number"
-        attribute "battery", "number"
         attribute "pm1", "number"
         attribute "pm10", "number"
         attribute "pm11", "number"
@@ -83,10 +83,12 @@ metadata {
         attribute "absHumidity", "number"
         attribute "mold", "number"
         attribute "html", "string"
-        
-        command "refresh"  
+
+        attribute "rssi", "number"
+        attribute "relayDeviceType", "string"
+
 //        command "test",[[name:"val*", type:"NUMBER", description:"pm25 Value"]]
-    }   
+    }
 }
 
 preferences {
@@ -114,7 +116,7 @@ def installed() {
 }
 
 def initialize(){
-   updated()    
+   updated()
 }
 
 @SuppressWarnings('unused')
@@ -157,11 +159,11 @@ void dataRefresh(retData){
         switch (it.key){
             case("temp"):
                 unit="°C"
-                if(useFahrenheit){ 
-                    it.value = celsiusToFahrenheit(it.value) 
+                if(useFahrenheit){
+                    it.value = celsiusToFahrenheit(it.value)
                     unit = "°F"
                 }
-                updateAttr("temperature", it.value, unit)
+                updateAttr("temperature", "${it.value}", unit)
                 break
             case("radonShortTermAvg"):
                 if(usePicoC){
@@ -202,21 +204,25 @@ void dataRefresh(retData){
             case("relayDeviceType")://ignore
                 unit=""
                 break
+            case("time"):// update timestamp
+                unit=null
+                state.lastUpdate = it.value.toInteger()
+                break
             default:
                 unit=""
                 try{
                     it.value = Math.floor(10 * it.value.toFloat()) / 10
-                } catch(e) { 
+                } catch(e) {
                     log.warn "Return Data Mismatch, Key: ${it.key} Value: ${it.value} - value will be set to zero"
                     it.value = 0
                 }
                 break
         }
-        if(debugEnabled) log.debug "${it.key}:${it.value}" 
+        if(debugEnabled) log.debug "${it.key}:${it.value}"
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm') || it.key == "mold") {//unit will be null for any values not tracked
-            updateAttr(it.key, it.value, unit) 
+            updateAttr(it.key, it.value, unit)
             if(debugEnabled) log.debug "${it.key}"
-            if("${it.key}" == "pm25") 
+            if("${it.key}" == "pm25")
                 calcPm25Aqi(it.value)
         }
     }
@@ -225,7 +231,7 @@ void dataRefresh(retData){
         tileHtml = genHtml(tileTemplate)
         updateAttr("html","$tileHtml")
     }
- 
+
 }
 
 void calcAbsHumidity() {
@@ -235,7 +241,7 @@ void calcAbsHumidity() {
         deviceTempInCelsius = fahrenheitToCelsius(device.currentValue("temperature",true).toFloat())
     else
         deviceTempInCelsius = device.currentValue("temperature",true).toFloat()
-    //(6.112 × e^[(17.67 × T)/(T+243.5)] × rh × 2.1674)     / (273.15+T)    
+    //(6.112 × e^[(17.67 × T)/(T+243.5)] × rh × 2.1674)     / (273.15+T)
     Double numerator = 6.112 * Math.exp((17.67 * deviceTempInCelsius)/(deviceTempInCelsius + 243.5)) * device.currentValue("humidity",true).toFloat() * 2.1674
     Double denominator = (273.15+deviceTempInCelsius)
     Double absHumidity = numerator/denominator
@@ -252,28 +258,32 @@ void test(val){
     dataRefresh(x)
 }
 
+
+@Field static final aqiLevel = [[max: 50,  color: "green", name: "Good"],
+                                [max: 100, color: "yellow", name: "Moderate"],
+                                [max: 150, color: "orange", name: "Unhealthy for sensitive groups"],
+                                [max: 200, color: "red", name: "Unhealthy"],
+                                [max: 300, color: "purple", name: "Very unhealthy"],
+                                [max: 500, color: "maroon", name: "Hazardous"]]
+
 void calcPm25Aqi(pm25Val){
-    if(debugEnabled) 
+    if(debugEnabled)
         log.debug "calcPm25Aqi($pm25Val)"
-    aqiLevel = [[max: 50,  color: "green", name: "Good"],
-                [max: 100, color: "yellow", name: "Moderate"],
-                [max: 150, color: "orange", name: "Unhealthy for sensitive groups"],
-                [max: 200, color: "red", name: "Unhealthy"],
-                [max: 300, color: "purple", name: "Very unhealthy"],
-                [max: 500, color: "maroon", name: "Hazardous"]]
-    a = pm25Val.toFloat();
-    c = a < 0 ? 0 // values below 0 are considered beyond AQI
-        : a < 12.1 ? lerp(  0.0,  12.0,   0,  50, a)
+    Float a = pm25Val.toFloat();
+
+    // breakpoints - February 7, 2024 update as per https://www.epa.gov/system/files/documents/2024-02/pm-naaqs-air-quality-index-fact-sheet.pdf
+    Float c = a < 0 ? 0 // values below 0 are considered beyond AQI
+        : a < 9.1 ? lerp(  0.0,  9.0,   0,  50, a)
         : a < 35.5 ? lerp( 12.1,  35.4,  51, 100, a)
         : a < 55.5 ? lerp( 35.5,  55.4, 101, 150, a)
-        : a < 150.5 ? lerp( 55.5, 150.4, 151, 200, a)
-        : a < 250.5 ? lerp(150.5, 250.4, 201, 300, a)
-        : a < 350.5 ? lerp(250.5, 350.4, 301, 400, a)
-        : a < 500.5 ? lerp(350.5, 500.4, 401, 500, a)
+        : a < 125.5 ? lerp( 55.5, 125.4, 151, 200, a)
+        : a < 225.5 ? lerp(150.5, 225.4, 201, 300, a)
+        : a < 325.5 ? lerp(225.5, 325.4, 301, 500, a)
         : 500// values above 500 are considered beyond AQI
     if(debugEnabled) log.debug "lerp returned $c"
-    aLevel = Math.floor(10 * c) / 10
+    Float aLevel = Math.floor(10 * c) / 10
     updateAttr("pm25Aqi",aLevel)
+    updateAttr("airQualityIndex",aLevel.toInteger())
     for (i=0;i<aqiLevel.size();i++){
         if(debugEnabled) log.debug "$aLevel:${aqiLevel[i].max}"
         if(aLevel <= aqiLevel[i].max){
@@ -282,12 +292,10 @@ void calcPm25Aqi(pm25Val){
             break
         }
     }
-  
-    
 }
 
 float lerp(plo, phi, ilo, ihi, p) {
-    if(debugEnabled) 
+    if(debugEnabled)
         log.debug "lerp $plo $phi $ilo $ihi $p"
     float calcAqi = (((ihi-ilo)/(phi-plo))*(p-plo))+ilo
     if(calcAqi > ihi.toFloat()) calcAqi = ihi
@@ -303,7 +311,7 @@ List<String> listFiles(){
         uri: uri,
         headers: [
 				"Cookie": cookie
-            ]        
+            ]
     ]
     try {
         fileList = []

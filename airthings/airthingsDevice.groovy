@@ -1,6 +1,6 @@
 /*
  * Air Things Device
- * 
+ *
  *
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -21,10 +21,10 @@
  *                               add absHumidity
  *    30Nov2022    thebearmay    add option to force Integer values, add mold attribute
  *    16Dec2022    thebearmay    handle mismatched return data elements
- *    22Dec2022    thebearmay    hub security 
+ *    22Dec2022    thebearmay    hub security
  *    15Jan2023    thebearmay    add descriptionText
  *                               trap relayDeviceType
- *    04Dec2023    thebearmay    PM25 -> AQI 
+ *    04Dec2023    thebearmay    PM25 -> AQI
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -36,8 +36,8 @@ static String version() {return "0.0.18a"}
 
 metadata {
     definition (
-        name: "Air Things Device", 
-        namespace: "thebearmay", 
+        name: "Air Things Device",
+        namespace: "thebearmay",
         author: "Jean P. May, Jr.",
         importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/airthings/airthingsDevice.groovy"
     ) {
@@ -45,16 +45,14 @@ metadata {
         capability "Initialize"
         capability "Battery"
         capability "CarbonDioxideMeasurement"
+        capability "PressureMeasurement"
+        capability "Refresh"
         capability "RelativeHumidityMeasurement"
         capability "TemperatureMeasurement"
- 
+
         attribute "radonShortTermAvg", "number"
-        attribute "humidity", "number"
-        attribute "pressure", "number"
         attribute "co2", "number"
         attribute "voc", "number"
-        attribute "temperature", "number"
-        attribute "battery", "number"
         attribute "pm1", "number"
         attribute "pm10", "number"
         attribute "pm11", "number"
@@ -83,10 +81,12 @@ metadata {
         attribute "absHumidity", "number"
         attribute "mold", "number"
         attribute "html", "string"
-        
-        command "refresh"  
+
+        attribute "rssi", "number"
+        attribute "relayDeviceType", "string"
+
 //        command "test",[[name:"val*", type:"NUMBER", description:"pm25 Value"]]
-    }   
+    }
 }
 
 preferences {
@@ -114,7 +114,7 @@ def installed() {
 }
 
 def initialize(){
-   updated()    
+   updated()
 }
 
 @SuppressWarnings('unused')
@@ -157,11 +157,11 @@ void dataRefresh(retData){
         switch (it.key){
             case("temp"):
                 unit="°C"
-                if(useFahrenheit){ 
-                    it.value = celsiusToFahrenheit(it.value) 
+                if(useFahrenheit){
+                    it.value = celsiusToFahrenheit(it.value)
                     unit = "°F"
                 }
-                updateAttr("temperature", it.value, unit)
+                updateAttr("temperature", "${it.value}", unit)
                 break
             case("radonShortTermAvg"):
                 if(usePicoC){
@@ -202,21 +202,25 @@ void dataRefresh(retData){
             case("relayDeviceType")://ignore
                 unit=""
                 break
+            case("time"):// update timestamp
+                unit=null
+                state.lastUpdate = it.value.toInteger()
+                break
             default:
                 unit=""
                 try{
                     it.value = Math.floor(10 * it.value.toFloat()) / 10
-                } catch(e) { 
+                } catch(e) {
                     log.warn "Return Data Mismatch, Key: ${it.key} Value: ${it.value} - value will be set to zero"
                     it.value = 0
                 }
                 break
         }
-        if(debugEnabled) log.debug "${it.key}:${it.value}" 
+        if(debugEnabled) log.debug "${it.key}:${it.value}"
         if((it.key != "temp" && unit != null) || it.key.startsWith('pm') || it.key == "mold") {//unit will be null for any values not tracked
-            updateAttr(it.key, it.value, unit) 
+            updateAttr(it.key, it.value, unit)
             if(debugEnabled) log.debug "${it.key}"
-            if("${it.key}" == "pm25") 
+            if("${it.key}" == "pm25")
                 calcPm25Aqi(it.value)
         }
     }
@@ -225,7 +229,7 @@ void dataRefresh(retData){
         tileHtml = genHtml(tileTemplate)
         updateAttr("html","$tileHtml")
     }
- 
+
 }
 
 void calcAbsHumidity() {
@@ -235,7 +239,7 @@ void calcAbsHumidity() {
         deviceTempInCelsius = fahrenheitToCelsius(device.currentValue("temperature",true).toFloat())
     else
         deviceTempInCelsius = device.currentValue("temperature",true).toFloat()
-    //(6.112 × e^[(17.67 × T)/(T+243.5)] × rh × 2.1674)     / (273.15+T)    
+    //(6.112 × e^[(17.67 × T)/(T+243.5)] × rh × 2.1674)     / (273.15+T)
     Double numerator = 6.112 * Math.exp((17.67 * deviceTempInCelsius)/(deviceTempInCelsius + 243.5)) * device.currentValue("humidity",true).toFloat() * 2.1674
     Double denominator = (273.15+deviceTempInCelsius)
     Double absHumidity = numerator/denominator
@@ -282,12 +286,12 @@ void calcPm25Aqi(pm25Val){
             break
         }
     }
-  
-    
+
+
 }
 
 float lerp(plo, phi, ilo, ihi, p) {
-    if(debugEnabled) 
+    if(debugEnabled)
         log.debug "lerp $plo $phi $ilo $ihi $p"
     float calcAqi = (((ihi-ilo)/(phi-plo))*(p-plo))+ilo
     if(calcAqi > ihi.toFloat()) calcAqi = ihi
@@ -303,7 +307,7 @@ List<String> listFiles(){
         uri: uri,
         headers: [
 				"Cookie": cookie
-            ]        
+            ]
     ]
     try {
         fileList = []

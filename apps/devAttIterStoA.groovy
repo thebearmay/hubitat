@@ -78,15 +78,17 @@ def mainPage(){
           section(name:"itDetail",title:"Iteration Retention Details", hideable: true, hidden: false){
              input "qryDevice", "capability.*", title: "Device Selection:", multiple: false, required: true, submitOnChange: true
              if (qryDevice != null) {
-                 href "attrSelect", title: "Attribute Selection", required: false
-                 href "compAttr", title: "Computed Values (Max/Min/Avg)", required: false
-                 input ("numIter","number",title:"Number of Iterations to Retain", submitOnChange: true, width:4)
-                 input ("intType", "enum", title:"Reporting Interval Type", options: ["Minutes", "Hours", "Days","Value Change"], submitOnChange: true, width:4)
-                 input ("intVal", "number", title: "Reporting Interval Length", submitOnChange: true, width:4)
+				if(!stoLocation)
+					app.updateSetting("stoLocation",[value:"${app.getLabel()}",type:"text"])
+                href "attrSelect", title: "Attribute Selection", required: false
+                href "compAttr", title: "Computed Values (Max/Min/Avg)", required: false
+                input ("numIter","number",title:"Number of Iterations to Retain", submitOnChange: true, width:4)
+                input ("intType", "enum", title:"Reporting Interval Type", options: ["Minutes", "Hours", "Days","Value Change"], submitOnChange: true, width:4)
+                input ("intVal", "number", title: "Reporting Interval Length", submitOnChange: true, width:4)
                  
-                 input ("stoLocation","string",title: "Local file name to use for Storage (will add .CSV)", submitOnChange:true, width:4)
+                input ("stoLocation","text",title: "Local file name to use for Storage (will add .CSV when file is created)", submitOnChange:true, width:4, defaultValue:"${app.getLabel()}")
                  
-                 if(stoLocation != null) {
+                if(stoLocation != null) {
                      input ("createFile", "button", title: "Create File", width:4)
                      if(state.fileCreateReq) {
                          purgeOldStates()
@@ -106,7 +108,7 @@ def mainPage(){
           }
           section("Change Application Name", hideable: true, hidden: true){
             input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
-            if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+            if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
           }
           section("Options",  hideable: true, hidden: true){
 				input("sdfPref", "enum", title: "Date/Time Format Timestamp Column", options:sdfList, defaultValue:"Milliseconds", width:4)

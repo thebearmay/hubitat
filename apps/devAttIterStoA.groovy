@@ -234,7 +234,7 @@ void fileInitialize(){
 		initString = ""
 	}	
 	if(!sdfPref) sdfPref = "Milliseconds"
-	if(sdfPref = "Milliseconds")
+	if(sdfPref == "Milliseconds")
 		valString +="\"${new Date().getTime()}\""
 	else {
 		tDate = new Date().getTime()

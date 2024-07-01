@@ -297,7 +297,7 @@ void reportAttr(){
         }
     }
     fileContents = ""
-    if(noHeader)
+    if(noHeader){
 	if(fileRecords.size() <= numIter)
 	   inx = -1
 	else

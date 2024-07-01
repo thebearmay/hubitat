@@ -27,6 +27,7 @@ static String version()	{  return '0.0.6'  }
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
 import groovy.transform.Field
+import java.text.SimpleDateFormat
 
 
 definition (
@@ -245,7 +246,7 @@ void reportAttr(){
 		valString = ""
 		
 	if(!sdfPref) sdfPref = "Milliseconds"
-	if(sdfPref = "Milliseconds")
+	if(sdfPref == "Milliseconds")
 		valString +=",\"${new Date().getTime()}\""
 	else {
 		tDate = new Date().getTime()

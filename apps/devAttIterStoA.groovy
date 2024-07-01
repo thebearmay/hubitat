@@ -22,7 +22,7 @@
     
 
 
-static String version()	{  return '0.0.5'  }
+static String version()	{  return '0.0.6'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput

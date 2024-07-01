@@ -22,13 +22,12 @@
     
 
 
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.5'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
 import groovy.transform.Field
 import java.text.SimpleDateFormat
-
 
 definition (
 	name: 			"Device Attribute Iterative Storage - Acquisition", 
@@ -93,20 +92,7 @@ def mainPage(){
                          purgeOldStates()
                          checkSubscriptions()
                          state.fileCreateReq = false
-                         fName = toCamelCase(stoLocation)+".csv"
-                         app.updateSetting("stoLocation",[value:"${fName}",type:"string"])
-                         initString = "\"timeStamp\""
-                         valString ="\"${new Date().getTime()}\""
-                         state.sort().each {
-                             if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart" && !it.key.contains('count')){
-                                 initString+=","
-                                 valString+=","
-                                 initString+= "\"${it.key}\""
-                                 valString+="\"${it.value}\""
-                             }
-                         }
-                         bArray = (initString+"\n"+valString+"\n").getBytes("UTF-8")                       
-                         uploadHubFile("${fName}",bArray)
+                         fileInitialize()
                          scheduleReport()                         
                      }
                      input ("restart", "button", title: "Restart Reporting", width:4)
@@ -123,10 +109,10 @@ def mainPage(){
             if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
           }
           section("Options",  hideable: true, hidden: true){
-				input("sdfPref", "enum", title: "Date/Time Format Timestamp Column", options:sdfList, defaultValue:"Milliseconds", width:4 ,submitOnChange:true)
-				input("devCol", "bool", title:"Add Column for Device Name", width:4, submitOnChange:true)
-				input("noHeader","bool", title:"Suppress Header Creation", width:4, submitOnChange:true)
-                input("debugEnabled", "bool", title:"Enable Debug Logging",width:4, ,submitOnChange:true)
+				input("sdfPref", "enum", title: "Date/Time Format Timestamp Column", options:sdfList, defaultValue:"Milliseconds", width:4)
+				input("devCol", "bool", title:"Add Column for Device Name", width:4)
+				input("noHeader","bool", title:"Suppress Header Creation", width:4)
+                input("debugEnabled", "bool", title:"Enable Debug Logging",width:4)
           }
 	    } else {
 		    section("") {
@@ -239,6 +225,41 @@ def getPref(keyVal){
     return settings["$keyVal"]
 }
 
+void fileInitialize(){
+	if(devCol){
+		valString = "\"\$(getPref('qryDevice')}\","
+		initString = "\"device\","
+	}else{
+		valString = ""
+		initString = ""
+	}	
+	if(!sdfPref) sdfPref = "Milliseconds"
+	if(sdfPref = "Milliseconds")
+		valString +="\"${new Date().getTime()}\""
+	else {
+		tDate = new Date().getTime()
+		SimpleDateFormat sdf = new SimpleDateFormat(sdfPref)
+        valString +="\"${sdf.format(tDate)}\""
+	}
+	fName = toCamelCase(stoLocation)+".csv"
+	app.updateSetting("stoLocation",[value:"${fName}",type:"string"])
+	initString += "\"timeStamp\""
+	state.sort().each {
+		if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart" && !it.key.contains('count')){
+			initString+=","
+			valString+=","
+			initString+= "\"${it.key}\""
+			valString+="\"${it.value}\""
+		}
+	}
+	if(noHeader)
+		bArray = (valString+"\n").getBytes("UTF-8")
+	else
+		bArray = (initString+"\n"+valString+"\n").getBytes("UTF-8")
+	
+	uploadHubFile("${fName}",bArray)
+}
+
 void reportAttr(){
 	if(devCol)
 		valString = "\"\$(getPref('qryDevice')}\""
@@ -246,7 +267,7 @@ void reportAttr(){
 		valString = ""
 		
 	if(!sdfPref) sdfPref = "Milliseconds"
-	if(sdfPref == "Milliseconds")
+	if(sdfPref = "Milliseconds")
 		valString +=",\"${new Date().getTime()}\""
 	else {
 		tDate = new Date().getTime()

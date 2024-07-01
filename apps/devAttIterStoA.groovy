@@ -227,7 +227,7 @@ def getPref(keyVal){
 
 void fileInitialize(){
 	if(devCol){
-		valString = "\"\$(getPref('qryDevice')}\","
+		valString = "\"\$qryDevice\","
 		initString = "\"device\","
 	}else{
 		valString = ""
@@ -262,17 +262,17 @@ void fileInitialize(){
 
 void reportAttr(){
 	if(devCol)
-		valString = "\"\$(getPref('qryDevice')}\""
+		valString = "\"\$qryDevice\","
 	else
 		valString = ""
 		
 	if(!sdfPref) sdfPref = "Milliseconds"
 	if(sdfPref == "Milliseconds")
-		valString +=",\"${new Date().getTime()}\""
+		valString +="\"${new Date().getTime()}\""
 	else {
 		tDate = new Date().getTime()
 		SimpleDateFormat sdf = new SimpleDateFormat(sdfPref)
-        valString +=",\"${sdf.format(tDate)}\""
+        valString +="\"${sdf.format(tDate)}\""
 	}
     state.sort()each {
         if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart"){

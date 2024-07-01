@@ -297,14 +297,16 @@ void reportAttr(){
         }
     }
     fileContents = ""
-    if(fileRecords.size() <= numIter - 1)
+    if(noHeader)
+	if(fileRecords.size() <= numIter)
+	   inx = -1
+	else
+	   inx = fileRecords.size() - numIter
+    } else if(fileRecords.size() <= numIter - 1) {
         inx = 0
-    else
+    } else
         inx = fileRecords.size() - numIter 
-		
-	if(noHeader)
-		inx = inx - 1
-		
+	
     i=0
     fileRecords.each {
         if(debugEnabled) log.debug "$i $inx"

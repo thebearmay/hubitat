@@ -121,7 +121,7 @@ def mainPage(){
             input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
             if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
           }
-          section("Options",  hideable: true, hidden: true)){
+          section("Options",  hideable: true, hidden: true){
 				input("sdfPref", "enum", title: "Date/Time Format Timestamp Column", options:sdfList, defaultValue:"Milliseconds", width:4)
 				input("devCol", "bool", title:"Add Column for Device Name", width:4)
 				input("noHeader","bool", title:"Suppress Header Creation", width:4)

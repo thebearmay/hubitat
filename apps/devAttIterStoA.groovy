@@ -227,7 +227,7 @@ def getPref(keyVal){
 
 void fileInitialize(){
 	if(devCol){
-		valString = "\"\$qryDevice\","
+		valString = "\"$qryDevice\","
 		initString = "\"device\","
 	}else{
 		valString = ""
@@ -262,7 +262,7 @@ void fileInitialize(){
 
 void reportAttr(){
 	if(devCol)
-		valString = "\"\$qryDevice\","
+		valString = "\"$qryDevice\","
 	else
 		valString = ""
 		

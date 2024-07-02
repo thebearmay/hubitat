@@ -1,10 +1,10 @@
 {
  "packageName":"Device Attribute Iterative Storage ",
  "author":"Jean P. May, Jr.",
- "version":"24.06.28.02",
+ "version":"24.07.02.01",
  "minimumHEVersion":"2.3.7.00",
- "dateReleased":"2024-06-28",
- "releaseNotes":"v24.06.28.02 - UI v0.0.3 make the device name a link\nv24.06.28.01 - UI v0.0.2 small tweaks to the layout, add cogwheel for collector rows\nv24.06.27.01 - Introduction of v0.0.1 of the UI, v0.0.5 of the Acquisition code includes changes for the UI and adds Value Change as an Interval Type ",
+ "dateReleased":"2024-07-02",
+ "releaseNotes":"v24.07.02.01 - UI v0.0.4: Presentation cleanup, collector/aquisition co-changes, Aquisition v0.0.6: Advanced Options addition, fix restart error\nv24.06.28.02 - UI v0.0.3 make the device name a link\nv24.06.28.01 - UI v0.0.2 small tweaks to the layout, add cogwheel for collector rows\nv24.06.27.01 - Introduction of v0.0.1 of the UI, v0.0.5 of the Acquisition code includes changes for the UI and adds Value Change as an Interval Type ",
  "communityLink":"https://community.hubitat.com/t/early-beta-device-attribute-iterative-storage-rrd/139786",
  "apps": [
     {

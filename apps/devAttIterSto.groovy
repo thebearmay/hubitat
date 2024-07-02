@@ -19,11 +19,12 @@
  *    27Jun2024                  Changes to interface with the UI app, Value interval, purge unused preferences
  *    01Jul2024                  v0.0.6 Make the header optional, optional device column, SDF options for timestamp, fix restart issue
  *    02Jul2024                  v0.0.7 Disable/Enable reporting option, add notification device
+ *                               v0.0.8 Fix numIter = 1 
  */
     
 
 
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.8'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
@@ -319,23 +320,26 @@ void reportAttr(){
         }
     }
     fileContents = ""
-    if(noHeader){
-	if(fileRecords.size() <= numIter)
-	   inx = -1
-	else
-	   inx = fileRecords.size() - numIter
-    } else if(fileRecords.size() <= numIter - 1) {
-        inx = 0
-    } else
-        inx = fileRecords.size() - numIter 
+    if(numIter > 1){
+        if(noHeader){
+	        if(fileRecords.size() <= numIter)
+	           inx = -1
+    	    else
+	           inx = fileRecords.size() - numIter
+        } else if(fileRecords.size() <= numIter - 1) {
+            inx = 0
+        } else
+            inx = fileRecords.size() - numIter 
 	
-    i=0
-    fileRecords.each {
-        if(debugEnabled) log.debug "$i $inx"
-        if(i > inx)
-            fileContents+="${it}\n"
-        i++
+        i=0
+        fileRecords.each {
+            if(debugEnabled) log.debug "$i $inx"
+            if(i > inx)
+                fileContents+="${it}\n"
+            i++
+        }    
     }
+    
 	if(noHeader)
 		bArray = (fileContents+valString+"\n").getBytes("UTF-8") 
 	else

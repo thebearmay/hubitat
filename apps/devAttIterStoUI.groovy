@@ -17,12 +17,13 @@
  *    27Jun2024    thebearmay    v0.0.1 Original Code
  *    28Jun2024                  v0.0.2 Small UI tweaks
  *                               v0.0.3 Make device reference a link
- *                               v0.0.4 Use same window when creating child, presentation cleanup
+ *    02Jul2024                  v0.0.4 Use same window when creating child, presentation cleanup
+ *                               v0.0.5 Disable/Enable logic
  */
     
 
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.5'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput

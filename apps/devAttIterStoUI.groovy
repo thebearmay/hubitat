@@ -17,7 +17,7 @@
  *    27Jun2024    thebearmay    v0.0.1 Original Code
  *    28Jun2024                  v0.0.2 Small UI tweaks
  *                               v0.0.3 Make device reference a link
- *                               v0.0.4 Use same window when creating child
+ *                               v0.0.4 Use same window when creating child, presentation cleanup
  */
     
 
@@ -26,7 +26,7 @@ static String version()	{  return '0.0.3'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
-//import groovy.transform.Field
+import groovy.transform.Field
 
 
 definition (
@@ -87,7 +87,7 @@ def mainPage(){
             input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
             if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
           }
-            section("Debug", hideable:false){
+            section("", hideable:false){
                 input "debugEnabled", "bool", title:"Enable Debug Logging"
             }
 	    } else {
@@ -99,7 +99,7 @@ def mainPage(){
 }
 
 String listTable() {
-    ArrayList<String> tHead = ["","Name","Device","Attributes","Interval","Output File","<i style='font-size:1.125rem' class='material-icons he-bin'></i>"]
+    ArrayList<String> tHead = ["","Disable","Name","Device","Attributes","Interval","Output File","<i style='font-size:1.125rem' class='material-icons he-bin'></i>"]
     String X = "<i class='he-checkbox-checked'></i>"
     String O = "<i class='he-checkbox-unchecked'></i>"
     String settingsIcon = "<i class='material-icons app-column-info-icon' style='font-size: 24px;'>settings_applications</i>"
@@ -110,18 +110,19 @@ String listTable() {
     str += "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px } tr {border-right:2px solid black;}" +
             "</style><div style='overflow-x:auto'><table class='mdl-data-table tstat-col' style='border-left:2px solid black;border-top:2px solid black;'>" +
             "<thead><tr style='border-bottom:2px solid black'>"
-    //str += "<th style='font-size:0.8rem !important;border-right:2px solid black'><strong>Enabled</strong></th>" +
-            "<th style='text-align:left'><strong>Name</strong></th>"
     tHead.each { str += "<th><strong>${it}</strong></th>" }
     str += "</tr></thead>"
     
     getChildApps().each{      
-        str += "<tr><td><a href='http://${location.hub.localIP}/installedapp/status/${it.id}' target='_self'>$settingsIcon</a></td><td><a href='http://${location.hub.localIP}/installedapp/configure/${it.id}/mainPage', target='_blank'>${it.label}</a></td>"
+        str += "<tr><td><a href='http://${location.hub.localIP}/installedapp/status/${it.id}' target='_self'>$settingsIcon</a></td>"
+        String appDis = buttonLink("appDis${it.id}", "${it.getPref('appDisable')? X : O}", "#000000", "12px")
+        str += "<td>$appDis</td>"
+        str += "<td><a href='http://${location.hub.localIP}/installedapp/configure/${it.id}/mainPage', target='_self'>${it.label}</a></td>"
         str += "<td><a href='http://${location.hub.localIP}/device/edit/${it.getPref('qryDevice')?.id}' target='_blank'>${it.getPref('qryDevice')}</a></td>"
         attrList = ""
         i=0
         it.state.sort().each {
-            if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart" && it.key != "returnReq" && !it.key.contains("-count")){
+            if(!ignoreState.toString().contains("${it.key}") && !it.key.contains("-count")){
                 if(i>0) attrList+= ", "
                 attrList += it.key
                 i++
@@ -173,16 +174,26 @@ def appButtonHandler(btn) {
         case "addSto":
             state.addReq = true
             break
-        case "remSto":
-            state.addReq = false
-            break
         default: 
             if (btn.contains("remSto")){
                 cid=btn.substring(6,).toInteger()
                 deleteChildApp(cid)
                 break
             }
+            if (btn.contains("appDis")){
+                cid=btn.substring(6,).toLong()
+                chd=app.getChildAppById(cid)
+                if(chd.getPref('appDisable')){
+                    chd.setPref('appDisable','false','bool')
+                    chd.scheduleReport()
+                } else {
+                    chd.setPref('appDisable','true','bool')
+                    chd.unschedule('reportAttr')
+                }
+                break
+            }       
             log.error "Undefined button $btn pushed"
             break
     }
 }
+@Field ignoreState = ["isInstalled","fileCreateReq","rptRestart","returnReq","appDisable"]

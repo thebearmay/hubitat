@@ -1,4 +1,5 @@
-/*  Device Attribute Iterative Storage - UI
+/*
+ * Device Attribute Iterative Storage - UI
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -16,6 +17,7 @@
  *    27Jun2024    thebearmay    v0.0.1 Original Code
  *    28Jun2024                  v0.0.2 Small UI tweaks
  *                               v0.0.3 Make device reference a link
+ *                               v0.0.4 Use same window when creating child
  */
     
 
@@ -76,14 +78,14 @@ def mainPage(){
             if(state.addReq) {
                 state.addReq = false
                 chd = addChildApp("thebearmay", "Device Attribute Iterative Storage - Acquisition", "DAIS ${new Date().getTime()}")
-                paragraph "<script>window.open('http://${location.hub.localIP}:8080/installedapp/configure/${chd.id}/mainPage','#blank')</script>"
+                paragraph "<script>location.href='http://${location.hub.localIP}/installedapp/configure/${chd.id}/mainPage';setTimeout(() => {window.close()},1000);</script>"
             }
            
              
           }
           section("Change Application Name", hideable: true, hidden: true){
             input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
-            if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+            if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
           }
             section("Debug", hideable:false){
                 input "debugEnabled", "bool", title:"Enable Debug Logging"
@@ -114,30 +116,30 @@ String listTable() {
     str += "</tr></thead>"
     
     getChildApps().each{      
-        str += "<tr><td><a href='http://${location.hub.localIP}:8080/installedapp/status/${it.id}' target='_blank'>$settingsIcon</a></td><td><a href='http://${location.hub.localIP}:8080/installedapp/configure/${it.id}/mainPage', target='_blank'>${it.label}</a></td>"
-        str += "<td><a href='http://${location.hub.localIP}:8080/device/edit/${it.getPref('qryDevice').id}' target='_blank'>${it.getPref('qryDevice')}</a></td>"
+        str += "<tr><td><a href='http://${location.hub.localIP}/installedapp/status/${it.id}' target='_self'>$settingsIcon</a></td><td><a href='http://${location.hub.localIP}/installedapp/configure/${it.id}/mainPage', target='_blank'>${it.label}</a></td>"
+        str += "<td><a href='http://${location.hub.localIP}/device/edit/${it.getPref('qryDevice')?.id}' target='_blank'>${it.getPref('qryDevice')}</a></td>"
         attrList = ""
         i=0
         it.state.sort().each {
-            if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart" && !it.key.contains("-count")){
+            if(it.key != "isInstalled" && it.key != "fileCreateReq" && it.key != "rptRestart" && it.key != "returnReq" && !it.key.contains("-count")){
                 if(i>0) attrList+= ", "
                 attrList += it.key
                 i++
             }
         }
         str += "<td>${attrList}</td>"
-        if(!it.getPref('intType').contains("Value"))
-            wkStr = "${it.getPref('intVal')}${it.getPref('intType').substring(0,1)}"
+        if(!it.getPref('intType')?.contains("Value"))
+            wkStr = "${it.getPref('intVal')}${it.getPref('intType')?.substring(0,1)}"
         else
             wkStr = "Value"
         str += "<td>$wkStr</td>"
-        str += "<td><a href='http://${location.hub.localIP}:8080/local/${it.getPref('stoLocation')}'>${it.getPref('stoLocation')}</a></td>"
+        str += "<td><a href='http://${location.hub.localIP}/local/${it.getPref('stoLocation')}'>${it.getPref('stoLocation')}</a></td>"
         String remSto = buttonLink("remSto${it.id}", "$removeIcon", "#ff0000", "6px")
         str += "<td>$remSto</td></tr>"
     }
 
     String addSto = buttonLink("addSto", "<b>＋</b>", "#007009", "25px")
-    str += "<tr style='border-top:2px solid black;border-right:none'><td title='Add new storage definition' style='padding:0px 0px;border:2px solid black'>$addSto</td><td style='color:#007009;font-weight:bold;border:none'>&larr;Add new storage definition</td></tr>"
+    str += "<tr style='border-top:2px solid black;border-right:none'><td title='Add new storage definition' style='padding:0px 0px;border:2px solid black'>$addSto</td><td colspan='6' style='color:#007009;font-weight:bold;border:none;text-align:left'>&larr;Add new storage definition</td></tr>"
     str += "</table></div>"
 
 
@@ -172,7 +174,7 @@ def appButtonHandler(btn) {
             state.addReq = true
             break
         case "remSto":
-            state.addReq = true
+            state.addReq = false
             break
         default: 
             if (btn.contains("remSto")){

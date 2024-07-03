@@ -20,11 +20,12 @@
  *    01Jul2024                  v0.0.6 Make the header optional, optional device column, SDF options for timestamp, fix restart issue
  *    02Jul2024                  v0.0.7 Disable/Enable reporting option, add notification device
  *                               v0.0.8 Fix numIter = 1 
+ *    03Jul2024                  v0.0.9 Value Change ignoring disable
  */
     
 
 
-static String version()	{  return '0.0.8'  }
+static String version()	{  return '0.0.9'  }
 
 //import groovy.json.JsonSlurper
 //import groovy.json.JsonOutput
@@ -218,7 +219,7 @@ void holdValue(evt) {
         state["avg-${evt.name}-count"]++        
     }
     if(debugEnabled) log.debug "finished holdValue"
-    if(intType == "Value Change" && !state.appDisable) reportAttr()
+    if(intType == "Value Change" && !appDisable) reportAttr()
 }
 
 

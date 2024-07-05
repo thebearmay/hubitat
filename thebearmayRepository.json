@@ -309,6 +309,13 @@
         "Monitoring",
         "Tools & Utilities"
        ]
+    },
+    {
+      "id":"e4856d8f-faa8-4d85-9772-72901167fef6",
+      "name":"CSV Visualization",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/csvVisualManifest.json",
+      "description":"CSV Visualization - Local graphing of CSV files uitlizing the chart.js library"
     }
   ]
 }

@@ -1,0 +1,19 @@
+{
+ "packageName":"CSV Visualization",
+ "author":"Jean P. May, Jr.",
+ "version":"0.0.1",
+ "minimumHEVersion":"2.3.9.0",
+ "dateReleased":"2024-07-05",
+ "releaseNotes":"v0.0.1 - Original Code",
+ "apps": [
+  {
+     "id":"cfffe039-b4f4-4222-89d7-b3bfcc331cf4",
+     "name":"CSV Visualization",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/csvVisual.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

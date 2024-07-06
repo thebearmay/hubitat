@@ -22,7 +22,7 @@
      "namespace":"thebearmay",
      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/csvVisual.groovy",
      "required":true,
-     "oauth":false,
+     "oauth":true,
      "primary":true
   }
   ]

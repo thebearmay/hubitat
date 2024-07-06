@@ -14,7 +14,7 @@
      "required":true,
      "description":"ChartJS Javascript Graphing Library"
   }
-  ]
+  ],
  "apps": [
   {
      "id":"cfffe039-b4f4-4222-89d7-b3bfcc331cf4",

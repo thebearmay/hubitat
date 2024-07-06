@@ -5,6 +5,16 @@
  "minimumHEVersion":"2.3.9.0",
  "dateReleased":"2024-07-05",
  "releaseNotes":"v0.0.1 - Original Code",
+  "files: [
+  {
+     "id":"6e21a3eb-6a98-43c3-9f44-37756fc02473",
+     "name":"chart.js",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/chart.js",
+     "required":true,
+     "description":"ChartJS Javascript Graphing Library"
+  }
+  ]
  "apps": [
   {
      "id":"cfffe039-b4f4-4222-89d7-b3bfcc331cf4",

@@ -254,7 +254,7 @@ borderColor: "${lineColor[k]}",
   <canvas id="myChart"></canvas>
 </div>
 
-<script src="/local/chart.js"></script>
+<script>${insertJS()}</script>
 
 <script>
   ctx = document.getElementById('myChart');
@@ -284,6 +284,7 @@ def refresh(){
     contentBlock = [
         contentType: 'text/html',
         data: "$visualRep",
+        gzipContent: true,
         status:200
     ]        
 
@@ -325,6 +326,11 @@ String readExtFile(fName){
         return null
     }
 }
+
+String insertJS(){
+    return """${new String(downloadHubFile('chart.js'))}"""
+}
+
 
 def fetchJS(){
     jsFile = readExtFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/chart.js")

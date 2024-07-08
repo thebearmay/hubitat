@@ -10,11 +10,15 @@
  *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
  *  on an "AS IS" BASIS, WIyTHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
+ *
+ *    Date            Who                    Description
+ *    -------------   -------------------    ---------------------------------------------------------
+ *    08Jul2024        thebearmay            Remove button if chart.js already in File Manager
  */
     
 
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -76,9 +80,18 @@ def mainPage(){
                 paragraph "<b>Access Token: </b>${state.accessToken}"
          }
          section(name:"visualData",title:"Meta Data", hideable: false, hidden: false){
+             fileList = getFiles()
+             state.jsInstalled = false
+             csvList = []
+             fileList.each {
+                 if("$it" == "chart.js")
+                     state.jsInstalled = true
+                 else if("$it".contains('.csv'))
+                     csvList.add("$it")                     
+             }
              if(!state?.jsInstalled)
                  input("jsInstall","button", title:"Install ChartJS", width:4)
-             input("csvFile","string", title:"Name of Local CSV File for Visualization", width: 4, submitOnChange:true)
+             input("csvFile","enum", title:"Name of Local CSV File for Visualization", options:csvList, width: 4, submitOnChange:true)
              input("chartType","enum", title:"Type of Chart to Render", width: 4, options: cOptions, submitOnChange:true)
              href("pageRender", title:"Render Visualization", width:4)
          }
@@ -102,7 +115,25 @@ def pageRender(){
     }
 }
 
-def toCamelCase(init) {
+ArrayList getFiles(){
+    fileList =[]
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/fileManager/json",
+        headers: [
+            accept : "application/json"
+        ],
+    ]
+    httpGet(params) { resp ->
+        resp.data.files.each {
+            fileList.add(it.name)
+        }
+    }
+    
+    return fileList.sort()
+}
+
+String toCamelCase(init) {
     if (init == null)
         return null;
     init = init.replaceAll("[^a-zA-Z0-9]+","")
@@ -133,11 +164,11 @@ def appButtonHandler(btn) {
 }
 
 
-def jsonResponse(retMap){     
+HashMap jsonResponse(retMap){     
     return JsonOutput.toJson(retMap)
 }
 
-def csvParse(fName) {
+ArrayList csvParse(fName) {
     fileRecords = (new String (downloadHubFile("${fName}"))).split("\n")
     r=0
     tsCol = -1
@@ -167,7 +198,7 @@ def csvParse(fName) {
     return dataSet
 }
 
-def buildPage(){
+String buildPage(){
     cols = csvParse("$csvFile")
     labelData = []
     lCol=-1
@@ -270,6 +301,7 @@ String readExtFile(fName){
     try {
         httpGet(params) { resp ->
             if(resp!= null) {
+/*
                int i = 0
                String delim = ""
                i = resp.data.read() 
@@ -280,14 +312,17 @@ String readExtFile(fName){
                } 
                if(debugEnable) log.info "Read External File result: delim"
                return delim
+*/
+                return """${resp.data}"""
             }
             else {
                 log.error "Read External - Null Response"
+                return null
             }
         }
     } catch (exception) {
         log.error "Read Ext Error: ${exception.message}"
-        return null;
+        return null
     }
 }
 

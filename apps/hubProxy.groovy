@@ -110,8 +110,8 @@ def jsonResponse(retMap){
 
 def serveImage(){
 
-    //if(debugEnabled)
-    log.debug "serveImage called: $params source: ${request.requestSource}"
+    if(debugEnabled)
+        log.debug "serveImage called: $params source: ${request.requestSource}"
     imageFile = downloadHubFile("${params.fName}")
     fileExt = params.fName.substring(params.fName.lastIndexOf(".")+1)
     if(debugEnabled) log.debug fileExt

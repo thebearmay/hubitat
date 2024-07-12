@@ -1,10 +1,25 @@
 /*
-
+ *
+ *
+ *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ *  Change History:
+ *
+ *    Date         Who           What
+ *    ----         ---           ----
+ *    12Jul2024    thebearmay    Add alternate read for extended characters
  */
     
 
 
-static String version()	{  return '0.0.0'  }
+static String version()	{  return '0.0.1'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -65,7 +80,10 @@ def mainPage(){
                 paragraph "<b>Access Token: </b>${state.accessToken}"
                 paragraph "<b>Cloud Request Format: </b><br> ${getFullApiServerUrl()}/getImage?access_token=${state.accessToken}&fName=yourFileName.fileExtension"
         }
-          
+        section(name:"opt",title:"Options", hideablel: true, hidden: false){
+            input("debugEnabled","bool",title:"Enable Debug Logging", width:4)
+            input("altRead","bool",title:"Use alternate read for text files", width:4)
+        }
 
 	    } else {
 		    section("") {
@@ -112,8 +130,12 @@ def serveImage(){
 
     if(debugEnabled)
         log.debug "serveImage called: $params source: ${request.requestSource}"
-    imageFile = downloadHubFile("${params.fName}")
+
     fileExt = params.fName.substring(params.fName.lastIndexOf(".")+1)
+    if(!(fileExt in imageType)  && altRead) {
+        imageFile = readFile("${params.fName}")
+    } else
+        imageFile = downloadHubFile("${params.fName}")        
     if(debugEnabled) log.debug fileExt
     switch (fileExt) {
         case 'gif':
@@ -182,5 +204,32 @@ def serveImage(){
     }
     render(contentBlock)
     
+}
+
+String readFile(fName){  
+    uri = "http://${location.hub.localIP}:8080/local/${fName}"
+
+
+    def params = [
+        uri: uri,
+        contentType: "text/html",
+        textParser: true,
+    ]
+
+    try {
+        httpGet(params) { resp ->
+            if(resp!= null) {
+                if(!resp.contentType.contains("text") && !resp.contentType.contains("json"))
+                    return "File type is not text -> $resp.contentType"
+                return """${resp.data}"""
+            } else {
+                log.error "Null Response"
+                return null
+            }
+        }
+    } catch (exception) {
+        log.error "Alt Read Error: ${exception.message}"
+        return null
+    }
 }
 @Field imageType=['gif','jpeg','jpg','png','svg']

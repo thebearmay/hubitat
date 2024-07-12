@@ -64,7 +64,7 @@
  *    2024-04-16                 v3.0.41 - lanspeed source change
  *.   2024-05-07                 v3.0.42 - fix C8 Pro failing Matter compatibility check
  *    2024-05-10                 v3.0.43 - Add a delayed base data check on initialization
- *    2024-07-12                 v3.0.44 - 127.0.0.1 replacement
+ *    2024-07-12                 v3.0.44 - 127.0.0.1 replacement *** requires 2.3.9.159+
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -813,7 +813,9 @@ void ntpServerReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/ntpServer",
-        headers: []           
+        headers: [
+            "Connection-Timeout": 600
+        ]           
     ]
     
     if(debugEnable)log.debug params
@@ -838,7 +840,9 @@ void ipSubnetsReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/allowSubnets",
-        headers: []           
+        headers: [
+            "Connection-Timeout": 600
+        ]           
     ]
     
     if(debugEnable)log.debug params
@@ -863,7 +867,9 @@ void hubMeshReq(){
     params =  [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubMeshJson",
-        headers: []           
+        headers: [
+            "Connection-Timeout":600
+        ]           
     ]
     
     if(debugEnable)log.debug params
@@ -894,7 +900,7 @@ void getHubMesh(resp, data){
             updateAttr("hubMeshCount",i)
 
         } else {
-            if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
+            if (!warnSuppress) log.warn "Status ${resp.getStatus()} on Hubmesh request"
         } 
     } catch (Exception ex){
         if (!warnSuppress) log.warn ex
@@ -921,7 +927,9 @@ void hub2DataReq() {
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubData",
-        headers: []                   
+        headers: [
+            "Connection-Timeout": 800
+        ]                   
     ]
     
         if(debugEnable)log.debug params
@@ -978,6 +986,7 @@ void getHub2Data(resp, data){
                 log.error "Hub using Security but credentials not supplied"
                 device.updateSetting("security",[value:"true",type:"bool"])
             }
+            //log.debug "H2 Request successful"
         } else {
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
         } 

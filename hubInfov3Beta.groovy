@@ -53,6 +53,18 @@
  *    2023-10-24                 v3.0.30 - Add Matter attributes
  *    2023-11-14                 v3.0.31 - Suppress error on extended Zigbee/Matter reads if hub not ready
  *    2023-11-27                 v3.0.32 - Reboot with Rebuild Option
+ *    2024-01-05                 v3.0.33 - Use file methods instead of endpoints if available
+ *                               v3.0.34 - Reboot with Log Purge, Rebuild changes
+ *    2024-01-09                 v3.0.35 - Allow Matter attributes for C-5, C-7, and C-8
+ *				                 v3.0.36 - Allow C-8 Pro to pass Compatibility checks
+ *    2024-03-07                 v3.0.37 - add /hub/advanced/zipgatewayVersion endpoint
+ *    2024-03-19                 v3.0.38 - add pCloud (passive cloud check)
+ *    2024-03-28                 v3.0.39 - add GB option for memory display
+ *                               v3.0.40 - Dynamic unit option for memory display
+ *    2024-04-16                 v3.0.41 - lanspeed source change
+ *.   2024-05-07                 v3.0.42 - fix C8 Pro failing Matter compatibility check
+ *    2024-05-10                 v3.0.43 - Add a delayed base data check on initialization
+ *    2024-07-12                 v3.0.44 - 127.0.0.1 replacement
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -60,7 +72,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.32"}
+static String version() {return "3.0.44"}
 
 metadata {
     definition (
@@ -143,6 +155,7 @@ metadata {
         attribute "cpu15Pct", "number"
         attribute "freeMem15", "number"
         attribute "cloud", "string"
+        attribute "pCloud", "string"
         attribute "dnsStatus", "string"
         attribute "lanSpeed", "string"
         attribute "zigbeePower", "number"
@@ -150,10 +163,12 @@ metadata {
         attribute "zigbeeExtPan", "string"
         attribute "matterEnabled", "string"
         attribute "matterStatus", "string"
+        attribute "releaseNotesUrl", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
         command "rebootW_Rebuild"
+        command "rebootPurgeLogs"
         command "shutdown"
         command "updateCheck"
         command "removeUnused"
@@ -181,12 +196,7 @@ preferences {
     input("forceFileOutput","bool", title:"Always use Output file for HTML Attribute", submitOnChange:true, width:4)
     input("attrLogging", "bool", title: "Log all attribute changes", defaultValue: false, submitOnChange: true, width:4)
     input("allowReboot","bool", title: "Allow Hub to be shutdown or rebooted", defaultValue: false, submitOnChange: true, width:4)
-    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
-    if (security) { 
-        input("username", "string", title: "Hub Security Username", required: false, width:4)
-        input("password", "password", title: "Hub Security Password", required: false, width:4)
-    }
-    input("freeMemUnit", "enum", title: "Free Memory Unit", options:["KB","MB"], defaultValue:"KB", width:4)
+    input("freeMemUnit", "enum", title: "Free Memory Unit", options:["KB","MB","GB","Dynamic"], defaultValue:"KB", width:4)
     input("sunSdfPref", "enum", title: "Date/Time Format for Sunrise/Sunset", options:sdfList, defaultValue:"HH:mm:ss", width:4)
     input("updSdfPref", "enum", title: "Date/Time Format for Last Poll Time", options:sdfList, defaultValue:"Milliseconds", width:4)
     input("rsrtSdfPref", "enum", title: "Date/Time Format for Hub Restart Formatted", options:sdfList, defaultValue:"yyyy-MM-dd HH:mm:ss", width:4)  
@@ -206,20 +216,21 @@ void installed() {
 }
 
 void initialize() {
-    log.info "Hub Information v${version()} initialized"
     restartCheck()
     updated()
-    runIn(8,"initMemory")
-    runIn(5,"baseData")
+    runIn(30,"initMemory")
     if (settings["parm12"] != 0)
         runIn(30,"updateCheck")
     if(!state?.v2Cleaned)
         v2Cleanup()
+    log.info "Hub Information v${version()} initialized"
+    runIn(120,"baseData")
+
 }
 
 void initMemory(){
-    if(security) cookie = getCookie()
-    freeMemoryReq(cookie)    
+    
+    freeMemoryReq()    
 }
 
 void configure() {
@@ -230,6 +241,7 @@ void configure() {
 }
 
 void updated(){
+    baseData()
     if(debugEnable) log.debug "updated"
 	unschedule()
 	state.poll1 = []
@@ -307,9 +319,9 @@ void v2Cleanup() {
 
 
 void poll1(){
-    if(security) cookie = getCookie()
+    
 	state.poll1.each{
-		this."$it"(cookie)
+		this."$it"()
 	}
 	if(pollRate1 > 0)
 		runIn(pollRate1*60, "poll1")
@@ -317,9 +329,9 @@ void poll1(){
 }
 
 void poll2(){
-    if(security) cookie = getCookie()
+    
 	state.poll2.each{
-		this."$it"(cookie)
+		this."$it"()
 	}
 	if(pollRate2 > 0)
 		runIn(pollRate2*60, "poll2")
@@ -327,9 +339,9 @@ void poll2(){
 }
 
 void poll3(){
-    if(security) cookie = getCookie()
+    
 	state.poll3.each{
-		this."$it"(cookie)
+		this."$it"()
 	}
 	if(pollRate3 > 0)
 		runIn(pollRate3*60, "poll3")
@@ -337,9 +349,9 @@ void poll3(){
 }
 
 void poll4(){
-    if(security) cookie = getCookie()
+    
 	state.poll4.each{
-		this."$it"(cookie)
+		this."$it"()
 	}
 	if(pollRate4 > 0)
 		runIn(pollRate4*60*60, "poll4")
@@ -461,11 +473,11 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
     if(attrLogging) log.info "$aKey : $aValue$aUnit"
 }
 
-void cpuTemperatureReq(cookie){
+void cpuTemperatureReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/internalTempCelsius",
-        headers: ["Cookie": cookie]
+        headers: []
     ]
     if (debugEnabled) log.debug params
     asynchttpGet("getCpuTemperature", params)    
@@ -493,11 +505,11 @@ void getCpuTemperature(resp, data) {
 }
 
 
-void freeMemoryReq(cookie){
+void freeMemoryReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/freeOSMemory",
-        headers: ["Cookie": cookie]
+        headers: []
     ]
     if (debugEnable) log.debug params
         asynchttpGet("getFreeMemory", params)    
@@ -508,7 +520,22 @@ void getFreeMemory(resp, data) {
     try {
         if(resp.getStatus() == 200 || resp.getStatus() == 207) {
             Integer memWork = new Integer(resp.data.toString())
-            if(debugEnable) log.debug memWork
+            if(debugEnable) 
+                log.debug "Free Memory $memWork"
+            if(freeMemUnit == "Dynamic"){
+                if(memWork > 1048575){ 
+                    freeMemUnit = "GB"
+                    if(debugEnable) log.debug "unit is $freeMemUnit"
+                }else if(memWork > 150000){
+                    freeMemUnit = "MB"
+                    if(debugEnable) log.debug "unit is $freeMemUnit"
+                }
+                else freeMemUnit = "KB"
+            }
+                               
+            if(freeMemUnit == "GB")
+                updateAttr("freeMemory",(new Float(memWork/1024/1024).round(2)), "GB")
+            else
             if(freeMemUnit == "MB")
                 updateAttr("freeMemory",(new Float(memWork/1024).round(2)), "MB")
             else
@@ -520,7 +547,7 @@ void getFreeMemory(resp, data) {
     }
 }
 
-void fifteenMinute(cookie){
+void fifteenMinute(){
     if(location.hub.uptime < 900) { //if the hub hasn't been up 15 minutes use current 5 min values
         updateAttr("cpu15Min",device.currentValue("cpu5Min",true))
         updateAttr("cpu15Pct",device.currentValue("cpuPct",true),"%")
@@ -530,7 +557,7 @@ void fifteenMinute(cookie){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/freeOSMemoryHistory",
-        headers: ["Cookie": cookie]
+        headers: []
     ]
     if (debugEnable) log.debug params
     asynchttpGet("get15Min", params)        
@@ -572,11 +599,11 @@ void get15Min(resp, data){
     }
 }
 
-void cpuLoadReq(cookie){
+void cpuLoadReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/freeOSMemoryLast",
-        headers: ["Cookie": cookie]
+        headers: []
     ]
     if (debugEnable) log.debug params
     asynchttpGet("getCpuLoad", params)    
@@ -612,11 +639,11 @@ void getCpuLoad(resp, data) {
         }
     }
 }
-void dbSizeReq(cookie){
+void dbSizeReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/databaseSize",
-        headers: ["Cookie": cookie]
+        headers: []
     ]
 
     if (debugEnable) log.debug params
@@ -637,7 +664,7 @@ void getDbSize(resp, data) {
     } 
 }
 
-void publicIpReq(cookie){
+void publicIpReq(){
     params = [
         uri: "https://api.ipify.org?format=json",
         headers: [            
@@ -665,12 +692,12 @@ void getPublicIp(resp, data){
     }
 }
 
-void evtStateDaysReq(cookie){
+void evtStateDaysReq(){
     //Max State Days
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/maxDeviceStateAgeDays",
-        headers: ["Cookie": cookie]           
+        headers: []           
     ]
     
     if(debugEnable)log.debug params
@@ -680,7 +707,7 @@ void evtStateDaysReq(cookie){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/maxEventAgeDays",
-        headers: ["Cookie": cookie]           
+        headers: []           
     ]
     
     if(debugEnable)log.debug params
@@ -717,7 +744,7 @@ void getStateDays(resp, data) {
     } 
 }
 
-void zwaveVersionReq(cookie){
+void zwaveVersionReq(){
     if(!isCompatible(7)) {
         if(!warnSuppress) log.warn "ZWave Version information not available for this hub"
         return
@@ -725,7 +752,7 @@ void zwaveVersionReq(cookie){
     param = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/zwaveVersion",
-        headers: ["Cookie": cookie]
+        headers: []
     ]
     if (debugEnable) log.debug param
     asynchttpGet("getZwaveVersion", param)
@@ -763,17 +790,30 @@ void parseZwave(String zString){
         wrkStr = wrkStr.replace(")","]")
 
         HashMap zMap = (HashMap)evaluate(wrkStr)
+
+        if(location.hub.firmwareVersionString < "2.3.8.124")
+            updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
+        else {
+            params = [
+                uri    : "http://127.0.0.1:8080",
+                path   : "/hub/advanced/zipgatewayVersion",
+                headers: []           
+            ]
+            httpGet(params) { resp ->
+                updateAttr("zwaveSDKVersion",resp.data)
+            }
+        }
+            
         
-        updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
         updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}.${zMap?.hardwareVersion}")
     }
 }
 
-void ntpServerReq(cookie){
+void ntpServerReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/ntpServer",
-        headers: ["Cookie": cookie]           
+        headers: []           
     ]
     
     if(debugEnable)log.debug params
@@ -794,11 +834,11 @@ void getNtpServer(resp, data) {
     }
 }
 
-void ipSubnetsReq(cookie){
+void ipSubnetsReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/allowSubnets",
-        headers: ["Cookie": cookie]           
+        headers: []           
     ]
     
     if(debugEnable)log.debug params
@@ -819,11 +859,11 @@ void getSubnets(resp, data) {
     }
 }
 
-void hubMeshReq(cookie){
+void hubMeshReq(){
     params =  [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubMeshJson",
-        headers: ["Cookie": cookie]           
+        headers: []           
     ]
     
     if(debugEnable)log.debug params
@@ -861,7 +901,7 @@ void getHubMesh(resp, data){
     }
 }
 
-void extNetworkReq(cookie){
+void extNetworkReq(){
     if(location.hub.firmwareVersionString < "2.3.4.126"){
         if(!warnSuppress) log.warn "Extend Network Data not available for HE v${location.hub.firmwareVersionString}"
         return
@@ -870,18 +910,18 @@ void extNetworkReq(cookie){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/networkConfiguration",
-        headers: ["Cookie": cookie]           
+        headers: []           
     ]
     
     if(debugEnable)log.debug params
     asynchttpGet("getExtNetwork", params)
 }
 
-void hub2DataReq(cookie) {
+void hub2DataReq() {
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubData",
-        headers: ["Cookie": cookie]                   
+        headers: []                   
     ]
     
         if(debugEnable)log.debug params
@@ -928,6 +968,11 @@ void getHub2Data(resp, data){
             }
             if(debugEnable) log.debug "securityInUse"
             updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
+            if(!h2Data.baseModel.cloudDisconnected){
+                updateAttr("pCloud", "connected")
+            } else {
+                updateAttr("pCloud", "not connected")
+            }
             if(debugEnable) log.debug "h2 security check"
             if((!security || password == null || username == null) && h2Data.baseModel.userLoggedin == true){
                 log.error "Hub using Security but credentials not supplied"
@@ -1006,7 +1051,10 @@ void getExtNetwork(resp, data){
             dnsList = dnsList.unique()
             checkDns(dnsList)
             updateAttr("dnsServers", dnsList)
-            updateAttr("lanSpeed", h2Data.lanAutonegStatus)
+            if(h2Data.lanAutoneg == 'AUTONEG')
+                updateAttr("lanSpeed","Auto","mbps")
+            else
+                updateAttr("lanSpeed", "100","mbps")
 
         }
     }catch (ex) {
@@ -1037,16 +1085,16 @@ void checkDns(dnsList) {
 }
 
 void updateCheck(){
-    if(security) cookie = getCookie()
-    updateCheckReq(cookie)
+    
+    updateCheckReq()
 }
 
-void updateCheckReq(cookie){
+void updateCheckReq(){
     params = [
-        uri: "http://${location.hub.localIP}:8080",
+        uri: "http://127.0.0.1:8080",
         path:"/hub/cloud/checkForUpdate",
         timeout: 10,
-        headers:["Cookie": cookie]
+        headers:[]
     ]
     asynchttpGet("getUpdateCheck", params)
 }
@@ -1057,6 +1105,11 @@ void getUpdateCheck(resp, data) {
     try {
         if (resp.status == 200) {
             def jSlurp = new JsonSlurper()
+            /*/Temporary capture
+            tempStr = readFile("updateLog.txt")
+            tempStr+="\n${resp.data}"
+            writeFile("updateLog.txt",tempStr)
+            /*/
             Map resMap = (Map)jSlurp.parseText((String)resp.data)
             if(resMap.status == "NO_UPDATE_AVAILABLE")
                 updateAttr("hubUpdateStatus","Current")
@@ -1072,11 +1125,11 @@ void getUpdateCheck(resp, data) {
 
 }
 /*
-void zigbeeStackReq(cookie){
+void zigbeeStackReq(){
     params = [
         uri: "http://127.0.0.1:8080",
         path:"/hub/currentZigbeeStack",
-        headers:["Cookie": cookie]
+        headers:[]
     ]
         asynchttpGet("getZigbeeStack",params) 
 }
@@ -1090,7 +1143,7 @@ void getZigbeeStack(resp, data) {
     } catch(ignore) { }
 }
 */
-void checkCloud(cookie){
+void checkCloud(){
     if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/")) {
         updateAttr("cloud", "invalid endpoint")
         cloudFontStyle = 'font-weight:bold;color:red'
@@ -1129,7 +1182,7 @@ void getCloudReturn(resp, data){
 }
 
 void extendedZigbee(){
-    if(security) cookie = getCookie()
+    
     if(location.hub.firmwareVersionString > "2.3.7.1")
         zPath = "/hub/zigbeeDetails/json"
     else
@@ -1137,7 +1190,7 @@ void extendedZigbee(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : zPath,
-        headers: ["Cookie": cookie]
+        headers: []
     ]
     if (debugEnabled) log.debug params
     asynchttpGet("getExtendedZigbee", params)    
@@ -1157,14 +1210,15 @@ void getExtendedZigbee(resp, data){
         
 }
 
-void checkMatter(cookie){
-    if(location.hub.firmwareVersionString < "2.3.7.1" || getHubVersion() != "C-8")
+void checkMatter(){
+    hubModel = getHubVersion()
+    if(!(isCompatible(5)))
         return
     
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/matterDetails/json",
-        headers: ["Cookie": cookie]
+        headers: []
     ]
     if (debugEnabled) log.debug params
     asynchttpGet("getMatter", params) 
@@ -1188,32 +1242,8 @@ boolean isCompatible(Integer minLevel) { //check to see if the hub version meets
     String model = getHubVersion()
     String[] tokens = model.split('-')
     String revision = tokens.last()
+    if(revision.contains('Pro')) revision = 9
     return (Integer.parseInt(revision) >= minLevel)
-}
-
-@SuppressWarnings('unused')
-String getCookie(){
-    try{
-  	  httpPost(
-		[
-		uri: "http://127.0.0.1:8080",
-		path: "/login",
-		query: [ loginRedirect: "/" ],
-		body: [
-			username: username,
-			password: password,
-			submit: "Login"
-			]
-		]
-	  ) { resp -> 
-		cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) 
-        if(debugEnable)
-            log.debug "$cookie"
-	  }
-    } catch (e){
-        cookie = ""
-    }
-    return "$cookie"
 }
 
 @SuppressWarnings('unused')
@@ -1226,13 +1256,13 @@ Boolean xferFile(fileIn, fileOut) {
 
 @SuppressWarnings('unused')
 String readExtFile(fName){
-    if(security) cookie = getCookie()    
+        
     def params = [
         uri: fName,
         contentType: "text/html",
         textParser: true,
         headers: [
-				"Cookie": cookie
+				
             ]        
     ]
 
@@ -1263,7 +1293,24 @@ String readExtFile(fName){
 @SuppressWarnings('unused')
 Boolean fileExists(fName){
     if(fName == null) return false
-    uri = "http://${location.hub.localIP}:8080/local/${fName}";
+    try{
+        if(location.hub.firmwareVersionString >= "2.3.4.134"){
+            byte[] rData = downloadHubFile("$fName")
+            fContent = new String(rData, "UTF-8")
+            if(fContent.size() > 0) {
+                if(debugEnable) log.debug "File Exist: true"
+                return true;
+            } else {
+                if(debugEnable) log.debug "File Exist: false"
+                return false;                
+            }
+        }
+    } catch (ex) {
+        log.error "$fName - $ex"
+        return false
+    }    
+    
+    uri = "http://127.0.0.1:8080/local/${fName}";
 
      def params = [
         uri: uri          
@@ -1275,7 +1322,7 @@ Boolean fileExists(fName){
                 if(debugEnable) log.debug "File Exist: true"
                 return true;
             } else {
-                if(debugEnable) log.debug "File Exist: true"
+                if(debugEnable) log.debug "File Exist: false"
                 return false
             }
         }
@@ -1345,7 +1392,7 @@ void createHtml(){
         if(html.size() > 1024 || forceFileOutput){
             if(htmlFileOutput == null) htmlFileOutput = "hubInfoOutput.html"
             writeFile(htmlFileOutput, html)
-            updateAttr("html","<a href='http://${location.hub.localIP}/local/$htmlFileOutput'>Link to attribute data</a>")
+            updateAttr("html","<a href='http://127.0.0.1/local/$htmlFileOutput'>Link to attribute data</a>")
         } else
             updateAttr("html", html)
     }else {
@@ -1359,15 +1406,24 @@ void createHtml(){
 
 @SuppressWarnings('unused')
 String readFile(fName){
-    if(security) cookie = getCookie()
-    uri = "http://${location.hub.localIP}:8080/local/${fName}"
+    try{
+        if(location.hub.firmwareVersionString >= "2.3.4.134"){
+            byte[] rData = downloadHubFile("$fName")
+            return new String(rData, "UTF-8")
+        }
+    } catch (ex) {
+        log.error "$fName - $ex"
+    }
+    
+    
+    uri = "http://127.0.0.1:8080/local/${fName}"
 
     def params = [
         uri: uri,
         contentType: "text/html",
         textParser: true,
         headers: [
-				"Cookie": cookie,
+				
                 "Accept": "application/octet-stream"
             ]
     ]
@@ -1397,6 +1453,12 @@ String readFile(fName){
 }
 @SuppressWarnings('unused')
 Boolean writeFile(String fName, String fData) {
+    if(location.hub.firmwareVersionString >= "2.3.4.134"){
+        wData = fData.getBytes("UTF-8")
+        uploadHubFile("$fName",wData)
+        return true
+    }
+    
     now = new Date()
     String encodedString = "thebearmay$now".bytes.encodeBase64().toString(); 
     
@@ -1442,19 +1504,16 @@ void reboot() {
         return
     }
     log.info "Hub Reboot requested"
-    // start - Modified from dman2306 Rebooter app
-    String cookie=(String)null
-    if(security) cookie = getCookie()
+    
 	httpPost(
 		[
 			uri: "http://127.0.0.1:8080",
 			path: "/hub/reboot",
 			headers:[
-				"Cookie": cookie
+				
 			]
 		]
 	) {		resp ->	} 
-    // end - Modified from dman2306 Rebooter app
 }
 
 @SuppressWarnings('unused')
@@ -1467,20 +1526,55 @@ void rebootW_Rebuild() {
         log.error "Reboot with rebuild was requested, but failed HE min version."
         return        
     }
-    log.info "Hub Reboot requested"
-    // start - Modified from dman2306 Rebooter app
-    String cookie=(String)null
-    if(security) cookie = getCookie()
+    log.info "Hub Reboot with Rebuild requested"
+    
+    if(location.hub.firmwareVersionString < "2.3.7.14"){
+    	httpPost(
+	    	[
+		    	uri: "http://127.0.0.1:8080",
+			    path: "/hub/rebuildDatabaseAndReboot",
+      			headers:[
+	    			
+		    	]
+    		]
+	    ) {		resp ->	} 
+    } else {
+        httpPost(
+		[
+			uri: "http://127.0.0.1:8080",
+			path: "/hub/reboot",
+			headers:[
+				
+                "Content-Type": "application/x-www-form-urlencoded"
+			],
+            body:[rebuildDatabase:"true"] 
+	    ]
+    	) {		resp ->	} 
+    }
+}
+
+void rebootPurgeLogs() {
+    if(!allowReboot){
+        log.error "Reboot was requested, but allowReboot was set to false"
+        return
+    }
+    if(location.hub.firmwareVersionString < "2.3.7.140"){
+        log.error "Reboot with Purge was requested, but failed HE min version."
+        return        
+    }
+    log.info "Hub Reboot & Log Purge requested"
+    
 	httpPost(
 		[
 			uri: "http://127.0.0.1:8080",
-			path: "/hub/rebuildDatabaseAndReboot",
+			path: "/hub/reboot",
 			headers:[
-				"Cookie": cookie
-			]
+				
+                "Content-Type": "application/x-www-form-urlencoded"
+			],
+            body:[purgeLogs:"true"] 
 		]
 	) {		resp ->	} 
-    // end - Modified from dman2306 Rebooter app
 }
 
 @SuppressWarnings('unused')
@@ -1489,20 +1583,18 @@ void shutdown() {
         log.error "Shutdown was requested, but allowReboot/Shutdown was set to false"
         return
     }
-    log.info "Hub Reboot requested"
-    // start - Modified from dman2306 Rebooter app
-    String cookie=(String)null
-    if(security) cookie = getCookie()
+    log.info "Hub Shutdown requested"
+
 	httpPost(
 		[
 			uri: "http://127.0.0.1:8080",
 			path: "/hub/shutdown",
 			headers:[
-				"Cookie": cookie
+				
 			]
 		]
 	) {		resp ->	} 
-    // end - Modified from dman2306 Rebooter app
+
 }
                    
 void formatUptime(){
@@ -1553,8 +1645,6 @@ void restartCheck() {
         updateAttr("lastHubRestartFormatted", sdf.format(upDate.getTime()))
     }
     
-//    SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-//    updateAttr("lastHubRestartFormatted",sdf.format(upDate))
 }
 
 void removeUnused() {
@@ -1620,11 +1710,11 @@ void logsOff(){
 [parm10:[desc:"Hub Mesh Data", attributeList:"hubMeshData, hubMeshCount", method:"hubMeshReq"]],
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
-[parm13:[desc:"Zwave Status & Hub Alerts",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, securityInUse", method:"hub2DataReq"]],
+[parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud, securityInUse", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
-[parm16:[desc:"Check Cloud Connection",attributeList:"cloud", method:"checkCloud"]],
-[parm17:[desc:"Matter Status (C8 only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]]    
+[parm16:[desc:"Active Cloud Connection Check",attributeList:"cloud", method:"checkCloud"]],
+[parm17:[desc:"Matter Status (C-5 and > only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]]    
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

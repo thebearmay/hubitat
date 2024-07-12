@@ -64,7 +64,7 @@
  *    2024-04-16                 v3.0.41 - lanspeed source change
  *.   2024-05-07                 v3.0.42 - fix C8 Pro failing Matter compatibility check
  *    2024-05-10                 v3.0.43 - Add a delayed base data check on initialization
- *    2024-07-12                 v3.0.44 - 127.0.0.1 replacement *** requires 2.3.9.159+
+ *    2024-07-12                 v3.1.00 - 127.0.0.1 replacement *** requires 2.3.9.159+
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -72,7 +72,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.0.44"}
+static String version() {return "3.1.00"}
 
 metadata {
     definition (

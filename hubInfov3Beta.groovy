@@ -64,7 +64,7 @@
  *    2024-04-16                 v3.0.41 - lanspeed source change
  *.   2024-05-07                 v3.0.42 - fix C8 Pro failing Matter compatibility check
  *    2024-05-10                 v3.0.43 - Add a delayed base data check on initialization
- *    2024-07-12                 v3.1.00 - 127.0.0.1 replacement *** requires 2.3.9.159+
+ *    2024-07-12                 v3.1.00/v3.1.1 - 127.0.0.1 replacement *** requires 2.3.9.159+
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -72,7 +72,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.00"}
+static String version() {return "3.1.1"}
 
 metadata {
     definition (
@@ -477,7 +477,9 @@ void cpuTemperatureReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/internalTempCelsius",
-        headers: []
+        headers: [
+            "Connection-Timeout":600
+        ]
     ]
     if (debugEnabled) log.debug params
     asynchttpGet("getCpuTemperature", params)    
@@ -509,7 +511,9 @@ void freeMemoryReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/freeOSMemory",
-        headers: []
+        headers: [
+            "Connection-Timeout":600
+        ]
     ]
     if (debugEnable) log.debug params
         asynchttpGet("getFreeMemory", params)    
@@ -557,7 +561,9 @@ void fifteenMinute(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/freeOSMemoryHistory",
-        headers: []
+        headers: [
+            "Connection-Timeout":600
+        ]
     ]
     if (debugEnable) log.debug params
     asynchttpGet("get15Min", params)        
@@ -603,7 +609,9 @@ void cpuLoadReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/freeOSMemoryLast",
-        headers: []
+        headers: [
+            "Connection-Timeout":600
+        ]
     ]
     if (debugEnable) log.debug params
     asynchttpGet("getCpuLoad", params)    
@@ -643,7 +651,9 @@ void dbSizeReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/databaseSize",
-        headers: []
+        headers: [
+            "Connection-Timeout":600
+        ]
     ]
 
     if (debugEnable) log.debug params
@@ -697,7 +707,9 @@ void evtStateDaysReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/maxDeviceStateAgeDays",
-        headers: []           
+        headers: [
+            "Connection-Timeout":600
+        ]           
     ]
     
     if(debugEnable)log.debug params
@@ -707,7 +719,9 @@ void evtStateDaysReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/maxEventAgeDays",
-        headers: []           
+        headers: [
+            "Connection-Timeout":600
+        ]           
     ]
     
     if(debugEnable)log.debug params
@@ -752,7 +766,9 @@ void zwaveVersionReq(){
     param = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/zwaveVersion",
-        headers: []
+        headers: [
+            "Connection-Timeout":600
+        ]
     ]
     if (debugEnable) log.debug param
     asynchttpGet("getZwaveVersion", param)
@@ -797,7 +813,9 @@ void parseZwave(String zString){
             params = [
                 uri    : "http://127.0.0.1:8080",
                 path   : "/hub/advanced/zipgatewayVersion",
-                headers: []           
+                headers: [
+                    "Connection-Timeout":600
+                ]           
             ]
             httpGet(params) { resp ->
                 updateAttr("zwaveSDKVersion",resp.data)
@@ -916,7 +934,9 @@ void extNetworkReq(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/networkConfiguration",
-        headers: []           
+        headers: [
+            "Connection-Timeout":600
+        ]           
     ]
     
     if(debugEnable)log.debug params
@@ -1199,7 +1219,9 @@ void extendedZigbee(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : zPath,
-        headers: []
+        headers: [
+            "Connection-Timeout":600
+        ]
     ]
     if (debugEnabled) log.debug params
     asynchttpGet("getExtendedZigbee", params)    
@@ -1227,7 +1249,9 @@ void checkMatter(){
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/matterDetails/json",
-        headers: []
+        headers: [
+            "Connection-Timeout":600
+        ]
     ]
     if (debugEnabled) log.debug params
     asynchttpGet("getMatter", params) 

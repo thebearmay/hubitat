@@ -15,6 +15,7 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    12Jul2024    thebearmay    Add alternate read for extended characters
+ *    13Jul2024                  charset = UTF-8 for HTML
  */
     
 
@@ -143,7 +144,7 @@ def serveImage(){
             break     
         case 'htm':
         case 'html':
-            fType = 'text/html'
+            fType = 'text/html; charset=UTF-8'
             break
         case 'js':
             fType = 'text/javascript'
@@ -206,7 +207,8 @@ def serveImage(){
     
 }
 
-String readFile(fName){  
+String readFile(fName){ 
+    if(debugEnabled) log.debug "Alternate Read"
     uri = "http://${location.hub.localIP}:8080/local/${fName}"
 
 

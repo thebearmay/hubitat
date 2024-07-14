@@ -19,7 +19,7 @@
     
 
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput

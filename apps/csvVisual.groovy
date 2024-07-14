@@ -14,6 +14,7 @@
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
  *    08Jul2024        thebearmay            Remove button if chart.js already in File Manager
+ *    13Jul2024                              Handle non-long timestamp
  */
     
 
@@ -187,10 +188,15 @@ ArrayList csvParse(fName) {
         i=0
         col.each{
             it = it.replace('\"','')
-            if(r > 0 && i == tsCol){
-                dataSet[i].add("\"${new Date(it.toLong()).toString()}\"")
-            } else
-                dataSet[i].add(it)
+            try {
+                if(r > 0 && i == tsCol){
+                    dataSet[i].add("\"${new Date(it.toLong()).toString()}\"")
+                } else {
+                    dataSet[i].add(it)
+                }
+            } catch (e) {
+                dataSet[i].add("\"$it\"")
+            }
             i++
         }
         r++

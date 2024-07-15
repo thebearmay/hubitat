@@ -316,6 +316,13 @@
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/csvVisualManifest.json",
       "description":"CSV Visualization - Local graphing of CSV files uitlizing the chart.js library"
+    },
+    {
+      "id":"d20fd665-34ca-42f6-bbc9-866eb862cfca",
+      "name":"Hub Image Proxy",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubProxyManifest.json",
+      "description":"Serves files from the hub File Manager, thus permitting images and text files on the hub to be viewed//referenced via the cloud interface."
     }
   ]
 }

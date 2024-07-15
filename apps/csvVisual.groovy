@@ -13,8 +13,8 @@
  *
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
- *    08Jul2024        thebearmay            Remove button if chart.js already in File Manager
- *    13Jul2024                              Handle non-long timestamp
+ *    08Jul2024        thebearmay            v0.0.2 - Remove button if chart.js already in File Manager
+ *    13Jul2024                              v0.0.3 - Handle non-long timestamp
  *    15Jul2024                              v0.0.4 - handle the device column, if present
  */
     

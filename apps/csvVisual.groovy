@@ -15,12 +15,12 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    08Jul2024        thebearmay            Remove button if chart.js already in File Manager
  *    13Jul2024                              Handle non-long timestamp
- *    15Jul2024                              v0.0.3 - handle the device column, if present
+ *    15Jul2024                              v0.0.4 - handle the device column, if present
  */
     
 
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput

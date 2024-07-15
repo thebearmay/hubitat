@@ -1,10 +1,10 @@
 {
  "packageName":"CSV Visualization",
  "author":"Jean P. May, Jr.",
- "version":"0.0.3",
+ "version":"0.0.4",
  "minimumHEVersion":"2.3.9.0",
  "dateReleased":"2024-07-08",
- "releaseNotes":"v0.0.3 0 - handle non-long timestamp\nv0.0.2 - only show download for chart.js if file not in File Manager, show csv files as a dropdown, fix cloud interface\nv0.0.1 - Original Code",
+ "releaseNotes":"v0.0.4 - handle files with device column\nv0.0.3 - handle non-long timestamp\nv0.0.2 - only show download for chart.js if file not in File Manager, show csv files as a dropdown, fix cloud interface\nv0.0.1 - Original Code",
   "files": [
   {
      "id":"6e21a3eb-6a98-43c3-9f44-37756fc02473",

@@ -15,6 +15,7 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    08Jul2024        thebearmay            Remove button if chart.js already in File Manager
  *    13Jul2024                              Handle non-long timestamp
+ *    15Jul2024                              v0.0.3 - handle the device column, if present
  */
     
 
@@ -173,34 +174,44 @@ ArrayList csvParse(fName) {
     fileRecords = (new String (downloadHubFile("${fName}"))).split("\n")
     r=0
     tsCol = -1
+    devCol = -1
     fileRecords.each {
         col = it.split(",")
         if(r==0){ //initialize arrays
           i=0
           dataSet = []
-          col.each{
-             dataSet[i]=[]
+          col.each{              
              if(it == '"timeStamp"')
                  tsCol = i
+             else if(it == '"device"')
+                 devCol = i
+             if(i != devCol)
+                 dataSet[i]=[]
              i++
           }      
         }
         i=0
         col.each{
-            it = it.replace('\"','')
-            try {
-                if(r > 0 && i == tsCol){
-                    dataSet[i].add("\"${new Date(it.toLong()).toString()}\"")
-                } else {
-                    dataSet[i].add(it)
+            if(i != devCol){
+                it = it.replace('\"','')
+                try {
+                    if(r > 0 && i == tsCol){
+                        dataSet[i].add("\"${new Date(it.toLong()).toString()}\"")
+                    } else {
+                        dataSet[i].add(it)
+                    }
+                } catch (e) {
+                    dataSet[i].add("\"$it\"")
                 }
-            } catch (e) {
-                dataSet[i].add("\"$it\"")
             }
             i++
         }
         r++
     }
+    if(devCol > -1)
+        dataSet.remove(devCol)
+    if(debugEnabled)
+        uploadHubFile ("csvWork.txt",dataSet.toString().getBytes("UTF-8"))
     return dataSet
 }
 
@@ -282,6 +293,9 @@ borderColor: "${lineColor[k]}",
   });
 </script>
 """
+    
+    if(debugEnabled)
+        uploadHubFile ("pageBuildWork.txt",visualRep.toString().getBytes("UTF-8"))    
     return(visualRep)
 }
 

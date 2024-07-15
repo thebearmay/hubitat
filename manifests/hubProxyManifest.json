@@ -2,7 +2,7 @@
  "packageName":"Hub Image Proxy",
  "author":"Jean P. May, Jr.",
  "version":"0.0.1",
- "minimumHEVersion":"2.3.8.0",
+ "minimumHEVersion":"2.3.9.160",
  "dateReleased":"2024-07-15",
  "releaseNotes":"v0.0.1 - Original Code",
  "apps": [

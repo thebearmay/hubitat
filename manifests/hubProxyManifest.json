@@ -1,0 +1,19 @@
+{
+ "packageName":"Hub Image Proxy",
+ "author":"Jean P. May, Jr.",
+ "version":"0.0.1",
+ "minimumHEVersion":"2.3.8.0",
+ "dateReleased":"2024-07-15",
+ "releaseNotes":"v0.0.1 - Original Code",
+ "apps": [
+  {
+     "id":"0ccef23b-1d00-4477-9956-aec55fd05bad",
+     "name":"Hub Image Proxy",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubProxy.groovy",
+     "required":true,
+     "oauth":true,
+     "primary":true
+  }
+  ]
+}

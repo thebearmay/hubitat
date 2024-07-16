@@ -16,11 +16,12 @@
  *    08Jul2024        thebearmay            v0.0.2 - Remove button if chart.js already in File Manager
  *    13Jul2024                              v0.0.3 - Handle non-long timestamp
  *    15Jul2024                              v0.0.4 - handle the device column, if present
+ *    16Jul2024                              v0.0.5 - Allow multiple CSVs
  */
     
 
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -93,7 +94,7 @@ def mainPage(){
              }
              if(!state?.jsInstalled)
                  input("jsInstall","button", title:"Install ChartJS", width:4)
-             input("csvFile","enum", title:"Name of Local CSV File for Visualization", options:csvList, width: 4, submitOnChange:true)
+             input("csvFile","enum", title:"Name of Local CSV File for Visualization", options:csvList, width: 4, submitOnChange:true, multiple:true)
              input("chartType","enum", title:"Type of Chart to Render", width: 4, options: cOptions, submitOnChange:true)
              href("pageRender", title:"Render Visualization", width:4)
          }
@@ -170,6 +171,165 @@ HashMap jsonResponse(retMap){
     return JsonOutput.toJson(retMap)
 }
 
+ArrayList csvCombine() {
+    csvArr = [[]]
+    fArray = []
+    numCols = []
+    tsCol = []
+    i=0
+    csvFile.each{
+        fArray[i] = (new String (downloadHubFile("${csvFile[i]}"))).split("\n")
+        cols=fArray[i][0].split(",")
+        numCols[i] = cols.size()
+        j=0
+        cols.each{
+            if("$it" == '\"timeStamp\"')
+               tsCol[i] = j 
+            j++
+        }
+        i++
+    }
+    fInx = 0
+    narrInx = 0
+    fArray.each { files ->
+        rInx = 0
+        files.each { records ->
+            cols=records.split(',')
+            cInx=0
+            cols.each{
+                if(cInx >= tsCol[fInx]){
+                    if(debugEnabled)
+                        log.debug "$fInx:$rInx:$cInx $it"
+                    if(rInx == 0) { //Header Row
+                        if (cInx >= tsCol[fInx]  && !(fInx > 0 && "$it".contains('timeStamp'))) { 
+                            if(debugEnabled)
+                                log.debug "Header Before: ${csvArr[0]}"
+                            csvArr[0].add("$it")
+                            if(debugEnabled)
+                                log.debug "Header After: ${csvArr[0]}"
+                        }
+                    } else {
+                        if(debugEnabled) 
+                            log.debug "cInx: $cInx cols:${numCols[fInx]}"
+                        if(cInx == tsCol[fInx]){
+                            if(debugEnabled) log.debug "ts col"
+                            csvArr[narrInx]=[]
+                            csvArr[narrInx][0]="$it"
+                            if(debugEnabled)
+                                log.debug "$fInx Before"
+                            for(i=0;i<fInx;i++){ //handle cols before this file
+                                for(j=tsCol[fInx]+1;j<numCols[fInx];j++){
+                                    if(debugEnabled)
+                                        log.debug "file:$fInx cols:${numCols[fInx]} index:$j"
+                                    csvArr[narrInx].add("")
+                                }
+                            }                        
+                        } else if (cInx > tsCol[fInx] && cInx < numCols[fInx]-1){
+                            if(debugEnabled)log.debug "middle"
+                            if(!csvArr[narrInx]) csvArr[narrInx] = []
+                            csvArr[narrInx].add("$it")
+                        } else if(cInx == numCols[fInx]-1){
+                            if(debugEnabled)log.debug "end"
+                            csvArr[narrInx].add("$it")
+                            if(debugEnabled)
+                                log.debug "$fInx After"
+                            for(i=fInx;i<csvFile.size();i++){
+                                for(j=tsCol[i]+1;j<numCols[i];j++){
+                                    if(debugEnabled)
+                                        log.debug "file:$fInx cols:${numCols[fInx]} index:$j"
+                                    csvArr[narrInx].add("")
+                                }
+                            }
+                        }
+                    }
+                }                 
+                cInx++
+            }
+            if(rInx > 0 || fInx == 0)
+                narrInx++
+            rInx++
+        }
+        fInx++
+    }
+    if (debugEnabled)
+        uploadHubFile ("csvCombWork.txt",csvArr.toString().getBytes("UTF-8"))
+                   
+    csvWork = "${csvArr[0].toString().replace('[','').replace(']','')}\n"
+    csvArr.remove(0) //
+    csvArr = dSort(csvArr)
+    /// replace nulls logic
+    rInx = 0
+    csvArr.each{ row ->
+        cInx = 0
+        row.each { col ->
+            if("$col" == null || "$col" == ""){
+                if(debugEnabled) log.debug "null found $rInx $cInx"
+                if (rInx == 0){
+                    for(i=rInx+1;i<csvArr.size();i++){
+                        if(csvArr[i][cInx] != null){
+                            csvArr[rInx][cInx] = csvArr[i][cInx]
+                            break
+                        }
+                    }
+                } else 
+                    csvArr[rInx][cInx] = csvArr[rInx-1][cInx]                   
+            }
+            cInx++ 
+        }
+        if(debugEnabled) log.debug "${csvArr[rInx]}"
+        rInx++
+    }
+    
+    csvArr.each{
+        if(it){
+            csvWork += "${it.toString().replace('[','').replace(']','')}\n"  
+        }
+    }
+    uploadHubFile ("csvWork${app.id}.txt",csvWork.getBytes("UTF-8"))
+    return csvParse("csvWork${app.id}.txt")
+}
+
+ArrayList dSort(aLst){
+    bLst=[]
+    Long minLst = 0
+    while(aLst.size() > 0){
+        minInx = -1
+        minLst = Long.MAX_VALUE
+        for(i=0;i<aLst.size();i++){
+            //log.debug "for:$i ${aLst[i]}"
+            if(aLst[i]){
+                if(debugEnabled) log.debug "$i ${aLst[i]}"
+                try{
+                    c1 = aLst[i][0].split(',').toString().replace('[\"','').replace('\"]','').toLong()
+                    if(debugEnabled)
+                        log.debug "$c1 $minLst"
+                    if(c1 < minLst){
+                        if (debugEnabled) log.debug "replacing $minLst with $c1"
+                        minLst=c1
+                        minInx=i                   
+                    }
+                } catch (e){
+                    log.error "Invalid TimeStamp found - must be Long"
+                    return null
+                }
+            } 
+        }
+        if(minInx == -1)
+            break
+        if(aLst[minInx])
+            bLst.add(aLst[minInx])
+        if(minInx < aLst.size())
+            aLst.remove(minInx)
+        
+        if(minLst == Long.MAX_VALUE){
+            log.warn "Over run break"
+            break
+        }
+    }
+    return bLst
+    
+}
+
 ArrayList csvParse(fName) {
     fileRecords = (new String (downloadHubFile("${fName}"))).split("\n")
     r=0
@@ -201,7 +361,10 @@ ArrayList csvParse(fName) {
                         dataSet[i].add(it)
                     }
                 } catch (e) {
-                    dataSet[i].add("\"$it\"")
+/*                    if(it != null)
+                        if(!dataSet[i]) dataSet[i]=[]
+                        dataSet[i].add("\"$it\"")
+*/
                 }
             }
             i++
@@ -216,7 +379,12 @@ ArrayList csvParse(fName) {
 }
 
 String buildPage(){
-    cols = csvParse("$csvFile")
+    if(csvFile.size == 1)
+        cols = csvParse("${csvFile[0]}")
+    else {
+        cols = csvCombine()
+        deleteHubFile("csvWork${app.id}.txt")
+    }
     labelData = []
     lCol=-1
     lr=0

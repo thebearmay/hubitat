@@ -1273,6 +1273,10 @@ void getMatter(resp, data){
 }
 
 void checkAccess(){
+    if(location.hub.firmwareVersionString < "2.3.9.159"){
+        updateAttr('accessList','[]')
+        return
+    }
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/getLimitedAccessAddresses",

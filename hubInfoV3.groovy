@@ -65,7 +65,8 @@
  *.   2024-05-07                 v3.0.42 - fix C8 Pro failing Matter compatibility check
  *    2024-05-10                 v3.0.43 - Add a delayed base data check on initialization
  *    2024-07-12                 v3.1.0/v3.1.1 - 127.0.0.1 replacement *** best using 2.3.9.159+
- *    2024-07-22                 v3.1.2  - Added accessList attribute
+ *    2024-07-22                 v3.1.2 - Added accessList attribute
+ *    2024-07-23                 v3.1.3 - streamline the firmware version checks
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -73,7 +74,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.2"}
+static String version() {return "3.1.3"}
 
 metadata {
     definition (
@@ -403,7 +404,7 @@ void baseData(dummy=null){
         updateAttr(it, myHub["${it}"])
     }
     
-    if(location.hub.firmwareVersionString < minFwVersion) {
+    if(!minVerCheck(minFwVersion)) {
         state.errorMinVersion = true
     } else
         state.errorMinVersion = false
@@ -422,7 +423,7 @@ void baseData(dummy=null){
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
 
-    if(location.hub.firmwareVersionString > "2.3.6.1")
+    if(minVerCheck("2.3.6.1"))
         extendedZigbee()
     
     everyPoll("baseData")
@@ -809,7 +810,7 @@ void parseZwave(String zString){
 
         HashMap zMap = (HashMap)evaluate(wrkStr)
 
-        if(location.hub.firmwareVersionString < "2.3.8.124")
+        if(!minVerCheck("2.3.8.124"))
             updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
         else {
             params = [
@@ -928,7 +929,7 @@ void getHubMesh(resp, data){
 }
 
 void extNetworkReq(){
-    if(location.hub.firmwareVersionString < "2.3.4.126"){
+    if(!minVerCheck("2.3.4.126")){
         if(!warnSuppress) log.warn "Extend Network Data not available for HE v${location.hub.firmwareVersionString}"
         return
     }
@@ -1214,7 +1215,7 @@ void getCloudReturn(resp, data){
 
 void extendedZigbee(){
     
-    if(location.hub.firmwareVersionString > "2.3.7.1")
+    if(minVerCheck("2.3.7.1"))
         zPath = "/hub/zigbeeDetails/json"
     else
         zPath = "/hub2/zigbeeInfo"
@@ -1273,10 +1274,11 @@ void getMatter(resp, data){
 }
 
 void checkAccess(){
-    if(location.hub.firmwareVersionString < "2.3.9.159"){
+    if(!minVerCheck("2.3.9.159")){
         updateAttr('accessList','[]')
         return
     }
+        
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub/advanced/getLimitedAccessAddresses",
@@ -1357,7 +1359,7 @@ String readExtFile(fName){
 Boolean fileExists(fName){
     if(fName == null) return false
     try{
-        if(location.hub.firmwareVersionString >= "2.3.4.134"){
+        if(minVerCheck("2.3.4.134")){
             byte[] rData = downloadHubFile("$fName")
             fContent = new String(rData, "UTF-8")
             if(fContent.size() > 0) {
@@ -1470,7 +1472,7 @@ void createHtml(){
 @SuppressWarnings('unused')
 String readFile(fName){
     try{
-        if(location.hub.firmwareVersionString >= "2.3.4.134"){
+        if(minVerCheck("2.3.4.134")){
             byte[] rData = downloadHubFile("$fName")
             return new String(rData, "UTF-8")
         }
@@ -1516,7 +1518,7 @@ String readFile(fName){
 }
 @SuppressWarnings('unused')
 Boolean writeFile(String fName, String fData) {
-    if(location.hub.firmwareVersionString >= "2.3.4.134"){
+    if(minVerCheck("2.3.4.134")){
         wData = fData.getBytes("UTF-8")
         uploadHubFile("$fName",wData)
         return true
@@ -1585,13 +1587,13 @@ void rebootW_Rebuild() {
         log.error "Reboot was requested, but allowReboot was set to false"
         return
     }
-    if(location.hub.firmwareVersionString < "2.3.7.122"){
+    if(!minVerCheck("2.3.7.122")){
         log.error "Reboot with rebuild was requested, but failed HE min version."
         return        
     }
     log.info "Hub Reboot with Rebuild requested"
     
-    if(location.hub.firmwareVersionString < "2.3.7.14"){
+    if(!minVerCheck("2.3.7.14")){
     	httpPost(
 	    	[
 		    	uri: "http://127.0.0.1:8080",
@@ -1621,7 +1623,7 @@ void rebootPurgeLogs() {
         log.error "Reboot was requested, but allowReboot was set to false"
         return
     }
-    if(location.hub.firmwareVersionString < "2.3.7.140"){
+    if(!minVerCheck("2.3.7.140")){
         log.error "Reboot with Purge was requested, but failed HE min version."
         return        
     }
@@ -1749,6 +1751,20 @@ String toCamelCase(init) {
 
     if(debugEnabled) log.debug "toCamelCase return $ret"
     return ret;
+}
+
+@SuppressWarnings('unused')
+Boolean minVerCheck(vStr){  //check if HE is >= to the requirement
+    fwTokens = location.hub.firmwareVersionString.split("\\.")
+    vTokens = vStr.split("\\.")
+    if(fwTokens.size() != vTokens.size())
+        return false
+    rValue =  true
+    for(i=0;i<vTokens.size();i++){
+        if(vTokens[i].toInteger() > fwTokens[i].toInteger())
+            rValue=false
+    }
+    return rValue
 }
 
 

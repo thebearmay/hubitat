@@ -67,6 +67,7 @@
  *    2024-07-12                 v3.1.0/v3.1.1 - 127.0.0.1 replacement *** best using 2.3.9.159+
  *    2024-07-22                 v3.1.2 - Added accessList attribute
  *    2024-07-23                 v3.1.3 - streamline the firmware version checks
+ *    2024-07-24		 v3.1.4 - correct an issue with blank headers and endpoints
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -74,7 +75,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.3"}
+static String version() {return "3.1.4"}
 
 metadata {
     definition (
@@ -1125,8 +1126,7 @@ void updateCheckReq(){
     params = [
         uri: "http://127.0.0.1:8080",
         path:"/hub/cloud/checkForUpdate",
-        timeout: 10,
-        headers:[]
+        timeout: 10
     ]
     asynchttpGet("getUpdateCheck", params)
 }
@@ -1160,8 +1160,7 @@ void getUpdateCheck(resp, data) {
 void zigbeeStackReq(){
     params = [
         uri: "http://127.0.0.1:8080",
-        path:"/hub/currentZigbeeStack",
-        headers:[]
+        path:"/hub/currentZigbeeStack"
     ]
         asynchttpGet("getZigbeeStack",params) 
 }

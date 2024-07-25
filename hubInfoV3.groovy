@@ -67,7 +67,8 @@
  *    2024-07-12                 v3.1.0/v3.1.1 - 127.0.0.1 replacement *** best using 2.3.9.159+
  *    2024-07-22                 v3.1.2 - Added accessList attribute
  *    2024-07-23                 v3.1.3 - streamline the firmware version checks
- *    2024-07-24		 v3.1.4 - correct an issue with blank headers and endpoints
+ *    2024-07-24		         v3.1.4 - correct an issue with blank headers and endpoints
+ *                               v3.1.5 - reboot and shutdown headers issue
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -1572,10 +1573,7 @@ void reboot() {
 	httpPost(
 		[
 			uri: "http://127.0.0.1:8080",
-			path: "/hub/reboot",
-			headers:[
-				
-			]
+			path: "/hub/reboot"
 		]
 	) {		resp ->	} 
 }
@@ -1596,10 +1594,7 @@ void rebootW_Rebuild() {
     	httpPost(
 	    	[
 		    	uri: "http://127.0.0.1:8080",
-			    path: "/hub/rebuildDatabaseAndReboot",
-      			headers:[
-	    			
-		    	]
+			    path: "/hub/rebuildDatabaseAndReboot"
     		]
 	    ) {		resp ->	} 
     } else {
@@ -1608,7 +1603,6 @@ void rebootW_Rebuild() {
 			uri: "http://127.0.0.1:8080",
 			path: "/hub/reboot",
 			headers:[
-				
                 "Content-Type": "application/x-www-form-urlencoded"
 			],
             body:[rebuildDatabase:"true"] 
@@ -1633,7 +1627,6 @@ void rebootPurgeLogs() {
 			uri: "http://127.0.0.1:8080",
 			path: "/hub/reboot",
 			headers:[
-				
                 "Content-Type": "application/x-www-form-urlencoded"
 			],
             body:[purgeLogs:"true"] 
@@ -1652,10 +1645,7 @@ void shutdown() {
 	httpPost(
 		[
 			uri: "http://127.0.0.1:8080",
-			path: "/hub/shutdown",
-			headers:[
-				
-			]
+			path: "/hub/shutdown"
 		]
 	) {		resp ->	} 
 

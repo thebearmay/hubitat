@@ -76,7 +76,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.4"}
+static String version() {return "3.1.5"}
 
 metadata {
     definition (

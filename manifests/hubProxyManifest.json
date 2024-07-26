@@ -1,10 +1,10 @@
 {
  "packageName":"Hub Image Proxy",
  "author":"Jean P. May, Jr.",
- "version":"0.0.1",
+ "version":"0.0.3",
  "minimumHEVersion":"2.3.9.160",
  "dateReleased":"2024-07-15",
- "releaseNotes":"v0.0.1 - Original Code",
+ "releaseNotes":"v0.0.3 -add getURL endpoint\nv0.0.2 - add UTF-8 for HTML and text files\nv0.0.1 - Original Code",
  "apps": [
   {
      "id":"0ccef23b-1d00-4477-9956-aec55fd05bad",

@@ -16,14 +16,13 @@
  *    ----         ---           ----
  *    12Jul2024    thebearmay    Add alternate read for extended characters
  *    13Jul2024                  charset = UTF-8 for HTML
+ *    26Jul2024                  add getURL endpoint,  remove alternate read
  */
     
 
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.3'  }
 
-import groovy.json.JsonSlurper
-import groovy.json.JsonOutput
 import groovy.transform.Field
 
 
@@ -49,6 +48,10 @@ mappings {
         action: [POST: "serveImage",
                  GET: "serveImage"]
     }
+    path("/getURL") {
+        action: [POST: "serveURL",
+                 GET: "serveURL"]
+    }    
 }
 
 def installed() {
@@ -79,11 +82,10 @@ def mainPage(){
                 paragraph "<b>Cloud Server API: </b>${getFullApiServerUrl()}"
                 if(state.accessToken == null) createAccessToken()
                 paragraph "<b>Access Token: </b>${state.accessToken}"
-                paragraph "<b>Cloud Request Format: </b><br> ${getFullApiServerUrl()}/getImage?access_token=${state.accessToken}&fName=yourFileName.fileExtension"
+                paragraph "<b>Cloud Request Formats: </b><br>${getFullApiServerUrl()}/getImage?access_token=${state.accessToken}&fName=yourFileName.fileExtension<br><br>${getFullApiServerUrl()}/getURL?access_token=${state.accessToken}&url=urlEncodedURL"
         }
         section(name:"opt",title:"Options", hideablel: true, hidden: false){
             input("debugEnabled","bool",title:"Enable Debug Logging", width:4)
-            input("altRead","bool",title:"Use alternate read for text files", width:4)
         }
 
 	    } else {
@@ -130,13 +132,26 @@ def jsonResponse(retMap){
 def serveImage(){
 
     if(debugEnabled)
-        log.debug "serveImage called: $params source: ${request.requestSource}"
+    log.debug "serveImage called: ${params} source: ${request.requestSource}"
+    renderFile(params.fName)
+}
 
-    fileExt = params.fName.substring(params.fName.lastIndexOf(".")+1)
-    if(!(fileExt in imageType)  && altRead) {
-        imageFile = readFile("${params.fName}")
-    } else
-        imageFile = downloadHubFile("${params.fName}")        
+def serveURL(){
+    if(debugEnabled)
+        log.debug "serveURL called: ${params.url}"
+    fContent = readFile(params.url)
+
+    uploadHubFile("proxyWork${app.id}.htm",fContent.getBytes("UTF-8"))
+    renderFile("proxyWork${app.id}.htm")
+}
+void delWork(){
+    deleteHubFile("proxyWork${app.id}.htm")
+}
+    
+def renderFile(fName) {
+
+    fileExt = fName.substring(fName.lastIndexOf(".")+1)
+    imageFile = downloadHubFile("${fName}")        
     if(debugEnabled) log.debug fileExt
     switch (fileExt) {
         case 'gif':
@@ -169,11 +184,10 @@ def serveImage(){
             fType = 'text/plain'
             break
     }
-    if(imageFile.size() < 131072) {
+    if(imageFile.size() < 9999999){// limit was originally 131072 
         if(fileExt in imageType) {
             if(debugEnabled) log.debug "Image Type"
             contentBlock = [
-                //contentDisposition: "attachment; fileName:${params.fName}",
                 contentType: fType,
                 contentLength:imageFile.size(),
                 gzipContent: true,
@@ -183,7 +197,6 @@ def serveImage(){
         } else {
             if(debugEnabled) log.debug "Text Type"
             contentBlock = [
-                //contentDisposition: "attachment; fileName:${params.fName}",
                 contentType: fType,
                 contentLength:imageFile.size(),
                 gzipContent: true,
@@ -203,13 +216,14 @@ def serveImage(){
         log.debug "Content Length: ${imageFile.size()}"
         log.debug contentBlock
     }
+    delWork()
     render(contentBlock)
     
 }
 
 String readFile(fName){ 
     if(debugEnabled) log.debug "Alternate Read"
-    uri = "http://${location.hub.localIP}:8080/local/${fName}"
+    uri = "${fName}"
 
 
     def params = [
@@ -221,8 +235,8 @@ String readFile(fName){
     try {
         httpGet(params) { resp ->
             if(resp!= null) {
-                if(!resp.contentType.contains("text") && !resp.contentType.contains("json"))
-                    return "File type is not text -> $resp.contentType"
+//                if(!resp.contentType.contains("text") && !resp.contentType.contains("json"))
+//                    return "File type is not text -> $resp.contentType"
                 return """${resp.data}"""
             } else {
                 log.error "Null Response"

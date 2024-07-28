@@ -17,11 +17,12 @@
  *    22Mar2022    thebearmay    original code  
  *    27Mar2022    thebearmay    allow scraping of Hub UI with Security
  *    31Mar2022    thebearmay    option to show raw source
+ *    27Jul2024    thebearmay    fix polling issue
 */
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.3"}
+static String version() {return "0.0.5"}
 
 metadata {
     definition (
@@ -44,7 +45,8 @@ metadata {
         command "scrape",[[name:"inputURL*", type:"STRING", description:"Input URL"],
                           [name:"searchStr*", type:"STRING", description:"String to look for"],
                           [name:"retBegOffset", type:"NUMBER", description: "Beginning offset from Found Item to Return Data"],
-                          [name:"retEndOffset", type:"NUMBER", description: "Ending offset from Found Item to Return Data"]
+                          [name:"retEndOffset", type:"NUMBER", description: "Ending offset from Found Item to Return Data"],
+                          [name:"followRed", type:"ENUM", description: "Follow Redirects", constraints: ["true", "false"]]
                          ]
 
     }   
@@ -54,6 +56,14 @@ preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?")
     input("pollRate", "number", title: "Poll Rate in minutes (0 = No Polling)", defaultValue:0)
     input("showSrc", "bool", title: "Show Raw Source", defaultValue: false, submitOnChange: true)
+    
+    input("siteLogin", "bool", title: "Site Requires Login", defaultValue: false, submitOnChange: true)
+    if (siteLogin) { 
+        input("sitePath", "string", title: "URL for site login", required: false)
+        input("siteUname", "string", title: "Site Username", required: false)
+        input("sitePwd", "password", title: "Site Password", required: false)
+        input("siteSubmit", "string", title: "Site Submit function (normally Login):", required: false)
+    }    
     input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false)
@@ -84,25 +94,27 @@ void updated(){
 }
 
 void scrape() {
-    log.error "No Parameters Passed"
+    //log.error "No Parameters Passed"
+    scrape(null,null,null,null,null)
 }
 
-void scrape (url, searchStr, beg=0, end=1){
+void scrape (url=null, searchStr=null, beg=0, end=1, follow){
     if(debugEnabled) log.debug "$url, /$searchStr/, $beg, $end"
     if(url == null){
         url = device.currentValue("lastURL",true)
         searchStr = device.currentValue("lastSearch",true)
-        List offset = device.currentValue("offsets", true).evaluate()
-        beg = offset(1)
-        end = offset(2)
+        ArrayList offset = device.currentValue("offsets", true).replace('[','').replace(']','').split(',')
+        beg = offset[0].toInteger()
+        end = offset[1].toInteger()
     }
+    //log.debug"$beg $end"
     updateAttr("lastURL", url)
     updateAttr("lastSearch",searchStr)
     ofList = [beg, end]
     updateAttr("offsets", ofList.toString())
     updateAttr("successful","running")
     updateAttr("textReturned","null")
-    dataRet = readExtFile(url).toString()
+    dataRet = readExtFile(url, follow).toString()
     if(debugEnabled) "${dataRet.length()} characters returned"
     if(showSrc) {
         writeFile("scrapeWork.txt","$dataRet")
@@ -130,8 +142,8 @@ void scrape (url, searchStr, beg=0, end=1){
                    
 }
 
-String readExtFile(fName){
-     String cookie=(String)null
+String readExtFile(fName, follow){
+    String cookie=(String)null
     if(security) {
         httpPost(
             [
@@ -145,12 +157,27 @@ String readExtFile(fName){
                 ]
             ]
         ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
+    } 
+    
+    if(siteLogin) {
+        httpPost(
+            [
+                uri: sitePath,
+                query: [ loginRedirect: "/" ],
+                body: [
+                    username: siteUname,
+                    password: sitePwd,
+                    submit: siteSubmit
+                ]
+            ]
+        ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
     }
    
     def params = [
         uri: fName,
         contentType: "text/html",
         textParser: true,
+        followRedirects: follow,
         headers: ["Cookie": cookie]                   
     ]
 

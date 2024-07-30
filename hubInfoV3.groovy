@@ -69,6 +69,7 @@
  *    2024-07-23                 v3.1.3 - streamline the firmware version checks
  *    2024-07-24		         v3.1.4 - correct an issue with blank headers and endpoints
  *                               v3.1.5 - reboot and shutdown headers issue
+ *    2024-07-30                 v3.1.6 - add security information back in for hub2 data
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -76,7 +77,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.5"}
+static String version() {return "3.1.6"}
 
 metadata {
     definition (
@@ -185,6 +186,11 @@ preferences {
     input("quickref","hidden", title:"$ttStyleStr<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html' target='_blank'>Quick Reference v${version()}</a>")
     input("debugEnable", "bool", title: "Enable debug logging?", width:4)
     input("warnSuppress", "bool", title: "Suppress Warn Level Logging", width:4)
+    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
+    if (security) { 
+        input("username", "string", title: "Hub Security Username", required: false, width:4)
+        input("password", "password", title: "Hub Security Password", required: false, width:4)
+    }
 
 	prefList.each { l1 ->
         l1.each{
@@ -949,11 +955,14 @@ void extNetworkReq(){
 }
 
 void hub2DataReq() {
+    cookie = getCookie()
+    //log.debug "cookie:$cookie"
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubData",
         headers: [
-            "Connection-Timeout": 800
+            "Connection-Timeout": 800,
+            "cookie": "$cookie"
         ]                   
     ]
     
@@ -999,17 +1008,15 @@ void getHub2Data(resp, data){
             } else {
                 updateAttr("zigbeeStatus2", "disabled")                 
             }
-            if(debugEnable) log.debug "securityInUse"
+            if(debugEnable) log.debug "securityInUse:${h2Data.baseModel.userLoggedIn}"
+            /*******************************************************************************************************
+            * userLoggedIn is ONLY true if security is in use and the user has provided credentials to this driver *
+            *******************************************************************************************************/
             updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
             if(!h2Data.baseModel.cloudDisconnected){
                 updateAttr("pCloud", "connected")
             } else {
                 updateAttr("pCloud", "not connected")
-            }
-            if(debugEnable) log.debug "h2 security check"
-            if((!security || password == null || username == null) && h2Data.baseModel.userLoggedin == true){
-                log.error "Hub using Security but credentials not supplied"
-                device.updateSetting("security",[value:"true",type:"bool"])
             }
             //log.debug "H2 Request successful"
         } else {
@@ -1017,7 +1024,7 @@ void getHub2Data(resp, data){
         } 
     } catch (Exception ex){
         if (!warnSuppress) log.warn ex
-    }
+   }
 }
 
 @SuppressWarnings('unused')
@@ -1760,6 +1767,32 @@ Boolean minVerCheck(vStr){  //check if HE is >= to the requirement
 @SuppressWarnings('unused')
 void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
+}
+
+@SuppressWarnings('unused')
+String getCookie(){
+    try{
+  	  httpPost(
+		[
+		uri: "http://127.0.0.1:8080",
+		path: "/login",
+		query: [ loginRedirect: "/" ],
+		body: [
+			username: username,
+			password: password,
+			submit: "Login"
+			]
+		]
+	  ) { resp -> 
+		cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) 
+        if(debugEnable)
+            log.debug "$cookie"
+	  }
+    } catch (e){
+        cookie = ""
+    }
+    return "$cookie"
+
 }
 
 @Field static String cloudFontStyle = ''

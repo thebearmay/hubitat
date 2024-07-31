@@ -71,6 +71,7 @@
  *                               v3.1.5 - reboot and shutdown headers issue
  *    2024-07-30                 v3.1.6 - add security information back in for hub2 data
  *                               v3.1.7 - alternate method to detect security in use
+ *    2024-07-31                 v3.1.8 - split securityInUse check out into its own option, code cleanup
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -78,7 +79,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.7"}
+static String version() {return "3.1.8"}
 
 metadata {
     definition (
@@ -187,12 +188,7 @@ preferences {
     input("quickref","hidden", title:"$ttStyleStr<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html' target='_blank'>Quick Reference v${version()}</a>")
     input("debugEnable", "bool", title: "Enable debug logging?", width:4)
     input("warnSuppress", "bool", title: "Suppress Warn Level Logging", width:4)
-/*    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
-    if (security) { 
-        input("username", "string", title: "Hub Security Username", required: false, width:4)
-        input("password", "password", title: "Hub Security Password", required: false, width:4)
-    }
-*/
+
 	prefList.each { l1 ->
         l1.each{
 		    pMap = (HashMap) it.value
@@ -477,10 +473,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
     aValue = aValue.toString()
     if(aValue.contains("Your hub is starting up"))
        return
-/*    if(aValue.length() > 1024) {
-        log.error "Attribute value for $aKey exceeds 1024, current size = ${aValue.length()}, truncating to 1024..."
-        aValue = aValue.substring(0,1023)
-    }*/
+
     sendEvent(name:aKey, value:aValue, unit:aUnit)
     if(attrLogging) log.info "$aKey : $aValue$aUnit"
 }
@@ -956,14 +949,12 @@ void extNetworkReq(){
 }
 
 void hub2DataReq() {
-//    cookie = getCookie()
-    //log.debug "cookie:$cookie"
+
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubData",
         headers: [
             "Connection-Timeout": 800
-//            "cookie": "$cookie"
         ]                   
     ]
     
@@ -1011,11 +1002,10 @@ void getHub2Data(resp, data){
             } else {
                 updateAttr("zigbeeStatus2", "disabled")                 
             }
-            if(debugEnable) log.debug "securityInUse:${h2Data.baseModel.userLoggedIn}"
             /*******************************************************************************************************
-            * userLoggedIn is ONLY true if security is in use and the user has provided credentials to this driver *
+            * userLoggedIn is ONLY true if security is in use and the user has provided credentials to this driver * 
+			* use /logout endpoint to check instead                                                                *
             *******************************************************************************************************/
-//            updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
             if(!h2Data.baseModel.cloudDisconnected){
                 updateAttr("pCloud", "connected")
             } else {
@@ -1036,7 +1026,7 @@ void checkSecurity(){
         path   : "/logout",
         followRedirects: false,
         headers: [
-            "Connection-Timeout": 800
+            "Connection-Timeout": 300
         ]                   
     ]
     asynchttpGet("getSecurity", params)
@@ -1044,7 +1034,7 @@ void checkSecurity(){
 }
 @SuppressWarnings('unused')
 void getSecurity(resp, data){
-    //log.debug "${resp.headers.Location}"
+
     if(resp.headers.Location == 'http://127.0.0.1:8080/login')
         updateAttr("securityInUse",'true')
     else
@@ -1796,32 +1786,6 @@ void logsOff(){
      device.updateSetting("debugEnable",[value:"false",type:"bool"])
 }
 
-@SuppressWarnings('unused')
-String getCookie(){
-    try{
-  	  httpPost(
-		[
-		uri: "http://127.0.0.1:8080",
-		path: "/login",
-		query: [ loginRedirect: "/" ],
-		body: [
-			username: username,
-			password: password,
-			submit: "Login"
-			]
-		]
-	  ) { resp -> 
-		cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) 
-        if(debugEnable)
-            log.debug "$cookie"
-	  }
-    } catch (e){
-        cookie = ""
-    }
-    return "$cookie"
-
-}
-
 @Field static String cloudFontStyle = ''
 @Field static String minFwVersion = "2.2.8.141"
 @Field static List <String> pollList = ["0", "1", "2", "3", "4"]
@@ -1838,12 +1802,13 @@ String getCookie(){
 [parm10:[desc:"Hub Mesh Data", attributeList:"hubMeshData, hubMeshCount", method:"hubMeshReq"]],
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
-[parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud, securityInUse", method:"hub2DataReq"]],
+[parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
 [parm16:[desc:"Active Cloud Connection Check",attributeList:"cloud", method:"checkCloud"]],
 [parm17:[desc:"Matter Status (C-5 and > only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]],
-[parm18:[desc:"Restricted Access List",attributeList:"accessList", method:"checkAccess"]]     
+[parm18:[desc:"Restricted Access List",attributeList:"accessList", method:"checkAccess"]],
+[parm19:[desc:"Hub Security Active",attributeList:"securityInUse", method:"checkSecurity"]]     
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

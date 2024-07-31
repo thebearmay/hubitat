@@ -70,6 +70,7 @@
  *    2024-07-24		         v3.1.4 - correct an issue with blank headers and endpoints
  *                               v3.1.5 - reboot and shutdown headers issue
  *    2024-07-30                 v3.1.6 - add security information back in for hub2 data
+ *                               v3.1.7 - alternate method to detect security in use
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -77,7 +78,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.6"}
+static String version() {return "3.1.7"}
 
 metadata {
     definition (
@@ -186,12 +187,12 @@ preferences {
     input("quickref","hidden", title:"$ttStyleStr<a href='https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html' target='_blank'>Quick Reference v${version()}</a>")
     input("debugEnable", "bool", title: "Enable debug logging?", width:4)
     input("warnSuppress", "bool", title: "Suppress Warn Level Logging", width:4)
-    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
+/*    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
     if (security) { 
         input("username", "string", title: "Hub Security Username", required: false, width:4)
         input("password", "password", title: "Hub Security Password", required: false, width:4)
     }
-
+*/
 	prefList.each { l1 ->
         l1.each{
 		    pMap = (HashMap) it.value
@@ -955,19 +956,21 @@ void extNetworkReq(){
 }
 
 void hub2DataReq() {
-    cookie = getCookie()
+//    cookie = getCookie()
     //log.debug "cookie:$cookie"
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubData",
         headers: [
-            "Connection-Timeout": 800,
-            "cookie": "$cookie"
+            "Connection-Timeout": 800
+//            "cookie": "$cookie"
         ]                   
     ]
     
         if(debugEnable)log.debug params
         asynchttpGet("getHub2Data", params)
+    
+    checkSecurity()
 }
 
 @SuppressWarnings('unused')
@@ -1012,7 +1015,7 @@ void getHub2Data(resp, data){
             /*******************************************************************************************************
             * userLoggedIn is ONLY true if security is in use and the user has provided credentials to this driver *
             *******************************************************************************************************/
-            updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
+//            updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
             if(!h2Data.baseModel.cloudDisconnected){
                 updateAttr("pCloud", "connected")
             } else {
@@ -1024,8 +1027,32 @@ void getHub2Data(resp, data){
         } 
     } catch (Exception ex){
         if (!warnSuppress) log.warn ex
-   }
+    }
 }
+
+void checkSecurity(){
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/logout",
+        followRedirects: false,
+        headers: [
+            "Connection-Timeout": 800
+        ]                   
+    ]
+    asynchttpGet("getSecurity", params)
+    
+}
+@SuppressWarnings('unused')
+void getSecurity(resp, data){
+    //log.debug "${resp.headers.Location}"
+    if(resp.headers.Location == 'http://127.0.0.1:8080/login')
+        updateAttr("securityInUse",'true')
+    else
+        updateAttr("securityInUse",'false')
+    
+}
+
+
 
 @SuppressWarnings('unused')
 void getExtNetwork(resp, data){

@@ -64,7 +64,14 @@
  *    2024-04-16                 v3.0.41 - lanspeed source change
  *.   2024-05-07                 v3.0.42 - fix C8 Pro failing Matter compatibility check
  *    2024-05-10                 v3.0.43 - Add a delayed base data check on initialization
- *    2024-07-12                 v3.1.00/v3.1.1 - 127.0.0.1 replacement *** requires 2.3.9.159+
+ *    2024-07-12                 v3.1.0/v3.1.1 - 127.0.0.1 replacement *** best using 2.3.9.159+
+ *    2024-07-22                 v3.1.2 - Added accessList attribute
+ *    2024-07-23                 v3.1.3 - streamline the firmware version checks
+ *    2024-07-24		         v3.1.4 - correct an issue with blank headers and endpoints
+ *                               v3.1.5 - reboot and shutdown headers issue
+ *    2024-07-30                 v3.1.6 - add security information back in for hub2 data
+ *                               v3.1.7 - alternate method to detect security in use
+ *    2024-07-31                 v3.1.8 - split securityInUse check out into its own option, code cleanup
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -72,7 +79,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.1"}
+static String version() {return "3.1.8"}
 
 metadata {
     definition (
@@ -164,6 +171,7 @@ metadata {
         attribute "matterEnabled", "string"
         attribute "matterStatus", "string"
         attribute "releaseNotesUrl", "string"
+        attribute "accessList","string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -401,7 +409,7 @@ void baseData(dummy=null){
         updateAttr(it, myHub["${it}"])
     }
     
-    if(location.hub.firmwareVersionString < minFwVersion) {
+    if(!minVerCheck(minFwVersion)) {
         state.errorMinVersion = true
     } else
         state.errorMinVersion = false
@@ -420,7 +428,7 @@ void baseData(dummy=null){
     updateAttr("locationName", location.name)
     updateAttr("locationId", location.id)
 
-    if(location.hub.firmwareVersionString > "2.3.6.1")
+    if(minVerCheck("2.3.6.1"))
         extendedZigbee()
     
     everyPoll("baseData")
@@ -465,10 +473,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
     aValue = aValue.toString()
     if(aValue.contains("Your hub is starting up"))
        return
-/*    if(aValue.length() > 1024) {
-        log.error "Attribute value for $aKey exceeds 1024, current size = ${aValue.length()}, truncating to 1024..."
-        aValue = aValue.substring(0,1023)
-    }*/
+
     sendEvent(name:aKey, value:aValue, unit:aUnit)
     if(attrLogging) log.info "$aKey : $aValue$aUnit"
 }
@@ -807,7 +812,7 @@ void parseZwave(String zString){
 
         HashMap zMap = (HashMap)evaluate(wrkStr)
 
-        if(location.hub.firmwareVersionString < "2.3.8.124")
+        if(!minVerCheck("2.3.8.124"))
             updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
         else {
             params = [
@@ -926,7 +931,7 @@ void getHubMesh(resp, data){
 }
 
 void extNetworkReq(){
-    if(location.hub.firmwareVersionString < "2.3.4.126"){
+    if(!minVerCheck("2.3.4.126")){
         if(!warnSuppress) log.warn "Extend Network Data not available for HE v${location.hub.firmwareVersionString}"
         return
     }
@@ -944,6 +949,7 @@ void extNetworkReq(){
 }
 
 void hub2DataReq() {
+
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubData",
@@ -954,6 +960,8 @@ void hub2DataReq() {
     
         if(debugEnable)log.debug params
         asynchttpGet("getHub2Data", params)
+    
+    checkSecurity()
 }
 
 @SuppressWarnings('unused')
@@ -994,17 +1002,14 @@ void getHub2Data(resp, data){
             } else {
                 updateAttr("zigbeeStatus2", "disabled")                 
             }
-            if(debugEnable) log.debug "securityInUse"
-            updateAttr("securityInUse", h2Data.baseModel.userLoggedIn)
+            /*******************************************************************************************************
+            * userLoggedIn is ONLY true if security is in use and the user has provided credentials to this driver * 
+			* use /logout endpoint to check instead                                                                *
+            *******************************************************************************************************/
             if(!h2Data.baseModel.cloudDisconnected){
                 updateAttr("pCloud", "connected")
             } else {
                 updateAttr("pCloud", "not connected")
-            }
-            if(debugEnable) log.debug "h2 security check"
-            if((!security || password == null || username == null) && h2Data.baseModel.userLoggedin == true){
-                log.error "Hub using Security but credentials not supplied"
-                device.updateSetting("security",[value:"true",type:"bool"])
             }
             //log.debug "H2 Request successful"
         } else {
@@ -1014,6 +1019,30 @@ void getHub2Data(resp, data){
         if (!warnSuppress) log.warn ex
     }
 }
+
+void checkSecurity(){
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/logout",
+        followRedirects: false,
+        headers: [
+            "Connection-Timeout": 300
+        ]                   
+    ]
+    asynchttpGet("getSecurity", params)
+    
+}
+@SuppressWarnings('unused')
+void getSecurity(resp, data){
+
+    if(resp.headers.Location == 'http://127.0.0.1:8080/login')
+        updateAttr("securityInUse",'true')
+    else
+        updateAttr("securityInUse",'false')
+    
+}
+
+
 
 @SuppressWarnings('unused')
 void getExtNetwork(resp, data){
@@ -1122,8 +1151,7 @@ void updateCheckReq(){
     params = [
         uri: "http://127.0.0.1:8080",
         path:"/hub/cloud/checkForUpdate",
-        timeout: 10,
-        headers:[]
+        timeout: 10
     ]
     asynchttpGet("getUpdateCheck", params)
 }
@@ -1157,8 +1185,7 @@ void getUpdateCheck(resp, data) {
 void zigbeeStackReq(){
     params = [
         uri: "http://127.0.0.1:8080",
-        path:"/hub/currentZigbeeStack",
-        headers:[]
+        path:"/hub/currentZigbeeStack"
     ]
         asynchttpGet("getZigbeeStack",params) 
 }
@@ -1212,7 +1239,7 @@ void getCloudReturn(resp, data){
 
 void extendedZigbee(){
     
-    if(location.hub.firmwareVersionString > "2.3.7.1")
+    if(minVerCheck("2.3.7.1"))
         zPath = "/hub/zigbeeDetails/json"
     else
         zPath = "/hub2/zigbeeInfo"
@@ -1268,6 +1295,35 @@ void getMatter(resp, data){
         //log.error "$EX"
     }
         
+}
+
+void checkAccess(){
+    if(!minVerCheck("2.3.9.159")){
+        updateAttr('accessList','[]')
+        return
+    }
+        
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/advanced/getLimitedAccessAddresses",
+        headers: [
+            "Connection-Timeout":600
+        ]
+    ]
+    if (debugEnabled) log.debug params
+    asynchttpGet("getAccess", params) 
+}
+
+void getAccess(resp, data) {
+    try{
+        if(resp.data.toString().contains('no limit set'))
+            updateAttr('accessList','[]')
+        else{
+            aList = resp.data.toString().replace('<br>',',').replace('<br/>',',')
+            updateAttr('accessList',aList.split(','))
+        }
+    } catch (e) {    
+    }
 }
 
 @SuppressWarnings('unused')
@@ -1327,7 +1383,7 @@ String readExtFile(fName){
 Boolean fileExists(fName){
     if(fName == null) return false
     try{
-        if(location.hub.firmwareVersionString >= "2.3.4.134"){
+        if(minVerCheck("2.3.4.134")){
             byte[] rData = downloadHubFile("$fName")
             fContent = new String(rData, "UTF-8")
             if(fContent.size() > 0) {
@@ -1440,7 +1496,7 @@ void createHtml(){
 @SuppressWarnings('unused')
 String readFile(fName){
     try{
-        if(location.hub.firmwareVersionString >= "2.3.4.134"){
+        if(minVerCheck("2.3.4.134")){
             byte[] rData = downloadHubFile("$fName")
             return new String(rData, "UTF-8")
         }
@@ -1486,7 +1542,7 @@ String readFile(fName){
 }
 @SuppressWarnings('unused')
 Boolean writeFile(String fName, String fData) {
-    if(location.hub.firmwareVersionString >= "2.3.4.134"){
+    if(minVerCheck("2.3.4.134")){
         wData = fData.getBytes("UTF-8")
         uploadHubFile("$fName",wData)
         return true
@@ -1541,10 +1597,7 @@ void reboot() {
 	httpPost(
 		[
 			uri: "http://127.0.0.1:8080",
-			path: "/hub/reboot",
-			headers:[
-				
-			]
+			path: "/hub/reboot"
 		]
 	) {		resp ->	} 
 }
@@ -1555,20 +1608,17 @@ void rebootW_Rebuild() {
         log.error "Reboot was requested, but allowReboot was set to false"
         return
     }
-    if(location.hub.firmwareVersionString < "2.3.7.122"){
+    if(!minVerCheck("2.3.7.122")){
         log.error "Reboot with rebuild was requested, but failed HE min version."
         return        
     }
     log.info "Hub Reboot with Rebuild requested"
     
-    if(location.hub.firmwareVersionString < "2.3.7.14"){
+    if(!minVerCheck("2.3.7.14")){
     	httpPost(
 	    	[
 		    	uri: "http://127.0.0.1:8080",
-			    path: "/hub/rebuildDatabaseAndReboot",
-      			headers:[
-	    			
-		    	]
+			    path: "/hub/rebuildDatabaseAndReboot"
     		]
 	    ) {		resp ->	} 
     } else {
@@ -1577,7 +1627,6 @@ void rebootW_Rebuild() {
 			uri: "http://127.0.0.1:8080",
 			path: "/hub/reboot",
 			headers:[
-				
                 "Content-Type": "application/x-www-form-urlencoded"
 			],
             body:[rebuildDatabase:"true"] 
@@ -1591,7 +1640,7 @@ void rebootPurgeLogs() {
         log.error "Reboot was requested, but allowReboot was set to false"
         return
     }
-    if(location.hub.firmwareVersionString < "2.3.7.140"){
+    if(!minVerCheck("2.3.7.140")){
         log.error "Reboot with Purge was requested, but failed HE min version."
         return        
     }
@@ -1602,7 +1651,6 @@ void rebootPurgeLogs() {
 			uri: "http://127.0.0.1:8080",
 			path: "/hub/reboot",
 			headers:[
-				
                 "Content-Type": "application/x-www-form-urlencoded"
 			],
             body:[purgeLogs:"true"] 
@@ -1621,10 +1669,7 @@ void shutdown() {
 	httpPost(
 		[
 			uri: "http://127.0.0.1:8080",
-			path: "/hub/shutdown",
-			headers:[
-				
-			]
+			path: "/hub/shutdown"
 		]
 	) {		resp ->	} 
 
@@ -1721,6 +1766,20 @@ String toCamelCase(init) {
     return ret;
 }
 
+@SuppressWarnings('unused')
+Boolean minVerCheck(vStr){  //check if HE is >= to the requirement
+    fwTokens = location.hub.firmwareVersionString.split("\\.")
+    vTokens = vStr.split("\\.")
+    if(fwTokens.size() != vTokens.size())
+        return false
+    rValue =  true
+    for(i=0;i<vTokens.size();i++){
+        if(vTokens[i].toInteger() > fwTokens[i].toInteger())
+            rValue=false
+    }
+    return rValue
+}
+
 
 @SuppressWarnings('unused')
 void logsOff(){
@@ -1743,11 +1802,13 @@ void logsOff(){
 [parm10:[desc:"Hub Mesh Data", attributeList:"hubMeshData, hubMeshCount", method:"hubMeshReq"]],
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
-[parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud, securityInUse", method:"hub2DataReq"]],
+[parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
 [parm16:[desc:"Active Cloud Connection Check",attributeList:"cloud", method:"checkCloud"]],
-[parm17:[desc:"Matter Status (C-5 and > only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]]    
+[parm17:[desc:"Matter Status (C-5 and > only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]],
+[parm18:[desc:"Restricted Access List",attributeList:"accessList", method:"checkAccess"]],
+[parm19:[desc:"Hub Security Active",attributeList:"securityInUse", method:"checkSecurity"]]     
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

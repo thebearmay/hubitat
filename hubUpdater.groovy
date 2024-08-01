@@ -71,15 +71,37 @@ def test(){
 def push(){
     log.info "Firmware Update Requested"
     updateAttr ("msg", "Update Requested at ${new Date()}")
+    params = [
+        uri: "http://127.0.0.1:8080",
+        path:"/hub/cloud/checkForUpdate",
+        timeout: 10
+    ]
+    asynchttpGet("getUpdateCheck", params)    
+}
 
-    if(updMesh) {
-        updateMesh()
-        pauseExecution(1000)
+void getUpdateCheck(resp, data) {
+    if(debugEnable) log.debug "update check: ${resp.status}"
+    try {
+        if (resp.status == 200) {
+            def jSlurp = new JsonSlurper()
+            log.debug "${resp.data}"
+            Map resMap = (Map)jSlurp.parseText((String)resp.data)
+            if(resMap.status == "NO_UPDATE_AVAILABLE")
+                updateAttr("msg","Hub is Current")
+            else {
+                updateAttr("msg","${resMap.version} requested")
+                if(updMesh) {
+                    updateMesh()
+                    pauseExecution(1000)
+                }
+                httpGet("http://127.0.0.1:8080/hub/cloud/updatePlatform"){ response -> 
+                    updateAttr("msg", "${response.data}")
+                }
+            }
+        }
+    }catch(ignore) {
+        updateAttr("msg", "Hub is Current")
     }
-    
-    httpGet("http://127.0.0.1:8080/hub/cloud/updatePlatform"){ response -> 
-            updateAttr("msg", "${response.data}")
-    }    
 }
 
 void updateMesh(){

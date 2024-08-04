@@ -24,7 +24,7 @@ static String version()	{  return '2.0.2'  }
 
 metadata {
     definition (
-		name: "Hub Updater v2", 
+		name: "Hub Updater V2", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
 	        importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubUpdaterV2.groovy"
@@ -38,13 +38,12 @@ metadata {
         
         command "sendTestMsg"
         command "subscribe",[[type:"string",description:"IP of Publisher Hub"]]
-        command "unsubscribe"
-                                
     
     }   
 }
 
 preferences {
+    input("hidden","string",title: "By using this driver you are agreeing to the <a href='https://hubitat.com/terms-of-service'>Hubitat Terms of Service</a>")
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }
 

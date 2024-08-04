@@ -20,7 +20,7 @@ import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-static String version()	{  return '2.0.1'  }
+static String version()	{  return '2.0.2'  }
 
 metadata {
     definition (
@@ -37,6 +37,8 @@ metadata {
         attribute "notesUrl", "string"
         
         command "sendTestMsg"
+        command "subscribe",[[type:"string",description:"IP of Publisher Hub"]]
+        command "unsubscribe"
                                 
     
     }   
@@ -44,11 +46,6 @@ metadata {
 
 preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
-    input("devRole","enum",title:"Device Role", width:4, options:['publisher','subscriber'], submitOnChange:true)
-    if(devRole == 'publisher') {
-        state.subscriberDNI = getHostAddress()
-        input("updMesh","bool",title: "Update all meshed hubs", width:4, submitOnChange:true)
-    } 
 }
 
 def installed() {
@@ -59,7 +56,7 @@ def installed() {
 
 def configure() {
     if(debugEnabled) log.debug "configure()"
-    state.subscriberDNI = getHostAddress()
+    device.updateDataValue('publishingDNI', getHostAddress())
 
 }
 
@@ -137,7 +134,7 @@ void getHubMesh(resp, data){
                 log.debug resp.data
             def jSlurp = new JsonSlurper()
             Map h2Data = (Map)jSlurp.parseText((String)resp.data)
-           if (debugEnable)
+            if (debugEnable)
                 log.debug "${h2Data.hubList}"
             h2Data.hubList.each{
                 log.info "Requesting update of ${it.ipAddress}"
@@ -160,8 +157,24 @@ void logsOff(){
      device.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }
 
-def getHostAddress() { 
-    ipTokens = location.hub.localIP.split('\\.')
+def subscribe(ip){
+    hostHex = getHostAddress(ip)
+    device.setDeviceNetworkId(hostHex)
+    device.updateDataValue('subscriptionDNI',hostHex)
+}
+
+def unsubscribe(){
+    newDNI=UUID.randomUUID().toString()
+    device.removeDataValue('subscriptionDNI')
+    device.setDeviceNetworkId(newDNI)
+}
+
+
+def getHostAddress(ip=''){
+    if(!ip)
+        ipTokens = location.hub.localIP.split('\\.')
+    else
+        ipTokens = ip.split('\\.')     
     hexStr=''
     ipTokens.each{
         wStr=Integer.toString(it.toInteger(),16).toUpperCase()

@@ -24,7 +24,7 @@ static String version()	{  return '2.0.2'  }
 
 metadata {
     definition (
-		name: "Hub Updater V2", 
+		name: "Hub Updater v2", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
 	        importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/hubUpdaterV2.groovy"

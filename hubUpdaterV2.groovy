@@ -43,7 +43,7 @@ metadata {
 }
 
 preferences {
-    input("termsAccepted","bool",title: "By using this driver you are agreeing to the <a href='https://hubitat.com/terms-of-service'>Hubitat Terms of Service</a>")
+    input("termsAccepted","bool",title: "By using this driver you are agreeing to the <a href='https://hubitat.com/terms-of-service'>Hubitat Terms of Service</a>", required:true)
     input("updMesh","bool", title: "Push Update Request to All HubMeshed Hubs")
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }

@@ -1,0 +1,16 @@
+{
+ "packageName":"Hub Updater v2",
+ "author":"Jean P. May, Jr.",
+ "version":"2.0.3",
+ "minimumHEVersion":"2.3.8.0",
+ "dateReleased":"2024-08-05",
+ "drivers": [
+  {
+     "id":"a7fd30ee-a09d-4d84-8452-91555fa27ca0",
+     "name":"Hub Updater v2",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubUpdaterV2.groovy",
+     "required":true
+  }
+  ]
+}

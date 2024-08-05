@@ -20,7 +20,7 @@ import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-static String version()	{  return '2.0.2'  }
+static String version()	{  return '2.0.3'  }
 
 metadata {
     definition (
@@ -44,6 +44,7 @@ metadata {
 
 preferences {
     input("hidden","string",title: "By using this driver you are agreeing to the <a href='https://hubitat.com/terms-of-service'>Hubitat Terms of Service</a>")
+    input("updMesh","bool", title: "Push Update Request to All HubMeshed Hubs")
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }
 

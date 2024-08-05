@@ -323,6 +323,16 @@
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubProxyManifest.json",
       "description":"Serves files from the hub File Manager, thus permitting images and text files on the hub to be viewed//referenced via the cloud interface."
+    },
+    {
+      "id":"4c231540-9ff4-4a64-b067-8df2c0781f3c",
+      "name":"Hub Updater v2",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/manifests/hubUpdaterV2Manifest.json",
+      "description":"Hub Updater v2 creates a virtual device that allows a single button push to request HE firmware updates for multiple HubMeshed hubs.",
+      "tags":[
+        "Misc. Devices"
+       ]
     }
   ]
 }

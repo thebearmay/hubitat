@@ -20,7 +20,7 @@ import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-static String version()	{  return '2.0.3'  }
+static String version()	{  return '2.0.4'  }
 
 metadata {
     definition (
@@ -38,12 +38,13 @@ metadata {
         
         command "sendTestMsg"
         command "subscribe",[[type:"string",description:"IP of Publisher Hub"]]
+        command "unsubscribe"
     
     }   
 }
 
 preferences {
-    input("termsAccepted","bool",title: "By using this driver you are agreeing to the <a href='https://hubitat.com/terms-of-service'>Hubitat Terms of Service</a>", required:true)
+    input("termsAccepted","bool",title: "By using this driver you are agreeing to the <a href='https://hubitat.com/terms-of-service'>Hubitat Terms of Service</a>",required:true)
     input("updMesh","bool", title: "Push Update Request to All HubMeshed Hubs")
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }

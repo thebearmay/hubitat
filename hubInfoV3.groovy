@@ -72,6 +72,7 @@
  *    2024-07-30                 v3.1.6 - add security information back in for hub2 data
  *                               v3.1.7 - alternate method to detect security in use
  *    2024-07-31                 v3.1.8 - split securityInUse check out into its own option, code cleanup
+ *    2024-08-06                 v3.1.9 - add a notification URL for hub shutdown
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -79,7 +80,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.8"}
+static String version() {return "3.1.9"}
 
 metadata {
     definition (
@@ -209,7 +210,8 @@ preferences {
     input("updSdfPref", "enum", title: "Date/Time Format for Last Poll Time", options:sdfList, defaultValue:"Milliseconds", width:4)
     input("rsrtSdfPref", "enum", title: "Date/Time Format for Hub Restart Formatted", options:sdfList, defaultValue:"yyyy-MM-dd HH:mm:ss", width:4)  
     input("upTimeSep", "string", title: "Separator for Formatted Uptime", defaultValue: ", ", width:4)
-    input("upTimeDesc", "enum", title: "Uptime Descriptors", defaultValue:"d/h/m/s", options:["d/h/m/s"," days/ hrs/ min/ sec"," days/ hours/ minutes/ seconds"])
+    input("upTimeDesc", "enum", title: "Uptime Descriptors", defaultValue:"d/h/m/s", options:["d/h/m/s"," days/ hrs/ min/ sec"," days/ hours/ minutes/ seconds"],width:4)
+    input("onShutdownUrl","string", title: "URL to notify when hub receives a shutdown request", width:4)
 	input("pollRate1", "number", title: "Poll Rate for Queue 1 in minutes", defaultValue:0, submitOnChange: true, width:4) 
 	input("pollRate2", "number", title: "Poll Rate for Queue 2 in minutes", defaultValue:0, submitOnChange: true, width:4) 
 	input("pollRate3", "number", title: "Poll Rate for Queue 3 in minutes", defaultValue:0, submitOnChange: true, width:4) 
@@ -1665,6 +1667,8 @@ void shutdown() {
         return
     }
     log.info "Hub Shutdown requested"
+    if(onShutdownUrl) 
+        sendShutdownUrl()
 
 	httpPost(
 		[
@@ -1673,6 +1677,23 @@ void shutdown() {
 		]
 	) {		resp ->	} 
 
+}
+
+@SuppressWarnings('unused')
+void sendShutdownUrl(){
+    if(debugEnabled) log.debug "Shutdown is sending request to $onShutdownUrl"
+    params = [
+			uri: onShutdownUrl,
+			headers:[
+                "Connection-Timeout":600
+			]
+		]
+    asynchttpGet("ssdResp",params)    
+}
+
+void ssdResp(resp, data){
+    if(debugEnabled) 
+        log.debug "${resp.properties}"
 }
                    
 void formatUptime(){

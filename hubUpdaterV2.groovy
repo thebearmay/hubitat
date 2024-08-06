@@ -103,7 +103,7 @@ void getUpdateCheck(resp, data) {
     try {
         if (resp.status == 200) {
             def jSlurp = new JsonSlurper()
-            log.debug "${resp.data}"
+            if (debugEnabled) log.debug "${resp.data}"
             Map resMap = (Map)jSlurp.parseText((String)resp.data)
             if(resMap.status == "NO_UPDATE_AVAILABLE")
                 updateAttr("msg","Hub is Current")

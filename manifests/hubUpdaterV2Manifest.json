@@ -1,9 +1,10 @@
 {
  "packageName":"Hub Updater v2",
  "author":"Jean P. May, Jr.",
- "version":"2.0.4",
+ "version":"2.0.5",
  "minimumHEVersion":"2.3.8.0",
  "dateReleased":"2024-08-05",
+ "releaseNotes":"2.0.5 - fix code reversion issue",
  "drivers": [
   {
      "id":"a7fd30ee-a09d-4d84-8452-91555fa27ca0",

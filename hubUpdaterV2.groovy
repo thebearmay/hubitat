@@ -14,13 +14,15 @@
  *
  *    Date         Who           What
  *    ----         ---           --------------------------------------
- *    06Aug2024    thebearmay    v2.0.5 fix code reversion issue
+ *    06Aug2024    thebearmay    v2.0.5 code reversion issue
+ *                               v2.0.6 send request even if publisher is current, fix notes link
+ *
  */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-static String version()	{  return '2.0.5'  }
+static String version()	{  return '2.0.6'  }
 
 metadata {
     definition (
@@ -93,6 +95,10 @@ def push(){
 }
 
 void getUpdateCheck(resp, data) {
+    if(updMesh) {
+        updateMesh()
+    }
+
     if(debugEnable) log.debug "update check: ${resp.status}"
     try {
         if (resp.status == 200) {
@@ -103,11 +109,7 @@ void getUpdateCheck(resp, data) {
                 updateAttr("msg","Hub is Current")
             else {
                 updateAttr("msg","${resMap.version} requested")
-                updateAttr("notesUrl","<a href='${resMap.releaseNotesUrl}>Release Notes for ${resMap.version}</a>")
-                if(updMesh) {
-                    updateMesh()
-                    pauseExecution(1000)
-                }
+                updateAttr("notesUrl","<a href='${resMap.releaseNotesUrl}'>Release Notes for ${resMap.version}</a>")
                 httpGet("http://127.0.0.1:8080/hub/cloud/updatePlatform"){ response -> 
                     updateAttr("msg", "${response.data}")
                 }

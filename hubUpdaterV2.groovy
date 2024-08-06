@@ -14,13 +14,13 @@
  *
  *    Date         Who           What
  *    ----         ---           --------------------------------------
- *
+ *    06Aug2024    thebearmay    v2.0.5 fix code reversion issue
  */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-static String version()	{  return '2.0.4'  }
+static String version()	{  return '2.0.5'  }
 
 metadata {
     definition (
@@ -104,7 +104,7 @@ void getUpdateCheck(resp, data) {
             else {
                 updateAttr("msg","${resMap.version} requested")
                 updateAttr("notesUrl","<a href='${resMap.releaseNotesUrl}>Release Notes for ${resMap.version}</a>")
-                if(updMesh && role == 'publisher') {
+                if(updMesh) {
                     updateMesh()
                     pauseExecution(1000)
                 }

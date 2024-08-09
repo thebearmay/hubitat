@@ -16,13 +16,14 @@
  *    ----         ---           --------------------------------------
  *    06Aug2024    thebearmay    v2.0.5 code reversion issue
  *                               v2.0.6 send request even if publisher is current, fix notes link
+ *    09AUg2024                  v2.0.7 update msg to show current HE version at initialize (5min delay)
  *
  */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-static String version()	{  return '2.0.6'  }
+static String version()	{  return '2.0.7'  }
 
 metadata {
     definition (
@@ -33,6 +34,7 @@ metadata {
 	) {
         capability "Actuator"
         capability "Configuration"
+        capability "Initialize"
         capability "Momentary"
        
         attribute "msg", "string"
@@ -51,16 +53,18 @@ preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }
 
-def installed() {
+void installed() {
     log.trace "Hub Updater v${version()} installed()"
-    configure()
-    
+    configure()   
 }
 
-def configure() {
+void configure() {
     if(debugEnabled) log.debug "configure()"
     device.updateDataValue('publishingDNI', getHostAddress())
+}
 
+void initialize() {
+    runIn(300,"verCheck")
 }
 
 def updateAttr(aKey, aValue){
@@ -71,11 +75,11 @@ def updateAttr(aKey, aValue, aUnit){
     sendEvent(name:aKey, value:aValue, unit:aUnit)
 }
 
-def initialize(){
-
+void verCheck() {
+    updateAttr('msg',"Hub is on v${location.hub.firmwareVersionString}")
 }
 
-def test(){
+void test(){
     log.debug "Test $debugEnabled"
 }
 
@@ -109,7 +113,7 @@ void getUpdateCheck(resp, data) {
                 updateAttr("msg","Hub is Current")
             else {
                 updateAttr("msg","${resMap.version} requested")
-                updateAttr("notesUrl","<a href='${resMap.releaseNotesUrl}'>Release Notes for ${resMap.version}</a>")
+                updateAttr("notesUrl","<a href='${resMap.releaseNotesUrl}'>Release Notes for Production</a>")
                 httpGet("http://127.0.0.1:8080/hub/cloud/updatePlatform"){ response -> 
                     updateAttr("msg", "${response.data}")
                 }

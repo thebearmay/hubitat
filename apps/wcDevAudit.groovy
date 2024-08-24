@@ -15,7 +15,7 @@
  */
 
 
-static String version()	{  return '0.0.0'  }
+static String version()	{  return '0.0.1'  }
 import groovy.json.JsonOutput
 
 import groovy.json.JsonSlurper
@@ -66,11 +66,11 @@ def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
         section("Errors Found") {
             childApps = getPistonList()
-            //paragraph "${childApps}"
+            //log.debug "Child apps:${childApps}"
             wcApp = readPage(state.wcID)
             //uploadHubFile("wcaWork.txt",wcApp.getBytes('UTF-8'))
             parDevList = []
-            devStart = wcApp.indexOf('/device/edit/',wcApp.indexOf('dev:all'))
+            devStart = wcApp.indexOf('/device/edit/')//,wcApp.indexOf('dev:all'))
             devEnd = wcApp.indexOf('"', devStart)
             //paragraph "$devStart, $devEnd"
             i=0
@@ -82,19 +82,23 @@ def mainPage(){
                 devEnd = wcApp.indexOf('"', devStart)
                 i++
             }
-            //paragraph "$parDevList"
+            parDevList = parDevList.unique().sort()
+            //paragraph "Parent List $parDevList"
+            errList = ''
             childApps.each {
                 i=0
-                chdApp = readPage(it)
+                log.debug it.key
+                chdApp = readPage(it.key)
                 devStart = chdApp.indexOf('/device/edit/')
                 devEnd = chdApp.indexOf('"', devStart)
-                errList = ''
                 while (devEnd > -1 && devStart > -1 && i<15){
                     if(devStart > -1 && devEnd > -1) {
                         devChk = chdApp.substring(devStart+13,devEnd).toInteger()
-                        if(parDevList.indexOf(devChk) == -1)
-                        dName = chdApp.substring(devEnd+2,chdApp.indexOf('<',devEnd+2))
-                        errList +="<a href='http://${location.hub.localIP}/installedapp/status/$it'>Piston #$it</a> is missing device $dName\n"
+                        if(!parDevList.contains(devChk)){
+                            dName = chdApp.substring(devEnd+2,chdApp.indexOf('<',devEnd+2))
+                            errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/$it'>${it.value}</a> is missing device $dName\n"
+                    
+                        }
                     }
                     devStart = chdApp.indexOf('/device/edit/',devEnd)
                     devEnd = chdApp.indexOf('"', devStart)
@@ -102,6 +106,7 @@ def mainPage(){
                 }
                
             }
+            if(errList.size() < 1) errList = "No Missing Devices Found"
             paragraph errList
 
         }
@@ -117,19 +122,7 @@ String readPage(pId){
     try {
         httpGet(params) { resp ->
             if(resp!= null) {
-/*               int i = 0
-               String delim = ""
-               i = resp.data.read() 
-               while (i != -1){
-                       char c =  (char) i
-                       delim+=c
-                       i = resp.data.read()
-                       if(i < 0 || i > 255) return delim
-               } 
-               if(debugEnabled) log.info "Read Page result: delim"
-               return delim.toString()
-*/
-                return """${resp.data}"""//resp.data.toString()
+                return """${resp.data}"""
             }
             else {
                 log.error "Null Response"
@@ -156,7 +149,8 @@ ArrayList getPistonList() {
             if(it.data.type == "webCoRE"){
                 state.wcID = it.data.id
                 it.children.each{
-                    wrkList.add(it.data.id)
+                    wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
+                    wrkList.add(wrkMap)
                 }
             }
         }

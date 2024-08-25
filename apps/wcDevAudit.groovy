@@ -95,7 +95,7 @@ def mainPage(){
                         devChk = chdApp.substring(devStart+13,devEnd).toInteger()
                         if(!parDevList.contains(devChk)){
                             dName = chdApp.substring(devEnd+2,chdApp.indexOf('<',devEnd+2))
-                            errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/$it'>${it.value}</a> is missing device <b>$dName</b>\n"
+                            errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> is missing device <b>$dName</b>\n"
                     
                         }
                     }
@@ -108,7 +108,7 @@ def mainPage(){
                 i=0
                 while (devEnd > -1 && devStart > -1){
                     dMsg = 'd'+chdApp.substring(devStart+1,devEnd+9)
-                    errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/$it'>${it.value}</a> <b>$dMsg</b>\n"
+                    errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> <b>$dMsg</b>\n"
                     devEnd = chdApp.indexOf('not found}',devStart+71)
                     devStart = chdApp.indexOf('Device', devEnd-70)
                     i++

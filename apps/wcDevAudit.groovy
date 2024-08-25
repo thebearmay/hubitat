@@ -14,8 +14,7 @@
  *    -------------   -------------------    ---------------------------------------------------------
  */
 
-
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 import groovy.json.JsonOutput
 
 import groovy.json.JsonSlurper
@@ -64,7 +63,7 @@ void logsOff(){
 
 def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
-        section("Errors Found") {
+        section("<b>Errors Found</b>") {
             childApps = getPistonList()
             //log.debug "Child apps:${childApps}"
             wcApp = readPage(state.wcID)
@@ -87,21 +86,31 @@ def mainPage(){
             errList = ''
             childApps.each {
                 i=0
-                log.debug it.key
+                //log.debug it.key
                 chdApp = readPage(it.key)
                 devStart = chdApp.indexOf('/device/edit/')
                 devEnd = chdApp.indexOf('"', devStart)
-                while (devEnd > -1 && devStart > -1 && i<15){
+                while (devEnd > -1 && devStart > -1){
                     if(devStart > -1 && devEnd > -1) {
                         devChk = chdApp.substring(devStart+13,devEnd).toInteger()
                         if(!parDevList.contains(devChk)){
                             dName = chdApp.substring(devEnd+2,chdApp.indexOf('<',devEnd+2))
-                            errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/$it'>${it.value}</a> is missing device $dName\n"
+                            errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/$it'>${it.value}</a> is missing device <b>$dName</b>\n"
                     
                         }
                     }
                     devStart = chdApp.indexOf('/device/edit/',devEnd)
                     devEnd = chdApp.indexOf('"', devStart)
+                    i++
+                }             
+                devEnd = chdApp.indexOf('not found}')
+                devStart = chdApp.indexOf('Device', devEnd-70)
+                i=0
+                while (devEnd > -1 && devStart > -1){
+                    dMsg = 'd'+chdApp.substring(devStart+1,devEnd+9)
+                    errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/$it'>${it.value}</a> <b>$dMsg</b>\n"
+                    devEnd = chdApp.indexOf('not found}',devStart+71)
+                    devStart = chdApp.indexOf('Device', devEnd-70)
                     i++
                 }
                

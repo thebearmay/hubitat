@@ -14,7 +14,7 @@
  *    -------------   -------------------    ---------------------------------------------------------
  */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 import groovy.json.JsonOutput
 
 import groovy.json.JsonSlurper
@@ -88,17 +88,19 @@ def mainPage(){
                 i=0
                 //log.debug it.key
                 chdApp = readPage(it.key)
+                //uploadHubFile("wcaWork2.txt",chdApp.getBytes('UTF-8'))
                 devStart = chdApp.indexOf('/device/edit/')
                 devEnd = chdApp.indexOf('"', devStart)
+                devList = []
                 while (devEnd > -1 && devStart > -1){
                     if(devStart > -1 && devEnd > -1) {
                         devChk = chdApp.substring(devStart+13,devEnd).toInteger()
                         if(!parDevList.contains(devChk)){
                             dName = chdApp.substring(devEnd+2,chdApp.indexOf('<',devEnd+2))
                             errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> is missing device <b>$dName</b>\n"
-                    
                         }
                     }
+                    devList.add(devChk)
                     devStart = chdApp.indexOf('/device/edit/',devEnd)
                     devEnd = chdApp.indexOf('"', devStart)
                     i++
@@ -113,7 +115,17 @@ def mainPage(){
                     devStart = chdApp.indexOf('Device', devEnd-70)
                     i++
                 }
-               
+                //devices&#x3D;
+                cntStart=chdApp.indexOf('devices&#x3D;')
+                cntEnd=chdApp.indexOf(',',cntStart)
+                dntCnt=-1
+                devCnt = devList.unique().size()
+                if(cntStart > -1 && cntEnd >-1)
+                    dCnt=chdApp.substring(cntStart+13,cntEnd).toInteger()
+                //paragraph "${it.value} $cntStart $cntEnd -> $dCnt $devCnt"
+                if(dCnt > 0 && dCnt != devCnt)
+                    errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> <b>is missing an unknown device</b>\n"
+
             }
             if(errList.size() < 1) errList = "No Missing Devices Found"
             paragraph errList

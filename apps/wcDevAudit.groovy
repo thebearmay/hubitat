@@ -79,6 +79,7 @@ def mainPage(){
                 i++
             }
             parDevList2.add('ff91564bbd8403bb7f9e5043bb7a9e82')//hsmStatus
+		parDevList2.add('4bb547f511e1fd753f8db83470827793')//Location mode
             parDevList = parDevList.unique().sort()
             parDevList2 = parDevList2.unique().sort()
             //paragraph "Parent List $parDevList"

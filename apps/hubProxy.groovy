@@ -230,13 +230,12 @@ String readFile(fName){
         uri: uri,
         contentType: "text/html",
         textParser: true,
+        ignoreSSLIssues: true
     ]
 
     try {
         httpGet(params) { resp ->
             if(resp!= null) {
-//                if(!resp.contentType.contains("text") && !resp.contentType.contains("json"))
-//                    return "File type is not text -> $resp.contentType"
                 return """${resp.data}"""
             } else {
                 log.error "Null Response"
@@ -245,7 +244,7 @@ String readFile(fName){
         }
     } catch (exception) {
         log.error "Alt Read Error: ${exception.message}"
-        return null
+       return null
     }
 }
 @Field imageType=['gif','jpeg','jpg','png','svg']

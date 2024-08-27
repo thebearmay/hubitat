@@ -14,15 +14,8 @@
  *    -------------   -------------------    ---------------------------------------------------------
  */
 
-static String version()	{  return '0.0.3'  }
-import groovy.json.JsonOutput
-
-import groovy.json.JsonSlurper
-import java.net.URLEncoder
-import groovy.transform.Field
-
-@Field btnBckGrd 
-@Field btnTxColor
+static String version()	{  return '0.0.5'  }
+import java.security.MessageDigest
 
 definition (
 	name: 			"webCoRE Device Audit", 
@@ -69,26 +62,34 @@ def mainPage(){
             wcApp = readPage(state.wcID)
             //uploadHubFile("wcaWork.txt",wcApp.getBytes('UTF-8'))
             parDevList = []
+            parDevList2 = []
             devStart = wcApp.indexOf('/device/edit/')//,wcApp.indexOf('dev:all'))
             devEnd = wcApp.indexOf('"', devStart)
             //paragraph "$devStart, $devEnd"
             i=0
             while (devEnd > -1 && devStart > -1){
                 if(devStart > -1 && devEnd > -1) {
-                    parDevList.add(wcApp.substring(devStart+13,devEnd).toInteger())
+                    devNum = wcApp.substring(devStart+13,devEnd).toInteger()
+                    parDevList.add(devNum)
+                    hDnum = md5("core.$devNum")
+                    parDevList2.add(hDnum)
                 }
                 devStart = wcApp.indexOf('/device/edit/',devEnd)
                 devEnd = wcApp.indexOf('"', devStart)
                 i++
             }
+            parDevList2.add('ff91564bbd8403bb7f9e5043bb7a9e82')//hsmStatus
             parDevList = parDevList.unique().sort()
+            parDevList2 = parDevList2.unique().sort()
             //paragraph "Parent List $parDevList"
+            //paragraph "Parent List2 $parDevList2"
+                                    
             errList = ''
             childApps.each {
                 i=0
                 //log.debug it.key
                 chdApp = readPage(it.key)
-                //uploadHubFile("wcaWork2.txt",chdApp.getBytes('UTF-8'))
+                uploadHubFile("wcaWork2.txt",chdApp.getBytes('UTF-8'))
                 devStart = chdApp.indexOf('/device/edit/')
                 devEnd = chdApp.indexOf('"', devStart)
                 devList = []
@@ -115,16 +116,19 @@ def mainPage(){
                     devStart = chdApp.indexOf('Device', devEnd-70)
                     i++
                 }
-                //devices&#x3D;
-                cntStart=chdApp.indexOf('devices&#x3D;')
-                cntEnd=chdApp.indexOf(',',cntStart)
-                dntCnt=-1
-                devCnt = devList.unique().size()
-                if(cntStart > -1 && cntEnd >-1)
-                    dCnt=chdApp.substring(cntStart+13,cntEnd).toInteger()
-                //paragraph "${it.value} $cntStart $cntEnd -> $dCnt $devCnt"
-                if(dCnt > 0 && dCnt != devCnt)
-                    errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> <b>is missing an unknown device</b>\n"
+                devStart=chdApp.indexOf('d&#x3D;:')
+                devEnd=chdApp.indexOf(':',devStart+8)
+                //if(devEnd > -1 && devStart > -1)
+                //    log.debug "${it.value}: ${chdApp.substring(devStart+8,devEnd)}"
+                i=0
+                while (devEnd > -1 && devStart > -1){
+                    hashVal = chdApp.substring(devStart+8,devEnd)
+                    if(!parDevList2.contains(hashVal))
+                        errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> contains unknown device <b>':$hashVal:'</b>\n"
+                    devStart=chdApp.indexOf('d&#x3D;:',devEnd)
+                    devEnd=chdApp.indexOf(':',devStart+8)
+                    i++
+                }                
 
             }
             if(errList.size() < 1) errList = "No Missing Devices Found"
@@ -170,12 +174,25 @@ ArrayList getPistonList() {
             if(it.data.type == "webCoRE"){
                 state.wcID = it.data.id
                 it.children.each{
-                    wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
-                    wrkList.add(wrkMap)
+                    if(it.data.type == 'webCoRE Piston'){
+                        wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
+                        wrkList.add(wrkMap)
+                    }
                 }
             }
         }
         
         return wrkList
     }
+}
+
+String md5(String md5){ 
+	MessageDigest md=MessageDigest.getInstance('md5')
+	byte[] array=md.digest(md5.getBytes())   
+	String r= ''
+	Integer l=array.size()
+	for(Integer i=0; i<l;++i){
+		r+=Integer.toHexString((array[i] & 0xFF)| 0x100).substring(1,3)
+	}
+	return r
 }

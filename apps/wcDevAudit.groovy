@@ -73,8 +73,8 @@ def mainPage(){
                     paragraph "${it.key}::${it.value}"
                 }
             }
-            input("excName", "text", title:"<b>Name of Exclusion<b>")
-            input("excHash", "text", title:"<b>Hash Value to Exclude</b>")
+            input("excName", "text", title:"<b>Name of Exclusion</b>",size:6)
+            input("excHash", "text", title:"<b>Hash Value to Exclude</b>",size:6)
             input("addExc","button",title:"Add", size:4)
             if(state.addExclusion) {
                 state.addExclusion = false

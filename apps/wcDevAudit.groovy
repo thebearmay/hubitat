@@ -12,9 +12,10 @@
  *
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
- */
+ *    31Aug2024        thebearmay            add a try..catch around the piston processing 
+*/
 
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.7'  }
 import java.security.MessageDigest
 
 definition (
@@ -153,7 +154,8 @@ String getErrors(){
     parDevList2 = parDevList2.unique().sort()
     //paragraph "Parent List $parDevList"
     //log.debug "Parent List2 $parDevList2"
-                                    
+    
+    try{
     errList = ''
     childApps.each {
         i=0
@@ -163,7 +165,7 @@ String getErrors(){
         devStart = chdApp.indexOf('/device/edit/')
         devEnd = chdApp.indexOf('"', devStart)
         devList = []
-        while (devEnd > -1 && devStart > -1){
+        while (devEnd > -1 && devStart > -1 && devStart > devEnd){
             if(devStart > -1 && devEnd > -1) {
                 devChk = chdApp.substring(devStart+13,devEnd).toInteger()
                 if(!parDevList.contains(devChk)){
@@ -179,7 +181,7 @@ String getErrors(){
         devEnd = chdApp.indexOf('not found}')
         devStart = chdApp.indexOf('Device', devEnd-70)
         i=0
-        while (devEnd > -1 && devStart > -1){
+        while (devEnd > -1 && devStart > -1 && devStart > devEnd){
             dMsg = 'd'+chdApp.substring(devStart+1,devEnd+9)
             errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> <b>$dMsg</b>\n"
             devEnd = chdApp.indexOf('not found}',devStart+71)
@@ -191,7 +193,7 @@ String getErrors(){
         //if(devEnd > -1 && devStart > -1)
         //    log.debug "${it.value}: ${chdApp.substring(devStart+8,devEnd)}"
         i=0
-        while (devEnd > -1 && devStart > -1){
+        while (devEnd > -1 && devStart > -1 && devStart > devEnd){
             hashVal = chdApp.substring(devStart+8,devEnd)
             if(!parDevList2.contains(hashVal))
                 errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> contains unknown device <b>':$hashVal:'</b>\n"
@@ -200,6 +202,9 @@ String getErrors(){
                 i++
         }                
 
+    }
+    } catch (ex) {
+        log.error ex.message
     }
     return errList
 }

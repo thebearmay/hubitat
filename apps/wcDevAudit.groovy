@@ -12,10 +12,11 @@
  *
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
- *    31Aug2024        thebearmay            add a try..catch around the piston processing 
+ *    31Aug2024        thebearmay            add a try..catch around the piston processing
+ *    01Sep2024                              split the try..catch into three separate iterations
 */
 
-static String version()	{  return '0.0.7'  }
+static String version()	{  return '0.0.8'  }
 import java.security.MessageDigest
 
 definition (
@@ -155,7 +156,6 @@ String getErrors(){
     //paragraph "Parent List $parDevList"
     //log.debug "Parent List2 $parDevList2"
     
-    try{
     errList = ''
     childApps.each {
         i=0
@@ -165,46 +165,54 @@ String getErrors(){
         devStart = chdApp.indexOf('/device/edit/')
         devEnd = chdApp.indexOf('"', devStart)
         devList = []
-        while (devEnd > -1 && devStart > -1 && devStart > devEnd){
-            if(devStart > -1 && devEnd > -1) {
-                devChk = chdApp.substring(devStart+13,devEnd).toInteger()
-                if(!parDevList.contains(devChk)){
-                    dName = chdApp.substring(devEnd+2,chdApp.indexOf('<',devEnd+2))
-                    errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> is missing device <b>$dName</b>\n"
+        try{
+            while (devEnd > -1 && devStart > -1 && devStart > devEnd){
+                if(devStart > -1 && devEnd > -1) {
+                    devChk = chdApp.substring(devStart+13,devEnd).toInteger()
+                    if(!parDevList.contains(devChk)){
+                        dName = chdApp.substring(devEnd+2,chdApp.indexOf('<',devEnd+2))
+                        errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> is missing device <b>$dName</b>\n"
+                    }
                 }
+                devList.add(devChk)
+                devStart = chdApp.indexOf('/device/edit/',devEnd)
+                devEnd = chdApp.indexOf('"', devStart)
+                i++
             }
-            devList.add(devChk)
-            devStart = chdApp.indexOf('/device/edit/',devEnd)
-            devEnd = chdApp.indexOf('"', devStart)
-            i++
-        }             
-        devEnd = chdApp.indexOf('not found}')
-        devStart = chdApp.indexOf('Device', devEnd-70)
-        i=0
-        while (devEnd > -1 && devStart > -1 && devStart > devEnd){
-            dMsg = 'd'+chdApp.substring(devStart+1,devEnd+9)
-            errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> <b>$dMsg</b>\n"
-            devEnd = chdApp.indexOf('not found}',devStart+71)
-            devStart = chdApp.indexOf('Device', devEnd-70)
-            i++
+        } catch (ex) {
+            log.error "Pass 1: ${ex.message}"
         }
-        devStart=chdApp.indexOf('d&#x3D;:')
-        devEnd=chdApp.indexOf(':',devStart+8)
+        try{
+            devEnd = chdApp.indexOf('not found}')
+            devStart = chdApp.indexOf('Device', devEnd-70)
+            i=0
+            while (devEnd > -1 && devStart > -1 && devStart > devEnd){
+                dMsg = 'd'+chdApp.substring(devStart+1,devEnd+9)
+                errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> <b>$dMsg</b>\n"
+                devEnd = chdApp.indexOf('not found}',devStart+71)
+                devStart = chdApp.indexOf('Device', devEnd-70)
+                i++
+            }
+            devStart=chdApp.indexOf('d&#x3D;:')
+            devEnd=chdApp.indexOf(':',devStart+8)
+        } catch (ex) {
+            log.error "Pass 2: ${ex.message}"
+        }
         //if(devEnd > -1 && devStart > -1)
         //    log.debug "${it.value}: ${chdApp.substring(devStart+8,devEnd)}"
-        i=0
-        while (devEnd > -1 && devStart > -1 && devStart > devEnd){
-            hashVal = chdApp.substring(devStart+8,devEnd)
-            if(!parDevList2.contains(hashVal))
-                errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> contains unknown device <b>':$hashVal:'</b>\n"
+        try{
+            i=0
+            while (devEnd > -1 && devStart > -1 && devStart > devEnd){
+                hashVal = chdApp.substring(devStart+8,devEnd)
+                if(!parDevList2.contains(hashVal))
+                    errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${it.key}'>${it.value}</a> contains unknown device <b>':$hashVal:'</b>\n"
                 devStart=chdApp.indexOf('d&#x3D;:',devEnd)
                 devEnd=chdApp.indexOf(':',devStart+8)
                 i++
-        }                
-
-    }
-    } catch (ex) {
-        log.error ex.message
+            }                
+        } catch (ex) {
+            log.error "Pass 3: ${ex.message}"
+        }
     }
     return errList
 }

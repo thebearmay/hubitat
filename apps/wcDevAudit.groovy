@@ -180,7 +180,7 @@ String getErrors(){
                 i++
             }
         } catch (ex) {
-            log.error "Pass 1: ${ex.message}"
+            log.error "Pass 1: ${it.value} ${ex.message}"
         }
         try{
             devEnd = chdApp.indexOf('not found}')
@@ -196,7 +196,7 @@ String getErrors(){
             devStart=chdApp.indexOf('d&#x3D;:')
             devEnd=chdApp.indexOf(':',devStart+8)
         } catch (ex) {
-            log.error "Pass 2: ${ex.message}"
+            log.error "Pass 2: ${it.value} ${ex.message}"
         }
         //if(devEnd > -1 && devStart > -1)
         //    log.debug "${it.value}: ${chdApp.substring(devStart+8,devEnd)}"
@@ -211,7 +211,7 @@ String getErrors(){
                 i++
             }                
         } catch (ex) {
-            log.error "Pass 3: ${ex.message}"
+            log.error "Pass 3: ${it.value} ${ex.message}"
         }
     }
     return errList

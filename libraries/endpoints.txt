@@ -1,5 +1,5 @@
 /*
- * use ports 8080 and 8443 if calling hub from itself
+ * use ports 8080 and 8443 and IP 127.0.0.1 if calling hub from itself
  *
  * Subnets
  *    Set: /hub/allowSubnets?<subNet IP List>

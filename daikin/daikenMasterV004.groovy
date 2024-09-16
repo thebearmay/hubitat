@@ -17,6 +17,7 @@
  *    Date         Who           What
  *    ----         ---           ----
  *    21Apr2023    thebearmay    add logic to map thermostatOperatingMode if equipmentStatus is received
+ *    16Sep2024                  handle child device already exists
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
@@ -24,7 +25,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.4"}
+static String version() {return "0.0.5"}
 
 metadata {
     definition (
@@ -161,9 +162,10 @@ void createChildDevices(){
 //        it = devMap
         if(debugEnabled) log.debug "${it.properties}"
         if(debugEnabled) log.debug "add child device ${it.id}"
-        devDetail = getDevDetail("$it.id")        
-        dev = addChildDevice("thebearmay", "Daikin One Thermostat", "${it.id}", [name:"$it.name",label:"$it.name",model:"$it.model", firmware:"$it.firmwareVersion"])
-        updateChild("$it.id", "C")
+        devDetail = getDevDetail("$it.id")
+        if(!getChildDevice("${it.id}"))
+            dev = addChildDevice("thebearmay", "Daikin One Thermostat", "${it.id}", [name:"$it.name",label:"$it.name",model:"$it.model", firmware:"$it.firmwareVersion"])
+        updateChild("${it.id}", "C")
     }
 }
 

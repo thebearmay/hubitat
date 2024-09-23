@@ -1,155 +1,157 @@
-/*
- * use ports 8080 and 8443 and IP 127.0.0.1 if calling hub from itself
- *
- * Subnets
- *    Set: /hub/allowSubnets?<subNet IP List>
- *    Clear: /hub/allowSubnets?none
- *    Get Current: /hub/allowSubnets
- *    
- * Static IP w/Netmask Override (default is 255.255.255.0)    
- *   /hub/advanced/switchToStaticIp?address=<staticIP>&netmask=<netMask>&gateway=<gatewayIP>&nameserver=<dnsIP>&override=yes
- *
- * Time Server
- *    Get: /hub/advanced/ntpServer
- *    Set: /hub/advanced/scanForNtpServers
- *
- * Set Name Server
- * /hub/advanced/resetResolvConf?nameserver=<dnsIP>
- *
- * Network Tests
- *    /hub/networkTest 
- *    /hub/networkTest/ping/gateway 
- *    /hub/networkTest/ping/<ipAddr> 
- *    /hub/networkTest/speedtest 
- *    /hub/networkTest/traceroute/<ipAddr> 
- *    
- * Zigbee
- *    /hub/zigbee/getChildAndRouteInfo
- *
- * Events 
- *    Get: /hub/advanced/event/limit
- *    Set: /hub/advanced/event/limit/2000
- *    Set: /hub/advanced/deviceStateHistorySize/2000
- * 
- * Access List
- * Set: /hub/advanced/limitAccess?addresses=<IP List, comma separated, no spaces> //Requires reboot
- * Clear: /hub/advanced/limitAccess?addresses=  // Requires reboot
- * Get: /hub/advanced/getLimitedAccessAddresses 
- *
- * WiFi
- * /hub/advanced/installDriver/all
- * /hub/advanced/deleteWiFiNetworkInfo
- * /hub/advanced/setWiFiNetworkInfo?ssid=<networkName>&psk=<networkPassword>
- * 
- * Hub Mesh Initialize
- *   /hub/advanced/setInitialHubMeshPeers?<Hub IP List>
- 
- * Force Update of Diag Tool
- *   /hub/cloud/updateDiagnosticTool
- 
- * Other
- *  /hub/cloud/updatePlatform
- *  /api/hubitat.xml
- * 
- * Hub Temperature
- * /hub/advanced/internalTempCelsius
- *
- * Free Memory
- * /hub/advanced/freeOSMemory
- * /hub/advanced/freeOSMemoryHistory
- * /hub/advanced/freeOSMemoryLast
- *
- * Database Size
- * /hub/advanced/databaseSize
- *
- * Max State Retention Days
- * /hub/advanced/maxDeviceStateAgeDays
- *
- * Max Event Retention Days
- * /hub/advanced/maxEventAgeDays
- *
- * ZWave Version
- */hub/zwaveVersion
- *
- * ZWave Gateway Version
- * /hub/advanced/zipgatewayVersion
- *
- * HubMesh Data
- * /hub2/hubMeshJson
- *
- * Network Information
- * /hub2/networkConfiguration
- *
- * Hub UI Header 
- * /hub2/hubData
- *
- * Security in Use
- * /logout 
- *   returns http://<IP>:8080/login page if in use
- *   use followRedirects: false to trap 
- *
- * Check for Firmware Update
- * /hub/cloud/checkForUpdate
- * 
- * Zigbee Details
- * /hub/zigbeeDetails/json //>= 2.3.7.1
- * /hub2/zigbeeInfo //<2.3.7.1
- *
- * Matter Details
- * /hub/matterDetails/json
- *
- * Hub Reboot
- * /hub/reboot
- * /hub/rebuildDatabaseAndReboot //>=2.3.7.14
- *  //Purge Logs
- * /hub/reboot
- *	headers:[
- *		"Content-Type": "application/x-www-form-urlencoded"
- *	],
- * body:[purgeLogs:"true"]
- *
- * Hub Shutdown
- * /hub/shutdown
- *
- * Local File List
- * /hub/fileManager/json
- *
- * Logs 
- * /logs/json
- *
- * App Type List
- * /app/appTypeList
- *
- * Management Endpoints
- * /hub/advanced/getManagementToken 
- * /management/firmwareUpdate?token=<tokenValue> //update firmware
- * /management/firmwareUpdateStatus?token=<tokenValue> //get current firmware update status.
-*  /management/clone?token=tokenValue&source=<sourceHubIpAddress>&sourceToken=<sourceHubTokenValue> //clones hub's database from the source hub, preserving current hub's management token
- * /management/reboot?token=<TOKEN>
- * /management/setStaticIp?token=<TOKEN>&address=<IP>&netmask=<net mask>&gateway=<gateway IP>&nameserver=<nameserver IP>
- * 
- * DNS Fallback
- * Opt out: /hub/advanced/setDNSFallback/false
- * Opt In: /hub/advanced/setDNSFallback/true
- * Get: /hub/advanced/getDNSFallback
- *
- * Radios On/Off
- *
- * /hub/zigbee/update
- *	headers: [
- *		"Content-Type": "application/x-www-form-urlencoded",
- *		Accept: "application/json"
- *		],
- *	body:[zigbeeStatus:"<enabled/disabled>"], 
- *	followRedirects: false
- * 
- * /hub/zwave/update
- *	headers: [
- *		"Content-Type": "application/x-www-form-urlencoded",
- *		Accept: "application/json"
- *		],
- *	body:[zwaveStatus:"<enabled/disabled>"], 
- *	followRedirects: false
- */
- 
- 
+/*			
+* use ports 8080 and 8443 and IP 127.0.0.1 if calling hub from itself			
+*			
+* Access List	 * Access List			
+* Access List	 * Set: /hub/advanced/limitAccess?addresses=<IP List, comma separated, no spaces> //Requires reboot			
+* Access List	 * Clear: /hub/advanced/limitAccess?addresses=  // Requires reboot			
+* Access List	 * Get: /hub/advanced/getLimitedAccessAddresses 			
+* Access List	 *			
+* Apps	 * App Type List			
+* Apps	 * /app/appTypeList			
+* Apps	 *			
+* DB	 * Database Size			
+* DB	 * /hub/advanced/databaseSize			
+* DB	 *			
+* Diag	 * Force Update of Diag Tool			
+* Diag	 *   /hub/cloud/updateDiagnosticTool			
+* Diag	 			
+* DNS	 * Set Name Server			
+* DNS	 * /hub/advanced/resetResolvConf?nameserver=<dnsIP>			
+* DNS	 *			
+* DNS	 * DNS Fallback			
+* DNS	 * Opt out: /hub/advanced/setDNSFallback/false			
+* DNS	 * Opt In: /hub/advanced/setDNSFallback/true			
+* DNS	 * Get: /hub/advanced/getDNSFallback			
+* DNS	 *			
+* Events	 * Events 			
+* Events	 *    Get: /hub/advanced/event/limit			
+* Events	 *    Set: /hub/advanced/event/limit/2000			
+* Events	 *    Set: /hub/advanced/deviceStateHistorySize/2000			
+* Events	 * 			
+* Events	 * Max State Retention Days			
+* Events	 * /hub/advanced/maxDeviceStateAgeDays			
+* Events	 *			
+* Events	 * Max Event Retention Days			
+* Events	 * /hub/advanced/maxEventAgeDays			
+* Events	 *			
+* Files	 * Local File List			
+* Files	 * /hub/fileManager/json			
+* Files	 *			
+* Firmware	 * Check for Firmware Update			
+* Firmware	 * /hub/cloud/checkForUpdate			
+* Firmware	 * 			
+* Jobs	* Delete Pending Jobs			
+* Jobs	* /hub/advanced/deleteAppJobs/<app/dev ID>			
+* Jobs	*			
+* Logs	 * Logs 			
+* Logs	 * /logs/json			
+* Logs	 *			
+* Manage	 * Management Endpoints			
+* Manage	 * /hub/advanced/getManagementToken 			
+* Manage	 * /management/firmwareUpdate?token=<tokenValue> //update firmware			
+* Manage	 * /management/firmwareUpdateStatus?token=<tokenValue> //get current firmware update status.			
+* Manage	*  /management/clone?token=tokenValue&source=<sourceHubIpAddress>&sourceToken=<sourceHubTokenValue> //clones hub's database from the source hub, preserving current hub's management token			
+* Manage	 * /management/reboot?token=<TOKEN>			
+* Manage	 * /management/setStaticIp?token=<TOKEN>&address=<IP>&netmask=<net mask>&gateway=<gateway IP>&nameserver=<nameserver IP>			
+* Manage	 * 			
+* Matter	 * Matter Details			
+* Matter	 * /hub/matterDetails/json			
+* Matter	 *			
+* Mem	 * Free Memory			
+* Mem	 * /hub/advanced/freeOSMemory			
+* Mem	 * /hub/advanced/freeOSMemoryHistory			
+* Mem	 * /hub/advanced/freeOSMemoryLast			
+* Mem	 *			
+* Mesh	 * Hub Mesh Initialize			
+* Mesh	 *   /hub/advanced/setInitialHubMeshPeers?<Hub IP List>			
+* Mesh	 			
+* Mesh	 * HubMesh Data			
+* Mesh	 * /hub2/hubMeshJson			
+* Mesh	 *			
+* Net	 * Network Tests			
+* Net	 *    /hub/networkTest 			
+* Net	 *    /hub/networkTest/ping/gateway 			
+* Net	 *    /hub/networkTest/ping/<ipAddr> 			
+* Net	 *    /hub/networkTest/speedtest 			
+* Net	 *    /hub/networkTest/traceroute/<ipAddr> 			
+* Net	 *    			
+* Net	 * Network Information			
+* Net	 * /hub2/networkConfiguration			
+* Net	 *			
+* Other	 * Other			
+* Other	 *  /hub/cloud/updatePlatform			
+* Other	 *  /api/hubitat.xml			
+* Other	 * 			
+* Radios	 * Radios On/Off			
+* Radios	 *			
+* Radios	 * /hub/zigbee/update			
+* Radios	 *	headers: [		Content-Type: "application/x-www-form-urlencoded",
+* Radios	 *			Accept: "application/json"
+* Radios	 *			],
+* Radios	 *			
+* Radios	 *	body:[zigbeeStatus:"<enabled/disabled>"], 		
+* Radios	 *	followRedirects: false		
+* Radios	 * 			
+* Radios	 * /hub/zwave/update			
+* Radios	 *	headers: [		Content-Type: "application/x-www-form-urlencoded",
+* Radios	 *			Accept: "application/json"
+* Radios	 *			],
+* Radios	 *			
+* Radios	 *	body:[zwaveStatus:"<enabled/disabled>"], 		
+* Radios	 *	followRedirects: false		
+* Radios	 */			
+* Reboot	 * Hub Reboot			
+* Reboot	 * /hub/reboot			
+* Reboot	 * /hub/rebuildDatabaseAndReboot //>=2.3.7.14			
+* Reboot	 *  //Purge Logs			
+* Reboot	 * /hub/reboot			
+* Reboot	 *	headers:[		Content-Type: "application/x-www-form-urlencoded"
+* Reboot	 *			
+* Reboot	 *	],		
+* Reboot	 * body:[purgeLogs:"true"]			
+* Reboot	 *			
+* Reboot	 * Hub Shutdown			
+* Reboot	 * /hub/shutdown			
+* Reboot	 *			
+* Security	 * Security in Use			
+* Security	 * /logout 			
+* Security	 *   returns http://<IP>:8080/login page if in use			
+* Security	 *   use followRedirects: false to trap 			
+* Security	 *			
+* Static IP	 * Static IP w/Netmask Override (default is 255.255.255.0)    			
+* Static IP	 *   /hub/advanced/switchToStaticIp?address=<staticIP>&netmask=<netMask>&gateway=<gatewayIP>&nameserver=<dnsIP>&override=yes			
+* Static IP	 *			
+* Subnets	 * Subnets			
+* Subnets	 *    Set: /hub/allowSubnets?<subNet IP List>			
+* Subnets	 *    Clear: /hub/allowSubnets?none			
+* Subnets	 *    Get Current: /hub/allowSubnets			
+* Subnets	 *    			
+* Temp	 * Hub Temperature			
+* Temp	 * /hub/advanced/internalTempCelsius			
+* Temp	 *			
+* Time	 * Time Server			
+* Time	 *    Get: /hub/advanced/ntpServer			
+* Time	 *    Set: /hub/advanced/scanForNtpServers			
+* Time	 *			
+* UI	 * Hub UI Header 			
+* UI	 * /hub2/hubData			
+* UI	 *			
+* WiFi	 * WiFi			
+* WiFi	 * /hub/advanced/installDriver/all			
+* WiFi	 * /hub/advanced/deleteWiFiNetworkInfo			
+* WiFi	 * /hub/advanced/setWiFiNetworkInfo?ssid=<networkName>&psk=<networkPassword>			
+* WiFi	 * 			
+* Zigbee	 * Zigbee			
+* Zigbee	 *    /hub/zigbee/getChildAndRouteInfo			
+* Zigbee	 *			
+* Zigbee	 * Zigbee Details			
+* Zigbee	 * /hub/zigbeeDetails/json //>= 2.3.7.1			
+* Zigbee	 * /hub2/zigbeeInfo //<2.3.7.1			
+* Zigbee	 *			
+* Zwave	 * ZWave Version			
+* Zwave	 */hub/zwaveVersion			
+* Zwave	 *			
+* Zwave	 * ZWave Gateway Version			
+* Zwave	 * /hub/advanced/zipgatewayVersion			
+* Zwave	 *			
+/* 

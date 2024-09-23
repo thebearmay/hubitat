@@ -7,14 +7,30 @@
 * Access List	 * Get: /hub/advanced/getLimitedAccessAddresses 			
 * Access List	 *			
 * Apps	 * App Type List			
-* Apps	 * /app/appTypeList			
-* Apps	 *			
-* DB	 * Database Size			
+* Apps	 * /app/appTypeList
+* Apps   * /hub/advanced/reloadAppAndDriverDefinitions //Resets 'Error 404' conditions
+* Apps	 *	
+* Backup    * Backup Download
+* Backup    * /hub/backupDB?fileName=latest
+* Backup    *
+* DB	 * Database			
 * DB	 * /hub/advanced/databaseSize			
-* DB	 *			
+* DB	 * /hub/cleanupDatabase
+* DB	 * 
+* Device    * Device
+* Device    * /device/forceDelete/<devId>/yes
+* Device    * /hub2/devicesList
+* Device    *
 * Diag	 * Force Update of Diag Tool			
-* Diag	 *   /hub/cloud/updateDiagnosticTool			
-* Diag	 			
+* Diag	 *   /hub/cloud/updateDiagnosticTool
+* Diag   * 
+* Diag   * Fix Unreachable
+* Diag   * :8081/deleteDatabaseTraceFiles //requires reboot
+* Diag   *
+* Disable    * Disable App/Dev
+* Disable    * /installedapp/disable?id=<ID>&disable=<true|false>
+* Disable    * /device/disable?id=<ID>&disable=<true|false>
+* Disable    *
 * DNS	 * Set Name Server			
 * DNS	 * /hub/advanced/resetResolvConf?nameserver=<dnsIP>			
 * DNS	 *			
@@ -61,12 +77,21 @@
 * Mem	 * /hub/advanced/freeOSMemory			
 * Mem	 * /hub/advanced/freeOSMemoryHistory			
 * Mem	 * /hub/advanced/freeOSMemoryLast			
-* Mem	 *			
+* Mem	 * /hub/advanced/getExcessiveLoadThreshold 
+* Mem	 * /hub/advanced/setExcessiveLoadThreshold/50 (default: 33, range: [20..100])
+* Mem	 * /hub/forceGC
+* Mem	 * 
+* Mesh	 * HubMesh Data			
+* Mesh	 * /hub2/hubMeshJson
+* Mesh	 * 
+* Mesh	 * Hub Mesh Device Status
+* Mesh	 * /hubMesh/localLinkedDevice/<hostDevId>
+* Mesh	 *
 * Mesh	 * Hub Mesh Initialize			
 * Mesh	 *   /hub/advanced/setInitialHubMeshPeers?<Hub IP List>			
-* Mesh	 			
-* Mesh	 * HubMesh Data			
-* Mesh	 * /hub2/hubMeshJson			
+* Mesh	 *		
+* Mesh	 * Token
+* Mesh   * /device/showHubMeshToken
 * Mesh	 *			
 * Net	 * Network Tests			
 * Net	 *    /hub/networkTest 			
@@ -79,7 +104,8 @@
 * Net	 * /hub2/networkConfiguration			
 * Net	 *			
 * Other	 * Other			
-* Other	 *  /hub/cloud/updatePlatform			
+* Other	 *  /hub/cloud/updatePlatform	
+* Other  *  /hub/list/data
 * Other	 *  /api/hubitat.xml			
 * Other	 * 			
 * Radios	 * Radios On/Off			
@@ -112,12 +138,26 @@
 * Reboot	 *			
 * Reboot	 * Hub Shutdown			
 * Reboot	 * /hub/shutdown			
-* Reboot	 *			
+* Reboot	 *
+* Reset    * Factory Reset
+* Reset    * /factory/recovery
+* Reset    *
 * Security	 * Security in Use			
 * Security	 * /logout 			
 * Security	 *   returns http://<IP>:8080/login page if in use			
 * Security	 *   use followRedirects: false to trap 			
-* Security	 *			
+* Security	 *
+* SSL    * SSL Cert
+* SSL    * /hub/advanced/certificate
+* SSL    * /hub/advanced/disablessl
+* SSL    *
+* Speed    * Network Auto Negotiate
+* Speed    * /hub/advanced/network/lanautonegconfigdisable
+* Speed    * /hub/advanced/network/lanautonegconfigenable
+* Speed    * /hub/advanced/network/lanautonegconfigstatus
+* Speed    *
+* Speed    *  status is also available from /hub2/networkConfiguration -> lanAutoneg
+* Speed    * 
 * Static IP	 * Static IP w/Netmask Override (default is 255.255.255.0)    			
 * Static IP	 *   /hub/advanced/switchToStaticIp?address=<staticIP>&netmask=<netMask>&gateway=<gatewayIP>&nameserver=<dnsIP>&override=yes			
 * Static IP	 *			
@@ -125,16 +165,22 @@
 * Subnets	 *    Set: /hub/allowSubnets?<subNet IP List>			
 * Subnets	 *    Clear: /hub/allowSubnets?none			
 * Subnets	 *    Get Current: /hub/allowSubnets			
-* Subnets	 *    			
+* Subnets	 *
+* Update    * Firmware Updates
+* Update    * /hub/cloud/checkForUpdate
+* Update    * /hub/cloud/updatePlatform
+* Update    *
 * Temp	 * Hub Temperature			
 * Temp	 * /hub/advanced/internalTempCelsius			
 * Temp	 *			
 * Time	 * Time Server			
 * Time	 *    Get: /hub/advanced/ntpServer			
-* Time	 *    Set: /hub/advanced/scanForNtpServers			
+* Time	 *    Scan/Set: /hub/advanced/scanForNtpServers	
+* Time	 *    Set: /hub/advanced/ntpServer/<ipAddr>    
 * Time	 *			
-* UI	 * Hub UI Header 			
-* UI	 * /hub2/hubData			
+* UI	 * Hub UI 			
+* UI	 * /hub2/hubData
+* UI   * /hub/messages
 * UI	 *			
 * WiFi	 * WiFi			
 * WiFi	 * /hub/advanced/installDriver/all			
@@ -142,16 +188,23 @@
 * WiFi	 * /hub/advanced/setWiFiNetworkInfo?ssid=<networkName>&psk=<networkPassword>			
 * WiFi	 * 			
 * Zigbee	 * Zigbee			
-* Zigbee	 *    /hub/zigbee/getChildAndRouteInfo			
+* Zigbee	 *    /hub/zigbee/getChildAndRouteInfo
+* Zigbee   *    /hub/resetzigbee
+* Zigbee   *    /hub/searchZigbeeDevices
+* Zigbee   *    /hub/zigbeeChannelScan
 * Zigbee	 *			
 * Zigbee	 * Zigbee Details			
 * Zigbee	 * /hub/zigbeeDetails/json //>= 2.3.7.1			
 * Zigbee	 * /hub2/zigbeeInfo //<2.3.7.1			
 * Zigbee	 *			
-* Zwave	 * ZWave Version			
-* Zwave	 */hub/zwaveVersion			
-* Zwave	 *			
-* Zwave	 * ZWave Gateway Version			
+* Zwave  * ZWave
+* Zwave	 * /hub/searchZwaveDevices		
+* Zwave	 * /hub/zwaveVersion			
+* Zwave	 * /hub/zwave/nodeCleanup
 * Zwave	 * /hub/advanced/zipgatewayVersion			
-* Zwave	 *			
+* Zwave	 * /hub/startZwaveJoin
+* ZWave  * /hub/stopJoin
+* Zwave	 * /hub/zwaveRepair
+* ZWave  * /hub/zwave/reset
+* Zwave	 *
 /* 

@@ -103,11 +103,12 @@
 * Net	 * Network Information			
 * Net	 * /hub2/networkConfiguration			
 * Net	 *			
-* Other	 * Other			
+* Other	 * Other	
 * Other	 *  /hub/cloud/updatePlatform	
 * Other  *  /hub/data
 * Other  *  /hub/list/data   //returns the same data as the /hub/data
-* Other	 *  /api/hubitat.xml			
+* Other	 *  /api/hubitat.xml
+* Other  *  /ui2/images/hub.png
 * Other	 * 			
 * Radios	 * Radios On/Off			
 * Radios	 *			

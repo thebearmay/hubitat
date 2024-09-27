@@ -105,7 +105,8 @@
 * Net	 *			
 * Other	 * Other			
 * Other	 *  /hub/cloud/updatePlatform	
-* Other  *  /hub/list/data
+* Other  *  /hub/data
+* Other  *  /hub/list/data   //returns the same data as the /hub/data
 * Other	 *  /api/hubitat.xml			
 * Other	 * 			
 * Radios	 * Radios On/Off			

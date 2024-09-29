@@ -1,9 +1,9 @@
 {
  "packageName":"Message Rotator Tile Device",
  "author":"Jean P. May, Jr.",
- "version":"0.0.7",
+ "version":"0.0.8",
  "minimumHEVersion":"2.2.8.0",
- "dateReleased":"2022-12-06",
+ "dateReleased":"2024-09-29",
  "releaseNotes":"Attempt to kill a null message",
  "communityLink":"https://community.hubitat.com/t/needed-an-app-to-display-multiple-alerts-in-a-common-dashboard-tile/92885",
  "drivers": [

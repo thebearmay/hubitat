@@ -17,16 +17,18 @@
  *    03Dec2022   thebearmay    Fix null after remove to messages.size() == 1
  *    06Dec2022   thebearmay    Space if no messages option
  *    21Dec2022   thebearmay    Close a possible "null" message opportunity
+ *    29Sep2024   thebearmay	Change to singlethread to force collisions to queue
  */
 
-static String version()	{  return '0.0.7'  }
+static String version()	{  return '0.0.8'  }
 
 metadata {
     definition (
 		name: "Message Rotator Tile Device", 
 		namespace: "thebearmay", 
 		author: "Jean P. May, Jr.",
-	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/msgRotate.groovy"
+	        importUrl:"https://raw.githubusercontent.com/thebearmay/hubitat/main/msgRotate.groovy",
+	    	singleThreaded: true
 	) {
         capability "Actuator"
         attribute "html", "string"

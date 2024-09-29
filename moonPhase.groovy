@@ -25,10 +25,11 @@
  *    2021-08-28  thebearmay	 add option to use html attribute instead of moonPhaseTile
  *    2021-09-29  thebearmay	 Last Quarter typo - left out the first "r"
  *    2021-10-03  thebearmay     Change refresh to sunset
+ *    2024-09-29  thebearmay 	 Typo
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.7.4'  }
+static String version()	{  return '0.7.5'  }
 
 metadata {
     definition (
@@ -151,7 +152,7 @@ void getPhase(Long cDate = now()) {
         }
     }
     
-    List<String>imgList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbious", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
+    List<String>imgList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
     if(imgNum!=null) {
         phaseText = imgList[imgNum]
     } else phaseText = "Error - Out of Range"

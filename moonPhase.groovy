@@ -45,6 +45,7 @@ metadata {
 		attribute "lastQryDate", "string"
         attribute "moonPhaseTile", "string"
         attribute "moonPhaseImg", "string"
+	attribute "moonPhaseSvg", "string"
         attribute "html", "string"
         
         command "getPhase"
@@ -78,6 +79,7 @@ def calcPhase (String dateStr){
 Long dateCheck(String dateStr) {
     try {
         Date cDate = Date.parse("yyyy-MM-dd HH:mm:ss",dateStr)
+        updateAttr("error", "Valid time " + cDate + " entered.")
         return cDate.getTime()
     } catch (ignored) {
         updateAttr("error", "Invalid date string use format yyyy-MM-dd HH:mm:ss")
@@ -156,6 +158,37 @@ void getPhase(Long cDate = now()) {
     if(imgNum!=null) {
         phaseText = imgList[imgNum]
     } else phaseText = "Error - Out of Range"
+	  
+    // Generate SVG output from template
+    String svgString = """
+        <svg width="140" height="140">
+        <defs>
+        <clipPath id="clip"><circle cx="70" cy="70" r="70"/></clipPath>
+        <filter id="blur"><feGaussianBlur stdDeviation="3"/></filter>
+        <radialGradient id="grad" cx="50%" cy="50%" r="50%">
+        <stop offset="1%" stop-color="#444e"/>
+        <stop offset="90%" stop-color="#222c"/></radialGradient>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="#000"/>
+        <circle cx="70" cy="70" r="70" fill="url(#grad)" stroke="#9992"/>
+        <path d="M70,0 Arx1,70 180 0 sf1 70,140 Arx2,70 180 0 sf2 70,0" fill="#cccd" filter="url(#blur)" stroke="#fff" clip-path="url(#clip)" />
+        </svg>
+        """
+    Double rx1 = 70.0, rx2 = 70.0
+    Integer sf1 = 0, sf2 = 0
+    if (phaseWork<=0.25) {
+        rx1 = rx1 * (1 - phaseWork)
+        sf1 = 1
+    } else if (phaseWork>0.25 && phaseWork<=0.5) {
+        rx1 = rx1 * phaseWork
+    } else if (phaseWork>0.5 && phaseWork<=0.75) {
+        rx2 = rx2 * (1 - phaseWork)
+    } else {
+        rx2 = rx2 * phaseWork
+        sf2 = 1
+    }
+    svgString = svgString.replace("rx1","$rx1").replace("rx2","$rx2").replace("sf1","$sf1").replace("sf2","$sf2")
+    updateAttr("moonPhaseSvg", svgString)
         
     updateAttr("moonPhaseImg", "<img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png' />")    
     updateAttr("moonPhase", phaseText)

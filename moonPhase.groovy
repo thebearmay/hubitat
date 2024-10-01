@@ -27,6 +27,7 @@
  *    2021-10-03  thebearmay     Change refresh to sunset
  *    2024-09-29  thebearmay 	 Typo
  *    2024-10-01  thebearmay     Normalize the phase breakpoints to cause less of a jump in images
+ *                LibraSun       Add SVG and Emjois 
  */
 
 import java.text.SimpleDateFormat
@@ -42,8 +43,8 @@ metadata {
         capability "Actuator"
         
         attribute "moonPhase", "enum", ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
-	attribute "moonPhaseNum", "number"
-	attribute "lastQryDate", "string"
+	    attribute "moonPhaseNum", "number"
+	    attribute "lastQryDate", "string"
         attribute "moonPhaseEmoji", "enum", ["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"]
         attribute "moonPhaseTile", "string"
         attribute "moonPhaseImg", "string"

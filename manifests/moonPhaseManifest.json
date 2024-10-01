@@ -1,10 +1,10 @@
 {
   "packageName": "Moon Phase Device",
   "author": "Jean P. May, Jr.",
-  "version": "0.7.4",
+  "version": "0.7.7",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-10-03",
-  "releaseNotes":"0.7.4 - change refresh point to sunset\n0.7.3 - fixed typo in Last Quarter",
+  "dateReleased": "2024-10-01",
+  "releaseNotes":"0.7.7 - smoothed the phase breakpoints and merged a pull request to add SVG and Emojis",
   "drivers": [
     {
       "id": "405716f8-46a9-49c0-8746-c757653a6d25",

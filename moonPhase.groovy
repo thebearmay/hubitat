@@ -26,10 +26,11 @@
  *    2021-09-29  thebearmay	 Last Quarter typo - left out the first "r"
  *    2021-10-03  thebearmay     Change refresh to sunset
  *    2024-09-29  thebearmay 	 Typo
+ *    2024-10-01  thebearmay     Normalize the phase breakpoints to cause less of a jump in images
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.7.5'  }
+static String version()	{  return '0.7.6'  }
 
 metadata {
     definition (
@@ -98,19 +99,43 @@ void getPhase(Long cDate = now()) {
     phaseWork = phaseWork/lunarSecs/10.0D //calculate lunar cycles
     
     phaseWork = phaseWork - phaseWork.toInteger() //remove whole cycles
-    phaseWork = phaseWork.round(2)
+    if(!widenRange)
+        phaseWork = phaseWork.round(2)
+    else
+        phaseWork = phaseWork.round(1)
     
     if(phaseWork == 1.0) phaseWork = 0.0
     
-	updateAttr("moonPhaseNum", phaseWork)
+    updateAttr("moonPhaseNum", phaseWork)
     updateAttr("lastQryDate",sdf.format(cDate))
     
     String iconPath = "https://raw.githubusercontent.com/thebearmay/hubitat/main/moonPhaseRes/"
     if(iconPathOvr > " ") iconPath = iconPathOvr
     Integer imgNum
     String phaseText
-    
-    if(!widenRange){
+    //                                 .125               .250             .375              .500         .625              .750            .875
+    List<String>imgList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
+    if (phaseWork < 0.125D){
+        imgNum = 0
+    }else if (phaseWork < 0.25D){
+        imgNum = 1
+    }else if (phaseWork < 0.375D){
+        imgNum = 2
+    }else if (phaseWork < 0.5D){
+        imgNum = 3
+    }else if (phaseWork < 0.625D){
+        imgNum = 4	
+    }else if (phaseWork < 0.75D){
+        imgNum = 5
+    }else if (phaseWork < 0.875D){
+        imgNum = 6
+    }else if (phaseWork <= 1.0D){
+        imgNum = 7
+    }else {
+        imgNum = null
+    }
+
+/*    if(!widenRange){
         if (phaseWork == 0.0D){
             imgNum = 0
         }else if (phaseWork < 0.25D){
@@ -151,8 +176,8 @@ void getPhase(Long cDate = now()) {
             imgNum = null
         }
     }
-    
-    List<String>imgList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
+*/
+
     if(imgNum!=null) {
         phaseText = imgList[imgNum]
     } else phaseText = "Error - Out of Range"

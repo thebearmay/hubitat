@@ -27,7 +27,7 @@
  *    2021-10-03  thebearmay     Change refresh to sunset
  *    2024-09-29  thebearmay 	 Typo
  *    2024-10-01  thebearmay     Normalize the phase breakpoints to cause less of a jump in images
- *                LibraSun       Add SVG and Emjois 
+ *                LibraSun       Add SVG graphic and Emoji text output
  */
 
 import java.text.SimpleDateFormat
@@ -192,41 +192,44 @@ void getPhase(Long cDate = now()) {
     
     // Generate SVG output from template
     String svgString = """
-        <svg width="140" height="140">
+        <svg width="150" height="150">
         <defs>
-        <clipPath id="clip"><circle cx="70" cy="70" r="70"/></clipPath>
-        <filter id="blur"><feGaussianBlur stdDeviation="3"/></filter>
-        <radialGradient id="grad" cx="50%" cy="50%" r="50%">
-        <stop offset="1%" stop-color="#444e"/>
-        <stop offset="90%" stop-color="#222c"/></radialGradient>
+          <filter id="effect" >
+            <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="3"/>
+            <feDiffuseLighting>
+              <fePointLight x="lcx" y="70" z="20"/>
+            </feDiffuseLighting>
+            <feGaussianBlur stdDeviation="1.2"/>
+            <feComposite operator="in" in2="SourceGraphic"/>
+          </filter>
         </defs>
-        <rect x="0" y="0" width="100%" height="100%" fill="#000"/>
-        <circle cx="70" cy="70" r="70" fill="url(#grad)" stroke="#9992"/>
-        <path d="M70,0 Arx1,70 180 0 sf1 70,140 Arx2,70 180 0 sf2 70,0" fill="#cccd" filter="url(#blur)" stroke="#fff" clip-path="url(#clip)" />
+        <circle cx="70" cy="70" r="70.3" filter="url(#effect)"/>
+        <path d="M70,0 Arx1,70 180 0 sf1 70,140 Arx2,70 180 0 sf2 70,0" fill="#000a" stroke-width="2" stroke="#333a"/>
         </svg>
         """
+    Double lcx = 120 - 90*phaseWork // point light x-position
     Double rx1 = 70.0 // right limn x-radius
     Integer sf1 = 1 // right limn sweep flag concave )
     Double rx2 = 70.0  // left limn x-radius
-    Integer sf2 = 0 // left limn sweep flag concave )
+    Integer sf2 = 1 // left limn sweep flag concave (
     if (phaseWork<=0.25) {
-        rx2 = rx2 * (1 - 4*phaseWork) // 70 🌑 .. 🌒 .. 0 🌓
-        // right limn fixed, concave )
-        // left limn moving, concave )
-    } else if (phaseWork>0.25 && phaseWork<=0.50) {
-        rx2 = rx2 * (4*phaseWork - 1) // 0 🌓 .. 🌔 .. 70 🌕
-        // right limn fixed, concave )
-        sf2 = 1 // left limn moving, vertical ► concave (
-    } else if (phaseWork>0.50 && phaseWork<=0.75) {
-        rx1 = rx1 * (3 - 4*phaseWork) // 70 🌕 .. 🌖 .. 0 🌗
+        rx1 = rx1 * (1 - 4*phaseWork) // 70 🌑 .. 🌒 .. 0 🌓
         // right limn moving, concave )
-        sf2 = 1 // left limn fixed, concave (
-    } else {
-        rx1 = rx1 * (4*phaseWork - 3) // 0 🌗 .. 🌘 .. 70 🌑
+        // left limn fixed, concave (
+    } else if (phaseWork>0.25 && phaseWork<=0.50) {
+        rx1 = rx1 * (4*phaseWork - 1) // 0 🌓 .. 🌔 .. 70 🌕
         sf1 = 0 // right limn moving, vertical ► concave (
-        sf2 = 1 // left limn fixed, concave (
+        // left limn fixed, concave (
+    } else if (phaseWork>0.50 && phaseWork<=0.75) {
+        rx2 = rx2 * (3 - 4*phaseWork) // 70 🌕 .. 🌖 .. 0 🌗
+        // right limn fixed, concave )
+        sf2 = 0 // left limn moving, concave )
+    } else {
+        rx2 = rx2 * (4*phaseWork - 3) // 0 🌗 .. 🌘 .. 70 🌑
+        // right limn fixed, concave )
+        // left limn moving, vertical ► concave (
     }
-    svgString = svgString.replace("rx1","$rx1").replace("rx2","$rx2").replace("sf1","$sf1").replace("sf2","$sf2")
+    svgString = svgString.replace("lcx","$lcx").replace("rx1","$rx1").replace("rx2","$rx2").replace("sf1","$sf1").replace("sf2","$sf2")
     
     // Update device attributes
     updateAttr("moonPhaseEmoji", phaseEmoji)

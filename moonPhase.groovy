@@ -41,11 +41,13 @@ metadata {
 	) {
         capability "Actuator"
         
-        attribute "moonPhase", "string"
-		attribute "moonPhaseNum", "number"
-		attribute "lastQryDate", "string"
+        attribute "moonPhase", "enum", ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
+	attribute "moonPhaseNum", "number"
+	attribute "lastQryDate", "string"
+        attribute "moonPhaseEmoji", "enum", ["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"]
         attribute "moonPhaseTile", "string"
         attribute "moonPhaseImg", "string"
+        attribute "moonPhaseSvg", "string"
         attribute "html", "string"
         
         command "getPhase"
@@ -63,7 +65,7 @@ preferences {
 }
 
 def installed() {
-	log.trace "installed()"
+    log.trace "installed()"
 }
 
 def configure() {
@@ -79,6 +81,7 @@ def calcPhase (String dateStr){
 Long dateCheck(String dateStr) {
     try {
         Date cDate = Date.parse("yyyy-MM-dd HH:mm:ss",dateStr)
+        updateAttr("error", "Valid time " + cDate + " entered.")
         return cDate.getTime()
     } catch (ignored) {
         updateAttr("error", "Invalid date string use format yyyy-MM-dd HH:mm:ss")
@@ -112,6 +115,7 @@ void getPhase(Long cDate = now()) {
     String iconPath = "https://raw.githubusercontent.com/thebearmay/hubitat/main/moonPhaseRes/"
     if(iconPathOvr > " ") iconPath = iconPathOvr
     Integer imgNum
+    String phaseEmoji
     String phaseText
     //                                 .125               .250             .375              .500         .625              .750            .875
     List<String>imgList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
@@ -181,8 +185,52 @@ void getPhase(Long cDate = now()) {
     if(imgNum!=null) {
         phaseText = imgList[imgNum]
     } else phaseText = "Error - Out of Range"
-        
-    updateAttr("moonPhaseImg", "<img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png' />")    
+    
+    // Select emoji for moon phase
+    phaseEmoji = ["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"][imgNum]
+    
+    // Generate SVG output from template
+    String svgString = """
+        <svg width="140" height="140">
+        <defs>
+        <clipPath id="clip"><circle cx="70" cy="70" r="70"/></clipPath>
+        <filter id="blur"><feGaussianBlur stdDeviation="3"/></filter>
+        <radialGradient id="grad" cx="50%" cy="50%" r="50%">
+        <stop offset="1%" stop-color="#444e"/>
+        <stop offset="90%" stop-color="#222c"/></radialGradient>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="#000"/>
+        <circle cx="70" cy="70" r="70" fill="url(#grad)" stroke="#9992"/>
+        <path d="M70,0 Arx1,70 180 0 sf1 70,140 Arx2,70 180 0 sf2 70,0" fill="#cccd" filter="url(#blur)" stroke="#fff" clip-path="url(#clip)" />
+        </svg>
+        """
+    Double rx1 = 70.0 // right limn x-radius
+    Integer sf1 = 1 // right limn sweep flag concave )
+    Double rx2 = 70.0  // left limn x-radius
+    Integer sf2 = 0 // left limn sweep flag concave )
+    if (phaseWork<=0.25) {
+        rx2 = rx2 * (1 - 4*phaseWork) // 70 🌑 .. 🌒 .. 0 🌓
+        // right limn fixed, concave )
+        // left limn moving, concave )
+    } else if (phaseWork>0.25 && phaseWork<=0.50) {
+        rx2 = rx2 * (4*phaseWork - 1) // 0 🌓 .. 🌔 .. 70 🌕
+        // right limn fixed, concave )
+        sf2 = 1 // left limn moving, vertical ► concave (
+    } else if (phaseWork>0.50 && phaseWork<=0.75) {
+        rx1 = rx1 * (3 - 4*phaseWork) // 70 🌕 .. 🌖 .. 0 🌗
+        // right limn moving, concave )
+        sf2 = 1 // left limn fixed, concave (
+    } else {
+        rx1 = rx1 * (4*phaseWork - 3) // 0 🌗 .. 🌘 .. 70 🌑
+        sf1 = 0 // right limn moving, vertical ► concave (
+        sf2 = 1 // left limn fixed, concave (
+    }
+    svgString = svgString.replace("rx1","$rx1").replace("rx2","$rx2").replace("sf1","$sf1").replace("sf2","$sf2")
+    
+    // Update device attributes
+    updateAttr("moonPhaseEmoji", phaseEmoji)
+    updateAttr("moonPhaseSvg", svgString)
+    updateAttr("moonPhaseImg", "<img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png' />")
     updateAttr("moonPhase", phaseText)
     String phaseIcon = "<div id='moonTile'><img class='moonPhase' src='${iconPath}moon-phase-icon-${imgNum}.png'><p class='small' style='text-align:center'>$phaseText</p></img></div>"
     if(!htmlVtile)
@@ -211,7 +259,7 @@ def initialize(){
 }
 
 def updated(){
-	log.trace "updated()"
+    log.trace "updated()"
     HashMap riseAndSet = getSunriseAndSunset()
     if(riseAndSet.sunset < new Date()){
         getSunriseAndSunset(sunsetOffset: "+24:00")

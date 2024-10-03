@@ -194,23 +194,31 @@ void getPhase(Long cDate = now()) {
     String svgString = """
         <svg width="150" height="150">
         <defs>
-          <filter id="effect" >
-            <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="3"/>
-            <feDiffuseLighting>
-              <fePointLight x="lcx" y="70" z="20"/>
-            </feDiffuseLighting>
-            <feGaussianBlur stdDeviation="1.2"/>
-            <feComposite operator="in" in2="SourceGraphic"/>
-          </filter>
+        <mask id="arc">
+        <path d="M75,5 Arx1,70 180 0 sf1 75,145 Arx2,70 180 0 sf2 75,5 z" fill="#fff" style="filter:blur(3px)"/>
+        </mask>
+        <filter id="surface" >
+        <feTurbulence type="turbulence" baseFrequency="0.025" numOctaves="4"/>
+        <feDiffuseLighting>
+        <feDistantLight elevation="20"/>
+        </feDiffuseLighting>
+        <feGaussianBlur stdDeviation="1.2"/>
+        <feComposite operator="in" in2="SourceGraphic"/>
+        </filter>
+        <radialGradient id="shadow">
+        <stop offset="10%" stop-color="#0009"/>
+        <stop offset="90%" stop-color="#000e"/>
+        </radialGradient>
         </defs>
-        <circle cx="70" cy="70" r="70.3" filter="url(#effect)"/>
-        <path d="M70,0 Arx1,70 180 0 sf1 70,140 Arx2,70 180 0 sf2 70,0" fill="#000a" stroke-width="2" stroke="#333a"/>
+        <g style="filter:blur(1.2px)">
+        <circle cx="75" cy="75" r="70.3" filter="url(#surface)"/> // lunar surface
+        <circle cx="75" cy="75" r="70" mask="url(#arc)" fill="url(#shadow)"/> // lunar penumbra
+        </g>
         </svg>
         """
-    Double lcx = 120 - 90*phaseWork // point light x-position
-    Double rx1 = 70.0 // right limn x-radius
+    Double rx1 = 70.0 // right limn radius
     Integer sf1 = 1 // right limn sweep flag concave )
-    Double rx2 = 70.0  // left limn x-radius
+    Double rx2 = 70.0  // left limn radius
     Integer sf2 = 1 // left limn sweep flag concave (
     if (phaseWork<=0.25) {
         rx1 = rx1 * (1 - 4*phaseWork) // 70 🌑 .. 🌒 .. 0 🌓
@@ -229,7 +237,7 @@ void getPhase(Long cDate = now()) {
         // right limn fixed, concave )
         // left limn moving, vertical ► concave (
     }
-    svgString = svgString.replace("lcx","$lcx").replace("rx1","$rx1").replace("rx2","$rx2").replace("sf1","$sf1").replace("sf2","$sf2")
+    svgString = svgString.replace("rx1","$rx1").replace("rx2","$rx2").replace("sf1","$sf1").replace("sf2","$sf2")
     
     // Update device attributes
     updateAttr("moonPhaseEmoji", phaseEmoji)

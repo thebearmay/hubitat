@@ -192,18 +192,14 @@ void getPhase(Long cDate = now()) {
     
     // Generate SVG output from template
     String svgString = """
-    <svg width="150" height="150"><defs><mask id="arc">
-    <path d="M75,5 Arx1,70 180 0 sf1 75,145 Arx2,70 180 0 sf2 75,5 z" fill="#fff" style="filter:blur(3px)"/>
-    </mask><filter id="surface">
-    <feImage x="4" width="95%" href="https://raw.githubusercontent.com/LibraSun/Hubitat/main/Resources/lunar_surface.png"/>
-    <feComposite operator="in" in2="SourceGraphic"/></filter>
-    <radialGradient id="shadow">
-    <stop offset="10%" stop-color="#0007"/>
-    <stop offset="90%" stop-color="#000d"/>
-    </radialGradient></defs>
-    <circle cx="75" cy="75" r="70.3" filter="url(#surface)"/>
-    <circle cx="75" cy="75" r="70" mask="url(#arc)" fill="url(#shadow)"/>
-    </svg>
+  <svg width="150" height="150">
+  <mask id="arc">
+  <path d="M75,5 Arx1,70 180 0 sf1 75,145 Arx2,70 180 0 sf2 75,5 z" fill="#fff" style="filter:blur(3px)"/></mask>
+  <radialGradient id="shadow"><stop offset="10%" stop-color="#0007"/>
+  <stop offset="90%" stop-color="#000d"/></radialGradient>
+  <image x="6" y="4" width="140" href="https://bit.ly/3Brrs54"/>
+  <circle cx="75" cy="75" r="70" mask="url(#arc)" fill="url(#shadow)"/>
+  </svg>
         """
     Double rx1 = 70.0 // right limn radius
     Integer sf1 = 1 // right limn sweep flag concave )

@@ -13,6 +13,9 @@
 * Backup    * Backup Download
 * Backup    * /hub/backupDB?fileName=latest
 * Backup    *
+* Cloud    *
+* Cloud    * /hub/advanced/disableCloudController
+* Cloud    *
 * DB	 * Database			
 * DB	 * /hub/advanced/databaseSize			
 * DB	 * /hub/cleanupDatabase

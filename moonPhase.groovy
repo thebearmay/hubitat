@@ -192,15 +192,16 @@ void getPhase(Long cDate = now()) {
     
     // Generate SVG output from template
     String svgString = """
-  <svg width="150" height="150">
+  <svg width="140" height="140">
+  <filter id="blur"><feGaussianBlur stdDeviation="5"/></filter>  
   <mask id="arc">
-  <path d="M75,5 Arx1,70 180 0 sf1 75,145 Arx2,70 180 0 sf2 75,5 z" fill="#fff" style="filter:blur(3px)"/></mask>
+  <path d="M70,5 Arx1,65 180 0 sf1 70,135 Arx2,65 180 0 sf2 70,5 z" fill="#fff" filter="url(#blur)"/></mask>
   <radialGradient id="shadow"><stop offset="10%" stop-color="#0007"/>
   <stop offset="90%" stop-color="#000d"/></radialGradient>
-  <image x="6" y="4" width="140" href="https://bit.ly/3Brrs54"/>
-  <circle cx="75" cy="75" r="70" mask="url(#arc)" fill="url(#shadow)"/>
+  <image x="6" y="4" width="130" href="https://bit.ly/3Brrs54"/>
+  <circle cx="70" cy="70" r="65" mask="url(#arc)" fill="url(#shadow)"/>
   </svg>
-        """
+      """
     Double rx1 = 70.0 // right limn radius
     Integer sf1 = 1 // right limn sweep flag concave )
     Double rx2 = 70.0  // left limn radius

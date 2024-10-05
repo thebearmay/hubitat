@@ -28,7 +28,7 @@
  *    2024-09-29  thebearmay 	 Typo
  *    2024-10-01  thebearmay     Normalize the phase breakpoints to cause less of a jump in images
  *                LibraSun       Add SVG graphic and Emoji text output
- *    2024-10-05  LibraSun	 More SVG enhancements
+ *    2024-10-05  LibraSun	     More SVG enhancements
  */
 
 import java.text.SimpleDateFormat
@@ -199,7 +199,7 @@ void getPhase(Long cDate = now()) {
   <path d="M70,5 Arx1,65 180 0 sf1 70,135 Arx2,65 180 0 sf2 70,5 z" fill="#fff" filter="url(#blur)"/></mask>
   <radialGradient id="shadow"><stop offset="10%" stop-color="#0007"/>
   <stop offset="90%" stop-color="#000d"/></radialGradient>
-  <image x="6" y="4" width="130" href="https://bit.ly/3Brrs54"/>
+  <image x="6" y="4" width="130" href="${iconPath}lunar_surface.png"/>
   <circle cx="70" cy="70" r="65" mask="url(#arc)" fill="url(#shadow)"/>
   </svg>
       """

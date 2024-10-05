@@ -193,7 +193,7 @@ void getPhase(Long cDate = now()) {
     // Generate SVG output from template
     String svgString = """
   <svg width="90%" viewBox="0 0 140 140">
-  <filter id="blur"><feGaussianBlur stdDeviation="5"/></filter>  
+  <filter id="blur"><feGaussianBlur stdDeviation="4"/></filter>  
   <mask id="arc">
   <path d="M70,5 Arx1,65 180 0 sf1 70,135 Arx2,65 180 0 sf2 70,5 z" fill="#fff" filter="url(#blur)"/></mask>
   <radialGradient id="shadow"><stop offset="10%" stop-color="#0007"/>

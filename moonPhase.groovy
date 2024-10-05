@@ -202,9 +202,9 @@ void getPhase(Long cDate = now()) {
   <circle cx="70" cy="70" r="65" mask="url(#arc)" fill="url(#shadow)"/>
   </svg>
       """
-    Double rx1 = 70.0 // right limn radius
+    Double rx1 = 65.0 // right limn radius
     Integer sf1 = 1 // right limn sweep flag concave )
-    Double rx2 = 70.0  // left limn radius
+    Double rx2 = 65.0  // left limn radius
     Integer sf2 = 1 // left limn sweep flag concave (
     if (phaseWork<=0.25) {
         rx1 = rx1 * (1 - 4*phaseWork) // 70 🌑 .. 🌒 .. 0 🌓

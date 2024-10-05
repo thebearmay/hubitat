@@ -28,10 +28,11 @@
  *    2024-09-29  thebearmay 	 Typo
  *    2024-10-01  thebearmay     Normalize the phase breakpoints to cause less of a jump in images
  *                LibraSun       Add SVG graphic and Emoji text output
+ *    2024-10-05  LibraSun	 More SVG enhancements
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '2.0.1'  }
+static String version()	{  return '2.0.2'  }
 
 metadata {
     definition (

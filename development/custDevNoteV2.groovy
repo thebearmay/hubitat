@@ -77,21 +77,18 @@ def mainPage(){
                 }                
                 state.sdSave = false
                 paragraph buildDeviceTable()               
-                //href name: "noteMaintHref", page: "singleDevice",title: "${btnIcon('pi-pencil')} Single Note Maint", description: "", width: 4, newLine: false, params:[did: 30]
+                //href name: "noteMaintHref", page: "noteMaint",title: "${btnIcon('pi-pencil')} Note Maint", description: "", width: 4, newLine: false//, params:[did: 30]
                 input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true                  
 
 	       }
-//           section("Update Messages", hideable:true, hidden: false){
-//                paragraph "$atomicState.meshedDeviceMsg"
-//            }
-            section("Change Application Name", hideable: true, hidden: true){
+           section("Change Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
-               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
-            }            
+               if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
+           }            
 	    } else {
-		section("") {
-		   paragraph title: "Click Done", "Please click Done to install app before continuing"
-		}
+    		section("") {
+	    	   paragraph title: "Click Done", "Please click Done to install app before continuing"
+		    }
 	    }
     }
 }
@@ -118,7 +115,7 @@ String buildDeviceTable(){
             "<thead><tr style='border-bottom:2px solid black'>"
     tHead.each { str += "<th><strong>${it}</strong></th>" }
     str += "</tr></thead>"    
-    qryDevice.each{
+    qryDevice.sort().each{
         noteMap = it.getData()
         noteList = ''
         i=0
@@ -130,7 +127,10 @@ String buildDeviceTable(){
         //str += "<tr><td><a href='${appLocation}/singleDevice?did=${it.id}' target='_self'>$settingsIcon</a></td>"
         String singleDev = buttonLink("singleDev${it.id}", "$settingsIcon", "#000000", "12px")
         str += "<tr><td>$singleDev</td>"
-        String devSel = buttonLink("devSel${it.id}", "${state["devSel${it.id}"]? X : O}", "#000000", "12px")
+        if(it.controllerType == "LNK") 
+            devSel = "<b style='color:#700000'>&#x26D4;</b>"
+        else
+            devSel = buttonLink("devSel${it.id}", "${state["devSel${it.id}"]? X : O}", "#000000", "12px")
         if(it.label)
             devName = it.label
         else
@@ -147,14 +147,14 @@ String buildDeviceTable(){
 
 def noteMaint(){
     dynamicPage (name:"noteMaint", title: "Note Maintenance", install: false, uninstall: false) {
-        devList = getDevList()
-        if(devList.size() <= 0){
+        dList = getDevList()
+        if(dList.devList.size() <= 0){
             section("") {
                 paragraph "<h1>No devices selected</h1>"
             }
-        }else if(devList.size() == 1) {
+        }else if(dList.devList.size() == 1) {
             section("Single Device Maintenance", hideable:false, hidden: false){
-                
+                paragraph "<span style='background-color:yellow;font-weight:bold'>Selected device: ${dList.DevListName}</span>"
                 input "sdSave", "button", title:"<b>Save</b>", width:2, backgroundColor:'#007000',textColor:'#ffffff'
                 input "sdRem", "button", title:"<b>Remove</b>", width:2, backgroundColor:'#700000',textColor:'#ffffff'
                 input "hidden","hidden", title:"", width:8
@@ -173,7 +173,7 @@ def noteMaint(){
                 if (state.sdSave) {
                     state.sdSave = false
                     qryDevice.each{ dev ->
-                        if("${dev.id}" == devList[0]){
+                        if("${dev.id}" == dList.devList[0]){
                             if(newKey && newVal){
                                 dev.updateDataValue("$newKey", "$newVal")
                                 app.removeSetting("newKey")
@@ -210,7 +210,7 @@ def noteMaint(){
             }
         } else {
             section("Multi-Device Maintenance", hideable:false, hidden: false){
-
+                paragraph "<span style='background-color:yellow;font-weight:bold'>Selected devices: ${dList.devListName.sort()}</span>"
                 input "mdSave", "button", title:"<b>Save</b>", width:2, backgroundColor:'#007000',textColor:'#ffffff'
                 input "mdRem", "button", title:"<b>Remove</b>", width:2, backgroundColor:'#700000',textColor:'#ffffff'
                 input "hidden","hidden", title:"", width:8
@@ -257,11 +257,14 @@ def noteMaint(){
 
 def getDevList(){
     devList = []
+    devListName = []
     qryDevice.each {
-        if(state["devSel${it.id}"])
-            devList.add("${it.id}")                 
+        if(state["devSel${it.id}"]){
+            devList.add("${it.id}") 
+            devListName.add("${it.displayName}")
+        }
     }
-    return devList
+    return [devList:devList, devListName:devListName]
 }
 
            
@@ -285,6 +288,7 @@ def toCamelCase(init) {
 }
 
 def appButtonHandler(btn) {
+    log.debug "$btn pressed"
     switch(btn) {
 	case "addNote":
 /*            if(it.controllerType == "LNK") {

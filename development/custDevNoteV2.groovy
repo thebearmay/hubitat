@@ -76,7 +76,12 @@ def mainPage(){
                     }
                 }                
                 state.sdSave = false
-                paragraph buildDeviceTable()               
+                paragraph buildDeviceTable() 
+                if(state.singleDev){
+                    state.singleDev = false
+                    paragraph "<script>window.location.replace('${appLocation()}/noteMaint')</script>"
+                }                    
+                
                 //href name: "noteMaintHref", page: "noteMaint",title: "${btnIcon('pi-pencil')} Note Maint", description: "", width: 4, newLine: false//, params:[did: 30]
                 input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true                  
 
@@ -115,7 +120,7 @@ String buildDeviceTable(){
             "<thead><tr style='border-bottom:2px solid black'>"
     tHead.each { str += "<th><strong>${it}</strong></th>" }
     str += "</tr></thead>"    
-    qryDevice.sort().each{
+    qryDevice.each{
         noteMap = it.getData()
         noteList = ''
         i=0
@@ -146,7 +151,7 @@ String buildDeviceTable(){
 }
 
 def noteMaint(){
-    dynamicPage (name:"noteMaint", title: "Note Maintenance", install: false, uninstall: false) {
+    dynamicPage (name:"noteMaint", title: "Note Maintenance", install: false, uninstall: false, nextPage:mainPage) {
         dList = getDevList()
         if(dList.devList.size() <= 0){
             section("") {
@@ -154,7 +159,7 @@ def noteMaint(){
             }
         }else if(dList.devList.size() == 1) {
             section("Single Device Maintenance", hideable:false, hidden: false){
-                paragraph "<span style='background-color:yellow;font-weight:bold'>Selected device: ${dList.DevListName}</span>"
+                paragraph "<span style='background-color:yellow;font-weight:bold'>Selected device: ${dList.devListName[0]}</span>"
                 input "sdSave", "button", title:"<b>Save</b>", width:2, backgroundColor:'#007000',textColor:'#ffffff'
                 input "sdRem", "button", title:"<b>Remove</b>", width:2, backgroundColor:'#700000',textColor:'#ffffff'
                 input "hidden","hidden", title:"", width:8
@@ -162,7 +167,7 @@ def noteMaint(){
                 if(newKey) app.updateSetting("newKey",[value:"${toCamelCase(newKey)}",type:"text"])
                 input "newVal", "text", title:"<b style='background-color:#87CECB'>New Note</b>",submitOnChange:true, width:6                               
                 qryDevice.each{
-                    if("${it.id}" == devList[0]){ 
+                    if("${it.id}" == dList.devList[0]){ 
                         noteMap = it.getData()
                         noteMap.each {
                             input "sdKey${it.key}", "text", title:"<b style='background-color:#87CECB'>${it.key}</b>", defaultValue:"${it.value}", submitOnChange:true, width:6
@@ -187,7 +192,7 @@ def noteMaint(){
                             }
                         }
                     }
-                    paragraph "<script>window.location.reload()</script>"
+                    paragraph "<script>window.location.replace('${appLocation()}')</script>"
                 }
 
                 if (state.sdRem) {
@@ -200,7 +205,7 @@ def noteMaint(){
                             app.removeSetting("newVal")
                         }
                     }
-                    paragraph "<script>window.location.reload()</script>"                    
+                    paragraph "<script>window.location.replace('${appLocation()}')</script>"                    
                 }
                 input "mainPage", "button", title:"Return" 
                 if(state.mainPg){
@@ -327,7 +332,14 @@ def appButtonHandler(btn) {
                 state."$btn" = true
         }
         else if (btn.contains("singleDev")){
-            state.singleDev = "$btn".substring(9,)
+            singleDev = "$btn".substring(9,)
+            qryDevice.each{
+                if("${it.id}" != singleDev)
+                    state["devSel${it.id}"] = false
+                else
+                    state["devSel${it.id}"] = true
+            }
+            state.singleDev = true
             
         }
         else 

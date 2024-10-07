@@ -122,7 +122,7 @@ String buildDeviceTable(){
     qryDevice.each{
         noteMap = it.getData()
         noteList = ''
-		hoverList = '<div class='tTip'>'
+		hoverList = "<div class='tTip'>"
         i=0
         noteMap.each {
             if ( i > 0 ) noteList += ", "

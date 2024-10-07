@@ -19,7 +19,7 @@
  *    01Oct2024     thebearmay    2.0.0 - Rewrite of the UI
  */
 
-static String version()	{  return '2.0.0'  }
+static String version()	{  return '2.0.1'  }
 String appLocation() { return "http:${location.hub.localIP}/installedapp/configure/${app.id}/mainPage" }
 
 

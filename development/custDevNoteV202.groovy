@@ -62,7 +62,7 @@ void logsOff(){
 }
 
 def mainPage(){
-    dynamicPage (name: "mainPage", title: "<h1 style='color:blue'>Custom Note</h1><p style='font-size: smaller>v${version()}</p>", install: true, uninstall: true) {
+    dynamicPage (name: "mainPage", title: "<h1 style='color:blue'>Custom Note</h1><p style='font-size: smaller'>v${version()}</p>", install: true, uninstall: true) {
         if (app.getInstallationState() == 'COMPLETE') { 
             section("Configuration", hideable:true, hidden: true){
                 input "qryDevice", "capability.*", title: "Populate Device Table:", multiple: true, required: false, submitOnChange: true
@@ -153,7 +153,7 @@ String buildDeviceTable(){
 }
 
 def noteMaint(){
-    dynamicPage (name:"noteMaint", title: "<h1 style='color:blue'>Custom Note</h1><p style='font-size: smaller>v${version()}</p><h3>Note Maintenance</h3>", install: false, uninstall: false, nextPage:mainPage) {
+    dynamicPage (name:"noteMaint", title: "<h1 style='color:blue'>Custom Note</h1><p style='font-size: smaller'>v${version()}</p><h3>Note Maintenance</h3>", install: false, uninstall: false, nextPage:mainPage) {
         dList = getDevList()
         if(dList.devList.size() <= 0){
             section("") {

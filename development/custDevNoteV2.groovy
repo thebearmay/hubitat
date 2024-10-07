@@ -32,6 +32,7 @@ definition (
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/custDevNote.groovy",
 	oauth: 			false,
     installOnOpen: true,
+    singleThreaded: true,
     iconUrl:        "",
     iconX2Url:      ""
 ) 

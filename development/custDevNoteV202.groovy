@@ -142,7 +142,7 @@ String buildDeviceTable(){
             devName = it.label
         else
             devName = it.name
-        str += "<td>$devSel</td><td><a href='http://${location.hub.localIP}/device/edit/${it.id}' target='_self'>${devName}</a><td class='tTip'>$noteList$hoverList</td>"
+        str += "<td>$devSel</td><td><a href='http://${location.hub.localIP}/device/edit/${it.id}' target='_self'>${devName}</a><td class='tTip'>$hoverList$noteList</td>"
         str += "</tr>"
     }
     String addNote = "<a href='${appLocation()}/noteMaint' target='_self' style='color:#007009;font-size:25px;'><b>+</b></a>"

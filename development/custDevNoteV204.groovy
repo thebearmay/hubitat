@@ -118,8 +118,9 @@ String buildDeviceTable(){
     str += "$tableStyle<div style='overflow-x:auto'><table class='mdl-data-table tstat-col' style='border-left:2px solid black;border-top:2px solid black;'>" +
             "<thead><tr style='border-bottom:2px solid black'>"
     tHead.each { str += "<th><strong>${it}</strong></th>" }
-    str += "</tr></thead>"    
-    devSort = qryDevice.sort { a, b -> a.displayName <=> b.displayName }
+    str += "</tr></thead>" 
+    if(qryDevice)
+	devSort = qryDevice.sort { a, b -> a.displayName <=> b.displayName }
     devSort.each{
         noteMap = it.getData()
         noteList = ''

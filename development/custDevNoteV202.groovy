@@ -16,10 +16,10 @@
  *    01Mar2022     thebearmay    1.0.1 - Add message for any hub mesh device a note is attached to (meshed devices won't retain note)
  *                                1.0.2 - Use controllerType to determine Mesh status
  *    02Mar2022     thebearmay    1.0.3 - Add warning message for missing note text
- *    01Oct2024     thebearmay    2.0.0 - Rewrite of the UI
+ *    01Oct2024     thebearmay    2.0.0..2.0.4 - Rewrite of the UI
  */
 import groovy.transform.Field
-static String version()	{  return '2.0.2'  }
+static String version()	{  return '2.0.4'  }
 String appLocation() { return "http:${location.hub.localIP}/installedapp/configure/${app.id}/mainPage" }
 
 
@@ -62,7 +62,7 @@ void logsOff(){
 }
 
 def mainPage(){
-    dynamicPage (name: "mainPage", title: "<h2 style='color:blue'>Custom Note</h2><p style='font-size: smaller'>v${version()}</p>", install: true, uninstall: true) {
+    dynamicPage (name: "mainPage", title: "<h2 style='color:blue'>Custom Note <span style='font-size: x-small'>v${version()}</span></h2>", install: true, uninstall: true) {
         if (app.getInstallationState() == 'COMPLETE') { 
             section("<h4>Configuration</h4>", hideable:true, hidden: true){
                 input "qryDevice", "capability.*", title: "Populate Device Table:", multiple: true, required: false, submitOnChange: true
@@ -107,7 +107,7 @@ String btnIcon(String name) {
 }
 
 String buildDeviceTable(){
-    ArrayList<String> tHead = ["","Select","Device","Notes"]
+    ArrayList<String> tHead = ["","Sel","Device","Notes"]
     String X = "<i class='he-checkbox-checked'></i>"
     String O = "<i class='he-checkbox-unchecked'></i>"
     String settingsIcon = "<i class='material-icons app-column-info-icon' style='font-size: 24px;'>settings_applications</i>"
@@ -119,29 +119,33 @@ String buildDeviceTable(){
             "<thead><tr style='border-bottom:2px solid black'>"
     tHead.each { str += "<th><strong>${it}</strong></th>" }
     str += "</tr></thead>"    
-    qryDevice.each{
+    devSort = qryDevice.sort { a, b -> a.displayName <=> b.displayName }
+    devSort.each{
         noteMap = it.getData()
         noteList = ''
-		hoverList = "<div class='tTipText'>"
+		hoverList = "<div class='tTipText'><ul>"
         i=0
-        noteMap.each {
+        noteMap.sort().each {
             if ( i > 0 ) noteList += ", "
             noteList += "<b>${it.key}</b>" 
             i++
-			hoverList += "<p><b>${it.key}:</b>${it.value}</p>"
+			hoverList += "<li><b>${it.key}:</b>${it.value}</li>"
         }
-		hoverList += "</div>"
+		hoverList += "</ul></div>"
         //str += "<tr><td><a href='${appLocation}/singleDevice?did=${it.id}' target='_self'>$settingsIcon</a></td>"
-        String singleDev = buttonLink("singleDev${it.id}", "$settingsIcon", "#000000", "12px")
+        if(it.controllerType == "LNK") 
+            singleDev = "<b style='color:#700000'>&#x26D4;</b>"
+        else
+            singleDev = buttonLink("singleDev${it.id}", "$settingsIcon", "#000000", "12px")
         str += "<tr><td>$singleDev</td>"
         if(it.controllerType == "LNK") 
             devSel = "<b style='color:#700000'>&#x26D4;</b>"
         else
             devSel = buttonLink("devSel${it.id}", "${state["devSel${it.id}"]? X : O}", "#000000", "12px")
-        if(it.label)
-            devName = it.label
+        if(it.controllerType == "LNK")
+            devName = "${it.displayName} <span style='color:red'>(HubMesh Device)</span>"
         else
-            devName = it.name
+            devName = it.displayName
         str += "<td>$devSel</td><td><a href='http://${location.hub.localIP}/device/edit/${it.id}' target='_self'>${devName}</a><td class='tTip'>$hoverList$noteList</td>"
         str += "</tr>"
     }
@@ -153,7 +157,7 @@ String buildDeviceTable(){
 }
 
 def noteMaint(){
-    dynamicPage (name:"noteMaint", title: "<h2 style='color:blue'>Custom Note</h2><p style='font-size: smaller'>v${version()}</p><h3>Note Maintenance</h3>", install: false, uninstall: false, nextPage:mainPage) {
+    dynamicPage (name:"noteMaint", title: "<h2 style='color:blue'>Custom Note <span style='font-size: x-small'>v${version()}</span></h2>", install: false, uninstall: false, nextPage:mainPage) {
         dList = getDevList()
         if(dList.devList.size() <= 0){
             section("") {
@@ -171,7 +175,7 @@ def noteMaint(){
                 qryDevice.each{
                     if("${it.id}" == dList.devList[0]){ 
                         noteMap = it.getData()
-                        noteMap.each {
+                        noteMap.sort().each {
                             input "sdKey${it.key}", "text", title:"<b style='background-color:#87CECB'>${it.key}</b>", defaultValue:"${it.value}", submitOnChange:true, width:6
                         }
                     }
@@ -405,5 +409,5 @@ def intialize() {
 
 }
 
-@Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
+@Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;text-align:left;}</style>"
 @Field static String tableStyle = "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px } tr {border-right:2px solid black;}</style>"

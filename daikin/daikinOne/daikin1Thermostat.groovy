@@ -92,7 +92,8 @@ def updated(){
 @SuppressWarnings('unused')
 def configure() {
     if(debugEnabled) log.debug "configure()"
-
+    updateAttr("supportedThermostatFanModes",'["auto", "circulate", "on"]')
+    updateAttr("supportedThermostatModes",'["heat", "cool", "emergency heat", "auto", "off"]')              
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){

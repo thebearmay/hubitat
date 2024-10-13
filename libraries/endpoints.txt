@@ -15,6 +15,7 @@
 * Backup    *
 * Cloud    *
 * Cloud    * /hub/advanced/disableCloudController
+* Cloud    * /hub/advanced/enableCloudController
 * Cloud    *
 * DB	 * Database			
 * DB	 * /hub/advanced/databaseSize			

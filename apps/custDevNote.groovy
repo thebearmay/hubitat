@@ -17,9 +17,10 @@
  *                                1.0.2 - Use controllerType to determine Mesh status
  *    02Mar2022     thebearmay    1.0.3 - Add warning message for missing note text
  *    01Oct2024     thebearmay    2.0.0..2.0.4 - Rewrite of the UI
+ *    20Oct2024                   2.0.5 - Add more debug
  */
 import groovy.transform.Field
-static String version()	{  return '2.0.4'  }
+static String version()	{  return '2.0.5'  }
 String appLocation() { return "http:${location.hub.localIP}/installedapp/configure/${app.id}/mainPage" }
 
 
@@ -184,15 +185,19 @@ def noteMaint(){
 
                 if (state.sdSave) {
                     state.sdSave = false
+                    if(debugEnabled)log.debug "Single save requested"
                     qryDevice.each{ dev ->
                         if("${dev.id}" == dList.devList[0]){
+                            if(debugEnabled)log.debug "newKey:$newKey newVal:$newval"
                             if(newKey && newVal){
+                                if(debugEnabled)log.debug "Updating $newKey:$newVal"
                                 dev.updateDataValue("$newKey", "$newVal")
                                 app.removeSetting("newKey")
                                 app.removeSetting("newVal")
                             }
                             settings.each{
                                 if("${it.key}".contains("sdKey")){
+                                    if(debugEnabled)log.debug "Updating previous setting ${it.key.substring(5,)}:${it.value}"
                                     dev.updateDataValue(it.key.substring(5,),it.value)
                                     app.removeSetting("${it.key}")
                                 }
@@ -204,8 +209,10 @@ def noteMaint(){
 
                 if (state.sdRem) {
                     state.sdRem = false
+                    if(debugEnabled)log.debug "Remove requested for $newKey"
                     qryDevice.each{ dev ->
                         if("${dev.id}" == devList[0]){
+                            if(debugEnabled)log.debug "Remove from ${dev.id}"
                             dev.removeDataValue(newKey)
                             app.removeSetting("sdKey$newKey")
                             app.removeSetting("newKey")
@@ -232,9 +239,11 @@ def noteMaint(){
               
                 if (state.mdSave) {
                     state.mdSave = false
+                    if(debugEnabled)log.debug "Save requested $newKey:$newVal"
                     qryDevice.each{ dev ->
                         if(state["devSel${dev.id}"]){
                             if(newKey && newVal){
+                                if(debugEnabled)log.debug "Updating $dev.id for $newKey:$newVal}"
                                 dev.updateDataValue("$newKey", "$newVal")                                
                             }
                         }
@@ -246,8 +255,10 @@ def noteMaint(){
 
                 if (state.mdRem) {
                     state.mdRem = false
+                    if(debugEnabled)log.debug "Remove requested"
                     qryDevice.each{ dev ->
                         if(state["devSel${dev.id}"]){
+                            if(debugEnabled)log.debug "Removing $newKey from ${dev.id}"
                             dev.removeDataValue(newKey)
                         }
                     }
@@ -300,7 +311,7 @@ def toCamelCase(init) {
 }
 
 def appButtonHandler(btn) {
-    log.debug "$btn pressed"
+    if(debugEnabled)log.debug "$btn pressed"
     switch(btn) {
 	case "addNote":
 /*            if(it.controllerType == "LNK") {

@@ -207,6 +207,7 @@
 * Zwave	 * /hub/searchZwaveDevices		
 * Zwave	 * /hub/zwaveVersion			
 * Zwave	 * /hub/zwave/nodeCleanup
+* Zwave  * /hub/zwaveNodeDetailGet //force update of the ZWave Details page
 * Zwave	 * /hub/advanced/zipgatewayVersion			
 * Zwave	 * /hub/startZwaveJoin
 * ZWave  * /hub/stopJoin

@@ -16,14 +16,15 @@
  *    ----         ---           --------------------------------------
  *    06Aug2024    thebearmay    v2.0.5 code reversion issue
  *                               v2.0.6 send request even if publisher is current, fix notes link
- *    09AUg2024                  v2.0.7 update msg to show current HE version at initialize (5min delay)
+ *    09Aug2024                  v2.0.7 update msg to show current HE version at initialize (5min delay)
+ *    06Nov2024					 v2.0.8 add "Switch" capability to enable HomeKit usage
  *
  */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-static String version()	{  return '2.0.7'  }
+static String version()	{  return '2.0.8'  }
 
 metadata {
     definition (
@@ -36,6 +37,7 @@ metadata {
         capability "Configuration"
         capability "Initialize"
         capability "Momentary"
+		capability "Switch"
        
         attribute "msg", "string"
         attribute "notesUrl", "string"
@@ -61,6 +63,7 @@ void installed() {
 void configure() {
     if(debugEnabled) log.debug "configure()"
     device.updateDataValue('publishingDNI', getHostAddress())
+	off()
 }
 
 void initialize() {
@@ -81,6 +84,16 @@ void verCheck() {
 
 void test(){
     log.debug "Test $debugEnabled"
+}
+
+def on(){
+    push()
+    updateAttr("switch","on")
+    off()
+}
+
+def off(){
+    updateAttr("switch","off")
 }
 
 def push(){

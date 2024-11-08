@@ -19,9 +19,10 @@
  *    01Oct2024     thebearmay    2.0.0..2.0.4 - Rewrite of the UI
  *    20Oct2024                   2.0.5 - Add more debug
  *    21Oct2024                   2.0.6 - Change buttons on maintenance pages
+ *    08Nov2024                   2.0.7 - Left Align device name
  */
 import groovy.transform.Field
-static String version()	{  return '2.0.6'  }
+static String version()	{  return '2.0.7'  }
 String appLocation() { return "http:${location.hub.localIP}/installedapp/configure/${app.id}/mainPage" }
 
 
@@ -153,7 +154,7 @@ String buildDeviceTable(){
             devName = "${it.displayName} <span style='color:red'>(HubMesh Device)</span>"
         else
             devName = it.displayName
-        str += "<td>$devSel</td><td><a href='http://${location.hub.localIP}/device/edit/${it.id}' target='_self'>${devName}</a><td class='tTip'>$hoverList$noteList</td>"
+        str += "<td>$devSel</td><td style='text-align:left'><a href='http://${location.hub.localIP}/device/edit/${it.id}' target='_self'>${devName}</a><td class='tTip'>$hoverList$noteList</td>"
         str += "</tr>"
     }
     String addNote = "<a href='${appLocation()}/noteMaint' target='_self' style='color:#007009;font-size:25px;'><b>+</b></a>"

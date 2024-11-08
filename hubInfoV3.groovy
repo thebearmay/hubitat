@@ -73,6 +73,7 @@
  *                               v3.1.7 - alternate method to detect security in use
  *    2024-07-31                 v3.1.8 - split securityInUse check out into its own option, code cleanup
  *    2024-08-06                 v3.1.9 - add a notification URL for hub shutdown
+ *    2024-11-08                 v3.1.10 - Add capability URL and attributes to allow display on Easy Dash 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -80,7 +81,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.9"}
+static String version() {return "3.1.10"}
 
 metadata {
     definition (
@@ -95,6 +96,7 @@ metadata {
         capability "Refresh"
         capability "Sensor"
         capability "TemperatureMeasurement"
+        capability "URL" //Virtual URL Device for Easy Dash
         
         attribute "latitude", "string"
         attribute "longitude", "string"
@@ -173,6 +175,9 @@ metadata {
         attribute "matterStatus", "string"
         attribute "releaseNotesUrl", "string"
         attribute "accessList","string"
+        // Virtual URL Device attributes
+        attribute "URL", "string"
+        attribute "type", "iframe"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -1484,6 +1489,8 @@ void createHtml(){
             if(htmlFileOutput == null) htmlFileOutput = "hubInfoOutput.html"
             writeFile(htmlFileOutput, html)
             updateAttr("html","<a href='http://127.0.0.1/local/$htmlFileOutput'>Link to attribute data</a>")
+            updateAttr("URL","http://${location.hub.localIP}:8080/local/$htmlFileOutput")
+            updateAttr("type","iframe")
         } else
             updateAttr("html", html)
     }else {

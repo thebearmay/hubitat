@@ -73,7 +73,8 @@
  *                               v3.1.7 - alternate method to detect security in use
  *    2024-07-31                 v3.1.8 - split securityInUse check out into its own option, code cleanup
  *    2024-08-06                 v3.1.9 - add a notification URL for hub shutdown
- *    2024-11-08                 v3.1.10 - Add capability URL and attributes to allow display on Easy Dash 
+ *    2024-11-08                 v3.1.10 - Add capability URL and attributes to allow display on Easy Dash
+ *                               v3.1.11 - Fix degree symbol when using File Manager output
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -81,7 +82,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.10"}
+static String version() {return "3.1.11"}
 
 metadata {
     definition (
@@ -1487,8 +1488,9 @@ void createHtml(){
         state.htmlError = false
         if(html.size() > 1024 || forceFileOutput){
             if(htmlFileOutput == null) htmlFileOutput = "hubInfoOutput.html"
+            html = html.replace("°","&deg;")
             writeFile(htmlFileOutput, html)
-            updateAttr("html","<a href='http://127.0.0.1/local/$htmlFileOutput'>Link to attribute data</a>")
+            updateAttr("html","<a href='http://${location.hub.localIP}:8080/local/$htmlFileOutput'>Link to attribute data</a>")
             updateAttr("URL","http://${location.hub.localIP}:8080/local/$htmlFileOutput")
             updateAttr("type","iframe")
         } else

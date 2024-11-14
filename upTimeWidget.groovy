@@ -16,6 +16,7 @@
  *    ----        ---            ----
  *    21Dec2023   thebearmay    Initialize at install
  *                              Add text color option
+ *    14Nov2024   thebearmay    Add URL Capability
  *
 */
 import java.text.SimpleDateFormat
@@ -24,7 +25,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "1.0.2"}
+static String version() {return "1.0.4"}
 
 metadata {
     definition (
@@ -35,12 +36,16 @@ metadata {
     ) {
         capability "Actuator"
         capability "Initialize"
-        attribute "html", "string"    
+        capability "URL"
+        attribute "html", "string"
+        attribute "URL", "string"
+        attribute "type", "string"//iframe, image or video
       }   
 }
 preferences {
     //input("upTimeDesc", "enum", title: "Uptime Descriptors", defaultValue:"d/h/m/s", options:["d/h/m/s"," days/ hrs/ min/ sec"," days/ hours/ minutes/ seconds"])
     input("textColor","string",title: "Text Color", submitOnChange:true)
+    input("backGroundColor","string",title:"Background Color", submitOnChange:true)
 }
 @SuppressWarnings('unused')
 void installed() {
@@ -54,6 +59,8 @@ void initialize() {
     state.hubStart = now()-(location.hub.uptime*1000)
     uploadHubFile("upTimeWidget.html",genHtml(state.hubStart).getBytes("UTF-8"))
     updateAttr('html',"<iframe src='http://${location.hub.localIP}:8080/local/upTimeWidget.html'></iframe>")
+    updateAttr("URL","http://${location.hub.localIP}:8080/local/upTimeWidget.html")
+    updateAttr("type","iframe")
 
 }
 
@@ -76,7 +83,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
 def genHtml(sTime){
     //utD=upTimeDesc.split("/")
     html="""
-<span style='color:$textColor' id='upTimeElement'>Initializing...</span>
+<span style='color:$textColor;background-color:$backGroundColor' id='upTimeElement'>Initializing...</span>
  <script type='text/javascript'>
 
         setInterval(utimer,1000,parseInt($sTime/1000));

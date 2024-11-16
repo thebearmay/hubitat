@@ -17,11 +17,12 @@
  *    12Jul2024    thebearmay    Add alternate read for extended characters
  *    13Jul2024                  charset = UTF-8 for HTML
  *    26Jul2024                  add getURL endpoint,  remove alternate read
+ *    16Nov2024                  add device attribute render 
  */
     
 
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 import groovy.transform.Field
 
@@ -44,14 +45,18 @@ preferences {
 
 }
 mappings {
-    path("/getImage") {
+    path("/getImage") {  //?fName=
         action: [POST: "serveImage",
                  GET: "serveImage"]
     }
-    path("/getURL") {
+    path("/getURL") { //?url=
         action: [POST: "serveURL",
                  GET: "serveURL"]
-    }    
+    }
+    path("/getAttribute") { //?dev=xxxx,attr=xxxx
+        action: [POST: "serveAttr",
+                GET: "serveAttr"]
+    }
 }
 
 def installed() {
@@ -82,11 +87,14 @@ def mainPage(){
                 paragraph "<b>Cloud Server API: </b>${getFullApiServerUrl()}"
                 if(state.accessToken == null) createAccessToken()
                 paragraph "<b>Access Token: </b>${state.accessToken}"
-                paragraph "<b>Cloud Request Formats: </b><br>${getFullApiServerUrl()}/getImage?access_token=${state.accessToken}&fName=yourFileName.fileExtension<br><br>${getFullApiServerUrl()}/getURL?access_token=${state.accessToken}&url=urlEncodedURL"
+                paragraph "<b>Cloud Request Formats: </b><br>${getFullApiServerUrl()}/getImage?access_token=${state.accessToken}&fName=yourFileName.fileExtension<br><br>${getFullApiServerUrl()}/getURL?access_token=${state.accessToken}&url=urlEncodedURL<br><br>${getFullApiServerUrl()}/getAttribute?access_token=${state.accessToken}&dev=deviceID&attr=attributeName"
         }
-        section(name:"opt",title:"Options", hideablel: true, hidden: false){
+        section(name:"opt",title:"Options", hideable: true, hidden: false){
             input("debugEnabled","bool",title:"Enable Debug Logging", width:4)
         }
+        section(name:"devs",title:"Authorized Devices", hideable:true, hidden:true){
+            input "devlist","capability.*",title:"Select Devices to Authorized",multiple:true
+         }
 
 	    } else {
 		    section("") {
@@ -144,6 +152,27 @@ def serveURL(){
     uploadHubFile("proxyWork${app.id}.htm",fContent.getBytes("UTF-8"))
     renderFile("proxyWork${app.id}.htm")
 }
+
+def serveAttr(){
+    if(debugEnabled)
+        log.debug "serveAttr called: ${params.dev} ${params.attr}"
+    devlist.each{
+        if ("${it.id}" == "${params.dev}"){
+            //uploadHubFile("proxyWork${app.id}.htm",it.currentValue("${params.attr}").getBytes("UTF-8"))
+            //renderFile("proxyWork${app.id}.htm")
+            contentBlock = [
+                contentType: "text/html; charset:utf-8 ",
+                gzipContent: true,
+                data: it.currentValue("${params.attr}").replace("°","&deg;"),
+                status:200
+            ]
+        }
+    }
+    if(debugEnabled)
+        log.debug "$contentBlock"
+    render (contentBlock)
+}
+
 void delWork(){
     deleteHubFile("proxyWork${app.id}.htm")
 }

@@ -75,6 +75,7 @@
  *    2024-08-06                 v3.1.9 - add a notification URL for hub shutdown
  *    2024-11-08                 v3.1.10 - Add capability URL and attributes to allow display on Easy Dash
  *                               v3.1.11 - Fix degree symbol when using File Manager output
+ *    2024-11-16                 v3.1.12 - fix min version check
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -82,7 +83,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.11"}
+static String version() {return "3.1.12"}
 
 metadata {
     definition (
@@ -178,7 +179,7 @@ metadata {
         attribute "accessList","string"
         // Virtual URL Device attributes
         attribute "URL", "string"
-        attribute "type", "iframe"
+        attribute "type", "string"//iframe, image or video
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -1804,6 +1805,9 @@ Boolean minVerCheck(vStr){  //check if HE is >= to the requirement
         return false
     rValue =  true
     for(i=0;i<vTokens.size();i++){
+        if(vTokens[i].toInteger() < fwTokens[i].toInteger())
+           i=vTokens.size()+1
+        else
         if(vTokens[i].toInteger() > fwTokens[i].toInteger())
             rValue=false
     }

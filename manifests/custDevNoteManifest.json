@@ -3,7 +3,7 @@
   "author": "Jean P. May, Jr.",
   "version": "2.0.8",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2024-11-08",
+  "dateReleased": "2024-11-17,
   "releaseNotes": "v2.0.8 - button styling\nv2.0.7 - Left justify device name\nv2.0.6 - Change button handler to custom UI\nv2.0.5 - add more debug lines\nv2.0.4 - UI Rewrite",
   "apps": [
     {

@@ -16,12 +16,13 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
+ *    17Nov2024    thebearmay    Fix display issue with the cooling and heating setpoints
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.5"}
+static String version() {return "0.0.6"}
 
 metadata {
     definition (
@@ -40,6 +41,8 @@ metadata {
         capability "ThermostatMode"
         capability "ThermostatOperatingState"
         capability "ThermostatSetpoint"
+        capability "TemperatureMeasurement"
+        capability "Sensor"
         
         attribute "equipmentStatus","number" //???HE - thermostatOperatingState ENUM ["heating", "pending cool", "pending heat", "vent economizer", "idle", "cooling", "fan only"]        
         attribute "fan","number"
@@ -92,6 +95,11 @@ def updated(){
 @SuppressWarnings('unused')
 def configure() {
     if(debugEnabled) log.debug "configure()"
+    log.debug device.properties
+    device.supportedAttributes.each{
+        log.debug "${it}"
+        updateAttr("${it}","0")
+    }
     updateAttr("supportedThermostatFanModes",'["auto", "circulate", "on"]')
     updateAttr("supportedThermostatModes",'["heat", "cool", "emergency heat", "auto", "off"]')              
 }
@@ -150,20 +158,26 @@ void off(){
 
 void setCoolingSetpoint(temp){
     if(useFahrenheit) {
-        temp = fahrenheitToCelsius(temp).toFloat().round(0)
+        temp2 = fahrenheitToCelsius(temp).toFloat().round(0)
         cOrF = "°F"
-    } else cOrF = "°C"
-    parent.sendPut("/deviceData/${device.deviceNetworkId}",[cspHome:temp])
+    } else {
+        cOrF = "°C"
+        temp2 = temp
+    }
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[cspHome:temp2])
     updateAttr("thermostatSetPoint",temp,cOrF)
     updateAttr("coolingSetPoint",temp,cOrF)                   
 }
 
 void setHeatingSetpoint(temp){
     if(useFahrenheit) {
-        temp = fahrenheitToCelsius(temp).toFloat().round(0)
+        temp2 = fahrenheitToCelsius(temp).toFloat().round(0)
         cOrF = "°F"
-    } else cOrF = "°C"
-    parent.sendPut("/deviceData/${device.deviceNetworkId}",[hspHome:temp])
+    } else {
+        cOrF = "°C"
+        temp2 = temp
+    }
+    parent.sendPut("/deviceData/${device.deviceNetworkId}",[hspHome:temp2])
     updateAttr("thermostatSetPoint",temp,cOrF)
     updateAttr("heatingSetPoint",temp,cOrF)   
 }

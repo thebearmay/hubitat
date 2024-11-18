@@ -20,9 +20,10 @@
  *    20Oct2024                   2.0.5 - Add more debug
  *    21Oct2024                   2.0.6 - Change buttons on maintenance pages
  *    08Nov2024                   2.0.7 - Left Align device name
+ *    17Nov2024                   2.0.8 - button styling
  */
 import groovy.transform.Field
-static String version()	{  return '2.0.7'  }
+static String version()	{  return '2.0.8'  }
 String appLocation() { return "http:${location.hub.localIP}/installedapp/configure/${app.id}/mainPage" }
 
 
@@ -106,7 +107,7 @@ String buttonLink(String btnName, String linkText, color = "#1A77C9", font = "15
 }
 
 String buttonLink2(String btnName, String linkText, color = "#1A77C9", bkColor = "#FFFFFF", font = "15px") {
-	"<div class='form-group'><input type='hidden' name='${btnName}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='color:$color;background-color:$bkColor;cursor:pointer;font-size:$font; border-style:outset;width:10em;'>$linkText</div></div><input type='hidden' name='settings[$btnName]' value=''>"
+	"<div class='form-group'><input type='hidden' name='${btnName}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='border-radius:25px;color:$color;background-color:$bkColor;cursor:pointer;font-size:$font; border-style:outset;width:10em;'>$linkText</div></div><input type='hidden' name='settings[$btnName]' value=''>"
 }
 
 String btnIcon(String name) {

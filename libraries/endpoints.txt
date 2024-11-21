@@ -9,6 +9,7 @@
 * Apps	 * App Type List			
 * Apps	 * /app/appTypeList
 * Apps   * /hub/advanced/reloadAppAndDriverDefinitions //Resets 'Error 404' conditions
+* Apps   * /installedapp/statusJson/<appID> //>=HE 2.4.0.xx returns the application status page data
 * Apps	 *	
 * Backup    * Backup Download
 * Backup    * /hub/backupDB?fileName=latest

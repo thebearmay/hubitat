@@ -18,10 +18,12 @@
  *    11Sep2023    thebearmay    Add server attribute option
  *    18Sep2023    thebearmay    Add Debug Logging option
  *    23Oct2023    thebearmay    Add serverIp as an atttribute
+ *    18Nov2024    thebearmay    HE 2.4.0.x changes
  */
 
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 import groovy.transform.Field
 @Field static final String okSymFLD       = "\u2713"
 @Field static final String notOkSymFLD    = "<span style='color:red'>\u2715</span>"
@@ -30,7 +32,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.5"} 
+static String version() {return "0.0.6"} 
 
 metadata {
     definition (
@@ -117,41 +119,73 @@ void processPage(){
     app = findPage()
     if(app==-1) {
         log.error "Echo Speaks not Installed"
+        return
     }
-    pData=readPage("http://127.0.0.1:8080/installedapp/status/$app")
-
-    dWork = pData.substring(pData.indexOf('refreshCookieDays'),pData.indexOf('refreshCookieDays')+500)
-    if(debuEnabled) "Refresh Days Work: <br> $dWork"
-    dWork.replace('<','')
-    dWork=dWork.split(' ')
-    dWork.each{
-        if(debugEnable) "Refresh Split Each: $it"
-        if(it.isNumber()) updateAttr("cookieRefreshDays",it.toInteger())
-    }
-    dWork = pData.substring(pData.indexOf('serverDataMap'),pData.indexOf('serverDataMap')+800)
-    dWork = dWork.substring(dWork.indexOf('{'),dWork.indexOf('}')+1)
+    if(minVerCheck("2.4.0.0")) 
+        processJsonData(app)
+    else{    
+        pData=readExtPage("http://127.0.0.1:8080/installedapp/status/$app")
+        dWork = pData.substring(pData.indexOf('refreshCookieDays'),pData.indexOf('refreshCookieDays')+500)
+        if(debugEnabled) "Refresh Days Work: <br> $dWork"
+        dWork.replace('<','')
+        dWork=dWork.split(' ')
+        dWork.each{
+            if(debugEnable) "Refresh Split Each: $it"
+            if(it.isNumber()) updateAttr("cookieRefreshDays",it.toInteger())
+        }
+        dWork = pData.substring(pData.indexOf('serverDataMap'),pData.indexOf('serverDataMap')+800)
+        dWork = dWork.substring(dWork.indexOf('{'),dWork.indexOf('}')+1)
    
-    createServerMap(dWork)
-    if(pData.indexOf("cookieData") >-1){
-        if(debugEnabled) log.debug "Found Cookie Data"
-        updateAttr("cookieData",true)
-        if(pData.indexOf("csrf") > -1){
-            updateAttr("csrf", true)
-            if(debugEnabled) log.debug "Found csrf"
+        createServerMap(dWork)
+        if(pData.indexOf("cookieData") >-1){
+            if(debugEnabled) log.debug "Found Cookie Data"
+            updateAttr("cookieData",true)
+            if(pData.indexOf("csrf") > -1){
+                updateAttr("csrf", true)
+                if(debugEnabled) log.debug "Found csrf"
+            }
+        }
+        dWork = pData.substring(pData.indexOf('amazonDomain'),pData.indexOf('amazonDomain')+300)
+        if(debugEnabled) log.debug "Amazon Domain Raw: $dWork"
+        dWork.replace('<','')
+        dWork=dWork.split(' ')
+        dWork.each{
+            if(it.contains(".")){
+                updateAttr("amazonDomain",it.trim())
+                if(debugEnabled) log.debug "Amazon Domain: ${it.trim()}"
+            }
         }
     }
-    dWork = pData.substring(pData.indexOf('amazonDomain'),pData.indexOf('amazonDomain')+300)
-    if(debugEnabled) log.debug "Amazon Domain Raw: $dWork"
-    dWork.replace('<','')
-    dWork=dWork.split(' ')
-    dWork.each{
-        if(it.contains(".")){
-            updateAttr("amazonDomain",it.trim())
-            if(debugEnabled) log.debug "Amazon Domain: ${it.trim()}"
-        }
-    }
-
 }
+
+void processJsonData(app){
+    jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/$app") 
+    cookieRefreshDays = 0
+    jData.appSettings.each {
+        if(it.name == "cookieRefreshDays"){
+            cookieRefreshDays = it.value.toInteger()
+            updateAttr("cookieRefreshDays",cookieRefreshDays)
+        }
+    }
+    def cookieData = ''
+    jData.appState.each{
+        if(it.name == 'serverDataMap'){
+            updateAttr("serverData", JsonOutput.toJson(it.value))
+        }
+        if(it.name == 'cookieData'){
+            cookieData = it.value
+            updateAttr("cookieData",true)
+            if(cookieData.csrf){
+                updateAttr("csrf", true)
+                if(debugEnabled) log.debug "Found csrf"
+            }
+        }
+        if(it.name == 'amazonDomain'){
+            updateAttr("amazonDomain",it.value.trim())
+        }
+    }
+}
+
 
 Integer findPage(){
 
@@ -185,7 +219,8 @@ Integer findPage(){
 }
 
 void createServerMap(sData){
-    if(debugEnabled) "Server Data Raw: $sData"
+    if(debugEnabled)
+        log.debug "Server Data Raw: $sData"
     sWork = sData.replace("&#x3D;",'\":\"')
     sWork = sWork.replace(', ','","')
     sWork = sWork.replace('{','{\"')
@@ -197,8 +232,12 @@ void createServerMap(sData){
 void refreshHTML(){
     if(debugEnabled)  log.debug "Refreshing HTML"
     Long tNow = new Date().getTime()
-    def jSlurp = new JsonSlurper()
-    serverData = jSlurp.parseText(device.currentValue("serverData",true))
+    if(minVerCheck("2.4.0.0")) {
+        def jSlurp = new JsonSlurper()
+        serverData = jSlurp.parseText(device.currentValue("serverData",true))
+    } else {
+        serverData = device.currentValue("serverData",true)
+    }
     nextCookieRefreshDur()
     wkStr = "<table style='color:mediumblue;font-size:small'><tr><th>Auth Status: "
     if(device.currentValue("csrf",true) == "true" && device.currentValue("cookieData",true) == "true")
@@ -229,7 +268,7 @@ void refreshHTML(){
     }
     wkStr+="</td></tr><tr><th>Server Data</th></tr>"
     wkStr+="<tr><td>Heroku: "
-    if(serverData.onHeroku == "true"){
+    if(serverData.onHeroku == "true" || serverData.onHeroku){
         wkStr+=okSymFLD
         updateAttr("serverLocation","Heroku")
     } else {
@@ -237,7 +276,7 @@ void refreshHTML(){
         updateAttr("serverLocation","Local")
     }
     wkStr+="</td></tr><tr><td>Local Server: "
-    if(serverData.isLocal == "true")
+    if(serverData.isLocal == "true"  || serverData.isLocal)
        wkStr+=okSymFLD
     else
         wkStr+=notOkSymFLD
@@ -256,12 +295,12 @@ void refreshHTML(){
     }
     wkStr2+="</td></tr><tr><th>Server Data</th></tr>"
     wkStr2+="<tr><td>Heroku: "
-    if(serverData.onHeroku == "true")
+    if(serverData.onHeroku == "true" || serverData.onHeroku)
        wkStr2+=okSymFLD
     else
         wkStr2+=notOkSymFLD
     wkStr2+="</td></tr><tr><td>Local Server: "
-    if(serverData.isLocal == "true")
+    if(serverData.isLocal == "true" || serverData.isLocal)
        wkStr2+=okSymFLD
     else
         wkStr2+=notOkSymFLD
@@ -319,76 +358,79 @@ static String seconds2Duration(Integer itimeSec, Boolean postfix=true, Integer t
 
 static String pluralize(Integer itemVal, String str) { return (itemVal > 1) ? str+"s" : str }
 
-String readPage(fName){
-    if(security) cookie = securityLogin().cookie
+def readJsonPage(fName){
     def params = [
         uri: fName,
-        contentType: "text/html",
-        textParser: true,
+        contentType: "application/json",
+        //textParser: false,
         headers: [
-				"Cookie": cookie
+            "Connection-Timeout":600
         ]
-                    
     ]
 
     try {
         httpGet(params) { resp ->
             if(resp!= null) {
-               int i = 0
-               String delim = ""
-               i = resp.data.read() 
-               while (i != -1){
-                   char c = (char) i
-                   delim+=c
-                   i = resp.data.read() 
-               } 
-               return delim
+                //def jSlurp = new JsonSlurper()
+                //Map jData = (Map)jSlurp.parseText((String)resp.data)
+                //log.debug "${resp.properties}"
+                return resp.data
             }
             else {
-                log.error "Null Response"
+                log.error "Read External - Null Response"
+                return null
             }
         }
     } catch (exception) {
-        log.error "Read Page Error: ${exception.message}"
-        return null;
+        log.error "Read Ext Error: ${exception.message}"
+        return null
+    }
+     
+}
+
+
+String readExtPage(fName){  
+    def params = [
+        uri: fName,
+        contentType: "text/html",
+        textParser: true,
+        headers: [
+            "Connection-Timeout":600
+        ]
+    ]
+
+    try {
+        httpGet(params) { resp ->
+            if(resp!= null) {
+                return """${resp.data}"""
+            }
+            else {
+                log.error "Read External - Null Response"
+                return null
+            }
+        }
+    } catch (exception) {
+        log.error "Read Ext Error: ${exception.message}"
+        return null
     }
 }
-HashMap securityLogin(){
-    def result = false
-    try{
-        httpPost(
-				[
-					uri: "http://127.0.0.1:8080",
-					path: "/login",
-					query: 
-					[
-						loginRedirect: "/"
-					],
-					body:
-					[
-						username: username,
-						password: password,
-						submit: "Login"
-					],
-					textParser: true,
-					ignoreSSLIssues: true
-				]
-		)
-		{ resp ->
-				if (resp.data?.text?.contains("The login information you supplied was incorrect."))
-					result = false
-				else {
-					cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0)
-					result = true
-		    	}
-		}
-    }catch (e){
-			log.error "Error logging in: ${e}"
-			result = false
-            cookie = null
+
+Boolean minVerCheck(vStr){  //check if HE is >= to the requirement
+    fwTokens = location.hub.firmwareVersionString.split("\\.")
+    vTokens = vStr.split("\\.")
+    if(fwTokens.size() != vTokens.size())
+        return false
+    rValue =  true
+    for(i=0;i<vTokens.size();i++){
+        if(vTokens[i].toInteger() < fwTokens[i].toInteger())
+           i=vTokens.size()+1
+        else
+        if(vTokens[i].toInteger() > fwTokens[i].toInteger())
+            rValue=false
     }
-	return [result: result, cookie: cookie]
+    return rValue
 }
+
 
 @SuppressWarnings('unused')
 void logsOff(){

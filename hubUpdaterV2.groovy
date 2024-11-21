@@ -18,6 +18,7 @@
  *                               v2.0.6 send request even if publisher is current, fix notes link
  *    09Aug2024                  v2.0.7 update msg to show current HE version at initialize (5min delay)
  *    06Nov2024					 v2.0.8 add "Switch" capability to enable HomeKit usage
+ *    21Nov2024                  v2.0.9 add capability to use a list of hubs for updates
  *
  */
 import groovy.transform.Field
@@ -41,17 +42,19 @@ metadata {
        
         attribute "msg", "string"
         attribute "notesUrl", "string"
+        attribute "hubList", "string"
         
         command "sendTestMsg"
         command "subscribe",[[type:"string",description:"IP of Publisher Hub"]]
         command "unsubscribe"
-    
+        command "updateHubList",[[type:"string",description:"Comma separated list of hubs to update"]]    
     }   
 }
 
 preferences {
     input("termsAccepted","bool",title: "By using this driver you are agreeing to the <a href='https://hubitat.com/terms-of-service'>Hubitat Terms of Service</a>",required:true)
     input("updMesh","bool", title: "Push Update Request to All HubMeshed Hubs")
+    input("useHubList","bool",title: "Push Update Request using Hub List Attribute")
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }
 
@@ -86,6 +89,14 @@ void test(){
     log.debug "Test $debugEnabled"
 }
 
+void updateHubList(hList){
+    if(hList == null) {
+        device.deleteCurrentState('hubList')
+        return
+    }
+    updateAttr("hubList",hList.replace(" ",""))
+}
+
 def on(){
     push()
     updateAttr("switch","on")
@@ -114,6 +125,8 @@ def push(){
 void getUpdateCheck(resp, data) {
     if(updMesh) {
         updateMesh()
+    } else if(useHubList) {
+        updateFromList()
     }
 
     if(debugEnable) log.debug "update check: ${resp.status}"
@@ -126,7 +139,7 @@ void getUpdateCheck(resp, data) {
                 updateAttr("msg","Hub is Current")
             else {
                 updateAttr("msg","${resMap.version} requested")
-                updateAttr("notesUrl","<a href='${resMap.releaseNotesUrl}'>Release Notes for Production</a>")
+                updateAttr("notesUrl","<a href='${resMap.releaseNotesUrl}'>Release Notes</a>")
                 httpGet("http://127.0.0.1:8080/hub/cloud/updatePlatform"){ response -> 
                     updateAttr("msg", "${response.data}")
                 }
@@ -171,6 +184,15 @@ void getHubMesh(resp, data){
         if (!warnSuppress) log.warn ex
     }
 }
+
+void updateFromList(){
+    hubList = device.currentValue("hubList")
+    hList = hubList.split(',')
+    hList.each{
+        log.info "Requesting update of ${it}"
+        sendMsg(it,"Update Requested")
+    } 
+}
     
 def updated(){
 	log.trace "updated()"
@@ -212,7 +234,16 @@ def getHostAddress(ip=''){
 }
 
 def sendTestMsg(){
-        params =  [
+    if(useHubList){
+        hubList = device.currentValue("hubList")
+        hList = hubList.split(',')
+        hList.each{
+            log.info "Testing Message to ${it}"
+            sendMsg(it,"Test Message")
+        }       
+        return
+    }
+    params =  [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubMeshJson",
         headers: [

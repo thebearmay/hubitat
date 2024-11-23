@@ -8,12 +8,17 @@
 * Access List	 *			
 * Apps	 * App Type List			
 * Apps	 * /app/appTypeList
+* Apps   * /hub2/appsList
+* Apps   * /hub2/userAppTypes
 * Apps   * /hub/advanced/reloadAppAndDriverDefinitions //Resets 'Error 404' conditions
 * Apps   * /installedapp/statusJson/<appID> //>=HE 2.4.0.xx returns the application status page data
 * Apps	 *	
 * Backup    * Backup Download
 * Backup    * /hub/backupDB?fileName=latest
 * Backup    *
+* Bundles    *
+* Bundles    * /hub2/userBundles
+* Bundles    *
 * Cloud    *
 * Cloud    * /hub/advanced/disableCloudController
 * Cloud    * /hub/advanced/enableCloudController
@@ -23,8 +28,10 @@
 * DB	 * /hub/cleanupDatabase
 * DB	 * 
 * Device    * Device
-* Device    * /device/forceDelete/<devId>/yes
+* Device    * /device/forceDelete/<devID>/yes
 * Device    * /hub2/devicesList
+* Device    * /hub2/userDeviceTypes
+* Device    * /device/fullJson/<devID>  //2.4.0.x
 * Device    *
 * Diag	 * Force Update of Diag Tool			
 * Diag	 *   /hub/cloud/updateDiagnosticTool
@@ -60,10 +67,19 @@
 * Files	 *			
 * Firmware	 * Check for Firmware Update			
 * Firmware	 * /hub/cloud/checkForUpdate			
-* Firmware	 * 			
+* Firmware	 *
+* Hub    *
+* Hub    * /hub/details/json //2.4.0.x
+* Hub    *
+* Hub Vars    *
+* Hub Vars    * /installedapp/configure/json/<ID of HubVar app>/hubVar
+* Hub Vars    *
 * Jobs	* Delete Pending Jobs			
 * Jobs	* /hub/advanced/deleteAppJobs/<app/dev ID>			
-* Jobs	*			
+* Jobs	*
+* Libraries    *
+* Libraries    * /hub2/userLibraries
+* Libraries    *
 * Logs	 * Logs 			
 * Logs	 * /logs/json			
 * Logs	 *			
@@ -138,10 +154,8 @@
 * Reboot	 * /hub/rebuildDatabaseAndReboot //>=2.3.7.14			
 * Reboot	 *  //Purge Logs			
 * Reboot	 * /hub/reboot			
-* Reboot	 *	headers:[		Content-Type: "application/x-www-form-urlencoded"
-* Reboot	 *			
-* Reboot	 *	],		
-* Reboot	 * body:[purgeLogs:"true"]			
+* Reboot	 *	headers:[		Content-Type: "application/x-www-form-urlencoded" ],		
+* Reboot	 *  body:[purgeLogs:"true"]			
 * Reboot	 *			
 * Reboot	 * Hub Shutdown			
 * Reboot	 * /hub/shutdown			
@@ -149,6 +163,9 @@
 * Reset    * Factory Reset
 * Reset    * /factory/recovery
 * Reset    *
+* Rooms    *
+* Rooms    * /hub2/roomsList
+* Rooms    *
 * Security	 * Security in Use			
 * Security	 * /logout 			
 * Security	 *   returns http://<IP>:8080/login page if in use			

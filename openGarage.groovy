@@ -16,6 +16,7 @@
  *    ----        ---            ----
  * 2023-01--4	thebearmay	Initial release
  * 2023-01-16	ucdscott	Added txtEnable logging, changed debugEnable preference to Hubitat de facto standard logEnable, updated Change History
+ * 2024-11-24	jakubsuchy	Fixing 404 on actions (open/close/reboot)
  *
  */
 
@@ -83,7 +84,11 @@ void open() {
     httpGet(
         [
             uri: "http://$devIP",
-            path: "/cc?dkey=$devPwd&open=1",
+            path: "/cc",
+	    query: [
+                   dkey: "$devPwd",
+                   open: 1
+            ],
             headers: [            
                    Accept: "application/json"
             ]
@@ -99,7 +104,11 @@ void close() {
     httpGet(
         [
             uri: "http://$devIP",
-            path: "/cc?dkey=$devPwd&close=1",
+            path: "/cc",
+            query: [
+                   dkey: "$devPwd",
+                   close: 1
+            ],
             headers: [            
                    Accept: "application/json"
             ]
@@ -115,7 +124,11 @@ void toggleDoor() {
     httpGet(
         [
             uri: "http://$devIP",
-            path: "/cc?dkey=$devPwd&click=1",
+            path: "/cc",
+	    query: [
+                   dkey: "$devPwd",
+                   click: 1
+            ],
             headers: [            
                    Accept: "application/json"
             ]
@@ -130,7 +143,11 @@ void rebootDevice() {
     httpGet(
         [
             uri: "http://$devIP",
-            path: "/cc?dkey=$devPwd&reboot=1",
+            path: "/cc",
+	    query: [
+                   dkey: "$devPwd",
+                   reboot: 1
+            ],
             headers: [            
                    Accept: "application/json"
             ]

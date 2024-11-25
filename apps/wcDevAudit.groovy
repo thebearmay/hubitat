@@ -14,9 +14,10 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    31Aug2024        thebearmay            add a try..catch around the piston processing
  *    01Sep2024                              split the try..catch into three separate iterations
+ *    25Nov2024                              2.4.0.xx changes
 */
 
-static String version()	{  return '0.0.8'  }
+static String version()	{  return '0.0.9'  }
 import java.security.MessageDigest
 
 definition (
@@ -126,7 +127,14 @@ String readPage(pId){
 String getErrors(){
     childApps = getPistonList()
     //log.debug "Child apps:${childApps}"
+    if(minVerCheck("2.4.0.0")) {
+        jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${state.wcID}")
+        errList = getErrorsJ(jData, childApps)
+        return errList
+    }
+
     wcApp = readPage(state.wcID)
+    
     //uploadHubFile("wcaWork.txt",wcApp.getBytes('UTF-8'))
     parDevList = []
     parDevList2 = []
@@ -217,6 +225,61 @@ String getErrors(){
     return errList
 }
 
+String getErrorsJ(wcData, childApps){
+	parDevList = []
+	parDevList2 = []
+	wcData.appSettings.each {
+		if(it.type.contains('capability') && it.deviceIdsForDeviceList != null) {
+			it.deviceIdsForDeviceList.each {
+				parDevList.add(it.toInteger())
+				hDnum = md5("core.${it.toInteger()}")
+				parDevList2.add(hDnum)
+			}
+		}
+	}
+    if(state.exclude) {
+        state.exclude.each{
+            parDevList2.add(it.value.toString())
+        }
+    }
+    parDevList = parDevList.unique().sort()
+    parDevList2 = parDevList2.unique().sort()
+	errList = ''
+	childApps.each{ ca ->
+		jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
+		devList = []
+		jData.appSettings.each { ap ->
+			if(ap.type.contains('capability')){
+				ap.deviceIdsForDeviceList.each {
+                    if(!parDevList.contains(it)){
+                        dName = ap.deviceList["$it"]
+                        errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${ca.key}'>${ca.value}</a> is missing device <b>$dName</b>\n"
+                    }
+					devList.add(it)
+				}
+			}
+		}
+        jData.appState.each { aS ->
+            if(aS.name == 'cache' ){
+                aS.value.each{
+                    if(it.key.contains(":")  && it.key.size()>5){
+                        p1=it.key.indexOf(":")+1
+                        p2=it.key.indexOf(":",p1)-1
+                        
+                        devHash = it.key.substring(p1,p2)
+                        devType = it.key.substring(p2+3,it.key.size())
+                        if(!parDevList2.contains("$devHash")){
+                            errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${ca.key}'>${ca.value}</a> contains unknown device <b>':$devHash:'</b> of type <b>$devType</b>\n"
+                        }
+                    }
+                }
+            }
+        }
+	}
+    
+    return errList
+}
+
 ArrayList getPistonList() {
     Map requestParams =
 	[
@@ -240,6 +303,49 @@ ArrayList getPistonList() {
         
         return wrkList
     }
+}
+
+def readJsonPage(fName){
+    def params = [
+        uri: fName,
+        contentType: "application/json",
+        //textParser: false,
+        headers: [
+            "Connection-Timeout":600
+        ]
+    ]
+
+    try {
+        httpGet(params) { resp ->
+            if(resp!= null) {
+                return resp.data
+            }
+            else {
+                log.error "Read External - Null Response"
+                return null
+            }
+        }
+    } catch (exception) {
+        log.error "Read JFile Error: ${exception.message}"
+        return null
+    }
+     
+}
+
+Boolean minVerCheck(vStr){  //check if HE is >= to the requirement
+    fwTokens = location.hub.firmwareVersionString.split("\\.")
+    vTokens = vStr.split("\\.")
+    if(fwTokens.size() != vTokens.size())
+        return false
+    rValue =  true
+    for(i=0;i<vTokens.size();i++){
+        if(vTokens[i].toInteger() < fwTokens[i].toInteger())
+           i=vTokens.size()+1
+        else
+        if(vTokens[i].toInteger() > fwTokens[i].toInteger())
+            rValue=false
+    }
+    return rValue
 }
 
 String md5(String md5){ 

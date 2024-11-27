@@ -15,9 +15,10 @@
  *    31Aug2024        thebearmay            add a try..catch around the piston processing
  *    01Sep2024                              split the try..catch into three separate iterations
  *    25Nov2024                              2.4.0.xx changes
+ *    27Nov2024                              More 2.4.0.xx changes
 */
 
-static String version()	{  return '0.0.9'  }
+static String version()	{  return '0.0.10'  }
 import java.security.MessageDigest
 
 definition (
@@ -272,6 +273,20 @@ String getErrorsJ(wcData, childApps){
                             errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${ca.key}'>${ca.value}</a> contains unknown device <b>':$devHash:'</b> of type <b>$devType</b>\n"
                         }
                     }
+                }
+            }
+            if(aS.name == 'logs'){
+                aS.value.each {
+                    if(it.c && it.c == 'error'){
+                        eMsg = it.m.substring(0,it.m.indexOf('.'))
+                        errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${ca.key}'>${ca.value}</a> logged error: <b>$eMsg</b>\n"
+                    }
+                }
+            }
+            if(aS.name == 'subscriptions'){
+                dCount = aS.value.devices.toInteger()
+                if(dCount != devList.size()){
+                    errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${ca.key}'>${ca.value}</a><b> needs $dCount devices but only has ${devList.size()}</b>\n"
                 }
             }
         }

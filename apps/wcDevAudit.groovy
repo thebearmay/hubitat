@@ -69,7 +69,7 @@ def mainPage(){
             }
 
         }
-        section("Exclusions Maintenance",hideable:true,hidden:true){
+        section("Hash Exclusions Maintenance",hideable:true,hidden:true){
             if(!state.exclude) state.exclude = [:]
             else{
                 paragraph "<h3>Excluded Hashes</h3>"
@@ -98,6 +98,34 @@ def mainPage(){
                     state.exclude["${it.key}"]="${it.value}"
                 }
                 app.removeSetting("excName")
+            }
+        }
+        section("Piston Exclusions Maintenance",hideable:true,hidden:true){
+            if(!state.pExclude) state.pExclude = []
+            else{
+                paragraph "<h3>Excluded Piston IDs</h3>"
+                paragraph "${state.pExclude}"
+            }
+            input("excPiston", "number", title:"<b>Piston to Exclude</b>",size:4)
+            input("addExcP","button",title:"Add", size:4)
+            if(state.addExclusionP) {
+                state.addExclusionP = false
+                tList = (ArrayList) state.pExclude
+                tList.add(excPiston)
+                state.pExclude = tList
+                app.removeSetting("excPiston")
+            }
+            input("delExcP","button",title:"Delete",size:4)
+            if(state.delExclusionP) {
+                state.delExclusionP = false
+                tList= (ArrayList) state.pExclude
+                tList2 = []
+                tList.each{
+                    if(it.toInteger() != excPiston.toInteger())
+                        tList2.add(it.toInteger())
+                }
+                state.pExclude = tList2
+                app.removeSetting("excPiston")
             }
         }
     }
@@ -229,6 +257,7 @@ String getErrors(){
 String getErrorsJ(wcData, childApps){
 	parDevList = []
 	parDevList2 = []
+    excList = []
 	wcData.appSettings.each {
 		if(it.type.contains('capability') && it.deviceIdsForDeviceList != null) {
 			it.deviceIdsForDeviceList.each {
@@ -240,15 +269,17 @@ String getErrorsJ(wcData, childApps){
 	}
     if(state.exclude) {
         state.exclude.each{
-            parDevList2.add(it.value.toString())
+            excList.add(it.value.toString())
         }
     }
     parDevList = parDevList.unique().sort()
     parDevList2 = parDevList2.unique().sort()
+    excList = excList.unique().sort()
 	errList = ''
 	childApps.each{ ca ->
 		jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
 		devList = []
+        addDev = 0
 		jData.appSettings.each { ap ->
 			if(ap.type.contains('capability')){
 				ap.deviceIdsForDeviceList.each {
@@ -265,12 +296,16 @@ String getErrorsJ(wcData, childApps){
                 aS.value.each{
                     if(it.key.contains(":")  && it.key.size()>5){
                         p1=it.key.indexOf(":")+1
-                        p2=it.key.indexOf(":",p1)-1
+                        p2=it.key.indexOf(":",p1)
                         
                         devHash = it.key.substring(p1,p2)
-                        devType = it.key.substring(p2+3,it.key.size())
-                        if(!parDevList2.contains("$devHash")){
+                        devType = it.key.substring(p2+2,it.key.size())
+                        if(parDevList2.toString().indexOf("$devHash") == -1 && excList.toString().indexOf("$devHash") == -1){
                             errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${ca.key}'>${ca.value}</a> contains unknown device <b>':$devHash:'</b> of type <b>$devType</b>\n"
+                        }
+                        if(excList.toString().indexOf("$devHash") > -1){
+                            addDev++
+                            //log.debug "Added 1 to DevCount for $devHash in ${ca.value} -> $addDev"
                         }
                     }
                 }
@@ -283,10 +318,20 @@ String getErrorsJ(wcData, childApps){
                     }
                 }
             }
+            if(aS.name == 'vars'){
+                it.each {
+                    
+                }
+            }
+        }
+        jData.appState.each { aS -> // needs to run subscriptions last to make sure added devices are correct
             if(aS.name == 'subscriptions'){
-                dCount = aS.value.devices.toInteger()
-                if(dCount != devList.size()){
-                    errList +="Piston <a href='http://${location.hub.localIP}/installedapp/status/${ca.key}'>${ca.value}</a><b> needs $dCount devices but only has ${devList.size()}</b>\n"
+                dCount = aS.value.devices.toInteger() 
+                if(jData.scheduledJobs){
+                    addDev += jData.scheduledJobs.size()
+                }
+                if(dCount > devList.size()+addDev){
+                    errList +="<b>Warning:</b>Piston <a href='http://${location.hub.localIP}/installedapp/status/${ca.key}'>${ca.value} (${ca.key})</a> needs <b>$dCount</b> devices but only has <b>${devList.size()+addDev}</b> listed\n"
                 }
             }
         }
@@ -304,13 +349,16 @@ ArrayList getPistonList() {
 
     httpGet(requestParams) { resp ->
         wrkList = []
+        if(!state.ExclusionP) state.ExclusionP = []
         resp.data.apps.each{
             if(it.data.type == "webCoRE"){
                 state.wcID = it.data.id
                 it.children.each{
                     if(it.data.type == 'webCoRE Piston'){
-                        wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
-                        wrkList.add(wrkMap)
+                        if(!state.pExclude.contains(it.data.id)) {
+                            wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
+                            wrkList.add(wrkMap)
+                        }
                     }
                 }
             }
@@ -403,6 +451,12 @@ def appButtonHandler(btn) {
         case "delExc":
             state.delExclusion = true
             break
+        case "addExcP":
+            state.addExclusionP = true
+            break
+        case "delExcP":
+            state.delExclusionP = true
+            break        
         default: 
               log.error "Undefined button $btn pushed"
               break

@@ -12,10 +12,10 @@
  *
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
-
+ *		07Dec2024		thebearmay				eliminate duplicates
 */
 import groovy.transform.Field
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 definition (
 	name: 			"Rule Device Table", 
@@ -64,11 +64,15 @@ def mainPage(){
 		            jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
                     oTable += "<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${ca.key}'>${ca.value}</a></td><td>"
                     dCount = 0
+                    aSHold=[]
                     jData.appSettings.each { aS ->
-                        aS.deviceList.each{ 
-                            if (dCount > 0) oTable += ', '
-                            oTable += "<a href='http://${location.hub.localIP}/device/edit/${it.key}'>${it.value}</a>"
-                            dCount++
+                        aS.deviceList.each{
+                            if(!aSHold.contains(it.key)){ 
+                            	if (dCount > 0) oTable += ', '
+                            	oTable += "<a href='http://${location.hub.localIP}/device/edit/${it.key}'>${it.value}</a>"
+                            	dCount++
+                                aSHold.add(it.key)
+                        	}
                         }
                     }
                     oTable += '</td></tr>'

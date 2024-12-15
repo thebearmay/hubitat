@@ -29,10 +29,11 @@
  *    2024-10-01  thebearmay     Normalize the phase breakpoints to cause less of a jump in images
  *                LibraSun       Add SVG graphic and Emoji text output
  *    2024-10-05  LibraSun	     More SVG enhancements
+ *    2024-12-15  thebearmay	 Fix sunset scheduling
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '2.0.2'  }
+static String version()	{  return '2.0.3'  }
 
 metadata {
     definition (
@@ -239,9 +240,10 @@ void getPhase(Long cDate = now()) {
     
     HashMap riseAndSet = getSunriseAndSunset()
     if(riseAndSet.sunset < new Date()){
-        getSunriseAndSunset(sunsetOffset: "+24:00")
+        riseAndSet = getSunriseAndSunset(sunsetOffset: "+24:00")
     }
     unschedule()
+    //log.debug "${riseAndSet.sunset}"
     runOnce(riseAndSet.sunset, getPhase)
 }
 
@@ -260,10 +262,12 @@ def initialize(){
 def updated(){
     log.trace "updated()"
     HashMap riseAndSet = getSunriseAndSunset()
+    //log.debug "${new Date()} ${riseAndSet.sunset < new Date()}"
     if(riseAndSet.sunset < new Date()){
-        getSunriseAndSunset(sunsetOffset: "+24:00")
+        riseAndSet = getSunriseAndSunset(sunsetOffset: "+24:00")
     }
     unschedule()
+    //log.debug "${riseAndSet.sunset} "
     runOnce(riseAndSet.sunset, getPhase)
 	if(debugEnable) runIn(1800,logsOff)
 }

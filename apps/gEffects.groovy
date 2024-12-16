@@ -130,8 +130,7 @@ void runEffectList(){
         fileRecords.each {
             flds = it.split(":")
             devList.each {
-                //it.setEffect(flds[0])
-                log.debug "${flds[0]}"
+                it.setEffect(flds[0])
             }
             if(flds.size() > 2)
             	pauseExecution(flds[2].toInteger() * 60 * 1000)

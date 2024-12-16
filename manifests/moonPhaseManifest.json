@@ -1,10 +1,10 @@
 {
   "packageName": "Moon Phase Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2024-10-05",
-  "releaseNotes":"2.0.2 - additional SVG optimizations and enhancements\n2.0.1 - changed version to match degree of change\n\tSwitched from lighting the moon to shading it.\n\tAdded texture and glowing orb effect to moon surface.\n\tRemoved black background (now transparent).\n\tSimplified (read: shortened) underlying SVG code.\n\tAdded rim lighting suitable for both dark and light bg colors \n0.7.7 - smoothed the phase breakpoints and merged a pull request to add SVG and Emojis",
+  "dateReleased": "2024-12-15",
+  "releaseNotes":"2.0.3 - fixed sunset scheduling\n2.0.2 - additional SVG optimizations and enhancements\n2.0.1 - changed version to match degree of change\n\tSwitched from lighting the moon to shading it.\n\tAdded texture and glowing orb effect to moon surface.\n\tRemoved black background (now transparent).\n\tSimplified (read: shortened) underlying SVG code.\n\tAdded rim lighting suitable for both dark and light bg colors \n0.7.7 - smoothed the phase breakpoints and merged a pull request to add SVG and Emojis",
   "drivers": [
     {
       "id": "405716f8-46a9-49c0-8746-c757653a6d25",

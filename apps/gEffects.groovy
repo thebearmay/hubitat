@@ -153,7 +153,7 @@ void runEffectList(){
     setNextRun()
 }
 
-void overRideEffectRun(){
+void overRideEffectRun(evt){
     fileRecords = (new String (downloadHubFile("${effFile}"))).split("\n")
     while (overRide.currentValue("switch") == 'on' && !killSw){
         fileRecords.each {

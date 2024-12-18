@@ -13,13 +13,13 @@
  *
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
- *		18Dec2024		thebearmay				Add overRide processing, check for stop during effect list processing
+ *	18Dec2024	thebearmay		Add overRide processing, check for stop during effect list processing, kill switch
  *    
  */
 
 import java.time.*
 import java.time.format.DateTimeFormatter
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 
 import groovy.transform.Field
@@ -88,6 +88,7 @@ def mainPage(){
 				subscribe(overRide,"switch","overRideEffectRun")
 			 else
 				unsubscribe()
+			 input("killSw", "bool",title:"Stop/Block Effects from Running",width:4,submitOnChange:true)
              input("goBtn","button",title:"Submit", width: 4, submitOnChange:true)
              if(endTime < startTime) paragraph "<span style = 'color:red;font-weight:bold'>End Time less than Start Time</span>"
              if(endDate < startDate) paragraph "<span style = 'color:red;font-weight:bold'>End Date less than Start Date</span>"
@@ -129,13 +130,13 @@ void setNextRun(){
 }
 
 void runEffectList(){
-	if(overRide && overRide.currentValue("switch") == 'on') return
+	if((overRide && overRide.currentValue("switch") == 'on') || killSw) return
     fileRecords = (new String (downloadHubFile("${effFile}"))).split("\n")
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXX")
     eTime = LocalTime.parse(endTime, formatter)
-    while (LocalTime.now() < eTime){
+    while (LocalTime.now() < eTime && !killSw){
         fileRecords.each {
-			if(LocalTime.now() < eTime) {
+			if(LocalTime.now() < eTime && !killSw) {
 				flds = it.split(":")
 				devList.each {
 					it.setEffect(flds[0])
@@ -154,9 +155,9 @@ void runEffectList(){
 
 void overRideEffectRun(){
     fileRecords = (new String (downloadHubFile("${effFile}"))).split("\n")
-    while (overRide.currentValue("switch") == 'on'){
+    while (overRide.currentValue("switch") == 'on' && !killSw){
         fileRecords.each {
-			if(overRide.currentValue("switch") == 'on') {
+			if(overRide.currentValue("switch") == 'on' && !killSw) {
 				flds = it.split(":")
 				devList.each {
 					it.setEffect(flds[0])

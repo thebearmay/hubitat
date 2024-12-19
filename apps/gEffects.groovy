@@ -14,12 +14,13 @@
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
  *	18Dec2024	thebearmay		Add overRide processing, check for stop during effect list processing, kill switch
+ *	19Dec2024				Add debug logging, additional kill switch checking
  *    
  */
 
 import java.time.*
 import java.time.format.DateTimeFormatter
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 
 import groovy.transform.Field
@@ -62,7 +63,7 @@ def initialize(){
 }
 
 void logsOff(){
-     app.updateSetting("debugEnabled",[value:"false",type:"bool"])
+     app.updateSetting("debugEnable",[value:"false",type:"bool"])
 }
 
 def mainPage(){
@@ -76,20 +77,26 @@ def mainPage(){
                  if("$it".contains('.txt'))
                      effList.add("$it")                     
              }
+			 paragraph "<hr/>Base Data<hr/>"
              input("effFile","enum", title:"Name of Local File for Effects", options:effList, width: 4, submitOnChange:true)
+			 input("minEff","number",title:"Default Effect Time (Minutes)", width:4, submitOnChange: true, defaultValue: 5)
              input("devList","capability.*", title:"Lights to Send Effects to", width: 4, submitOnChange:true, multiple:true)
+			 paragraph "<hr/>Time Based Effects<hr/>"
              input("startTime","time",title:"Start Time", width: 4, submitOnChange:true)
              input("endTime","time",title:"End Time", width: 4, submitOnChange:true)
              input("startDate","date",title:"Start Date", width: 4, submitOnChange:true)
              input("endDate","date",title:"End Date", width: 4, submitOnChange:true)
-			 input("minEff","number",title:"Default Effect Time (Minutes)", width:4, submitOnChange: true, defaultValue: 5)
+			 input("goBtn","button",title:"Submit", width: 4, submitOnChange:true)
+			 paragraph "<hr/>Switch Based Effects<hr/>"
 			 input("overRide","capability.switch", title:"Time Overide Switch", width:4, submitOnChange:true)
 			 if(overRide)
 				subscribe(overRide,"switch","overRideEffectRun")
 			 else
 				unsubscribe()
+			 paragraph "<hr/>Global Switches<hr/>"	
 			 input("killSw", "bool",title:"Stop/Block Effects from Running",width:4,submitOnChange:true)
-             input("goBtn","button",title:"Submit", width: 4, submitOnChange:true)
+			 input("debugEnable", "bool",title:"Debug",width:4,submitOnChange:true)
+             
              if(endTime < startTime) paragraph "<span style = 'color:red;font-weight:bold'>End Time less than Start Time</span>"
              if(endDate < startDate) paragraph "<span style = 'color:red;font-weight:bold'>End Date less than Start Date</span>"
              if(state.goBtn){
@@ -121,30 +128,47 @@ void setNextRun(){
 			tDate = LocalDate.now()
 		else
 			tDate = LocalDate.now().plusDays(1)
-        //log.debug "${tDate.getYear()} ${tDate.getMonthValue()}<br>${new Date(tDate.getYear()-1900,tDate.getMonthValue()-1,tDate.getDayOfMonth(), sTime.getHour(), sTime.getMinute(), 0)}"
+		if(debugEnable)
+			log.debug "${tDate.getYear()} ${tDate.getMonthValue()}<br>${new Date(tDate.getYear()-1900,tDate.getMonthValue()-1,tDate.getDayOfMonth(), sTime.getHour(), sTime.getMinute(), 0)}"
 		runOnce(new Date(tDate.getYear()-1900,tDate.getMonthValue()-1,tDate.getDayOfMonth(), sTime.getHour(), sTime.getMinute(), 0), "runEffectList")
 	} else {
 		tDate = LocalDate.ofEpochDay(startDate.toLong())
+		if(debugEnable)
+			log.debug "${tDate.getYear()} ${tDate.getMonthValue()}<br>${new Date(tDate.getYear()-1900,tDate.getMonthValue()-1,tDate.getDayOfMonth(), sTime.getHour(), sTime.getMinute(), 0)}"		
         runOnce(new Date(tDate.getYear()-1900,tDate.getMonthValue()-1,tDate.getDayOfMonth(), sTime.getHour(), sTime.getMinute(), 0), "runEffectList")
     }  
 }
 
 void runEffectList(){
-	if((overRide && overRide.currentValue("switch") == 'on') || killSw) return
+	if((overRide && overRide.currentValue("switch") == 'on') || killSw) {
+		if(debugEnable)
+			log.debug " $overRide:${overRide.currentValue("switch")} kill:$killSw"
+		return
+	}
     fileRecords = (new String (downloadHubFile("${effFile}"))).split("\n")
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXX")
     eTime = LocalTime.parse(endTime, formatter)
     while (LocalTime.now() < eTime && !killSw){
         fileRecords.each {
+			if(debugEnable) 
+				log.debug "time:${LocalTime.now() < eTime } kill:$killSw"
 			if(LocalTime.now() < eTime && !killSw) {
 				flds = it.split(":")
 				devList.each {
+					if(killSw)
+						continue
+					if(debugEnable) 
+						log.debug "set effect ${flds[0]} on ${it.displayName}"
 					it.setEffect(flds[0])
 				}
-				if(flds.size() > 2)
+				if(flds.size() > 2){
+					if(debugEnable)
+						log.debug "pausing ${flds[2]} minutes"
 					pauseExecution(flds[2].toInteger() * 60 * 1000)
-				else {
+				} else {
 					if(!minEff) minEff = 5
+					if(debugEnable)
+						log.debug "pausing ${flds[2]} minutes"
 					pause(minEff * 60 * 1000)
 				}
 			}
@@ -155,17 +179,27 @@ void runEffectList(){
 
 void overRideEffectRun(evt){
     fileRecords = (new String (downloadHubFile("${effFile}"))).split("\n")
-    while (overRide.currentValue("switch") == 'on' && !killSw){
+    while (overRide.currentValue("switch", true) == 'on' && !killSw){
         fileRecords.each {
-			if(overRide.currentValue("switch") == 'on' && !killSw) {
+			if(debugEnable) 
+				log.debug "time:${LocalTime.now() < eTime } kill:$killSw"		
+			if(overRide.currentValue("switch", true) == 'on' && !killSw) {
 				flds = it.split(":")
 				devList.each {
+					if(killSw)
+						continue				
+					if(debugEnable) 
+						log.debug "set effect ${flds[0]} on ${it.displayName}"				
 					it.setEffect(flds[0])
 				}
 				if(flds.size() > 2)
+					if(debugEnable)
+						log.debug "pausing ${flds[2]} minutes"				
 					pauseExecution(flds[2].toInteger() * 60 * 1000)
 				else {
 					if(!minEff) minEff = 5
+					if(debugEnable)
+						log.debug "pausing ${flds[2]} minutes"					
 					pause(minEff * 60 * 1000)
 				}
 			}
@@ -205,7 +239,7 @@ String toCamelCase(init) {
     }
     ret="${Character.toLowerCase(ret.charAt(0))}${ret.substring(1)}"
 
-    if(debugEnabled) log.debug "toCamelCase return $ret"
+    if(debugEnable) log.debug "toCamelCase return $ret"
     return ret;
 }
 

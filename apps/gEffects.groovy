@@ -20,7 +20,7 @@
 
 import java.time.*
 import java.time.format.DateTimeFormatter
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 
 
 import groovy.transform.Field
@@ -155,11 +155,11 @@ void runEffectList(){
 			if(LocalTime.now() < eTime && !killSw) {
 				flds = it.split(":")
 				devList.each {
-					if(killSw)
-						continue
-					if(debugEnable) 
-						log.debug "set effect ${flds[0]} on ${it.displayName}"
-					it.setEffect(flds[0])
+					if(!killSw){
+						if(debugEnable) 
+							log.debug "set effect ${flds[0]} on ${it.displayName}"
+						it.setEffect(flds[0])
+					}
 				}
 				if(flds.size() > 2){
 					if(debugEnable)
@@ -186,11 +186,11 @@ void overRideEffectRun(evt){
 			if(overRide.currentValue("switch", true) == 'on' && !killSw) {
 				flds = it.split(":")
 				devList.each {
-					if(killSw)
-						continue				
-					if(debugEnable) 
-						log.debug "set effect ${flds[0]} on ${it.displayName}"				
-					it.setEffect(flds[0])
+					if(!killSw){			
+						if(debugEnable) 
+							log.debug "set effect ${flds[0]} on ${it.displayName}"				
+						it.setEffect(flds[0])
+					}
 				}
 				if(flds.size() > 2){
 					if(debugEnable)

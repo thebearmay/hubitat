@@ -192,11 +192,11 @@ void overRideEffectRun(evt){
 						log.debug "set effect ${flds[0]} on ${it.displayName}"				
 					it.setEffect(flds[0])
 				}
-				if(flds.size() > 2)
+				if(flds.size() > 2){
 					if(debugEnable)
 						log.debug "pausing ${flds[2]} minutes"				
 					pauseExecution(flds[2].toInteger() * 60 * 1000)
-				else {
+				} else {
 					if(!minEff) minEff = 5
 					if(debugEnable)
 						log.debug "pausing ${flds[2]} minutes"					

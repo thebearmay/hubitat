@@ -12,10 +12,10 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *    Date            Who                    Description
- *    -------------   -------------------    ---------------------------------------------------------
- *		18Dec2024		thebearmay				Add overRide processing, check for stop during effect list processing, kill switch
- *		19Dec2024								Add debug logging, additional kill switch checking
- *		20Dec2024								UI Cleanup
+ *	----------  ----------- ---------------------------------------------------------
+ *	18Dec2024	thebearmay	Add overRide processing, check for stop during effect list processing, kill switch
+ *	19Dec2024				Add debug logging, additional kill switch checking
+ *	20Dec2024				UI Cleanup
  *    
  */
 

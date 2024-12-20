@@ -20,7 +20,7 @@
 
 import java.time.*
 import java.time.format.DateTimeFormatter
-static String version()	{  return '0.0.5'  }
+static String version()	{  return '0.0.6'  }
 
 
 import groovy.transform.Field
@@ -140,7 +140,8 @@ void setNextRun(){
 }
 
 void runEffectList(){
-	if((overRide && overRide.currentValue("switch") == 'on') || killSw) {
+    if(killSw == null) app.updateSetting('killSw',[type:'bool',value:false])
+	if((overRide && overRide.currentValue("switch",true) == 'on') || app.getSetting('killSw')==true) {
 		if(debugEnable)
 			log.debug " $overRide:${overRide.currentValue("switch")} kill:$killSw"
 		return
@@ -148,14 +149,14 @@ void runEffectList(){
     fileRecords = (new String (downloadHubFile("${effFile}"))).split("\n")
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXX")
     eTime = LocalTime.parse(endTime, formatter)
-    while (LocalTime.now() < eTime && !killSw){
+    while (LocalTime.now() < eTime && app.getSetting('killSw')==false){
         fileRecords.each {
 			if(debugEnable) 
-				log.debug "time:${LocalTime.now() < eTime } kill:$killSw"
-			if(LocalTime.now() < eTime && !killSw) {
+            log.debug "time:${LocalTime.now() < eTime } kill:${app.getSetting('killSw')}"
+			if(LocalTime.now() < eTime && app.getSetting('killSw')==false) {
 				flds = it.split(":")
 				devList.each {
-					if(!killSw){
+					if(app.getSetting('killSw')==false){
 						if(debugEnable) 
 							log.debug "set effect ${flds[0]} on ${it.displayName}"
 						it.setEffect(flds[0])
@@ -178,15 +179,16 @@ void runEffectList(){
 }
 
 void overRideEffectRun(evt){
+    if(killSw == null) app.updateSetting('killSw',[type:'bool',value:false])
     fileRecords = (new String (downloadHubFile("${effFile}"))).split("\n")
-    while (overRide.currentValue("switch", true) == 'on' && !killSw){
+    while (overRide.currentValue("switch", true) == 'on' && app.getSetting('killSw')==false){
         fileRecords.each {
 			if(debugEnable) 
-				log.debug "time:${LocalTime.now() < eTime } kill:$killSw"		
-			if(overRide.currentValue("switch", true) == 'on' && !killSw) {
+            log.debug "overRide:${overRide.currentValue("switch", true)} kill:${app.getSetting('killSw')}"		
+			if(overRide.currentValue("switch", true) == 'on' && app.getSetting('killSw')==false) {
 				flds = it.split(":")
 				devList.each {
-					if(!killSw){			
+					if(app.getSetting('killSw')==false){			
 						if(debugEnable) 
 							log.debug "set effect ${flds[0]} on ${it.displayName}"				
 						it.setEffect(flds[0])

@@ -28,16 +28,16 @@ import groovy.transform.Field
 
 
 definition (
-	name: 			"Govee Effect Player", 
-	namespace: 		"thebearmay", 
-	author: 		"Jean P. May, Jr.",
+	name:		"Govee Effect Player", 
+	namespace:	"thebearmay", 
+	author:		"Jean P. May, Jr.",
 	description: 	"Play back Govee Effects",
-	category: 		"Utility",
+	category:	"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/gEffects.groovy",
-    installOnOpen:  true,
-	oauth: 			false,
-    iconUrl:        "",
-    iconX2Url:      ""
+	installOnOpen:  true,
+	oauth:		false,
+	iconUrl:        "",
+	iconX2Url:      ""
 ) 
 
 preferences {

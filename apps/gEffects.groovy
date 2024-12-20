@@ -173,7 +173,7 @@ void runEffectList(){
 					if(app.getSetting('killSw')==false){
 						if(debugEnable) 
 							log.debug "set effect ${flds[0]} on ${it.displayName}"
-						//it.setEffect(flds[0])
+						it.setEffect(flds[0])
 					}
 				}
 				if(flds.size() > 2){

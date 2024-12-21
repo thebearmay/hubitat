@@ -3,5 +3,16 @@
  "author":"Jean P. May, Jr.",
  "version":"0.0.8",
  "minimumHEVersion":"2.3.8.0",
- "dateReleased":"2024-12-21"
+ "dateReleased":"2024-12-21",
+ "apps": [
+  {
+     "id":"f24709ae-939b-445b-8990-2a6ac6d6887c",
+     "name":"Govee Effect Player",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/apps/gEffects.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
 }

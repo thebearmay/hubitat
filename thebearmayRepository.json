@@ -333,6 +333,16 @@
       "tags":[
         "Misc. Devices"
        ]
+    },
+    {
+      "id":"879b6db7-00c3-4a85-b66d-36c8d9b57d69",
+      "name":"Govee Effect Player",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/gEffectsManifest.json",
+      "description":"Govee Effects Player",
+      "tags":[
+        "Lights & Switches"
+       ]
     }
   ]
 }

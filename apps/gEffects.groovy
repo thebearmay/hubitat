@@ -133,7 +133,7 @@ void setNextRun(){
 		else
 			tDate = LocalDate.now().plusDays(1)
 		if(debugEnable)
-			log.debug "${tDate.getYear()} ${tDate.getMonthValue()}<br>${new Date(tDate.getYear()-1900,tDate.getMonthValue()-1,tDate.getDayOfMonth(), sTime.getHour(), sTime.getMinute(), 0)}"
+			log.debug "${tDate.getYear()} ${tDate.getMonthValue()} ${new Date(tDate.getYear()-1900,tDate.getMonthValue()-1,tDate.getDayOfMonth(), sTime.getHour(), sTime.getMinute(), 0)}"
 		runOnce(new Date(tDate.getYear()-1900,tDate.getMonthValue()-1,tDate.getDayOfMonth(), sTime.getHour(), sTime.getMinute(), 0), "runEffectList")
 	} else {
 		tDate = LocalDate.ofEpochDay(startDate.toLong())

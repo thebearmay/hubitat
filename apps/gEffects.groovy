@@ -14,14 +14,14 @@
  *	Date               Who                    Description
  *	----------	-----------	---------------------------------------------------------
  *	18Dec2024	thebearmay	Add overRide processing, check for stop during effect list processing, kill switch
- *	19Dec2024			Add debug logging, additional kill switch checking
- *	20Dec2024			UI Cleanup
+ *	19Dec2024				Add debug logging, additional kill switch checking
+ *	20Dec2024				UI Cleanup
  *    
  */
 
 import java.time.*
 import java.time.format.DateTimeFormatter
-static String version()	{  return '0.0.7'  }
+static String version()	{  return '0.0.8'  }
 
 
 import groovy.transform.Field
@@ -178,12 +178,12 @@ void runEffectList(){
 				}
 				if(flds.size() > 2){
 					if(debugEnable)
-						log.debug "pausing ${flds[2]} minutes"
+						log.debug "pausing ${flds[2].toInteger()} minutes"
 					pauseExecution(flds[2].toInteger() * 60 * 1000)
 				} else {
 					if(!minEff) minEff = 5
 					if(debugEnable)
-						log.debug "pausing ${flds[2]} minutes"
+						log.debug "pausing ${flds[2].toInteger()} minutes"
 					pause(minEff * 60 * 1000)
 				}
 			}
@@ -210,12 +210,12 @@ void overRideEffectRun(evt){
 				}
 				if(flds.size() > 2){
 					if(debugEnable)
-						log.debug "pausing ${flds[2]} minutes"				
+						log.debug "pausing ${flds[2].toInteger()} minutes"				
 					pauseExecution(flds[2].toInteger() * 60 * 1000)
 				} else {
 					if(!minEff) minEff = 5
 					if(debugEnable)
-						log.debug "pausing ${flds[2]} minutes"					
+						log.debug "pausing ${flds[2].toInteger()} minutes"					
 					pause(minEff * 60 * 1000)
 				}
 			}

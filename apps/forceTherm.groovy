@@ -66,8 +66,8 @@ def mainPage(){
                 if (state.sendBtn){
                     state.sendBtn = false
                     qryDevice.each {
-                        sendEvent(name:"supportedThermostatModes", value:'["off","cool","heat","auto"]' , isStateChange:true)
-    					sendEvent(name:"supportedThermostatFanModes", value:'["on","auto"]' , isStateChange:true)
+                        it.sendEvent(name:"supportedThermostatModes", value:'["off","cool","heat","auto"]' , isStateChange:true)
+    					it.sendEvent(name:"supportedThermostatFanModes", value:'["on","auto"]' , isStateChange:true)
 						paragraph "Events sent to $it" 
                     }
                 }

@@ -40,7 +40,6 @@ def installed() {
 
 def uninstalled() {
     log.info "${app.name} v${version()} uninstalled()"
-    removeDevice()
 }
 
 def updated(){

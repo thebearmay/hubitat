@@ -11,8 +11,10 @@
  *
  */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
+import groovy.transform.Field
+@Field oStateOpts = ["heating", "pending cool", "pending heat", "vent economizer", "idle", "cooling", "fan only"]
 
 definition (
 	name: 			"Force Thermostat Modes", 
@@ -61,6 +63,7 @@ def mainPage(){
 	    	section("Main")
 		    {
                 input "qryDevice", "capability.thermostat", title: "Thermostat(s) Selected:", multiple: true, required: false, submitOnChange: true
+				input "dState", "enum",title:"Desired Operating State", options:oStateOpts
                 input "sendBtn","button",title:"Send Update"
                 if (state.sendBtn){
                     state.sendBtn = false
@@ -68,7 +71,7 @@ def mainPage(){
                         it.sendEvent(name:"supportedThermostatModes", value:'["off","cool","heat","auto"]' , isStateChange:true)
     					it.sendEvent(name:"supportedThermostatFanModes", value:'["on","auto"]' , isStateChange:true)
     					it.sendEvent(name:"thermostatFanMode", value:"auto" , isStateChange:true)
-    					it.sendEvent(name:"thermostatOperatingState", value:'idle' , isStateChange:true)
+    					it.sendEvent(name:"thermostatOperatingState", value:dState , isStateChange:true)
                         paragraph "Events sent to $it" 
                     }
                 }

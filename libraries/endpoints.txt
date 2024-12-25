@@ -231,5 +231,5 @@
 * ZWave  * /hub/stopJoin
 * Zwave	 * /hub/zwaveRepair
 * ZWave  * /hub/zwave/reset
-* Zwave	 *
+* Zwave	 * /hub/zwaveDetails/json
 /* 

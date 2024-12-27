@@ -15,9 +15,10 @@
  *    Date        Who           What
  *    ----        ---           ----
  *    05Oct2022   thebearmay    code clean up
+ *	  27Dec2024	  				Handle small screens better
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 
 definition (
@@ -26,7 +27,8 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Overcomes the Extended Character display issue with File Manager and allows download of the selected file.",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxxx.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/apps/fmExtChar.groovy",
+    installOnOpen: 	true,
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""
@@ -64,38 +66,31 @@ def mainPage(){
 		    {
               section("File List", hideable: true, hidden: false){
                   fileList = listFiles()
-                  SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                  paragraph "<div><div style='width:15em'>&nbsp;</div><div style='text-align:center;width:37em;float:left;font-weight:bold'>Name</div><div style='text-align:center;width:5em;float:left;font-weight:bold'>Size</div><div style='text-align:center;width:10em;float:left;font-weight:bold'>Date</div></div>"
+                  SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")         
+                  oData = "<style>table{overflow:auto;display:block;width:100%} td {word-wrap:break-word;padding:5px;}</style><table><tr><th></th><th>Name</th><th>Size</th><th>Date</th><th></th></tr>"
                   int i = 0
                   fileList.each {
                       if(it.date)                   
                           dDate = sdf.format(new Date(Long.parseLong(it.date)))
                       else
                           dDate = "Date not Available"
-
-                      oData = "<div style='float:left;width:8em'>&nbsp;</div><div style='float:right;width:6em'><button><a href='http://${location.hub.localIP}:8080/local/${it.name}?raw=true'>Download</a></button></div>"
-                      oData +="<div style='width:30em;float:left;'><a href='http://${location.hub.localIP}:8080/local/${it.name}' target='_blank'>${it.name}</a></div>"
-                      oData +="<div style='width:5em;float:left;text-align:left'>${String.format('%,.0f',it.size.toDouble())}</div>"
-                      oData +="<div style='width:10em;float:left;text-align:left'>$dDate&nbsp;</div></div>"
- //<style>.mdl-button{width:6em;height:2em;padding:0;margins:0;border:2px solid black;color:blue;text-align:top left;}</style>
-                      paragraph "<div>"
-                      input "fDispBtn$i", "button", title:"FM Ext View", backgroundColor:"green", textColor:"white"                   
-//                     href "fileDisp", title: "FM Ext View" , description: "", params:["fName": "${it.name}"], width:2, height:0.5, style:"font-size:smaller;"
-                      paragraph oData
-                      //paragraph ""
-                      if(state["btnPush$i"]){
+                      oData +="<tr><td>${buttonLink("fDispBtn$i","FM Ext View")}</td>"
+                      oData +="<td><a href='http://${location.hub.localIP}:8080/local/${it.name}' target='_blank'>${it.name}</a></td>"
+                      oData +="<td style='text-align:right'>${String.format('%,.0f',it.size.toDouble())}</td>"
+                      oData +="<td>$dDate&nbsp;</td></td>"
+	                  oData +="<td><button><a href='http://${location.hub.localIP}:8080/local/${it.name}?raw=true'>Download</a></button></td></tr>"
+	                  if(state["btnPush$i"] || state["btnPush$i"] == "true"){
                           state["btnPush$i"] = false
                           fContent = readFile("${it.name}")
                           fContent = fContent.replace('<','&lt;')
-                          paragraph "<pre style='border:1px solid blue;overflow:auto'>${fContent}</pre>"
+                          paragraph "<pre style='border:1px solid blue;border-radius:10px'>${fContent}</pre>"
                           input "clear", "button", title:"Close", backgroundColor:"yellow"
-                      }
-                      
-
+					  }
+                 
                       i++
                   }
+                  paragraph oData+"</table>"
 
-                  paragraph "<hr />"
                   input "debugEnabled", "bool", title: "Enable Debug Logging", required: false, defaultValue:false, submitOnChange:true, width:4
                   input "security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4
                   if (security) { 
@@ -118,6 +113,10 @@ def mainPage(){
 		    }
 	    }
     }
+}
+
+String buttonLink(String btnName, String linkText, color = "#FFFFFF", bkColor = "green", font = "15px") {
+	"<div class='form-group'><input type='hidden' name='${btnName}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='border-radius:25px;color:$color;background-color:$bkColor;cursor:pointer;font-size:$font; border-style:outset;width:8em;text-align:center;'>$linkText</div></div><input type='hidden' name='settings[$btnName]' value=''>"
 }
 
 def fileDisp(params){

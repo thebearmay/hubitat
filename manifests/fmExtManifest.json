@@ -1,9 +1,9 @@
 {
   "packageName": "File Manager for Extended Character Sets",
   "author": "Jean P. May, Jr.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2022-10-05",
+  "dateReleased": "2024-12-27",
   "apps": [
     {
       "id": "a02e9924-c3ea-414b-a528-5209b5d082ce",

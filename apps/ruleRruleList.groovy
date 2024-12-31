@@ -14,7 +14,8 @@
  *    -------------   -------------------    ---------------------------------------------------------
 */
 import groovy.transform.Field
-static String version()	{  return '0.0.1'  }
+import groovy.json.JsonSlurper
+static String version()	{  return '0.0.2'  }
 
 definition (
 	name: 			"Rule Runs Rule Table", 
@@ -86,15 +87,22 @@ def mainPage(){
                     }
                     oTable+= "</td><td>"
                     jData.appState.each{
-                        runTable = []
                     	if(it.name == 'installedRules'){
                             i=0
-                            itVal = (HashMap) it.value
+							itVal = (ArrayList) it.value
 							if(debugEnabled)
-                            	log.debug "${it.value}"
+                            	log.debug "${itVal}"
                             itVal.each{
+                                it = it.toString()
+                                //log.debug "${it}"
+                                s1=it.indexOf('{')+1
+                                e1=it.indexOf('=')
+                                e2=it.indexOf('}')
+                                itK=it.substring(s1,e1)
+                                itV=it.substring(e1+1,e2)
+                                
                         		if(i>0) oTable += ", "
-                               	oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${it.key}'>${it.value}(${it.key})</a>"
+                               	oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${itK}'>${itV}(${itK})</a>"
                                 i++
                             }
                     	}

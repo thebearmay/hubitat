@@ -15,7 +15,7 @@
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 
 definition (
 	name: 			"Rule Runs Rule Table", 
@@ -61,7 +61,8 @@ def mainPage(){
             if(debugEnabled) runIn(1800,logsOff)
             if(minVerCheck("2.4.0.0")) {
                 childApps = getRuleList()
-                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th>Rule Name</th><th>Rules Run/Paused</th></tr>"//<th>Related Rules</th></tr>"
+                rule2Runner=[]
+                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Runs</b></th></tr><tr><th>Rule Name</th><th>Rules Run/Paused</th></tr>"//<th>Related Rules</th></tr>"
                 childApps.each { ca ->
 		            jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
                     aSHold=[]
@@ -90,7 +91,8 @@ def mainPage(){
                         eInx = it.toString().indexOf('\"',sInx)
                         if(i>0) oTable += ", "
                         i++
-                        oTable+= "<a href='http://${location.hub.localIP}/installedapp/configure/${it.toString().substring(sInx,eInx)}'>${it.toString().substring(sInx,eInx)}</a>"
+                        oTable+= "<a href='http://${location.hub.localIP}/installedapp/configure/${it.toString().substring(sInx,eInx)}'>${getName(it.toString().substring(sInx,eInx),childApps)}(${it.toString().substring(sInx,eInx)})</a>"
+                        rule2Runner.add([key:"${it.toString().substring(sInx,eInx)}", value:"${ca.key}"])
                     }
   /*                  oTable+= "</td><td>"
                     jData.appState.each{
@@ -118,9 +120,52 @@ def mainPage(){
                 }
                 oTable += '</table>'
                 paragraph oTable
+                r2r = rule2Runner.sort{it.key}
+				oTable = "$tableStyle<table class='mdl-data-table tstat-col'><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Run By</b></th></tr><tr><th>Rule Name</th><th>Run/Paused By</th></tr>"
+				lastKey = 0
+                holdR=[]
+                r2r.each { r ->
+                    if(lastKey != r.key ){
+                        i=0
+                        holdR.sort().each{
+                            if(i>0)
+                        		oTable+= ', '
+							oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${it}'>${getName(it,childApps)}(${it})"
+                            i++
+                        }  
+                        if(i>0){
+                            oTable+='</td></tr>'
+                        }
+                        oTable+="<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${r.key}'>${getName(r.key,childApps)}(${r.key})</a></td><td>"
+                        holdR=[]
+                        holdR.add(r.value)
+                        lastKey = r.key
+                    } else {
+                        holdR.add(r.value)
+                    }
+                }
+                i=0
+                holdR.sort().each{
+                	if(i>0)
+						oTable+= ', '
+                    oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${it}'>${getName(it,childApps)}(${it})"
+                	i++
+                }  
+                oTable+='</td></tr></table>' 
+				paragraph oTable
             } else paragraph "Must be on HE v2.4.0.0 or Higher"
         }     
     }
+}
+
+String getName(keyVal, appList){
+    rVal = ''
+    appList.each{
+        if(debugEnabled) log.debug "$keyVal ${it.key}"
+        if(it.key == keyVal)
+        	rVal = it.value
+    }
+    return rVal
 }
 
 ArrayList getRuleList() {
@@ -196,4 +241,4 @@ def appButtonHandler(btn) {
               break
     }
 }
-@Field static String tableStyle = "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:left;font-size:12px} .tstat-col td {font-size:15px; padding:8px 8px 8px 8px;white-space: nowrap;}</style>"
+@Field static String tableStyle = "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th {padding:8px 8px;text-align:left;font-size:12px} .tstat-col td {font-size:15px; padding:8px 8px 8px 8px;white-space: nowrap;}</style>"

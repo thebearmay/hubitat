@@ -16,9 +16,10 @@
  *    01Sep2024                              split the try..catch into three separate iterations
  *    25Nov2024                              2.4.0.xx changes
  *    27Nov2024                              More 2.4.0.xx changes
+ *	  01Jan2025								 null device count 
 */
 
-static String version()	{  return '0.0.10'  }
+static String version()	{  return '0.0.11'  }
 import java.security.MessageDigest
 
 definition (
@@ -326,7 +327,10 @@ String getErrorsJ(wcData, childApps){
         }
         jData.appState.each { aS -> // needs to run subscriptions last to make sure added devices are correct
             if(aS.name == 'subscriptions'){
-                dCount = aS.value.devices.toInteger() 
+                if(aS.value.devices)
+                	dCount = aS.value.devices.toInteger() 
+                else 
+                    dCount = 0
                 if(jData.scheduledJobs){
                     addDev += jData.scheduledJobs.size()
                 }

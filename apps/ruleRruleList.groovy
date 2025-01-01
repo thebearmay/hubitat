@@ -15,7 +15,7 @@
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
-static String version()	{  return '0.0.5'  }
+static String version()	{  return '0.0.6'  }
 
 definition (
 	name: 			"Rule Runs Rule Table", 
@@ -76,7 +76,7 @@ def mainPage(){
                             		aSHold.add(aS2.value)
                             }
                         }
-                        if(aS.name.toString().contains('pauseRule.')){
+                        if(aS.name.toString().contains('pauseRule.') || aS.name.toString().contains('valFunction.') || aS.name.toString().contains('privateT')){
                             vSplit = aS.value.toString().replace('\"','').replace('[','').replace(']','').split(',')
                             //log.debug "${aS.value} ${vSplit}"
                             vSplit.each{
@@ -120,7 +120,7 @@ def mainPage(){
                 }
                 oTable += '</table>'
                 paragraph oTable
-                r2r = rule2Runner.sort{it.key}
+                r2r = rule2Runner.sort{it.key}.unique()
 				oTable = "$tableStyle<table class='mdl-data-table tstat-col'><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Run By</b></th></tr><tr><th>Rule Name</th><th>Run/Paused By</th></tr>"
 				lastKey = 0
                 holdR=[]

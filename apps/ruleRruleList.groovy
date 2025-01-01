@@ -61,7 +61,7 @@ def mainPage(){
             if(debugEnabled) runIn(1800,logsOff)
             if(minVerCheck("2.4.0.0")) {
                 childApps = getRuleList()
-                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th>Rule Name</th><th>Rules Run</th></tr>"//<th>Related Rules</th></tr>"
+                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th>Rule Name</th><th>Rules Run/Paused</th></tr>"//<th>Related Rules</th></tr>"
                 childApps.each { ca ->
 		            jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
                     aSHold=[]

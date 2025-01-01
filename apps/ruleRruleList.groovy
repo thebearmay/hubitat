@@ -57,8 +57,8 @@ void logsOff(){
 def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
         section("<h4>Settings</h4>", hideable:true, hidden: true){
-			input "debugEnabled", "bool", title: "Enable Debug", defaultValue: false, submitOnChange:true
-			input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
+			input "debugEnabled", "bool", title: "<b>Enable Debug Logging</b>", defaultValue: false, submitOnChange:true
+			input "nameOverride", "text", title: "<b>New Name for Application</b>", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
 			if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)				
 		}        
         section("") {

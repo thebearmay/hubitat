@@ -359,7 +359,7 @@ ArrayList getPistonList() {
                 state.wcID = it.data.id
                 it.children.each{
                     if(it.data.type == 'webCoRE Piston'){
-                        if(!state.pExclude.contains(it.data.id)) {
+                        if(!state.pExclude || !state.pExclude.contains(it.data.id)) {
                             wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
                             wrkList.add(wrkMap)
                         }

@@ -15,7 +15,7 @@
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.7'  }
 
 definition (
 	name: 			"Rule Runs Rule Table", 
@@ -68,15 +68,7 @@ def mainPage(){
                     aSHold=[]
                     oTable += "<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${ca.key}'>${ca.value}(${ca.key})</a></td><td>"
                     jData.appSettings.each { aS ->
-                        if(aS.value == 'getRuleActions'){
-                            suffix = aS.name.substring(aS.name.indexOf('.')+1,)
-                            if(debugEnabled) log.debug "$suffix"
-                            jData.appSettings.each { aS2 ->
-                                if(aS2.name == "ruleAct.$suffix")
-                            		aSHold.add(aS2.value)
-                            }
-                        }
-                        if(aS.name.toString().contains('pauseRule.') || aS.name.toString().contains('valFunction.') || aS.name.toString().contains('privateT') || aS.name.toString().contains('stopAct')){
+                        if(aS.name.toString().contains('ruleAct.') || aS.name.toString().contains('pauseRule.') || aS.name.toString().contains('valFunction.') || aS.name.toString().contains('privateT') || aS.name.toString().contains('stopAct')){
                             vSplit = aS.value.toString().replace('\"','').replace('[','').replace(']','').split(',')
                             //log.debug "${aS.value} ${vSplit}"
                             vSplit.each{
@@ -84,38 +76,21 @@ def mainPage(){
                             }
                         }
                     }
-                    if(debugEnabled) log.debug "$aSHold"
+                    if(debugEnabled) 
+                    	log.debug "$aSHold"
                     i=0
                     aSHold.sort().unique().each {
                         sInx = it.toString().indexOf('\"')+1
                         eInx = it.toString().indexOf('\"',sInx)
-                        if(i>0) oTable += ", "
-                        i++
-                        oTable+= "<a href='http://${location.hub.localIP}/installedapp/configure/${it.toString().substring(sInx,eInx)}'>${getName(it.toString().substring(sInx,eInx),childApps)}(${it.toString().substring(sInx,eInx)})</a>"
-                        rule2Runner.add([key:"${it.toString().substring(sInx,eInx)}", value:"${ca.key}"])
+                        aKey=it.toString().substring(sInx,eInx)
+                        if(aKey != 'null'){
+                        	if(i>0) oTable += ",<br> "
+                        	i++
+                        
+                        	oTable+= "<a href='http://${location.hub.localIP}/installedapp/configure/${aKey}'>${getName(aKey,childApps)}(${aKey})</a>"
+                        	rule2Runner.add([key:"$aKey", value:"${ca.key}"])
+                        }
                     }
-  /*                  oTable+= "</td><td>"
-                    jData.appState.each{
-                    	if(it.name == 'installedRules'){
-                            i=0
-							itVal = (ArrayList) it.value
-							if(debugEnabled)
-                            	log.debug "${itVal}"
-                            itVal.each{
-                                it = it.toString()
-                                //log.debug "${it}"
-                                s1=it.indexOf('{')+1
-                                e1=it.indexOf('=')
-                                e2=it.indexOf('}')
-                                itK=it.substring(s1,e1)
-                                itV=it.substring(e1+1,e2)
-                                
-                        		if(i>0) oTable += ", "
-                               	oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${itK}'>${itV}(${itK})</a>"
-                                i++
-                            }
-                    	}
-                    } */
                     oTable += '</td></tr>'
                 }
                 oTable += '</table>'
@@ -125,11 +100,11 @@ def mainPage(){
 				lastKey = 0
                 holdR=[]
                 r2r.each { r ->
-                    if(lastKey != r.key ){
+                    if(lastKey != r.key && r.key !='null' ){
                         i=0
                         holdR.sort().each{
                             if(i>0)
-                        		oTable+= ', '
+                        		oTable+= ',<br>'
 							oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${it}'>${getName(it,childApps)}(${it})"
                             i++
                         }  
@@ -140,7 +115,7 @@ def mainPage(){
                         holdR=[]
                         holdR.add(r.value)
                         lastKey = r.key
-                    } else {
+                    } else if(r.key != 'null'){
                         holdR.add(r.value)
                     }
                 }

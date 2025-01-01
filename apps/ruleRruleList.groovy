@@ -15,7 +15,7 @@
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 definition (
 	name: 			"Rule Runs Rule Table", 

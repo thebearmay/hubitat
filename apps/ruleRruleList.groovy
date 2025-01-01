@@ -61,7 +61,7 @@ def mainPage(){
             if(debugEnabled) runIn(1800,logsOff)
             if(minVerCheck("2.4.0.0")) {
                 childApps = getRuleList()
-                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th>Rule Name</th><th>Rules Run</th><th>Related Rules</th></tr>"
+                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th>Rule Name</th><th>Rules Run</th></tr>"//<th>Related Rules</th></tr>"
                 childApps.each { ca ->
 		            jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
                     aSHold=[]
@@ -92,7 +92,7 @@ def mainPage(){
                         i++
                         oTable+= "<a href='http://${location.hub.localIP}/installedapp/configure/${it.toString().substring(sInx,eInx)}'>${it.toString().substring(sInx,eInx)}</a>"
                     }
-                    oTable+= "</td><td>"
+  /*                  oTable+= "</td><td>"
                     jData.appState.each{
                     	if(it.name == 'installedRules'){
                             i=0
@@ -113,7 +113,7 @@ def mainPage(){
                                 i++
                             }
                     	}
-                    }
+                    } */
                     oTable += '</td></tr>'
                 }
                 oTable += '</table>'

@@ -15,7 +15,7 @@
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 definition (
 	name: 			"Rule Runs Rule Table", 
@@ -73,6 +73,13 @@ def mainPage(){
                             jData.appSettings.each { aS2 ->
                                 if(aS2.name == "ruleAct.$suffix")
                             		aSHold.add(aS2.value)
+                            }
+                        }
+                        if(aS.name.toString().contains('pauseRule.')){
+                            vSplit = aS.value.toString().replace('\"','').replace('[','').replace(']','').split(',')
+                            //log.debug "${aS.value} ${vSplit}"
+                            vSplit.each{
+								aSHold.add("\"$it\"")
                             }
                         }
                     }

@@ -15,13 +15,13 @@
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
-static String version()	{  return '0.0.7'  }
+static String version()	{  return '0.0.8'  }
 
 definition (
-	name: 			"Rule Runs Rule Table", 
+	name: 			"Rule References Rule Table", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"Simple Table Display for Devices in use by Rules",
+	description: 	"Simple Table Display for Rules referencing other Rules",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/ruleRruleList.groovy",
     installOnOpen:  true,
@@ -155,7 +155,10 @@ ArrayList getRuleList() {
         resp.data.apps.each{
             if(it.data.type.contains("Rule")){
                 it.children.each{
-                    wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
+                    if(it.data.disabled)
+                    	wrkMap =[key:"${it.data.id}",value:"<s>${it.data.name}</s>"]
+                    else
+                    	wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
                     wrkList.add(wrkMap)
                 }
             }

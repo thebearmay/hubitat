@@ -76,7 +76,7 @@ def mainPage(){
                             		aSHold.add(aS2.value)
                             }
                         }
-                        if(aS.name.toString().contains('pauseRule.') || aS.name.toString().contains('valFunction.') || aS.name.toString().contains('privateT')){
+                        if(aS.name.toString().contains('pauseRule.') || aS.name.toString().contains('valFunction.') || aS.name.toString().contains('privateT') || aS.name.toString().contains('stopAct')){
                             vSplit = aS.value.toString().replace('\"','').replace('[','').replace(']','').split(',')
                             //log.debug "${aS.value} ${vSplit}"
                             vSplit.each{

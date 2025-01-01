@@ -15,7 +15,7 @@
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
-static String version()	{  return '0.0.8'  }
+static String version()	{  return '0.0.9'  }
 
 definition (
 	name: 			"Rule References Rule Table", 
@@ -62,7 +62,7 @@ def mainPage(){
             if(minVerCheck("2.4.0.0")) {
                 childApps = getRuleList()
                 rule2Runner=[]
-                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Runs</b></th></tr><tr><th>Rule Name</th><th>Rules Run/Paused</th></tr>"//<th>Related Rules</th></tr>"
+                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Rule Affects</b></th></tr><tr><th>Rule Name(id)</th><th>Rules Affected</th></tr>"//<th>Related Rules</th></tr>"
                 childApps.each { ca ->
 		            jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
                     aSHold=[]
@@ -86,17 +86,18 @@ def mainPage(){
                         if(aKey != 'null'){
                         	if(i>0) oTable += ",<br> "
                         	i++
-                        
-                        	oTable+= "<a href='http://${location.hub.localIP}/installedapp/configure/${aKey}'>${getName(aKey,childApps)}(${aKey})</a>"
-                        	rule2Runner.add([key:"$aKey", value:"${ca.key}"])
+                        	aName=getName(aKey,childApps)
+                        	oTable+= "<a href='http://${location.hub.localIP}/installedapp/configure/${aKey}'>${aName}(${aKey})</a>"
+                        	rule2Runner.add([key:"$aKey", value:"${ca.key}", name:"$aName"])
                         }
                     }
                     oTable += '</td></tr>'
                 }
                 oTable += '</table>'
                 paragraph oTable
-                r2r = rule2Runner.sort{it.key}.unique()
-				oTable = "$tableStyle<table class='mdl-data-table tstat-col'><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Run By</b></th></tr><tr><th>Rule Name</th><th>Run/Paused By</th></tr>"
+                r2r = rule2Runner.sort{it.name+it.key}.unique()
+                
+				oTable = "$tableStyle<table class='mdl-data-table tstat-col'><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>In Use</b></th></tr><tr><th>Rule Name(id)</th><th>In Use By</th></tr>"
 				lastKey = 0
                 holdR=[]
                 r2r.each { r ->
@@ -111,7 +112,7 @@ def mainPage(){
                         if(i>0){
                             oTable+='</td></tr>'
                         }
-                        oTable+="<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${r.key}'>${getName(r.key,childApps)}(${r.key})</a></td><td>"
+                        oTable+="<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${r.key}'>${r.name}(${r.key})</a></td><td>"
                         holdR=[]
                         holdR.add(r.value)
                         lastKey = r.key

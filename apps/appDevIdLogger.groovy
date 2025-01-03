@@ -90,7 +90,7 @@ def mainPage(){
                     foundIt = false
 					oldData = jSlurp.parseText(new String(buData, "UTF-8"))                    
                     oldData.each {
-                        log.debug "$it"
+                        if(debugEnabled)log.debug "$it"
                         if("${it.key}" == "$aOrD-$iKey"){
                         	paragraph "<b>Found:</b> ${it.value}      <b>Last Seen: </b>${it.lastSeen}"
                         	foundIt = true

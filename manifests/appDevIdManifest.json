@@ -1,0 +1,19 @@
+{
+ "packageName":"App and Device ID Logger",
+ "author":"Jean P. May, Jr.",
+ "version":"0.0.1",
+ "minimumHEVersion":"2.4.0.145",
+ "dateReleased":"2025-01-03",
+ "releaseNotes":"v0.0.1 - Initial Release ",
+ "apps": [
+  {
+     "id":"26e3ddfb-2198-4ea9-8b4b-fc5351f987dd",
+     "name":"App and Device ID Logger",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/apps/appDevIdLogger.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

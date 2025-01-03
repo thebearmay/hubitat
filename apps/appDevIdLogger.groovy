@@ -16,7 +16,7 @@
 import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 definition (
 	name: 			"App and Device ID Logger", 
@@ -90,7 +90,7 @@ def mainPage(){
                     foundIt = false
 					oldData = jSlurp.parseText(new String(buData, "UTF-8"))                    
                     oldData.each {
-                        if(debugEnabled)log.debug "$it"
+                        if(debugEnabled) log.debug "$it"
                         if("${it.key}" == "$aOrD-$iKey"){
                         	paragraph "<b>Found:</b> ${it.value}      <b>Last Seen: </b>${it.lastSeen}"
                         	foundIt = true
@@ -139,6 +139,7 @@ void getSnapshot() {
             if(od.key == idl.key){
                 //log.debug "${od.key}<br><b>O:</b>${od.lastSeen}<br> <b>I:</b>${idl.lastSeen}"
                 od.lastSeen = idl.lastSeen
+                od.value = idl.value
                 foundIt = true
             }
         }

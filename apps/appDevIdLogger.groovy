@@ -16,7 +16,7 @@
 import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-static String version()	{  return '0.0.0'  }
+static String version()	{  return '0.0.1'  }
 
 definition (
 	name: 			"App and Device ID Logger", 

@@ -343,6 +343,13 @@
       "tags":[
         "Lights & Switches"
        ]
+    },
+    {
+      "id":"cc60b61f-0bda-4c83-a19d-5ce589ce6202",
+      "name":"App and Device ID Logger",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/appDevIdManifest.json",
+      "description":"App and Device ID Logger. Application creates and updates a log of all app and device IDs and retains their entries after the app/device is removed; this allows for a quick lookup that can be used to trace the 'Hub received a request for an unknown app' messages. "
     }
   ]
 }

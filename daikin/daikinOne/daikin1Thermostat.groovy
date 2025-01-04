@@ -165,8 +165,8 @@ void setCoolingSetpoint(temp){
         temp2 = temp
     }
     parent.sendPut("/deviceData/${device.deviceNetworkId}",[cspHome:temp2])
-    updateAttr("thermostatSetPoint",temp,cOrF)
-    updateAttr("coolingSetPoint",temp,cOrF)                   
+    updateAttr("thermostatSetpoint",temp,cOrF)
+    updateAttr("coolingSetpoint",temp,cOrF)                   
 }
 
 void setHeatingSetpoint(temp){
@@ -178,8 +178,8 @@ void setHeatingSetpoint(temp){
         temp2 = temp
     }
     parent.sendPut("/deviceData/${device.deviceNetworkId}",[hspHome:temp2])
-    updateAttr("thermostatSetPoint",temp,cOrF)
-    updateAttr("heatingSetPoint",temp,cOrF)   
+    updateAttr("thermostatSetpoint",temp,cOrF)
+    updateAttr("heatingSetpoint",temp,cOrF)   
 }
 
 void setThermostatFanMode(fanmode){

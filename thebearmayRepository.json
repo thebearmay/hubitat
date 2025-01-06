@@ -350,6 +350,13 @@
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/appDevIdManifest.json",
       "description":"App and Device ID Logger. Application creates and updates a log of all app and device IDs and retains their entries after the app/device is removed; this allows for a quick lookup that can be used to trace the 'Hub received a request for an unknown app' messages. "
+    },
+    {
+      "id":"cb995e0b-8a94-43d0-a888-7ffdb7f8484f",
+      "name":"Rules Referencing Rules ",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/ruleRruleManifest.json",
+      "description":"Rules References Rules Table.  App generates 2 cross reference tables of Rule Machine Rules that reference other rules.  These views allow one to quickly identify a rule that calls other rules, or all of the rules that a specific rule is referenced in."
     }
   ]
 }

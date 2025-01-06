@@ -12,10 +12,11 @@
  *
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
+ *    05Jan2025        thebearmay             capture privateF and actRuleMain
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
-static String version()	{  return '0.0.9'  }
+static String version()	{  return '0.0.'  }
 
 definition (
 	name: 			"Rule References Rule Table", 
@@ -66,13 +67,13 @@ def mainPage(){
             if(minVerCheck("2.4.0.0")) {
                 childApps = getRuleList()
                 rule2Runner=[]
-                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Rule Affects</b></th></tr><tr><th>Rule Name(id)</th><th>Rules Affected</th></tr>"//<th>Related Rules</th></tr>"
+                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Rule Affects</b></th></tr><tr><th>Rule Name(id)</th><th>Rules Affected(id)</th></tr>"//<th>Related Rules</th></tr>"
                 childApps.each { ca ->
 		            jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
                     aSHold=[]
                     oTable += "<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${ca.key}'>${ca.value}(${ca.key})</a></td><td>"
                     jData.appSettings.each { aS ->
-                        if(aS.name.toString().contains('ruleAct.') || aS.name.toString().contains('pauseRule.') || aS.name.toString().contains('valFunction.') || aS.name.toString().contains('privateT') || aS.name.toString().contains('stopAct')){
+                        if(aS.name.toString().contains('ruleAct') || aS.name.toString().contains('pauseRule.') || aS.name.toString().contains('valFunction.') || aS.name.toString().contains('privateT') || aS.name.toString().contains('privateF') || aS.name.toString().contains('stopAct')){
                             vSplit = aS.value.toString().replace('\"','').replace('[','').replace(']','').split(',')
                             //log.debug "${aS.value} ${vSplit}"
                             vSplit.each{
@@ -101,7 +102,7 @@ def mainPage(){
                 paragraph oTable
                 r2r = rule2Runner.sort{it.name+it.key}.unique()
                 
-				oTable = "$tableStyle<table class='mdl-data-table tstat-col'><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>In Use</b></th></tr><tr><th>Rule Name(id)</th><th>In Use By</th></tr>"
+				oTable = "$tableStyle<table class='mdl-data-table tstat-col'><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>In Use</b></th></tr><tr><th>Rule Name(id)</th><th>In Use By(id)</th></tr>"
 				lastKey = 0
                 holdR=[]
                 r2r.each { r ->

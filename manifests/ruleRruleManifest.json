@@ -1,0 +1,20 @@
+{
+ "packageName":"Rules Referencing Rules ",
+ "author":"TheBearMay",
+ "version":"0.0.10",
+ "minimumHEVersion":"2.4.0.145",
+ "dateReleased":"2025-01-03",
+ "releaseNotes":"v0.0.10 - Initial Release ",
+ "communityLink":"https://community.hubitat.com/c/comappsanddrivers/community-apps/64",
+ "apps": [
+  {
+     "id":"b65d171b-5afc-4fe2-9cd8-0cd18527bace",
+     "name":"Rules References Rules Table",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/ruleRruleList.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

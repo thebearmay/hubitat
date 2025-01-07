@@ -16,7 +16,7 @@
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
-static String version()	{  return '0.0.10'  }
+static String version()	{  return '0.0.11'  }
 
 definition (
 	name: 			"Rule References Rule Table", 
@@ -65,75 +65,80 @@ def mainPage(){
         section("") {
             if(debugEnabled) runIn(1800,logsOff)
             if(minVerCheck("2.4.0.0")) {
-                childApps = getRuleList()
-                rule2Runner=[]
-                oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Rule Affects</b></th></tr><tr><th>Rule Name(id)</th><th>Rules Affected(id)</th></tr>"//<th>Related Rules</th></tr>"
-                childApps.each { ca ->
-		            jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
-                    aSHold=[]
-                    oTable += "<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${ca.key}'>${ca.value}(${ca.key})</a></td><td>"
-                    jData.appSettings.each { aS ->
-                        if(aS.name.toString().contains('ruleAct') || aS.name.toString().contains('pauseRule.') || aS.name.toString().contains('valFunction.') || aS.name.toString().contains('privateT') || aS.name.toString().contains('privateF') || aS.name.toString().contains('stopAct')){
-                            vSplit = aS.value.toString().replace('\"','').replace('[','').replace(']','').split(',')
+                input "getRules", "button", title: "Create Tables"
+                if(state.getRules){
+                    state.getRules = false
+                	childApps = getRuleList()
+	                rule2Runner=[]
+     	           oTable = "$tableStyle<table class='mdl-data-table tstat-col'><tr><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>Rule Affects</b></th></tr><tr><th>Rule Name(id)</th><th>Rules Affected(id)</th></tr>"//<th>Related Rules</th></tr>"
+        	        childApps.each { ca ->
+		    	        jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
+                	    aSHold=[]
+                    	oTable += "<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${ca.key}'>${ca.value}(${ca.key})</a></td><td>"
+	                    jData.appSettings.each { aS ->
+    	                    if(aS.name.toString().contains('ruleAct') || aS.name.toString().contains('pauseRule.') || aS.name.toString().contains('valFunction.') || aS.name.toString().contains('privateT') || aS.name.toString().contains('privateF') || aS.name.toString().contains('stopAct')){
+        	                    vSplit = aS.value.toString().replace('\"','').replace('[','').replace(']','').split(',')
                             //log.debug "${aS.value} ${vSplit}"
-                            vSplit.each{
-								aSHold.add("\"$it\"")
-                            }
-                        }
-                    }
-                    if(debugEnabled) 
-                    	log.debug "$aSHold"
-                    i=0
-                    aSHold.sort().unique().each {
-                        sInx = it.toString().indexOf('\"')+1
-                        eInx = it.toString().indexOf('\"',sInx)
-                        aKey=it.toString().substring(sInx,eInx)
-                        if(aKey != 'null'){
-                        	if(i>0) oTable += ",<br> "
-                        	i++
-                        	aName=getName(aKey,childApps)
-                        	oTable+= "<a href='http://${location.hub.localIP}/installedapp/configure/${aKey}'>${aName}(${aKey})</a>"
-                        	rule2Runner.add([key:"$aKey", value:"${ca.key}", name:"$aName"])
-                        }
-                    }
-                    oTable += '</td></tr>'
+            	                vSplit.each{
+                	                if(ca.key != it)
+									   aSHold.add("\"$it\"")
+                        	    }
+                        	}
+	                    }
+    	                if(debugEnabled) 
+        	            	log.debug "$aSHold"
+            	        i=0
+                	    aSHold.sort().unique().each {
+                    	    sInx = it.toString().indexOf('\"')+1
+	                        eInx = it.toString().indexOf('\"',sInx)
+    	                    aKey=it.toString().substring(sInx,eInx)
+        	                if(aKey != 'null' && aKey != ca.key ){
+            	            	if(i>0) oTable += ",<br> "
+                	        	i++
+                    	    	aName=getName(aKey,childApps)
+                        		oTable+= "<a href='http://${location.hub.localIP}/installedapp/configure/${aKey}'>${aName}(${aKey})</a>"
+                        		rule2Runner.add([key:"$aKey", value:"${ca.key}", name:"$aName"])
+	                        }
+    	                }
+        	            oTable += '</td></tr>'
+            	    }
+                	oTable += '</table>'
+	                paragraph oTable
+    	            r2r = rule2Runner.sort{it.name+it.key}.unique()
+        	        
+					oTable = "$tableStyle<table class='mdl-data-table tstat-col'><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>In Use</b></th></tr><tr><th>Rule Name(id)</th><th>In Use By(id)</th></tr>"
+					lastKey = 0
+	                holdR=[]
+    	            r2r.each { r ->
+        	            if(lastKey != r.key && r.key !='null' ){
+            	            i=0
+                	        holdR.sort().each{
+                    	        if(i>0)
+                        			oTable+= ',<br>'
+								oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${it}'>${getName(it,childApps)}(${it})"
+	                            i++
+    	                    }  
+        	                if(i>0){
+            	                oTable+='</td></tr>'
+                	        }
+                    	    oTable+="<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${r.key}'>${r.name}(${r.key})</a></td><td>"
+                        	holdR=[]
+	                        holdR.add(r.value)
+    	                    lastKey = r.key
+        	            } else if(r.key != 'null'){
+            	            holdR.add(r.value)
+                	    }
+	                }
+    	            i=0
+        	        holdR.sort().each{
+            	    	if(i>0)
+							oTable+= ', '
+                    	oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${it}'>${getName(it,childApps)}(${it})"
+	                	i++
+    	            }  
+        	        oTable+='</td></tr></table>' 
+					paragraph oTable
                 }
-                oTable += '</table>'
-                paragraph oTable
-                r2r = rule2Runner.sort{it.name+it.key}.unique()
-                
-				oTable = "$tableStyle<table class='mdl-data-table tstat-col'><th colSpan='2' style='text-align:center;border-bottom:1px solid;'><b>In Use</b></th></tr><tr><th>Rule Name(id)</th><th>In Use By(id)</th></tr>"
-				lastKey = 0
-                holdR=[]
-                r2r.each { r ->
-                    if(lastKey != r.key && r.key !='null' ){
-                        i=0
-                        holdR.sort().each{
-                            if(i>0)
-                        		oTable+= ',<br>'
-							oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${it}'>${getName(it,childApps)}(${it})"
-                            i++
-                        }  
-                        if(i>0){
-                            oTable+='</td></tr>'
-                        }
-                        oTable+="<tr><td><a href='http://${location.hub.localIP}/installedapp/configure/${r.key}'>${r.name}(${r.key})</a></td><td>"
-                        holdR=[]
-                        holdR.add(r.value)
-                        lastKey = r.key
-                    } else if(r.key != 'null'){
-                        holdR.add(r.value)
-                    }
-                }
-                i=0
-                holdR.sort().each{
-                	if(i>0)
-						oTable+= ', '
-                    oTable+="<a href='http://${location.hub.localIP}/installedapp/configure/${it}'>${getName(it,childApps)}(${it})"
-                	i++
-                }  
-                oTable+='</td></tr></table>' 
-				paragraph oTable
             } else paragraph "Must be on HE v2.4.0.0 or Higher"
         }     
     }
@@ -219,7 +224,9 @@ Boolean minVerCheck(vStr){  //check if HE is >= to the requirement
 
 def appButtonHandler(btn) {
     switch(btn) {
-       
+		case "getRules":
+        	state.getRules = true
+        	break
         default: 
               log.error "Undefined button $btn pushed"
               break

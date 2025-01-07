@@ -4,7 +4,7 @@
  "version":"0.0.10",
  "minimumHEVersion":"2.4.0.145",
  "dateReleased":"2025-01-03",
- "releaseNotes":"v0.0.10 - Initial Release ",
+ "releaseNotes":"v0.0.11 - add button to start and elminate more self references\nv0.0.10 - Initial Release ",
  "communityLink":"https://community.hubitat.com/c/comappsanddrivers/community-apps/64",
  "apps": [
   {

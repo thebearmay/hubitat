@@ -163,6 +163,11 @@
 * Reset    * Factory Reset
 * Reset    * /factory/recovery
 * Reset    *
+* Retry    * //2.4.1.103
+* Retry    * /hub/commandRetryController/enable/true
+* Retry    * /hub/commandRetryController/enable/false
+* Retry    *
+* Retry    *
 * Rooms    *
 * Rooms    * /hub2/roomsList
 * Rooms    *

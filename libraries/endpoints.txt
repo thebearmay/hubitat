@@ -15,6 +15,13 @@
 * Apps	 *	
 * Backup    * Backup Download
 * Backup    * /hub/backupDB?fileName=latest
+* Backup    * 
+* Backup    * Backup Restore
+* Backup    * /hub/uploadBackup
+* Backup    * // this must be sent using a POST and needs to contain the backup to be restored embedded in the message (Content-Type: multipart/form-Data;)
+* Backup    * // if successful return JSON {"success":"true", "message":""}
+* Backup    * /hub2/restore/UploadedBackup
+* Backup    * //this is sent using an HTTP GET, normally the response is a 500 error but it can be ignored
 * Backup    *
 * Bundles    *
 * Bundles    * /hub2/userBundles

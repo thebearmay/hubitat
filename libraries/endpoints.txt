@@ -244,4 +244,9 @@
 * Zwave	 * /hub/zwaveRepair
 * ZWave  * /hub/zwave/reset
 * Zwave	 * /hub/zwaveDetails/json
+* Zwave	 *
+* Zwave	 * 2.1.4.110 ZWave JS 
+* Zwave	 * /hub/zwave2/enable
+* Zwave	 * /hub/zwave2/disable
+* Zwave	 * /hub/zwave2/status
 /* 

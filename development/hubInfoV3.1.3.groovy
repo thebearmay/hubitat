@@ -1501,12 +1501,12 @@ void hiaUpdate(htmlStr) {
 
 void createHtml(){
     if(alternateHtml == null || fileExists("$alternateHtml") == false){
-        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/hubInfoTemplate.res","hubInfoTemplate.res")
         device.updateSetting("alternateHtml",[value:"hubInfoTemplate.res", type:"string"])
     }
     String fContents = readFile("$alternateHtml")
     if(fContents == 'null' || fContents == null) {
-        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/hubInfoTemplate.res","hubInfoTemplate.res")
         device.updateSetting("alternateHtml",[value:"hubInfoTemplate.res", type:"string"]) 
         fContents = readFile("$alternateHtml")
     }

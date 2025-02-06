@@ -233,7 +233,7 @@ preferences {
 @SuppressWarnings('unused')
 void installed() {
     log.trace "installed()"
-    xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+    xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/hubInfoTemplate.res","hubInfoTemplate.res")
     initialize()
     configure()
 }

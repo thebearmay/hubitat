@@ -76,7 +76,7 @@
  *    2024-11-08                 v3.1.10 - Add capability URL and attributes to allow display on Easy Dash
  *                               v3.1.11 - Fix degree symbol when using File Manager output
  *    2024-11-16                 v3.1.12 - fix min version check
- *    2025-01-31				 v3.1.13 - add zwaveJS(enabled/disabled), zwaveRegion, zwaveUpdateAvail(true/false), zigbeeUpdateAvail(true/false)
+ *    2025-01-31		 v3.1.13 - add zwaveJS(enabled/disabled), zwaveRegion, zwaveUpdateAvail(true/false), zigbeeUpdateAvail(true/false)
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -817,7 +817,7 @@ void parseZwave(String zString){
     Integer start = zString.indexOf('(')
     Integer end = zString.length()
     String wrkStr
-    if(device.currentValue('zwaveJS',true) != 'true'){
+    if(device.currentValue('zwaveJS',true) != 'true' && zString.length() != 4){
     	if(start == -1 || end < 1 || zString.indexOf("starting up") > 0 ){ //empty or invalid string - possibly non-C7
         	//updateAttr("zwaveData",null)
         	if(!warnSuppress) log.warn "Invalid ZWave Data returned ($zString) "

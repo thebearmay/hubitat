@@ -83,7 +83,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.12"}
+static String version() {return "3.1.12a"}
 
 metadata {
     definition (
@@ -923,8 +923,8 @@ void getHubMesh(resp, data){
                 jStr+="{\"hubName\":\"$it.name\","
                 jStr+="\"active\":\"$it.active\","
                 jStr+="\"offline\":\"$it.offline\","
-                jStr+="\"ipAddress\":\"$it.ipAddress\","
-                jStr+="\"meshProtocol\":\"$h2Data.hubMeshProtocol\"}"          
+                jStr+="\"ipAddress\":\"$it.ipAddress\"}"
+                //jStr+="\"meshProtocol\":\"$h2Data.hubMeshProtocol\"}"          
                 i++
             }
             jStr+="]"

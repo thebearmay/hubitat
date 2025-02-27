@@ -43,7 +43,7 @@ String buttonLink(HashMap opt) {
     if(!opt.fontSize) opt.fontSize = "15px"
     if(!opt.width) opt.width = '10em'
     if(!opt.radius) opt.radius = '25px'
-    "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='border-radius:25px;color:${opt.color};background-color:${opt.background};cursor:pointer;font-size:${opt.fontSize}; border-style:outset;width:${opt.width};'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
+    return "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='border-radius:25px;color:${opt.color};background-color:${opt.background};cursor:pointer;font-size:${opt.fontSize}; border-style:outset;width:${opt.width};'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 
 String btnIcon(String name) {

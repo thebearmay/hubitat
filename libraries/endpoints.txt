@@ -249,4 +249,5 @@
 * Zwave	 * /hub/zwave2/enable
 * Zwave	 * /hub/zwave2/disable
 * Zwave	 * /hub/zwave2/status
+* ZWave  * /hub/zwave2/reinterview?node=<0x9999>
 /* 

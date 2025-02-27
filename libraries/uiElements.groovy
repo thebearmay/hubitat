@@ -35,7 +35,7 @@ String inputItem(HashMap opt) {
     return retVal
 }
 
-String buttonLink2(HashMap opt) { 
+String buttonLink(HashMap opt) { 
     if(!opt.name || !opt.title ) 
     	return "Error missing name or title"
     if(!opt.color) opt.color = "#1A77C9"

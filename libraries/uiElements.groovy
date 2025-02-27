@@ -52,8 +52,7 @@ String listTable() {
     String removeIcon = "<i class='material-icons he-bin'></i>"
 
 
-    String str = "<script src='/local/iconify-icon.min.js'></script>"
-    str += "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px } tr {border-right:2px solid black;}" +
+    String str = "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px } tr {border-right:2px solid black;}" +
             "</style><div style='overflow-x:auto'><table class='mdl-data-table tstat-col' style='border-left:2px solid black;border-top:2px solid black;'>" +
             "<thead><tr style='border-bottom:2px solid black'>"
     tHead.each { str += "<th><strong>${it}</strong></th>" }

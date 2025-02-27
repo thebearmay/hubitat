@@ -35,8 +35,15 @@ String inputItem(HashMap opt) {
     return retVal
 }
 
-String buttonLink2(String btnName, String linkText, color = "#1A77C9", bkColor = "#FFFFFF", font = "15px") {
-	"<div class='form-group'><input type='hidden' name='${btnName}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='border-radius:25px;color:$color;background-color:$bkColor;cursor:pointer;font-size:$font; border-style:outset;width:10em;'>$linkText</div></div><input type='hidden' name='settings[$btnName]' value=''>"
+String buttonLink2(HashMap opt) { 
+    if(!opt.name || !opt.title ) 
+    	return "Error missing name or title"
+    if(!opt.color) opt.color = "#1A77C9"
+    if(!opt.background) opt.background = "#FFFFFF"
+    if(!opt.fontSize) opt.fontSize = "15px"
+    if(!opt.width) opt.width = '10em'
+    if(!opt.radius) opt.radius = '25px'
+    "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='border-radius:25px;color:${opt.color};background-color:${opt.background};cursor:pointer;font-size:${opt.fontSize}; border-style:outset;width:${opt.width};'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 
 String btnIcon(String name) {

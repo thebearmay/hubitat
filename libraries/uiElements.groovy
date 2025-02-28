@@ -2,17 +2,7 @@
 *
 * Set of methods for UI elements
 *
-*
-*
-*
-*
-*
-*
-*
 */
-
-
-
 
 /*****************************************************************************
 * Returns a string that will create an input element for an app - limited to *

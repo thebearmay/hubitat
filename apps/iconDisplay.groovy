@@ -18,12 +18,8 @@
     
 
 
-static String version()	{  return '0.0.5'  }
-
-import groovy.json.JsonSlurper
-import groovy.json.JsonOutput
+static String version()	{  return '0.0.1'  }
 import groovy.transform.Field
-
 
 definition (
 	name: 			"Icon Display", 

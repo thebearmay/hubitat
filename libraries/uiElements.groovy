@@ -6,12 +6,12 @@
 
 /*****************************************************************************
 * Returns a string that will create an input element for an app - limited to *
-* text and number inputs currently                                           *
+* text, password, and number inputs currently                                *
 *                                                                            *
 * HashMap fields:                                                            *
 *	name - (required) name to store the input as a setting, no spaces or *
 *		special characters					     *
-*	type - (required) input type, 'text' or 'number' only 		     *
+*	type - (required) input type, 'text', 'password', or 'number' only   *
 *	title - displayed description for the input element		     * 
 *	width - CSS descriptor for field width				     *
 *	background - CSS color descriptor for the input background color     *
@@ -23,7 +23,7 @@
 
 String inputItem(HashMap opt) {
     if(!opt.name || !opt.type) return "Error missing name or type"
-    if(opt.type != 'number' && opt.type != 'text'){
+    if(opt.type != 'number' && opt.type != 'text' && opt.type != 'password'){
         log.warn "${opt.type} type not currently supported - using text"
         opt.type = 'text'
     }

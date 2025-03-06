@@ -41,6 +41,74 @@ String inputItem(HashMap opt) {
 }
 
 /*****************************************************************************
+* Returns a string that will create an input capability element for an app   *
+*                                                                            *
+* HashMap fields:                                                            *
+*	name - (required) name to store the input as a setting, no spaces or *
+*		special characters					     *
+*	type - (required) capability type, 'capability.<capability or *>'    *
+*	title - displayed description for the input element		     * 
+*	width - CSS descriptor for field width				     *
+*	background - CSS color descriptor for the input background color     *
+*	color - CSS color descriptor for text color			     *
+*	fontSize - CSS text size descriptor				     *
+*	multiple - true/<false>						     *
+*****************************************************************************/
+
+String inputCap(HashMap opt) {
+    String computedStyle = ''
+    if(opt.width) computedStyle += "width:${opt.width};"
+    if(opt.background) computedStyle += "background-color:${opt.background};"
+    if(opt.color) computedStyle += "color:${opt.color};"
+    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
+    if(opt.radius) computedStyle += "border-radius:${opt.radius};"    
+    if(!opt.multiple) opt.multiple = false
+    String dList = ''
+    String idList = ''
+    int i=0
+    if(settings["${opt.name}"]){
+        ArrayList devNameId = []
+        settings["${opt.name}"].each{
+            devNameId.add([name:"${it.displayName}", devId:it.deviceId])
+        }
+        ArrayList devNameIdSorted = devNameId.sort(){it.name}
+        devNameIdSorted.each{
+			if(i>0) { 
+                dList +='<br>'
+                idList += ','
+            }
+            dList+="${it.name}"
+            idList+="${it.devId}"
+	        i++
+	    }
+    } else {
+    	dList = 'Click to set'
+    }
+    String capAlt = opt.type.replace('.','')                                     
+
+	String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
+	retVal += "<div class='capability ${capAlt} mdl-cell mdl-cell--4-col' style='margin: 8px 0; $computedStyle'>"//width: ${opt.width}'>"
+	retVal += "<button type='button' class='btn btn-default btn-lg btn-block device-btn-filled btn-device mdl-button--raised mdl-shadow--2dp' style='text-align:left; width:100%;' data-toggle='modal' data-target='#deviceListModal' "
+	retVal += "data-capability='${opt.type}' data-elemname='${opt.name}' data-multiple='${opt.multiple}' data-ignore=''>"
+    	retVal += "<span style='white-space:pre-wrap;'>${opt.title}</span><br>"
+	retVal += "<span id='${opt.name}devlist' class='device-text' style='text-align: left;'>${dList}</span></button>"
+	retVal += "<input type='hidden' name='settings[${opt.name}]' class='form-control submitOnChange' value='${idList}' placeholder='Click to set' id='settings[${opt.name}]'>"
+	retVal += "<input type='hidden' name='deviceList' value='${opt.name}'><div class='device-list' style='display:none'>"
+	retVal += "<div id='deviceListModal' style='border:1px solid #ccc;padding:8px;max-height:300px;overflow:auto'><div class='checkAllBoxes my-2'>"
+	retVal += "<label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect checkall mdl-js-ripple-effect--ignore-events is-upgraded' id='${opt.name}-checkall' for='${opt.name}-checkbox-0' data-upgraded=',MaterialCheckbox,MaterialRipple'>"
+    	retVal += "<script>function toggleMe${opt.name}(){if(document.getElementById(\"${opt.name}-checkall\").classList.contains(\"is-checked\")){document.getElementById(\"${opt.name}-checkall\").classList.remove(\"is-checked\");}else{document.getElementById(\"${opt.name}-checkall\").classList.add(\"is-checked\");}}</script>"    
+	retVal += "<input type='checkbox' class='mdl-checkbox__input checkboxAll' id='${opt.name}-checkbox-0' onclick='toggleMe${opt.name}()'><span class='mdl-checkbox__label'>Toggle All On/Off</span>"
+	retVal += "<span class='mdl-checkbox__focus-helper'></span><span class='mdl-checkbox__box-outline'><span class='mdl-checkbox__tick-outline'></span></span>"
+	retVal += "<span class='mdl-checkbox__ripple-container mdl-js-ripple-effect mdl-ripple--center' data-upgraded=',MaterialRipple'><span class='mdl-ripple'></span></span></label></div>"
+	retVal += "<div id='${opt.name}-options' class='modal-body' style='overflow:unset'></div></div>"
+	retVal += "<div class='mdl-button mdl-js-button mdl-button--raised pull-right device-save' data-upgraded=',MaterialButton'>Update</div></div></div>"
+    
+    return retVal
+}
+
+
+
+/*****************************************************************************
 * Returns a string that will create an button element for an app 	     *
 *                                                                            *
 * HashMap fields:                                                            *

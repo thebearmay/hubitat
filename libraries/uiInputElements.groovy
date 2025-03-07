@@ -16,6 +16,28 @@ library (
     documentationLink: ""
 )
 
+String getInputElemStr(HashMap opt){
+   switch (opt.type){
+	case "text":
+	   return inputItem(opt)
+	   break
+	case "number":
+	   return inputItem(opt)
+	   break
+	case "password":
+	   return inputItem(opt)
+	   break
+	default:
+           if(opt.type.contains('capability')){
+	       return inputCap(opt)
+	   else
+	       return "Type ${opt.type} is not supported"
+	   break
+   }
+}
+
+
+
 /*****************************************************************************
 * Returns a string that will create an input element for an app - limited to *
 * text, password, and number inputs currently                                *

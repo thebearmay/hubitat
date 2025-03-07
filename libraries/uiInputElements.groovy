@@ -4,6 +4,18 @@
 *
 */
 
+library (
+    base: "app",
+    author: "Jean P. May Jr.",
+    category: "UI",
+    description: "Set of methods that allow the customization of the INPUT UI Elements",
+    name: "uiInputElements",
+    namespace: "thebearmay",
+    importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
+    version: "0.0.1",
+    documentationLink: ""
+)
+
 /*****************************************************************************
 * Returns a string that will create an input element for an app - limited to *
 * text, password, and number inputs currently                                *

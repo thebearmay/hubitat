@@ -3,7 +3,7 @@
 * Set of methods for UI elements
 *
 */
-
+import groovy.transform.Field
 library (
     base: "app",
     author: "Jean P. May Jr.",
@@ -36,7 +36,7 @@ String getInputElemStr(HashMap opt){
    }
 }
 
-
+String appLocation() { return "http://${location.hub.localIP}/installedapp/configure/${app.id}/mainPage" }
 
 /*****************************************************************************
 * Returns a string that will create an input element for an app - limited to *
@@ -183,7 +183,7 @@ String btnIcon(String name) {
 /*****************************************************************************
 * Code sample that returns a string that will create a standard HE table     *
 *****************************************************************************/
-
+/*
 String listTable() {
     ArrayList<String> tHead = ["","Disable","Name","Device","Attributes","Interval","Output File","<i style='font-size:1.125rem' class='material-icons he-bin'></i>"]
     String X = "<i class='he-checkbox-checked'></i>"
@@ -200,3 +200,12 @@ String listTable() {
   
     ...
 }
+*/
+// Return to Main Page
+// paragraph "<script>window.location.replace('${appLocation()}')</script>" 
+// Href to <pageName>
+//inx = appLocation().lastIndexOf("/")
+//paragraph "<script>window.location.replace('${appLocation().substring(0,inx)}/<pageName>')</script>"
+	
+@Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;text-align:left;}</style>"
+@Field static String tableStyle = "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px; padding:8px 8px 8px 8px;white-space: nowrap;} tr {border-right:2px solid black;}</style>"

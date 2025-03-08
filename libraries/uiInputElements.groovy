@@ -42,7 +42,7 @@ String getInputElemStr(HashMap opt){
    }
 }
 
-String appLocation() { return "http://${location.hub.localIP}/installedapp/configure/${app.id}/mainPage" }
+String appLocation() { return "http://${location.hub.localIP}/installedapp/configure/${app.id}" }
 
 /*****************************************************************************
 * Returns a string that will create an input element for an app - limited to *

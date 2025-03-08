@@ -27,6 +27,12 @@ String getInputElemStr(HashMap opt){
 	case "password":
 	   return inputItem(opt)
 	   break
+	case "enum:
+	   return inputEnum(opt)
+	   break
+	case "mode":
+	   return inputEnum(opt)
+	   break
 	default:
            if(opt.type.contains('capability')){
 	       return inputCap(opt)
@@ -137,6 +143,73 @@ String inputCap(HashMap opt) {
 	retVal += "<div id='${opt.name}-options' class='modal-body' style='overflow:unset'></div></div>"
 	retVal += "<div class='mdl-button mdl-js-button mdl-button--raised pull-right device-save' data-upgraded=',MaterialButton'>Update</div></div></div>"
     
+    return retVal
+}
+
+/*****************************************************************************
+* Returns a string that will create an input enum or mode element for an app *
+*                                                                            *
+* HashMap fields:                                                            *
+*	name - (required) name to store the input as a setting, no spaces or *
+*		special characters					     *
+*	type - (required) capability type, <enum/mode>			     *
+*	title - displayed description for the input element		     * 
+*	width - CSS descriptor for field width				     *
+*	background - CSS color descriptor for the input background color     *
+*	color - CSS color descriptor for text color			     *
+*	fontSize - CSS text size descriptor				     *
+*	multiple - true/<false>						     *
+*	options - list of values for the enum (modes will autofill)	     *
+*****************************************************************************/
+
+
+String inputEnum(HashMap opt){
+    String computedStyle = ''
+    if(opt.type == 'mode') opt.options = location.getModes()
+    if(opt.width) computedStyle += "width:${opt.width};"
+    if(opt.background) computedStyle += "background-color:${opt.background};"
+    if(opt.color) computedStyle += "color:${opt.color};"
+    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
+    if(opt.radius) computedStyle += "border-radius:${opt.radius};"    
+    if(!opt.multiple) {
+    	opt.multiple = false
+        mult = ' '
+    } else {
+        mult = 'multiple'
+    }
+    String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
+    retVal += "<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield' style='margin: 8px 0; padding-right: 8px; ' data-upgraded=',MaterialTextfield'>"
+    retVal += "<label for='settings[${opt.name}]' class='control-label'>${opt.title}</label><div class='SumoSelect sumo_settings[${opt.name}]' tabindex='0' role='button' aria-expanded='false'>"
+    retVal += "<select id='settings[${opt.name}]' ${mult} name='settings[${opt.name}]' class='selectpicker form-control mdl-switch__input submitOnChange SumoUnder' placeholder='Click to set' data-default='' tabindex='-1' style='${computedStyle}'>"
+    ArrayList selOpt = []
+	if(settings["${opt.name}"]){
+        if("${settings["${opt.name}"].class}" == 'class java.lang.String')
+        	selOpt.add("${settings["${opt.name}"]}")
+       else {               
+        	settings["${opt.name}"].each{
+            	selOpt.add("$it")
+        	}
+       }
+    }
+    if(mult != 'multiple') retVal+="<option value=''>Click to set</option>"
+    opt.options.each{ option -> 
+        if("$option".contains(':')){
+            optSplit = "$option".replace('[','').replace(']','').split(':')
+            optVal = optSplit[0]
+            optDis = optSplit[1]
+        } else {
+            optVal = option
+            optDis = option
+        }
+        sel = ' '
+        selOpt.each{
+            //log.debug "$it $optVal ${"$it" == "$optVal"}"
+            if("$it" == "$optVal") 
+            	sel = 'selected'
+        }
+        retVal += "<option value='$optVal' $sel>$optDis</option>"
+    }
+    retVal+= "</select></div></div>"
     return retVal
 }
 

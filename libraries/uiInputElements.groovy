@@ -24,6 +24,15 @@ String getInputElemStr(HashMap opt){
 	case "number":
 	   return inputItem(opt)
 	   break
+	case "decimal":
+	   return inputItem(opt)
+	   break
+	case "date":
+	   return inputItem(opt)
+	   break
+	case "time":
+	   return inputItem(opt)
+	   break	
 	case "password":
 	   return inputItem(opt)
 	   break
@@ -46,12 +55,12 @@ String appLocation() { return "http://${location.hub.localIP}/installedapp/confi
 
 /*****************************************************************************
 * Returns a string that will create an input element for an app - limited to *
-* text, password, and number inputs currently                                *
+* text, password, number, date and time inputs currently                     *
 *                                                                            *
 * HashMap fields:                                                            *
 *	name - (required) name to store the input as a setting, no spaces or *
 *		special characters					     *
-*	type - (required) input type, 'text', 'password', or 'number' only   *
+*	type - (required) input type					     *
 *	title - displayed description for the input element		     * 
 *	width - CSS descriptor for field width				     *
 *	background - CSS color descriptor for the input background color     *
@@ -63,10 +72,6 @@ String appLocation() { return "http://${location.hub.localIP}/installedapp/confi
 
 String inputItem(HashMap opt) {
     if(!opt.name || !opt.type) return "Error missing name or type"
-    if(opt.type != 'number' && opt.type != 'text' && opt.type != 'password'){
-        log.warn "${opt.type} type not currently supported - using text"
-        opt.type = 'text'
-    }
     if(settings[opt.name] != null) opt.defaultValue = settings[opt.name]
     String computedStyle = ''
     if(opt.width) computedStyle += "width:${opt.width};"

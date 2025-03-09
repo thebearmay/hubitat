@@ -85,6 +85,15 @@ String inputItem(HashMap opt) {
             opt.defaultValue = sdf.format(sdfIn.parse(settings[opt.name]))
         }
     }
+    if(opt.type == 'number') {
+    	step = ' step=\"1\" '
+    } else if (opt.type == 'decimal') {
+        step = ' step=\"any\" '
+        opt.type = 'number'
+    } else {
+        step = ' '
+    }
+        
     String computedStyle = ''
     if(opt.width) computedStyle += "width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
@@ -94,11 +103,11 @@ String inputItem(HashMap opt) {
     if(!opt.multiple) opt.multiple = false
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
 	retVal+="<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield has-placeholder is-dirty is-upgraded' style='' data-upgraded=',MaterialTextfield'>"
-	retVal+="<label for='settings[$opt.name]' class='control-label'>$opt.title</label><div class='flex'><input type='$opt.type' name='settings[$opt.name]' class='mdl-textfield__input submitOnChange' style='$computedStyle' value='$opt.defaultValue' placeholder='Click to set' id='settings[$opt.name]'>"
+	retVal+="<label for='settings[$opt.name]' class='control-label'>$opt.title</label><div class='flex'><input type='$opt.type' ${step} name='settings[$opt.name]' class='mdl-textfield__input submitOnChange' style='$computedStyle' value='$opt.defaultValue' placeholder='Click to set' id='settings[$opt.name]'>"
     retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"
     return retVal
 }
-
+	
 /*****************************************************************************
 * Returns a string that will create an input capability element for an app   *
 *                                                                            *

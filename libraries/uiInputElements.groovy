@@ -40,7 +40,7 @@ String getInputElemStr(HashMap opt){
 	case "color":
 	   return inputItem(opt)
 	   break
-   	case "enum:
+   	case "enum":
 	   return inputEnum(opt)
 	   break
 	case "mode":

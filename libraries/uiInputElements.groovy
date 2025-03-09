@@ -4,6 +4,7 @@
 *
 */
 import groovy.transform.Field
+import java.text.SimpleDateFormat
 library (
     base: "app",
     author: "Jean P. May Jr.",
@@ -72,13 +73,23 @@ String appLocation() { return "http://${location.hub.localIP}/installedapp/confi
 
 String inputItem(HashMap opt) {
     if(!opt.name || !opt.type) return "Error missing name or type"
-    if(settings[opt.name] != null) opt.defaultValue = settings[opt.name]
+    if(settings[opt.name] != null){
+        if(opt.type != 'time') {
+        	opt.defaultValue = settings[opt.name]
+        } else {
+            SimpleDateFormat sdf = new SimpleDateFormat('HH:mm')
+            SimpleDateFormat sdfIn = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+            opt.defaultValue = sdf.format(sdfIn.parse(settings[opt.name]))
+        }
+    }
     String computedStyle = ''
     if(opt.width) computedStyle += "width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
-    String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='false'></div>"
+	if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.multiple) opt.multiple = false
+    String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
 	retVal+="<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield has-placeholder is-dirty is-upgraded' style='' data-upgraded=',MaterialTextfield'>"
 	retVal+="<label for='settings[$opt.name]' class='control-label'>$opt.title</label><div class='flex'><input type='$opt.type' name='settings[$opt.name]' class='mdl-textfield__input submitOnChange' style='$computedStyle' value='$opt.defaultValue' placeholder='Click to set' id='settings[$opt.name]'>"
     retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"

@@ -46,32 +46,45 @@ String getInputElemStr(HashMap opt){
 	case "mode":
 	   return inputEnum(opt)
 	   break
-	default:
-           if(opt.type.contains('capability')){
+	case "bool":
+	   return inputBool(opt)
+	   break
+    case "button":
+	   return buttonLink(opt)
+	   break
+	case "icon":
+	   return btnIcon(opt)
+	   break
+	case "href":
+	   return buttonHref(opt)
+	   break
+    default:
+       if(opt.type && opt.type.contains('capability'))
 	       return inputCap(opt)
-	   else
+       else 
 	       return "Type ${opt.type} is not supported"
 	   break
    }
 }
 
-String appLocation() { return "http://${location.hub.localIP}/installedapp/configure/${app.id}" }
+String appLocation() { return "http://${location.hub.localIP}/installedapp/configure/${app.id}/" }
 
 /*****************************************************************************
 * Returns a string that will create an input element for an app - limited to *
 * text, password, number, date and time inputs currently                     *
 *                                                                            *
 * HashMap fields:                                                            *
-*	name - (required) name to store the input as a setting, no spaces or *
-*		special characters					     *
-*	type - (required) input type					     *
-*	title - displayed description for the input element		     * 
-*	width - CSS descriptor for field width				     *
-*	background - CSS color descriptor for the input background color     *
-*	color - CSS color descriptor for text color			     *
-*	fontSize - CSS text size descriptor				     *
-*	multiple - true/<false>						     *
-*	defaultValue - default for the field				     *
+*	name - (required) name to store the input as a setting, no spaces or 	 *
+*		special characters					     							 *
+*	type - (required) input type					     					 *
+*	title - displayed description for the input element		     			 * 
+*	width - CSS descriptor for field width				     				 *
+*	background - CSS color descriptor for the input background color     	 *
+*	color - CSS color descriptor for text color			     				 *
+*	fontSize - CSS text size descriptor				     					 *
+*	multiple - true/<false>						     						 *
+*	defaultValue - default for the field				     				 *
+*	radius - CSS border radius value (rounded corners)						 *
 *****************************************************************************/
 
 String inputItem(HashMap opt) {
@@ -112,15 +125,16 @@ String inputItem(HashMap opt) {
 * Returns a string that will create an input capability element for an app   *
 *                                                                            *
 * HashMap fields:                                                            *
-*	name - (required) name to store the input as a setting, no spaces or *
-*		special characters					     *
-*	type - (required) capability type, 'capability.<capability or *>'    *
-*	title - displayed description for the input element		     * 
-*	width - CSS descriptor for field width				     *
-*	background - CSS color descriptor for the input background color     *
-*	color - CSS color descriptor for text color			     *
-*	fontSize - CSS text size descriptor				     *
-*	multiple - true/<false>						     *
+*	name - (required) name to store the input as a setting, no spaces or 	 *
+*		special characters					     	 						 *
+*	type - (required) capability type, 'capability.<capability or *>'    	 *
+*	title - displayed description for the input element		     			 * 
+*	width - CSS descriptor for field width				     				 *
+*	background - CSS color descriptor for the input background color         *
+*	color - CSS color descriptor for text color			     				 *
+*	fontSize - CSS text size descriptor				     					 *
+*	multiple - true/<false>						     						 *
+*	radius - CSS border radius value (rounded corners)						 *
 *****************************************************************************/
 
 String inputCap(HashMap opt) {
@@ -178,16 +192,18 @@ String inputCap(HashMap opt) {
 * Returns a string that will create an input enum or mode element for an app *
 *                                                                            *
 * HashMap fields:                                                            *
-*	name - (required) name to store the input as a setting, no spaces or *
-*		special characters					     *
-*	type - (required) capability type, <enum/mode>			     *
-*	title - displayed description for the input element		     * 
-*	width - CSS descriptor for field width				     *
-*	background - CSS color descriptor for the input background color     *
-*	color - CSS color descriptor for text color			     *
-*	fontSize - CSS text size descriptor				     *
-*	multiple - true/<false>						     *
-*	options - list of values for the enum (modes will autofill)	     *
+*	name - (required) name to store the input as a setting, no spaces or 	 *
+*		special characters					     							 *
+*	type - (required) capability type, <enum/mode>			     			 *
+*	title - displayed description for the input element		     			 * 
+*	width - CSS descriptor for field width				     				 *
+*	background - CSS color descriptor for the input background color     	 *
+*	color - CSS color descriptor for text color			     				 *
+*	fontSize - CSS text size descriptor				     					 *
+*	multiple - true/<false>						     						 *
+*	options - list of values for the enum (modes will autofill)	     		 *
+*	defaultValue - default for the field				     				 *
+*	radius - CSS border radius value (rounded corners)						 *
 *****************************************************************************/
 
 
@@ -241,26 +257,69 @@ String inputEnum(HashMap opt){
     return retVal
 }
 
+/*****************************************************************************
+* Returns a string that will create an input boolean element for an app 	 *
+*                                                                            *
+* HashMap fields:                                                            *
+*	name - (required) name to store the input as a setting, no spaces or 	 *
+*		special characters					     							 *
+*	type - (required) capability type, <enum/mode>			     			 *
+*	title - displayed description for the input element		     			 * 
+*	width - CSS descriptor for field width				     				 *
+*	background - CSS color descriptor for the input background color     	 *
+*	color - CSS color descriptor for text color			     				 *
+*	fontSize - CSS text size descriptor				     					 *
+*	defaultValue - default for the field				     				 *
+*	radius - CSS border radius value (rounded corners)						 *
+*****************************************************************************/
+
+String inputBool(HashMap opt) {
+    if(!opt.name || !opt.type) return "Error missing name or type"
+
+    String computedStyle = ''
+    if(opt.width) computedStyle += "width:${opt.width};"
+    if(opt.background) computedStyle += "background-color:${opt.background};"
+    if(opt.color) computedStyle += "color:${opt.color};"
+    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
+	if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.multiple) opt.multiple = false
+
+    if(settings["${opt.name}"]) opt.defaultValue = settings["${opt.name}"]
+    String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
+    retVal += "<script>function toggleMe${opt.name}(){if(document.getElementById(\"lbl${opt.name}\").classList.contains(\"is-checked\")){document.getElementById(\"lbl${opt.name}\").classList.remove(\"is-checked\");document.getElementById(\"hid${opt.name}\").setAttribute(\"value\",false);}else{document.getElementById(\"lbl${opt.name}\").classList.add(\"is-checked\");document.getElementById(\"hid${opt.name}\").setAttribute(\"value\",true);}}</script>"
+    retVal+="<div class='mdl-cell mdl-cell--12-col mdl-textfield mdl-js-textfield' style='${computedStyle}' data-upgraded=',MaterialTextfield'><div class='w-fit'>"
+    retVal += "<label for='settings[${opt.name}]'  onmouseup=\"toggleMe${opt.name}()\" id='lbl${opt.name}' class='mdl-switch mdl-js-switch mdl-js-ripple-effect mdl-js-ripple-effect--ignore-events is-upgraded"
+    if(opt.defaultValue == true) retVal += " is-checked"
+    retVal += "' data-upgraded=',MaterialSwitch,MaterialRipple'>"
+	retVal += "<input name='checkbox[${opt.name}]' id='settings[${opt.name}]' class='mdl-switch__input ' type='checkbox'><div class='mdl-switch__label w-fit'>${opt.title}"
+	retVal += "</div><div class='mdl-switch__track'></div><div class='mdl-switch__thumb'><span class='mdl-switch__focus-helper'></span></div><span class='mdl-switch__ripple-container mdl-js-ripple-effect mdl-ripple--center' data-upgraded=',MaterialRipple'><span class='mdl-ripple is-animating' style='width: 137.765px; height: 137.765px; transform: translate(-50%, -50%) translate(24px, 24px);'></span></span></label>"
+	retVal += "</div>"
+    retVal += "<input id='hid${opt.name}' name='settings[${opt.name}]' type='hidden' value='${opt.defaultValue}'>"
+	retVal += "</div>"
+
+    return retVal
+}
+
 
 
 /*****************************************************************************
-* Returns a string that will create an button element for an app 	     *
+* Returns a string that will create an button element for an app 	     	 *
 *                                                                            *
 * HashMap fields:                                                            *
-*	name - (required) name to identify the button, no spaces or 	     *
-*		special characters					     *
-*	title - (required) button label					     *
-*	width - CSS descriptor for field width				     *
-*	background - CSS color descriptor for the input background color     *
-*	color - CSS color descriptor for text color			     *
-*	fontSize - CSS text size descriptor				     *
-*	radius - CSS border radius descriptor (corner rounding)		     *
+*	name - (required) name to identify the button, no spaces or 	     	 *
+*		special characters					     							 *
+*	title - (required) button label					     					 *
+*	width - CSS descriptor for field width				     				 *
+*	background - CSS color descriptor for the input background color		 *
+*	color - CSS color descriptor for text color			     				 *
+*	fontSize - CSS text size descriptor										 *
+*	radius - CSS border radius descriptor (corner rounding)		     		 *
 *****************************************************************************/
 
-String buttonLink(HashMap opt) { 
+String buttonLink(HashMap opt) { //modified slightly from jtp10181's code
     if(!opt.name || !opt.title ) 
     	return "Error missing name or title"
-    String computedStyle = ''
+    String computedStyle = 'cursor:pointer;text-align:center;box-shadow: 2px 2px 4px #71797E;'
     if(opt.width) computedStyle += "width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -270,14 +329,49 @@ String buttonLink(HashMap opt) {
 }
 
 /*****************************************************************************
-* Returns a string that will create an button icon element for an app from   *
-*	the materials-icon font						     *
+* Returns a string that will create an button HREF element for an app     	 *
 *                                                                            *
-*	name - (required) name of the icon to create			     *
+* HashMap fields:                                                            *
+*	name - (required) name to identify the button, no spaces or 	     	 *
+*		special characters					     							 *
+*	title - (required) button label					     					 *
+*	destPage - (required unless using destUrl) name of the app page to go to *
+*	destUrl - (required unless using destPage) URL for the external page	 *
+*	width - CSS descriptor for field width				     				 *
+*	background - CSS color descriptor for the input background color		 *
+*	color - CSS color descriptor for text color			     				 *
+*	fontSize - CSS text size descriptor										 *
+*	radius - CSS border radius descriptor (corner rounding)		     		 *
+*****************************************************************************/
+String buttonHref(HashMap opt) { //modified slightly from jtp10181's code
+    if(!opt.name || !opt.title ) 
+    	return "Error missing name or title"
+    if(!opt.destPage && !opt.destUrl) 
+    	return "Error missing Destination info"
+    String computedStyle = 'cursor:pointer;text-align:center;box-shadow: 2px 2px 4px #71797E;'
+    if(opt.width) computedStyle += "width:${opt.width};"
+    if(opt.background) computedStyle += "background-color:${opt.background};"
+    if(opt.color) computedStyle += "color:${opt.color};"
+    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
+    if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(opt.destPage) {
+    	inx = appLocation().lastIndexOf("/")
+    	dest = appLocation().substring(0,inx)+"/${opt.destPage}"
+    } else if(opt.destUrl) {
+    	dest=opt.destUrl
+    }
+    return "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='window.location.replace(\"$dest\")' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
+}
+
+/*****************************************************************************
+* Returns a string that will create an button icon element for an app from   *
+*	the materials-icon font						     						 *
+*                                                                            *
+*	name - (required) name of the icon to create			     			 *
 *****************************************************************************/
 
-String btnIcon(String name) {
-    return "<span class='p-button-icon p-button-icon-left pi " + name + "' data-pc-section='icon'></span>"
+String btnIcon(HashMap opt) {  //modified from jtp10181's code
+    return "<span class='p-button-icon p-button-icon-left pi ${opt.name}' data-pc-section='icon'></span>"
 }
 
 
@@ -302,11 +396,6 @@ String listTable() {
     ...
 }
 */
-// Return to Main Page
-// paragraph "<script>window.location.replace('${appLocation()}')</script>" 
-// Href to <pageName>
-//inx = appLocation().lastIndexOf("/")
-//paragraph "<script>window.location.replace('${appLocation().substring(0,inx)}/<pageName>')</script>"
-	
+
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;text-align:left;}</style>"
 @Field static String tableStyle = "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px; padding:8px 8px 8px 8px;white-space: nowrap;} tr {border-right:2px solid black;}</style>"

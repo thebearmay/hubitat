@@ -14,7 +14,7 @@
 *
 *	Date			Who					Description
 *	----------		--------------		-------------------------------------------------------------------------
-*	22Mar2025		thebearmay			add trackColor and switchColor for type = bool
+*	22Mar2025		thebearmay			add trackColor and switchColor for type = bool, add checkbox type
 */
 
 import groovy.transform.Field

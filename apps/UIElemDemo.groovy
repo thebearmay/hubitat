@@ -1,4 +1,6 @@
 /*
+ * UI Elements Demo App
+ *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
  *
@@ -8,9 +10,12 @@
  *  on an "AS IS" BASIS, WIyTHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Date			Who					Description
+ *	----------		----------------	-------------------------------------------------------
+ *	11Mar2025		thebearmay			Added Checkbox option
  */
 
-static String version()	{  return '0.0.0'  }
+static String version()	{  return '0.0.2'  }
 #include thebearmay.uiInputElements
 
 definition (
@@ -56,7 +61,7 @@ void logsOff(){
 def mainPage(){
     dynamicPage (name: "mainPage", title: "UI Demo", install: true, uninstall: true) {
         section("Main"){
-			String q1 = getInputElemStr( [name:"uiType", type:"enum", title:"<b>UI Type</b>", options:["text","number","decimal","date","time","password","color","enum","mode","capability.*","capability.switch","bool","href","button","icon"], multiple:false, width:"20em", background:"#ADD8E6", radius:"15px"])
+			String q1 = getInputElemStr( [name:"uiType", type:"enum", title:"<b>UI Type</b>", options:["text","number","decimal","date","time","password","color","enum","mode","capability.*","capability.switch","bool","checkbox","href","button","icon"], multiple:false, width:"20em", background:"#ADD8E6", radius:"15px"])
             String q2 =getInputElemStr( [name:"dTitle", type:"text", title:"<b>Title of UI Element</b>", width:"15em", background:"#ADD8E6", radius:"15px"])
             String q3 =getInputElemStr( [name:"tColor", type:"color", title:"<b>Text Color</b>", width:"15em", background:"#ADD8E6", radius:"15px"])
             String q4 =getInputElemStr( [name:"bColor", type:"color", title:"<b>Background Color</b>", width:"15em", background:"#ADD8E6", radius:"15px"])

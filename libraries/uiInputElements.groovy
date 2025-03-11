@@ -2,6 +2,7 @@
 *
 * Set of methods for UI elements
 *
+*
 *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
 *  in compliance with the License. You may obtain a copy of the License at:
 *
@@ -11,8 +12,11 @@
 *  on an "AS IS" BASIS, WIyTHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
 *  for the specific language governing permissions and limitations under the License.
 *
-*
+*	Date			Who					Description
+*	----------		--------------		-------------------------------------------------------------------------
+*	22Mar2025		thebearmay			add trackColor and switchColor for type = bool
 */
+
 import groovy.transform.Field
 import java.text.SimpleDateFormat
 library (
@@ -23,7 +27,7 @@ library (
     name: "uiInputElements",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
-    version: "0.0.1",
+    version: "0.0.2",
     documentationLink: ""
 )
 
@@ -59,6 +63,9 @@ String getInputElemStr(HashMap opt){
 	case "bool":
 	   return inputBool(opt)
 	   break
+	case "checkbox":
+	   return inputCheckbox(opt)
+	   break       
     case "button":
 	   return buttonLink(opt)
 	   break
@@ -281,6 +288,8 @@ String inputEnum(HashMap opt){
 *	fontSize - CSS text size descriptor				     					 *
 *	defaultValue - default for the field				     				 *
 *	radius - CSS border radius value (rounded corners)						 *
+*	trackColor - CSS color descriptor for the switch track					 *
+*	switchColor - CSS color descriptor for the switch knob					 *
 *****************************************************************************/
 
 String inputBool(HashMap opt) {
@@ -293,6 +302,10 @@ String inputBool(HashMap opt) {
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
 	if(opt.radius) computedStyle += "border-radius:${opt.radius};"
     if(!opt.multiple) opt.multiple = false
+    String trackColor = ' '
+    String switchColor = ' '
+    if(opt.trackColor) trackColor = "background-color:$opt.trackColor"
+    if(opt.switchColor) switchColor = "background-color:$opt.switchColor"
 
     if(settings["${opt.name}"]) opt.defaultValue = settings["${opt.name}"]
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
@@ -302,7 +315,7 @@ String inputBool(HashMap opt) {
     if(opt.defaultValue == true) retVal += " is-checked"
     retVal += "' data-upgraded=',MaterialSwitch,MaterialRipple'>"
 	retVal += "<input name='checkbox[${opt.name}]' id='settings[${opt.name}]' class='mdl-switch__input ' type='checkbox'><div class='mdl-switch__label w-fit'>${opt.title}"
-	retVal += "</div><div class='mdl-switch__track'></div><div class='mdl-switch__thumb'><span class='mdl-switch__focus-helper'></span></div><span class='mdl-switch__ripple-container mdl-js-ripple-effect mdl-ripple--center' data-upgraded=',MaterialRipple'><span class='mdl-ripple is-animating' style='width: 137.765px; height: 137.765px; transform: translate(-50%, -50%) translate(24px, 24px);'></span></span></label>"
+	retVal += "</div><div class='mdl-switch__track' style='$trackColor'></div><div class='mdl-switch__thumb' style='$switchColor'><span class='mdl-switch__focus-helper'></span></div><span class='mdl-switch__ripple-container mdl-js-ripple-effect mdl-ripple--center' data-upgraded=',MaterialRipple'><span class='mdl-ripple is-animating' style='width: 137.765px; height: 137.765px; transform: translate(-50%, -50%) translate(24px, 24px);'></span></span></label>"
 	retVal += "</div>"
     retVal += "<input id='hid${opt.name}' name='settings[${opt.name}]' type='hidden' value='${opt.defaultValue}'>"
 	retVal += "</div>"
@@ -310,7 +323,57 @@ String inputBool(HashMap opt) {
     return retVal
 }
 
+/*****************************************************************************
+* Returns a string that will create an input checkbox element for an app 	 *
+*                                                                            *
+* HashMap fields:                                                            *
+*	name - (required) name to store the input as a setting, no spaces or 	 *
+*		special characters					     							 *
+*	type - (required) capability type, <enum/mode>			     			 *
+*	title - displayed description for the input element		     			 * 
+*	width - CSS descriptor for field width				     				 *
+*	background - CSS color descriptor for the input background color     	 *
+*	color - CSS color descriptor for text color			     				 *
+*	fontSize - CSS text size descriptor				     					 *
+*	defaultValue - default for the field				     				 *
+*	radius - CSS border radius value (rounded corners)						 *
+*	cBoxColor - CSS color descriptor for the checkbox color					 *
+*****************************************************************************/
 
+String inputCheckbox(HashMap opt) {
+    if(!opt.name || !opt.type) return "Error missing name or type"
+	opt.type = 'bool'
+    String computedStyle = ''
+    if(opt.width) computedStyle += "width:${opt.width};"
+    if(opt.background) computedStyle += "background-color:${opt.background};"
+    if(opt.color) computedStyle += "color:${opt.color};"
+    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
+	if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.multiple) opt.multiple = false
+    
+    if(settings["${opt.name}"]) 
+    	opt.defaultValue = settings["${opt.name}"]
+    else
+        opt.defaultValue = false
+    if(!opt.cBoxColor) opt.cBoxColor = '#000000'
+    String cbClass = 'he-checkbox-unchecked'
+    if(opt.defaultValue) 
+    	cbClass = 'he-checkbox-checked'    
+
+    String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
+    retVal += "<script>function toggleMe${opt.name}(){if(document.getElementById(\"lbl${opt.name}\").classList.contains(\"is-checked\")){document.getElementById(\"lbl${opt.name}\").classList.remove(\"is-checked\");document.getElementById(\"hid${opt.name}\").setAttribute(\"value\",false);}else{document.getElementById(\"lbl${opt.name}\").classList.add(\"is-checked\");document.getElementById(\"hid${opt.name}\").setAttribute(\"value\",true);}}</script>"
+    retVal+="<div class='mdl-cell mdl-cell--12-col mdl-textfield mdl-js-textfield' style='${computedStyle}' data-upgraded=',MaterialTextfield'><div class='w-fit'>"
+    retVal += "<label for='settings[${opt.name}]'  onmouseup=\"toggleMe${opt.name}();changeSubmit(document.getElementById('settings[$opt.name]'))\" id='lbl${opt.name}' class='mdl-switch mdl-js-switch mdl-js-ripple-effect mdl-js-ripple-effect--ignore-events is-upgraded"
+    if(opt.defaultValue == true) retVal += " is-checked"
+    retVal += "' data-upgraded=',MaterialSwitch,MaterialRipple'>"
+	retVal += "<input name='checkbox[${opt.name}]' id='settings[${opt.name}]' class='mdl-switch__input ' type='checkbox'><div><i class='${cbClass}' style='color:${opt.cBoxColor}'></i><span class='mdl-switch__label w-fit'>${opt.title}</span>"
+	retVal += "</div><span class='mdl-switch__ripple-container mdl-js-ripple-effect mdl-ripple--center' data-upgraded=',MaterialRipple'><span class='mdl-ripple is-animating' style='width: 137.765px; height: 137.765px; transform: translate(-50%, -50%) translate(24px, 24px);'></span></span></label>"
+	retVal += "</div>"
+    retVal += "<input id='hid${opt.name}' name='settings[${opt.name}]' type='hidden' value='${opt.defaultValue}'>"
+	retVal += "</div>"
+
+    return retVal
+}
 
 /*****************************************************************************
 * Returns a string that will create an button element for an app 	     	 *
@@ -387,7 +450,6 @@ String btnIcon(HashMap opt) {  //modified from jtp10181's code
 
 /*****************************************************************************
 * Code sample that returns a string that will create a standard HE table     *
-* based on work of jtp10181						     *
 *****************************************************************************/
 /*
 String listTable() {
@@ -407,6 +469,11 @@ String listTable() {
     ...
 }
 */
-
+// Return to Main Page
+// paragraph "<script>window.location.replace('${appLocation()}')</script>" 
+// Href to <pageName>
+//inx = appLocation().lastIndexOf("/")
+//paragraph "<script>window.location.replace('${appLocation().substring(0,inx)}/<pageName>')</script>"
+	
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;text-align:left;}</style>"
 @Field static String tableStyle = "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px; padding:8px 8px 8px 8px;white-space: nowrap;} tr {border-right:2px solid black;}</style>"

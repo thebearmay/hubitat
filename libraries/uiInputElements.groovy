@@ -386,6 +386,7 @@ String btnIcon(HashMap opt) {  //modified from jtp10181's code
 
 /*****************************************************************************
 * Code sample that returns a string that will create a standard HE table     *
+* based on work of jtp10181						     *
 *****************************************************************************/
 /*
 String listTable() {

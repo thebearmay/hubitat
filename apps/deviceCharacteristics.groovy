@@ -24,9 +24,10 @@
  *    2021-11-22  thebearmay    clean up last activity date on report and add commands
  *    2022-02-07  thebearmay    add Capabilities to the report
  *    2022-06-20  thebearmay    embedded section error
+ *	  2025-03-11  thebearmay	line 243 bool value generating error correction
  */
 import java.text.SimpleDateFormat
-static String version()	{  return '2.0.4'  }
+static String version()	{  return '2.0.5'  }
 
 
 definition (
@@ -240,7 +241,7 @@ def buildReport() {
                         dString = "<b>${it.key}</b> ${hh.hexStringToInt(it.value)}<br>"                
                     } else {
                         dString += "<b>${it.key}</b>" 
-                        if(it.value) dString+= " ${it.value.replace('\"','')}<br>"
+                        if(it.value) dString+= " ${it.value.toString().replace('\"','')}<br>"
                     }
                 }            
                 html += "<td>$dString</td>"

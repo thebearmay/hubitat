@@ -830,7 +830,7 @@ void parseZwave(String zString){
         	updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}.${zMap?.hardwareVersion}")
         }
     }else
-       updateAttr("zwaveVersion","$zString")
+       updateAttr("zwaveVersion","${zString}.x")
                   
     if(!minVerCheck("2.3.8.124"))
         updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")

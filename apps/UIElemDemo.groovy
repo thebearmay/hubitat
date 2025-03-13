@@ -13,9 +13,10 @@
  *	Date			Who					Description
  *	----------		----------------	-------------------------------------------------------
  *	11Mar2025		thebearmay			Added Checkbox option
+ *	13Mar2025							Added hoverText, code cleanup
  */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 #include thebearmay.uiInputElements
 
 definition (
@@ -61,14 +62,16 @@ void logsOff(){
 def mainPage(){
     dynamicPage (name: "mainPage", title: "UI Demo", install: true, uninstall: true) {
         section("Main"){
-			String q1 = getInputElemStr( [name:"uiType", type:"enum", title:"<b>UI Type</b>", options:["text","number","decimal","date","time","password","color","enum","mode","capability.*","capability.switch","bool","checkbox","href","button","icon"], multiple:false, width:"20em", background:"#ADD8E6", radius:"15px"])
+			String q1 = getInputElemStr( [name:"uiType", type:"enum", title:"<b>UI Type</b>", options:["text","number","decimal","date","time","password","color","enum","mode","capability.*","capability.switch","bool","checkbox","href","button","icon"], multiple:false, width:"15em", background:"#ADD8E6", radius:"15px"])
             String q2 =getInputElemStr( [name:"dTitle", type:"text", title:"<b>Title of UI Element</b>", width:"15em", background:"#ADD8E6", radius:"15px"])
             String q3 =getInputElemStr( [name:"tColor", type:"color", title:"<b>Text Color</b>", width:"15em", background:"#ADD8E6", radius:"15px"])
             String q4 =getInputElemStr( [name:"bColor", type:"color", title:"<b>Background Color</b>", width:"15em", background:"#ADD8E6", radius:"15px"])
             String q5 =getInputElemStr( [name:"rStr", type:"text", title:"<b>Radius Style String</b>", width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:"15px"])
-            String q6 =getInputElemStr( [name:"wStr", type:"text", title:"<b>Width Style String</b>", width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:"15em"])
-            String tStr ="<table><tr><td style='width:25em'>$q1</td><td>&nbsp;</td><td style='width:25em'>$q2</td><td>&nbsp;</td><td style='width:25em'>$q3</td></tr>"
-            tStr+= "<tr><td>$q4</td><td>&nbsp;</td><td>$q5</td><td>&nbsp;</td><td>$q6</td></tr></table>"
+            String q6 =getInputElemStr( [name:"wStr", type:"text", title:"<b>Width Style String</b>", hoverText:"Hover Text Test", width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:"15em"])
+            String q7 =getInputElemStr( [name:"hText", type:"text", title:"<b>Tool Tip (Hover Text)</b>", width:"15em", background:"#ADD8E6", radius:"15px"])
+            String tStr ="${ttStyleStr}<table><tr><td>$q1</td><td style='max-width:1em'>&nbsp;</td><td>$q2</td><td style='max-width:1em'>&nbsp;</td><td>$q3</td></tr>"
+            tStr+= "<tr><td>$q4</td><td>&nbsp;</td><td>$q5</td><td>&nbsp;</td><td>$q6</td></tr>"
+            tStr += "<tr><td>$q7</td></tr></table>"
             
             paragraph tStr
             if(uiType && dTitle && tColor && bColor && rStr){
@@ -82,12 +85,13 @@ def mainPage(){
                 if(uiType == 'icon') 
                 	outPut =getInputElemStr([name:"${dTitle}", type:"${uiType}"])
                 else if(uiType == 'href') 
-                    outPut =getInputElemStr([name:"demo${uiType}",type:"${uiType}",title:"${dTitle}",destPage:"page2",width:"${wStr}",background:"${bColor}",color:"${tColor}",radius:"${rStr}"])
+                    outPut =getInputElemStr([name:"demo${uiType}",type:"${uiType}",title:"${dTitle}",destPage:"page2",width:"${wStr}",background:"${bColor}",color:"${tColor}",radius:"${rStr}", hoverText:"${hText}"])
                 else 
-                    outPut =getInputElemStr([name:"demo${uiType.replace('*','').replace('.','')}", type:"${uiType}", title:"<span style='background-color:$bColor;color:$tColor'>${dTitle}</span>", width:"${wStr}", background:"${bColor}", color:"$tColor",radius:"$rStr", multiple:oMult, options:eOpt])
+                    outPut =getInputElemStr([name:"demo${uiType.replace('*','').replace('.','')}", type:"${uiType}", title:"${dTitle}", width:"${wStr}", background:"${bColor}", color:"$tColor",radius:"$rStr", multiple:oMult, options:eOpt, hoverText:"${hText}"])
 
                 
                 paragraph "<hr><h3>Result</h3>$outPut"
+
             }
         }
     }

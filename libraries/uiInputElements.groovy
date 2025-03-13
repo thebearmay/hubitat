@@ -108,6 +108,7 @@ String appLocation() { return "http://${location.hub.localIP}/installedapp/confi
 *	multiple - true/<false>						     						 *
 *	defaultValue - default for the field				     				 *
 *	radius - CSS border radius value (rounded corners)						 *
+*	hoverText - Text to display as a tool tip								 *
 *****************************************************************************/
 String inputItem(HashMap opt) {
     if(!opt.name || !opt.type) return "Error missing name or type"
@@ -162,6 +163,7 @@ String inputItem(HashMap opt) {
 *	fontSize - CSS text size descriptor				     					 *
 *	multiple - true/<false>						     						 *
 *	radius - CSS border radius value (rounded corners)						 *
+*	hoverText - Text to display as a tool tip								 *
 *****************************************************************************/
 
 String inputCap(HashMap opt) {
@@ -233,6 +235,7 @@ String inputCap(HashMap opt) {
 *	options - list of values for the enum (modes will autofill)	     		 *
 *	defaultValue - default for the field				     				 *
 *	radius - CSS border radius value (rounded corners)						 *
+*	hoverText - Text to display as a tool tip								 *
 *****************************************************************************/
 
 
@@ -305,6 +308,7 @@ String inputEnum(HashMap opt){
 *	radius - CSS border radius value (rounded corners)						 *
 *	trackColor - CSS color descriptor for the switch track					 *
 *	switchColor - CSS color descriptor for the switch knob					 *
+*	hoverText - Text to display as a tool tip								 *
 *****************************************************************************/
 
 String inputBool(HashMap opt) {
@@ -355,6 +359,7 @@ String inputBool(HashMap opt) {
 *	defaultValue - default for the field				     				 *
 *	radius - CSS border radius value (rounded corners)						 *
 *	cBoxColor - CSS color descriptor for the checkbox color					 *
+*	hoverText - Text to display as a tool tip								 *
 *****************************************************************************/
 
 String inputCheckbox(HashMap opt) {
@@ -406,6 +411,7 @@ String inputCheckbox(HashMap opt) {
 *	color - CSS color descriptor for text color			     				 *
 *	fontSize - CSS text size descriptor										 *
 *	radius - CSS border radius descriptor (corner rounding)		     		 *
+*	hoverText - Text to display as a tool tip								 *
 *****************************************************************************/
 
 String buttonLink(HashMap opt) { //modified slightly from jtp10181's code

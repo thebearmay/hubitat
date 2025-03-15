@@ -15,7 +15,8 @@
 *	Date			Who					Description
 *	----------		--------------		-------------------------------------------------------------------------
 *	11Mar2025		thebearmay			Add checkbox uiType, add trackColor and switchColor for type = bool
- *	13Mar2025							Added hoverText, code cleanup
+*	13Mar2025							Added hoverText, code cleanup
+*	15Mar2025							Expand btnIcon to handle he- and fa- icons
 */
 
 import groovy.transform.Field
@@ -28,7 +29,7 @@ library (
     name: "uiInputElements",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
-    version: "0.0.2",
+    version: "0.0.3",
     documentationLink: ""
 )
 
@@ -139,9 +140,9 @@ String inputItem(HashMap opt) {
 	if(opt.radius) computedStyle += "border-radius:${opt.radius};"
     if(!opt.multiple) opt.multiple = false
     
-    if(opt.hoverText && opt.hoverText != 'null') 
-    opt.title ="${opt.title}<div class='tTip'> 🛈<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
-    
+    if(opt.hoverText && opt.hoverText != 'null'){  
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    }
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
 	retVal+="<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield has-placeholder is-dirty is-upgraded' style='' data-upgraded=',MaterialTextfield'>"
     retVal+="<label for='settings[${opt.name}]' style='min-width:${opt.width}' class='control-label'>${opt.title}</label><div class='flex'><input type='${typeAlt}' ${step} name='settings[${opt.name}]' class='mdl-textfield__input submitOnChange' style='${computedStyle}' value='${opt.defaultValue}' placeholder='Click to set' id='settings[${opt.name}]'>"
@@ -171,8 +172,11 @@ String inputCap(HashMap opt) {
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
-    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
-    if(opt.radius) computedStyle += "border-radius:${opt.radius};"    
+    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize}"
+    if(opt.radius) 
+    	computedStyle += "border-radius:${opt.radius};"
+    else 
+    	opt.radius = '1px'
     if(!opt.multiple) opt.multiple = false
     String dList = ''
     String idList = ''
@@ -197,24 +201,25 @@ String inputCap(HashMap opt) {
     }
     String capAlt = opt.type.replace('.','')
     if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> 🛈<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
 
 	String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
-    retVal += "<div class='capability ${capAlt} mdl-cell mdl-cell--4-col' style='margin: 8px 0; ${computedStyle}'>"
-	retVal += "<button type='button' class='btn btn-default btn-lg btn-block device-btn-filled btn-device mdl-button--raised mdl-shadow--2dp' style='text-align:left; width:100%;' data-toggle='modal' data-target='#deviceListModal' "
-	retVal += "data-capability='${opt.type}' data-elemname='${opt.name}' data-multiple='${opt.multiple}' data-ignore=''>"
-    	retVal += "<span style='white-space:pre-wrap;'>${opt.title}</span><br>"
+    retVal += "<div class='capability ${capAlt} mdl-cell mdl-cell--4-col' style='margin: 8px 0; '>"//${computedStyle}
+	//retVal += "<button type='button' class='btn btn-default btn-lg btn-block device-btn-filled btn-device mdl-button--raised mdl-shadow--2dp' style='text-align:left; width:100%;' data-toggle='modal' data-target='#deviceListModal' "
+    retVal += "<button type='button' class='btn btn-lg btn-block btn-device' style='border-radius:${opt.radius};border:0px;text-align:left; width:100%;' data-toggle='modal' data-target='#deviceListModal' "
+    retVal += "data-capability='${opt.type}' data-elemname='${opt.name}' data-multiple='${opt.multiple}' data-ignore=''>"
+    	retVal += "<span style='white-space:pre-wrap;'>${opt.title}</span><br><div style='${computedStyle}'>"
 	retVal += "<span id='${opt.name}devlist' class='device-text' style='text-align: left;'>${dList}</span></button>"
 	retVal += "<input type='hidden' name='settings[${opt.name}]' class='form-control submitOnChange' value='${idList}' placeholder='Click to set' id='settings[${opt.name}]'>"
 	retVal += "<input type='hidden' name='deviceList' value='${opt.name}'><div class='device-list' style='display:none'>"
 	retVal += "<div id='deviceListModal' style='border:1px solid #ccc;padding:8px;max-height:300px;overflow:auto'><div class='checkAllBoxes my-2'>"
 	retVal += "<label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect checkall mdl-js-ripple-effect--ignore-events is-upgraded' id='${opt.name}-checkall' for='${opt.name}-checkbox-0' data-upgraded=',MaterialCheckbox,MaterialRipple'>"
     	retVal += "<script>function toggleMe${opt.name}(){if(document.getElementById(\"${opt.name}-checkall\").classList.contains(\"is-checked\")){document.getElementById(\"${opt.name}-checkall\").classList.remove(\"is-checked\");}else{document.getElementById(\"${opt.name}-checkall\").classList.add(\"is-checked\");}}</script>"    
-	retVal += "<input type='checkbox' class='mdl-checkbox__input checkboxAll' id='${opt.name}-checkbox-0' onclick='toggleMe${opt.name}()'><span class='mdl-checkbox__label'>Toggle All On/Off</span>"
+    retVal += "<input type='checkbox' class='mdl-checkbox__input checkboxAll' id='${opt.name}-checkbox-0' onclick='toggleMe${opt.name}()'><span class='mdl-checkbox__label'>Toggle All On/Off</span>"
 	retVal += "<span class='mdl-checkbox__focus-helper'></span><span class='mdl-checkbox__box-outline'><span class='mdl-checkbox__tick-outline'></span></span>"
 	retVal += "<span class='mdl-checkbox__ripple-container mdl-js-ripple-effect mdl-ripple--center' data-upgraded=',MaterialRipple'><span class='mdl-ripple'></span></span></label></div>"
-	retVal += "<div id='${opt.name}-options' class='modal-body' style='overflow:unset'></div></div>"
-	retVal += "<div class='mdl-button mdl-js-button mdl-button--raised pull-right device-save' data-upgraded=',MaterialButton'>Update</div></div></div>"
+	retVal += "<div id='${opt.name}-options' class='modal-body' style='overflow:unset'></div></div></div>"
+	retVal += "<div class='mdl-button mdl-js-button mdl-button--raised pull-right device-save' data-upgraded=',MaterialButton' style='${computedStyle};width:6em;min-width:6em;'>Update</div></div></div>"
     
     return retVal
 }
@@ -254,12 +259,12 @@ String inputEnum(HashMap opt){
         mult = 'multiple'
     }
     if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> 🛈<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
     retVal += "<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield' style='margin: 8px 0; padding-right: 8px;' data-upgraded=',MaterialTextfield'>"
     retVal += "<label for='settings[${opt.name}]' style='min-width:${opt.width}' class='control-label'>${opt.title}</label><div class='SumoSelect sumo_settings[${opt.name}]' tabindex='0' role='button' aria-expanded='false'>"
-    retVal += "<div style='width:${opt.width}'><select id='settings[${opt.name}]' ${mult} name='settings[${opt.name}]' class='selectpicker form-control mdl-switch__input submitOnChange SumoUnder' placeholder='Click to set' data-default='' tabindex='-1' style='${computedStyle}'></div>"
+    retVal += "<div style='${computedStyle}'><select id='settings[${opt.name}]' ${mult} name='settings[${opt.name}]' class='selectpicker form-control mdl-switch__input submitOnChange SumoUnder' placeholder='Click to set' data-default='' tabindex='-1' style='${computedStyle}'></div>"
     ArrayList selOpt = []
 	if(settings["${opt.name}"]){
         if("${settings["${opt.name}"].class}" == 'class java.lang.String')
@@ -314,7 +319,7 @@ String inputEnum(HashMap opt){
 String inputBool(HashMap opt) {
     if(!opt.name || !opt.type) return "Error missing name or type"
 	if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> 🛈<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     
     String computedStyle = ''
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
@@ -365,7 +370,7 @@ String inputBool(HashMap opt) {
 String inputCheckbox(HashMap opt) {
     if(!opt.name || !opt.type) return "Error missing name or type"
     if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> 🛈<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
 	opt.type = 'bool'
     String computedStyle = ''
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
@@ -424,7 +429,7 @@ String buttonLink(HashMap opt) { //modified slightly from jtp10181's code
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
     if(opt.radius) computedStyle += "border-radius:${opt.radius};"
     if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> 🛈<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     return "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 
@@ -461,7 +466,7 @@ String buttonHref(HashMap opt) { //modified slightly from jtp10181's code
     	dest=opt.destUrl
     }
 	if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> 🛈<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     return "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='window.location.replace(\"$dest\")' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 
@@ -473,9 +478,14 @@ String buttonHref(HashMap opt) { //modified slightly from jtp10181's code
 *****************************************************************************/
 
 String btnIcon(HashMap opt) {  //modified from jtp10181's code
-    return "<span class='p-button-icon p-button-icon-left pi ${opt.name}' data-pc-section='icon'></span>"
+    
+	if(opt.name.startsWith('he'))
+    	return "<i class='p-button-icon p-button-icon-left pi ${opt.name}' data-pc-section='icon'></i>"
+	else if(opt.name.startsWith('fa'))                               
+        return "<i class='fa-regular ${opt.name}'></i>"//fa-circle-info
+    else 
+        return "<i class='material-icons ${opt.name}'>${opt.name}</i>"
 }
-
 
 /*****************************************************************************
 * Code sample that returns a string that will create a standard HE table     *

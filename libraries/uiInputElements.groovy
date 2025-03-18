@@ -17,6 +17,7 @@
 *	11Mar2025		thebearmay			Add checkbox uiType, add trackColor and switchColor for type = bool
 *	13Mar2025							Added hoverText, code cleanup
 *	15Mar2025							Expand btnIcon to handle he- and fa- icons
+*	18Mar2025							Add btnDivHide to hide/display div's 
 */
 
 import groovy.transform.Field
@@ -29,7 +30,7 @@ library (
     name: "uiInputElements",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
-    version: "0.0.3",
+    version: "0.0.4",
     documentationLink: ""
 )
 
@@ -448,7 +449,7 @@ String buttonLink(HashMap opt) { //modified slightly from jtp10181's code
 *	fontSize - CSS text size descriptor										 *
 *	radius - CSS border radius descriptor (corner rounding)		     		 *
 *****************************************************************************/
-String buttonHref(HashMap opt) { //modified slightly from jtp10181's code
+String buttonHref(HashMap opt) { //modified jtp10181's code
     if(!opt.name || !opt.title ) 
     	return "Error missing name or title"
     if(!opt.destPage && !opt.destUrl) 
@@ -468,6 +469,51 @@ String buttonHref(HashMap opt) { //modified slightly from jtp10181's code
 	if(opt.hoverText && opt.hoverText != 'null')  
     	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     return "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='window.location.replace(\"$dest\")' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
+}
+
+/*****************************************************************************
+* Returns a string that will create an button element to hide/display a div	 *
+*     for an app                                                             *
+* HashMap fields:                                                            *
+*	name - (required) name to identify the button, no spaces or 	     	 *
+*		special characters					     							 *
+*	title - (required) button label					     					 *
+*	divName - (require) name of the division to hide or display				 *
+*	hidden - if true will hide the div immediately							 *
+*	width - CSS descriptor for field width				     				 *
+*	background - CSS color descriptor for the input background color		 *
+*	color - CSS color descriptor for text color			     				 *
+*	fontSize - CSS text size descriptor										 *
+*	radius - CSS border radius descriptor (corner rounding)		     		 *
+*****************************************************************************/
+
+String btnDivHide(HashMap opt) { 
+    if(!opt.name || !opt.title || !opt.divName) 
+    	return "Error missing name, title or division"
+    String computedStyle = 'cursor:pointer;box-shadow: 2px 2px 4px #71797E;'
+    if(!opt.width) opt.width = '100%'
+    computedStyle += "width:${opt.width};"
+    if(opt.background) computedStyle += "background-color:${opt.background};"
+    if(opt.color) computedStyle += "color:${opt.color};"
+    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
+    if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(opt.destPage) {
+    	inx = appLocation().lastIndexOf("/")
+    	dest = appLocation().substring(0,inx)+"/${opt.destPage}"
+    } else if(opt.destUrl) {
+    	dest=opt.destUrl
+    }
+    String btnElem = "<i id='btn${opt.name}' class='material-icons he-shrink2' style='font-size:smaller'></i>"
+    String script= "<script>document.getElementById(\"${opt.divName}\").style.display=\"block\"</script>"
+    if(opt.hidden){
+    	btnElem = "<i id='btn${opt.name}' class='material-icons he-enlarge2' style='font-size:smaller'></i>"
+        script="<script>document.getElementById(\"${opt.divName}\").style.display=\"none\"</script>"
+    }
+    
+    opt.title = "${btnElem}&nbsp;${opt.title}"
+	if(opt.hoverText && opt.hoverText != 'null')  
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    return "$script<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='btn=document.getElementById(\"btn${opt.name}\");div=document.getElementById(\"${opt.divName}\");if(div.style.display==\"none\"){btn.classList.remove(\"he-enlarge2\");btn.classList.add(\"he-shrink2\");div.style.display=\"block\";} else {btn.classList.remove(\"he-shrink2\");btn.classList.add(\"he-enlarge2\");div.style.display=\"none\";}' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 
 /*****************************************************************************
@@ -507,11 +553,6 @@ String listTable() {
     ...
 }
 */
-// Return to Main Page
-// paragraph "<script>window.location.replace('${appLocation()}')</script>" 
-// Href to <pageName>
-//inx = appLocation().lastIndexOf("/")
-//paragraph "<script>window.location.replace('${appLocation().substring(0,inx)}/<pageName>')</script>"
 	
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;text-align:left;}</style>"
 @Field static String tableStyle = "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px; padding:8px 8px 8px 8px;white-space: nowrap;} tr {border-right:2px solid black;}</style>"

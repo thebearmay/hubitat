@@ -17,7 +17,7 @@
 *	11Mar2025		thebearmay			Add checkbox uiType, add trackColor and switchColor for type = bool
 *	13Mar2025							Added hoverText, code cleanup
 *	15Mar2025							Expand btnIcon to handle he- and fa- icons
-*	18Mar2025							Add btnDivHide to hide/display div's 
+*	18Mar2025							Add btnDivHide to hide/display div's (uiType='divHide')
 */
 
 import groovy.transform.Field

@@ -74,7 +74,7 @@ String getInputElemStr(HashMap opt){
 	case "checkbox":
 	   return inputCheckbox(opt)
 	   break       
-    case "button":
+    	case "button":
 	   return buttonLink(opt)
 	   break
 	case "icon":
@@ -83,7 +83,10 @@ String getInputElemStr(HashMap opt){
 	case "href":
 	   return buttonHref(opt)
 	   break
-    default:
+	case "divHide":
+	   return btnDivHide(opt)
+	   break
+default:
        if(opt.type && opt.type.contains('capability'))
 	       return inputCap(opt)
        else 

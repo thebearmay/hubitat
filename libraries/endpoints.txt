@@ -251,4 +251,6 @@
 * Zwave	 * /hub/zwave2/disable
 * Zwave	 * /hub/zwave2/status
 * ZWave  * /hub/zwave2/reinterview?node=<0x9999>
+* ZWave  * /hub/zwave2/enableDebugLogging
+* ZWave  * /hub/zwave2/disableDebugLogging
 /* 

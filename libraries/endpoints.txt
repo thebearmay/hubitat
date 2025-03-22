@@ -39,6 +39,8 @@
 * Device    * /hub2/devicesList
 * Device    * /hub2/userDeviceTypes
 * Device    * /device/fullJson/<devID>  //2.4.0.x
+* Devive    * /device/listJson?capability=capability.* //any valid capability
+* Device    *       //suspect that something like device.HubInformationDriverv3 may also be availabl
 * Device    *
 * Diag	 * Force Update of Diag Tool			
 * Diag	 *   /hub/cloud/updateDiagnosticTool

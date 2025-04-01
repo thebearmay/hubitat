@@ -32,7 +32,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"App to show details collected by the Hub Information Driver v3",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoDisp.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxx.groovy",
     installOnOpen:  true,
 	oauth: 			true,
     iconUrl:        "",
@@ -71,11 +71,11 @@ void logsOff(){
 }
 
 def configPage(){
-    dynamicPage (name: "configPage", title: "", install: true, uninstall: true) {
+    dynamicPage (name: "configPage", title: "<h2>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
         section (name:'cPageHndl', title:'Configuration Page'){
             paragraph getInputElemStr(name:'debugEnabled', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'Debug Enabled')
 	        if(state.accessToken == null) createAccessToken()
-    	    apiSection = getInputElemStr(name:'api', type:'divHide', width:'15em', radius:'12px', background:'#e6ffff', title:'API Information', divName:'apiSection', hidden:true)
+    	    apiSection = getInputElemStr(name:'api', type:'divHide', width:'15em', radius:'12px', background:'#669999', title:'API Information', divName:'apiSection', hidden:true)
         	String pStr = "<div id='apiSection' ${divStyle}><p><b>Local Server API:</b> ${getFullLocalApiServerUrl()}/refresh?access_token=${state.accessToken}</p>"
         	pStr+="<p><b>Cloud Server API: </b>${getFullApiServerUrl()}/refresh?access_token=${state.accessToken}</p>"
         	pStr+="<p><b>Access Token: </b>${state.accessToken}</p></div>"
@@ -89,30 +89,30 @@ def configPage(){
             }
             if(!state?.jsInstalled)
              	paragraph getInputElemStr(name:'jsInstall', type:'button', width:'15em', radius:'12px', background:'#e6ffff', title:'Install ChartJS')
-            paragraph getInputElemStr(name:'selectedDev', type:'capability.*', width:'15em', radius:'12px', background:'#e6ffff', title:'Hub Info Device')
+            String sDev = getInputElemStr(name:'selectedDev', type:'capability.*', width:'15em', radius:'12px', background:'#e6ffff', title:'Hub Info Device')
+			String aRename = getInputElemStr(name:"nameOverride", type:"text", title: "New Name for Application", multiple: false, defaultValue: app.getLabel(), width:'15em', radius:'12px', background:'#e6ffff')
+			paragraph "<table><tr><td style='min-width:15em'>$sDev</td><td>$aRename</td></tr></table>"
             if(selectedDev) {
                 state.configured = true
-				paragraph getInputElemStr(name:"pRender", type:'href', title:"Render Visualization", destPage:'pageRender', width:'15em', radius:'12px', background:'#e6ffff')
-             } else
+				paragraph getInputElemStr(name:"pRender", type:'href', title:"Hub Information", destPage:'pageRender', width:'15em', radius:'12px', background:'#669999')
+            } else
                 state.configured = false
-            	
-            
-        }
-
-         section("Change Application Name", hideable: true, hidden: true){
-            input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
             if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
-         }
+        }
     }
 }
 
 def pageRender(){
-    dynamicPage (name: "pageRender", title: "", install: false, uninstall: false) { 
+    dynamicPage (name: "pageRender", title: "<h2>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: false, uninstall: false) { 
         section(name:"visualDisp",title:"", hideable: false, hidden: false){
             if(!state.configured)
             	configPage()
             else {
             	paragraph "${buildPage()}"
+                if(state.hiRefresh) {
+                    state.hiRefresh = false
+                    selectedDev.refresh()
+                }
             }
         }
     }
@@ -145,6 +145,9 @@ def appButtonHandler(btn) {
         case "clearOptions":
             state.clearReq = true
             break
+        case 'getRefresh':
+        	state.hiRefresh = true
+        	break
         default: 
               log.error "Undefined button $btn pushed"
               break
@@ -157,23 +160,58 @@ HashMap jsonResponse(retMap){
 }
 
 String buildPage(){
-    String headDiv = getInputElemStr(name:'headDiv', type:'divHide', width:'15em', radius:'12px', background:'#e6ffff', title:'Information Charts', divName:'chartSection', hidden:false)
+    HashMap hubDataMap = getHubJson()
+    String basicData = "<table><tr><td style='font-size:small;font-weight:bold;'>MAC Address</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.macAddress}</td><td>&nbsp;</td>"
+    basicData += "<td style='font-size:small;font-weight:bold;'>Hub UID</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.hubUID}</td></tr>"
+	basicData += "<tr><td style='font-size:small;font-weight:bold;'>mDNS Name</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.mdnsName}</td><td>&nbsp;</td>"
+    basicData += "<td style='font-size:small;font-weight:bold;'>IP Address</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.ipAddress}</td></tr>"
+    basicData += "<tr><td style='font-size:small;font-weight:bold;'>Time Format</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.timeFormat}</td><td>&nbsp;</td>"
+	basicData += "<td style='font-size:small;font-weight:bold;'>Temperature Scale</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.tempScale}</td></tr>"    
+
+    basicData += "<td style='font-size:small;font-weight:bold;'>TTS Voice</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.ttsCurrent}</td><td>&nbsp;</td>"
+	basicData += "<td style='font-size:small;font-weight:bold;'>Hub Registered</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.hubRegistered}</td></tr>"    
+
+    basicData += "<tr><th colspan = '5'><hr></th></tr>"
+    basicData += "<tr><th colspan = '5'>Associated Emails</th></tr>"
+    basicData += "<tr><th style='font-size:small;font-weight:bold;'>Email</th><td>&nbsp;</td><th style='font-size:small;font-weight:bold;'>Role</th></tr>"
+    hubDataMap.users.each {
+		String itRole = 'unknown'
+        if(it.admin == true)
+        	itRole = 'admin'
+        else
+            itRole = 'user'
+        basicData += "<tr><td style='min-width:10em;overflow-wrap:anywhere;'>${it.email}</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${itRole}</td></tr>"
+    }
+    basicData += "<tr><th colspan = '5'><hr></th></tr></table>"  
+    
     String c1 = buildChart([attrSelect:'cpuPct',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[8,20,100],i:0])
     String c2 = buildChart([attrSelect:'freeMemory',cList:['\"#fd0a03\"','\"#fdf503\"','\"#0efb1c\"'],wList:[100,200,2000], scale:1000, i:1])
     String lat = selectedDev.currentValue('latitude')
     String lon = selectedDev.currentValue('longitude')
     String ifrm = "<iframe style='height:370px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
+    String ifrm2 = "<iframe style='background-color:#80b3ff;height:370px;padding:0;margin:0;border-radius:15px' src='http://${location.hub.localIP}:8080/local/clockWidget.html'></iframe>"    
     String aToF = getAttr('a'..'f')
     String gToP = getAttr('g'..'p')
     String qToZ = getAttr('q'..'z')
-    String aToFdivB = getInputElemStr(name:'aToFdiv', type:'divHide', width:'10em', radius:'12px', background:'#e6ffff', title:'A-F', divName:'aToFdiv', hidden:true)
-    String gToPdivB = getInputElemStr(name:'gToPdiv', type:'divHide', width:'10em', radius:'12px', background:'#e6ffff', title:'G-P', divName:'gToPdiv', hidden:true)
-    String qToZdivB = getInputElemStr(name:'qToZdiv', type:'divHide', width:'10em', radius:'12px', background:'#e6ffff', title:'Q-Z', divName:'qToZdiv', hidden:true)
-	String pContent = "<table><tr><td>${headDiv}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td></tr></table>"
-    pContent+= "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;height:371px;'><tr><td style='height:371px'>${c1}</td><td>>&nbsp;</td><td style='height:371px'>${c2}</td><td>&nbsp;</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td></tr></table>"
+    
+    String headDiv = getInputElemStr(name:'headDiv', type:'divHide', width:'5em', radius:'12px', background:'#669999', title:'Charts', divName:'chartSection', hidden:false)
+    String basicDivB = getInputElemStr(name:'basicDiv', type:'divHide', width:'5em', radius:'12px', background:'#669999', title:'Basic', divName:'basicDiv', hidden:false)
+    String aToFdivB = getInputElemStr(name:'aToFdiv', type:'divHide', width:'5em', radius:'12px', background:'#669999', title:'A-F', divName:'aToFdiv', hidden:true)
+    String gToPdivB = getInputElemStr(name:'gToPdiv', type:'divHide', width:'5em', radius:'12px', background:'#669999', title:'G-P', divName:'gToPdiv', hidden:true)
+    String qToZdivB = getInputElemStr(name:'qToZdiv', type:'divHide', width:'5em', radius:'12px', background:'#669999', title:'Q-Z', divName:'qToZdiv', hidden:true)
+    String hiRefreshBtn = getInputElemStr(name:'getRefresh', type:'button', width:'5em', radius:'12px', background:'#669999', title:'Refresh')
+    String cPage = getInputElemStr(name:'cPage',type:'href', width:'5em', radius:'5px', background:'#669999', title:'Configure', destPage:'configPage')
+    
+    String pContent = "<table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
+    pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
+    pContent+= "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;height:371px;'><tr><td style='height:371px'>${c1}</td><td>&nbsp;</td><td style='height:371px'>${c2}</td><td>&nbsp;</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm2}</td></tr></table>"
+	pContent += "<div id='basicDiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${basicData}</div>"   
     pContent += "<div id='aToFdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${aToF}</div>"
     pContent += "<div id='gToPdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${gToP}</div>"
     pContent += "<div id='qToZdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${qToZ}</div>"
+    pContent += "<table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
+    pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
+	genClockWidget(hubDataMap.timeFormat)
     return pContent
 }
 
@@ -181,22 +219,26 @@ String getAttr(aRange){
     ArrayList attrList = []
     selectedDev.supportedAttributes.each{
         String attr = it.toString()
-        if(aRange.contains(attr.substring(0,1))){
-        	tMap = [key:"${it}", value:"${selectedDev.currentValue("$it")}"]
+        if(aRange.contains(attr.substring(0,1)) && it.toString() != 'html'){
+        	tMap = [key:"${it}", value:"${selectedDev.currentValue("$it", true)}"]
         	attrList.add(tMap)
         }
     }
-    attrSort = attrList.sort{ it.key }
+    ArrayList attrSort = attrList.sort{ it.key }
     String retVal = '<table>'
-    i=0
+    Integer i=0
+    String prevKey = ''
     attrSort.each{
-        if(i==0) {
-        	retVal += "<tr><td style='font-size:small;font-weight:bold;'>${it.key}:</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${it.value}</td><td>&nbsp;</td>"
-        	i = 1
-        } else {
-            retVal += "<td style='font-size:small;font-weight:bold'>${it.key}:</td><td style='min-width:10em;overflow-wrap:anywhere;'>${it.value}</td></tr>"
-			i=0
+        if( it.key != prevKey) {
+        	if(i==0) {
+        		retVal += "<tr><td style='font-size:small;font-weight:bold;'>${it.key}:</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${it.value}</td><td>&nbsp;</td>"
+        		i = 1
+        	} else {
+            	retVal += "<td style='font-size:small;font-weight:bold'>${it.key}:</td><td style='min-width:10em;overflow-wrap:anywhere;'>${it.value}</td></tr>"
+				i=0
+        	}
         }
+        prevKey = it.key
     } 
     if(i==1)
     	retVal += "</tr>"
@@ -211,7 +253,7 @@ String buildChart(opts) {
     if(!opts.scale) opts.scale = 1
     i=opts.i
     valueScaled = selectedDev.currentValue(attrSelect)/opts.scale
-    String visualRep = """<div id='container${i}' style='padding:0;position:relative;margin:0;height:vh;width:vw;border:inset;border-radius:15px;background-color:#e6ffff'>
+    String visualRep = """<div id='container${i}' style='padding:0;position:relative;margin:0;height:vh;width:vw;border:inset;border-radius:15px;background-color:#80b3ff'>
 	<p id='cTitle${i}' style='text-align:center;font-weight:bold;margin:0;padding:0;font-size:10px;height:12px'></p>
 	<canvas id="myChart${i}"></canvas>
 	<p id='cValue${i}' style='text-align:center;font-weight:bold;margin:0;padding:0;font-size:8px,height:10px'></p>
@@ -324,6 +366,101 @@ def refresh(){
 
     render(contentBlock)
 
+}
+
+void genClockWidget(tFormat){
+    String htmlStr = """
+<div style='text-align:center'><hr><div><h3> Current Time </h3>
+<div id='clock'></div></div>
+<div><hr><h3 > Hub Up Time </h3>
+<div id='upTimeElement'>Initializing...</div></div></div>
+
+<script>
+function rFresh() {
+	window.location.reload();
+}
+
+function checkTime(i) {
+	if (i < 10) {i = "0" + i}
+    return i;
+}
+
+setInterval(utimer,1000,parseInt(${now()-(location.hub.uptime*1000)}/1000));
+setInterval(rFresh,5*60*1000)
+
+function utimer(ht){
+	tnow = Math.floor(Date.now()/1000)
+	ut = Math.floor( (tnow - ht))
+    days = Math.floor(ut/(3600*24));
+    hrs = Math.floor((ut - (days * (3600*24))) /3600);
+    min = Math.floor( (ut -  ((days * (3600*24)) + (hrs * 3600))) /60);
+    sec = Math.floor(ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60)));
+    oString = days+'days, '+hrs+'hrs, '+min+'min, '+sec+'sec';
+    document.getElementById('upTimeElement').textContent = oString;
+	updateClock()
+}
+
+
+"""
+    if(tFormat.toString() == '24'){
+		htmlStr += """
+function updateClock() {
+      const today = new Date();
+      let hours = today.getHours();
+      let minutes = today.getMinutes();
+      let seconds = today.getSeconds();
+
+      minutes = checkTime(minutes);
+      seconds = checkTime(seconds);
+
+      document.getElementById('clock').textContent =  hours + ":" + minutes + ":" + seconds;
+}
+</script>
+"""
+    } else {
+        htmlStr += """
+function updateClock() {
+  const now = new Date();
+  let hours = checkTime(now.getHours());
+  const minutes = checkTime(now.getMinutes());
+  const seconds = checkTime(now.getSeconds());
+  const ampm = hours >= 12 ? ' pm' : ' am';
+
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+
+  formattedTime = hours+':'+minutes+':'+seconds+ampm;
+  document.getElementById('clock').textContent = formattedTime;
+}
+
+</script>
+"""
+    }
+	uploadHubFile("clockWidget.html",htmlStr.getBytes("UTF-8"))
+    
+    
+}
+
+
+HashMap getHubJson(){
+        def params = [
+        uri: 'http://127.0.0.1:8080/hub/details/json',
+        contentType: "application/json"
+    ]
+
+    try {
+        httpGet(params) { resp ->
+            if(resp!= null) {
+                return resp.data
+            }
+            else {
+                log.error "Read Json - Null Response"
+                return null
+            }
+        }
+    } catch (exception) {
+        log.error "Read JSON error ${exception.message}"
+    }
 }
 
 String readExtFile(fName){  

@@ -76,6 +76,7 @@
  *    2024-11-08                 v3.1.10 - Add capability URL and attributes to allow display on Easy Dash
  *                               v3.1.11 - Fix degree symbol when using File Manager output
  *    2024-11-16                 v3.1.12 - fix min version check
+ *    2025-01-31				 v3.1.13 - add zwaveJS(enabled/disabled), zwaveRegion, zwaveUpdateAvail(true/false), zigbeeUpdateAvail(true/false)
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -83,7 +84,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.12a"}
+static String version() {return "3.1.13"}
 
 metadata {
     definition (
@@ -177,9 +178,14 @@ metadata {
         attribute "matterStatus", "string"
         attribute "releaseNotesUrl", "string"
         attribute "accessList","string"
+		//HE v2.7.3.1
+		attribute "zwaveJS", "string"
+        attribute "zwaveRegion","string"
+		attribute "zwaveUpdateAvail", "string"
+		attribute "zigbeeUpdateAvail", "string"
         // Virtual URL Device attributes
         attribute "URL", "string"
-        attribute "type", "string"//iframe, image or video
+        attribute "type", "string"//iframe, image, link, or video
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -227,7 +233,7 @@ preferences {
 @SuppressWarnings('unused')
 void installed() {
     log.trace "installed()"
-    xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+    xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/hubInfoTemplate.res","hubInfoTemplate.res")
     initialize()
     configure()
 }
@@ -439,7 +445,8 @@ void baseData(dummy=null){
 
     if(minVerCheck("2.3.6.1"))
         extendedZigbee()
-    
+    if(minVerCheck("2.4.1.103"))
+    	zwaveJsStat()
     everyPoll("baseData")
 }
 
@@ -810,20 +817,24 @@ void parseZwave(String zString){
     Integer start = zString.indexOf('(')
     Integer end = zString.length()
     String wrkStr
-    
-    if(start == -1 || end < 1 || zString.indexOf("starting up") > 0 ){ //empty or invalid string - possibly non-C7
-        //updateAttr("zwaveData",null)
-        if(!warnSuppress) log.warn "Invalid ZWave Data returned"
-    }else {
-        wrkStr = zString.substring(start,end)
-        wrkStr = wrkStr.replace("(","[")
-        wrkStr = wrkStr.replace(")","]")
+    if(device.currentValue('zwaveJS',true) != 'true' && zString.length() != 4){
+    	if(start == -1 || end < 1 || zString.indexOf("starting up") > 0 ){ //empty or invalid string - possibly non-C7
+        	//updateAttr("zwaveData",null)
+        	if(!warnSuppress) log.warn "Invalid ZWave Data returned ($zString) "
+    	}else {
+        	wrkStr = zString.substring(start,end)
+        	wrkStr = wrkStr.replace("(","[")
+        	wrkStr = wrkStr.replace(")","]")
 
-        HashMap zMap = (HashMap)evaluate(wrkStr)
-
-        if(!minVerCheck("2.3.8.124"))
-            updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
-        else {
+        	HashMap zMap = (HashMap)evaluate(wrkStr)
+        	updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}.${zMap?.hardwareVersion}")
+        }
+    }else
+       updateAttr("zwaveVersion","${zString}.x")
+                  
+    if(!minVerCheck("2.3.8.124"))
+        updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
+    else {
             params = [
                 uri    : "http://127.0.0.1:8080",
                 path   : "/hub/advanced/zipgatewayVersion",
@@ -834,11 +845,8 @@ void parseZwave(String zString){
             httpGet(params) { resp ->
                 updateAttr("zwaveSDKVersion",resp.data)
             }
-        }
-            
-        
-        updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}.${zMap?.hardwareVersion}")
     }
+            
 }
 
 void ntpServerReq(){
@@ -924,7 +932,7 @@ void getHubMesh(resp, data){
                 jStr+="\"active\":\"$it.active\","
                 jStr+="\"offline\":\"$it.offline\","
                 jStr+="\"ipAddress\":\"$it.ipAddress\"}"
-                //jStr+="\"meshProtocol\":\"$h2Data.hubMeshProtocol\"}"          
+               // jStr+="\"meshProtocol\":\"$h2Data.hubMeshProtocol\"}"          
                 i++
             }
             jStr+="]"
@@ -1269,6 +1277,7 @@ void getExtendedZigbee(resp, data){
         Map zbData = (Map)jSlurp.parseText((String)resp.data)
         updateAttr("zigbeeStatus","${zbData.networkState}".toLowerCase())
         updateAttr("zigbeePower",zbData.powerLevel)
+		updateAttr("zigbeeUpdateAvail", zbData.firmwareUpdateAvailable)
         if(zbData?.pan) updateAttr("zigbeePan",zbData.pan)
         if(zbData?.epan) updateAttr("zigbeeExtPan",zbData.epan)
     } catch (EX) {
@@ -1276,6 +1285,57 @@ void getExtendedZigbee(resp, data){
     }
         
 }
+
+void extendedZwave(){
+    
+    if(!minVerCheck("2.3.7.1"))
+        return
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/zwaveDetails/json",
+        headers: [
+            "Connection-Timeout":600
+        ]
+    ]
+    if (debugEnabled) log.debug params
+    asynchttpGet("getExtendedZwave", params)    
+}    
+
+void getExtendedZwave(resp, data){
+    try{
+        def jSlurp = new JsonSlurper()
+        Map zwData = (Map)jSlurp.parseText((String)resp.data)
+        updateAttr("zwaveUpdateAvail","${zwData.isRadioUpdateNeeded}")
+        updateAttr("zwaveRegion","${zwData.region}")
+//        updateAttr("zwaveStatus",zwData.enabled) //already caught in hub2 data
+    } catch (EX) {
+        //log.error "$EX"
+    }
+    zwaveJsStat()
+        
+}
+
+void zwaveJsStat(){
+	params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/zwave2/status",
+        headers: [
+            "Connection-Timeout":600
+        ]
+    ]
+	if (debugEnabled) log.debug params
+    asynchttpGet("getZwaveJsStat", params) 
+}
+
+void getZwaveJsStat(resp, data){
+    try{
+        updateAttr("zwaveJS","${resp.data}")
+    } catch (EX) {
+        //log.error "$EX"
+    }
+        
+}
+
 
 void checkMatter(){
     hubModel = getHubVersion()
@@ -1441,12 +1501,12 @@ void hiaUpdate(htmlStr) {
 
 void createHtml(){
     if(alternateHtml == null || fileExists("$alternateHtml") == false){
-        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/hubInfoTemplate.res","hubInfoTemplate.res")
         device.updateSetting("alternateHtml",[value:"hubInfoTemplate.res", type:"string"])
     }
     String fContents = readFile("$alternateHtml")
     if(fContents == 'null' || fContents == null) {
-        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/main/hubInfoTemplate.res","hubInfoTemplate.res")
+        xferFile("https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/hubInfoTemplate.res","hubInfoTemplate.res")
         device.updateSetting("alternateHtml",[value:"hubInfoTemplate.res", type:"string"]) 
         fContents = readFile("$alternateHtml")
     }
@@ -1837,12 +1897,13 @@ void logsOff(){
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud", method:"hub2DataReq"]],
-[parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zipCode",method:"baseData"]],
+[parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zigbeePower, zigbeeUpdateAvail, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
 [parm16:[desc:"Active Cloud Connection Check",attributeList:"cloud", method:"checkCloud"]],
 [parm17:[desc:"Matter Status (C-5 and > only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]],
 [parm18:[desc:"Restricted Access List",attributeList:"accessList", method:"checkAccess"]],
-[parm19:[desc:"Hub Security Active",attributeList:"securityInUse", method:"checkSecurity"]]     
+[parm19:[desc:"Hub Security Active",attributeList:"securityInUse", method:"checkSecurity"]],
+[parm20:[desc:"Extended ZWave",attributeList:"zwaveUpdateAvail, zwaveJS, zwaveRegion", method:"extendedZwave"]]     
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

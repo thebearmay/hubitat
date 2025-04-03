@@ -32,6 +32,7 @@ metadata {
         capability "Actuator"
         capability "Polling"
         capability "GarageDoorControl"
+	capability "DoorControl"
         
         attribute "door", "string"
         attribute "distance", "number"

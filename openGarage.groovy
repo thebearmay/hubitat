@@ -17,6 +17,7 @@
  * 2023-01--4	thebearmay	Initial release
  * 2023-01-16	ucdscott	Added txtEnable logging, changed debugEnable preference to Hubitat de facto standard logEnable, updated Change History
  * 2024-11-24	jakubsuchy	Fixing 404 on actions (open/close/reboot)
+ * 2025-04-03	thebearmay	Add DoorControl capability
  *
  */
 

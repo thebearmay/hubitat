@@ -35,12 +35,13 @@
 *    2022-04-06  thebearmay    fix max message state coming back as string
 *    2022-09-15  thebearmay    issue with clean install
 *    2022-12-06  thebearmay    additional date/time format
+* 	 2025-04-03	 thebearmay	   add time/date formats, lowered mininum message count to 1
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
-static String version()	{  return '2.0.11'  }
+static String version()	{  return '2.0.12'  }
 
-@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "MM/dd h:mma", "HH:mm", "H:mm","h:mma", "None"]
+@Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "MM/dd h:mma", "HH:mm", "H:mm","h:mma", "HH:mm ddMMMyyyy","HH:mm:ss ddMMMyyyy","hh:mma ddMMMyyyy", "HH:mm:ss dd/MM/yyyy", "HH:mm:ss MM/dd/yyyy", "hh:mma dd/MM/yyyy ", "hh:mma MM/dd/yyyy", "HH:mm yyyy-MM-dd", "None"]
 
 metadata {
 	definition (
@@ -65,7 +66,7 @@ metadata {
 		input("debugEnable", "bool", title: "Enable debug logging?")
 		input("sdfPref", "enum", title: "Date/Time Format", options:sdfList, defaultValue:"ddMMMyyyy HH:mm")
 		input("leadingDate", "bool", title:"Use leading date instead of trailing")
-		input("msgLimit", "number", title:"Number of messages from 5 to 20",defaultValue:5, range:5..20)
+		input("msgLimit", "number", title:"Number of messages from 1 to 20",defaultValue:5, range:1..20)
 		input("create5H", "bool", title: "Create horizontal message tile?")
 
 	}

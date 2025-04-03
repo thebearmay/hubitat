@@ -18,7 +18,7 @@
     
 
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.5'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -108,10 +108,30 @@ def pageRender(){
             if(!state.configured)
             	configPage()
             else {
+                log.debug "${state.lastLoad} : ${new Date().getTime() - (5*60*1000)}" 
+                if(state.lastLoad) {
+                    tNow = new Date().getTime()
+                    if(state.lastLoad < (tNow - (5*60*1000))){
+                        settings.each {
+                            if(it.key != 'debugEnabled' && it.key != 'selectedDev' && it.key != 'nameOverride')
+                            	app.removeSetting("${it.key}")
+                        }
+                    }
+                }
+                state.lastLoad = new Date().getTime()
             	paragraph "${buildPage()}"
                 if(state.hiRefresh) {
                     state.hiRefresh = false
+                    settings.each {
+						if(it.key != 'debugEnabled' && it.key != 'selectedDev' && it.key != 'nameOverride')
+							app.removeSetting("${it.key}")
+					}
                     selectedDev.refresh()
+                    paragraph "<script>window.location.reload();</script>"
+                }
+                if(state.saveBasic){
+                    state.saveBasic = false
+                    saveBaseData()
                 }
             }
         }
@@ -148,6 +168,9 @@ def appButtonHandler(btn) {
         case 'getRefresh':
         	state.hiRefresh = true
         	break
+        case 'saveBasic':
+        	state.saveBasic = true
+        	break
         default: 
               log.error "Undefined button $btn pushed"
               break
@@ -161,35 +184,12 @@ HashMap jsonResponse(retMap){
 
 String buildPage(){
     HashMap hubDataMap = getHubJson()
-    String basicData = "<table><tr><td style='font-size:small;font-weight:bold;'>MAC Address</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.macAddress}</td><td>&nbsp;</td>"
-    basicData += "<td style='font-size:small;font-weight:bold;'>Hub UID</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.hubUID}</td></tr>"
-	basicData += "<tr><td style='font-size:small;font-weight:bold;'>mDNS Name</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.mdnsName}</td><td>&nbsp;</td>"
-    basicData += "<td style='font-size:small;font-weight:bold;'>IP Address</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.ipAddress}</td></tr>"
-    basicData += "<tr><td style='font-size:small;font-weight:bold;'>Time Format</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.timeFormat}</td><td>&nbsp;</td>"
-	basicData += "<td style='font-size:small;font-weight:bold;'>Temperature Scale</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.tempScale}</td></tr>"    
-
-    basicData += "<td style='font-size:small;font-weight:bold;'>TTS Voice</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.ttsCurrent}</td><td>&nbsp;</td>"
-	basicData += "<td style='font-size:small;font-weight:bold;'>Hub Registered</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.hubRegistered}</td></tr>"    
-
-    basicData += "<tr><th colspan = '5'><hr></th></tr>"
-    basicData += "<tr><th colspan = '5'>Associated Emails</th></tr>"
-    basicData += "<tr><th style='font-size:small;font-weight:bold;'>Email</th><td>&nbsp;</td><th style='font-size:small;font-weight:bold;'>Role</th></tr>"
-    hubDataMap.users.each {
-		String itRole = 'unknown'
-        if(it.admin == true)
-        	itRole = 'admin'
-        else
-            itRole = 'user'
-        basicData += "<tr><td style='min-width:10em;overflow-wrap:anywhere;'>${it.email}</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${itRole}</td></tr>"
-    }
-    basicData += "<tr><th colspan = '5'><hr></th></tr></table>"  
-    
+    String basicData = buildBase(hubDataMap)    
     String c1 = buildChart([attrSelect:'cpuPct',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[8,20,100],i:0])
     String c2 = buildChart([attrSelect:'freeMemory',cList:['\"#fd0a03\"','\"#fdf503\"','\"#0efb1c\"'],wList:[100,200,2000], scale:1000, i:1])
     String lat = selectedDev.currentValue('latitude')
     String lon = selectedDev.currentValue('longitude')
     String ifrm = "<iframe style='height:370px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
-    String ifrm2 = "<iframe style='background-color:#80b3ff;height:370px;padding:0;margin:0;border-radius:15px' src='http://${location.hub.localIP}:8080/local/clockWidget.html'></iframe>"    
     String aToF = getAttr('a'..'f')
     String gToP = getAttr('g'..'p')
     String qToZ = getAttr('q'..'z')
@@ -204,15 +204,113 @@ String buildPage(){
     
     String pContent = "<table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
     pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
-    pContent+= "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;height:371px;'><tr><td style='height:371px'>${c1}</td><td>&nbsp;</td><td style='height:371px'>${c2}</td><td>&nbsp;</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm2}</td></tr></table>"
-	pContent += "<div id='basicDiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${basicData}</div>"   
+    pContent+= "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;height:371px;'><tr><td style='height:371px'>${c1}</td><td>&nbsp;</td><td style='height:371px'>${c2}</td><td>&nbsp;</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td></tr></table>"//<td style='vertical-align:top;padding:0;margin:0'>${ifrm2}</td>
+	pContent += genClockWidget(hubDataMap.timeFormat)
+    pContent += "<div id='basicDiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${basicData}</div>"   
     pContent += "<div id='aToFdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${aToF}</div>"
     pContent += "<div id='gToPdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${gToP}</div>"
     pContent += "<div id='qToZdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${qToZ}</div>"
     pContent += "<table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
     pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
-	genClockWidget(hubDataMap.timeFormat)
+	
     return pContent
+}
+
+String buildBase(hubDataMap){
+	String tVal = "${hubDataMap.mdnsName}"
+    if(settings['mdnsName']) tVal = settings['mdnsName']
+    String mDNS = getInputElemStr( [name:"mdnsName", type:"text", title:"<span style='font-size:small;font-weight:bold;'>mDNS Name</span>", width:"15em", background:"#ADD8E6", radius:"15px",defaultValue:"${tVal}"])
+	tVal = "${hubDataMap.hubName}"
+    if(settings['hubName']) tVal = settings['hubName']
+    String hubName = getInputElemStr( [name:"hubName", type:"text", title:"<span style='font-size:small;font-weight:bold;'>Hub Name</span>", width:"15em", background:"#ADD8E6", radius:"15px",defaultValue:"${tVal}"])
+    tVal = "${hubDataMap.tempScale}"
+    if(settings['temperatureScale']) tVal = settings['temperatureScale']
+    String tempScale = getInputElemStr( [name:"temperatureScale", type:"enum", title:"<span style='font-size:small;font-weight:bold;'>Temperature Scale</span>", width:"15em", background:"#ADD8E6", radius:"15px",defaultValue:"${tVal}",options:["F","C"]])  
+    
+    tVal = "${hubDataMap.zipCode}"
+    if(settings['zipCode']) tVal = settings['zipCode']
+    String zipCode = getInputElemStr( [name:"zipCode", type:"text", title:"<span style='font-size:small;font-weight:bold;'>Postal Code</span>", width:"15em", background:"#ADD8E6", radius:"15px",defaultValue:"${tVal}"])
+    tVal = "${hubDataMap.latitude}"
+    if(settings['latitude']) tVal = settings['latitude']
+    String latitude = getInputElemStr( [name:"latitude", type:"text", title:"<span style='font-size:small;font-weight:bold;'>Latitude</span>", width:"15em", background:"#ADD8E6", radius:"15px",defaultValue:"${tVal}"])
+    tVal = "${hubDataMap.longitude}"
+    if(settings['longitude']) tVal = settings['longitude']
+    String longitude = getInputElemStr( [name:"longitude", type:"text", title:"<span style='font-size:small;font-weight:bold;'>Longitude</span>", width:"15em", background:"#ADD8E6", radius:"15px",defaultValue:"${tVal}"])
+
+    tVal = "${hubDataMap.timeFormat}"
+    if(settings['clock']) tVal = settings['clock']
+    String timeFormat = getInputElemStr( [name:"clock", type:"enum", title:"<span style='font-size:small;font-weight:bold;'>Time Format</span>", width:"15em", background:"#ADD8E6", radius:"15px",defaultValue:"${tVal}",options:["12","24"]])  
+    tVal = "${hubDataMap.timeZone}"
+    if(settings['timeZone']) tVal = settings['timeZone']
+    tzOpt = []
+    hubDataMap.timeZones.each{
+        tzOpt.add(["${it.id}":"${it.label}"])
+    }
+    String timeZone = getInputElemStr( [name:"timeZone", type:"enum", title:"<span style='font-size:small;font-weight:bold;'>Time Zone</span>", width:"15em", background:"#ADD8E6", radius:"15px",defaultValue:"${tVal}",options:tzOpt])  
+    tVal = "${hubDataMap.ttsCurrent}"
+    if(settings['voice']) tVal = settings['voice']
+    ttsOpt = []
+    hubDataMap.ttsVoices.each{
+        ttsOpt.add(["${it.id}":"${it.label}"])
+    }
+    String ttsCurrent = getInputElemStr( [name:"voice", type:"enum", title:"<span style='font-size:small;font-weight:bold;'>Default text to speech (TTS) Voice</span>", width:"15em", background:"#ADD8E6", radius:"15px",defaultValue:"${tVal}",options:ttsOpt])  
+    
+    
+    String basicData ="<table style='border:solid 1px black;border-radius:15px'><tr><td>${hubName}</td><td>${mDNS}</td><td>${tempScale}</td><td></td></tr>"
+    basicData += "<tr><td>${zipCode}</td><td>${latitude}</td><td>${longitude}</td><td></td></tr>"
+    basicData += "<tr><td>${timeFormat}</td><td>${timeZone}</td><td>${ttsCurrent}</td><td></td></tr>"
+    String bi = "<span style='font-size:8px;vertical-align:bottom;'>${btnIcon([name:'save'])}</span>"
+    basicData += "<tr><td></td><td></td><td></td><td>${getInputElemStr(name:'saveBasic', type:'button', width:'5em', radius:'12px', background:'#00cc00', title:"<span style='font-weight:bold;color:white'>${bi} Save</span>")}</td></tr></table>"
+    
+    basicData += "<table><tr><td colspan='7'>&nbsp;</td></tr><tr><td style='font-size:small;font-weight:bold;'>MAC Address</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.macAddress}</td><td>&nbsp;</td>"
+    basicData += "<td style='font-size:small;font-weight:bold;'>Hub UID</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.hubUID}</td></tr>"
+    basicData += "<tr><td style='font-size:small;font-weight:bold;'>Hub Registered</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.hubRegistered}</td><td>&nbsp;</td><td style='font-size:small;font-weight:bold;'>IP Address</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.ipAddress}</td></tr>"
+
+    basicData += "<tr><th colspan = '7'><hr></th></tr>"
+    basicData += "<tr><th colspan = '7'>Associated Emails</th></tr>"
+    basicData += "<tr><th style='font-size:small;font-weight:bold;'>Email</th><td>&nbsp;</td><th style='font-size:small;font-weight:bold;'>Role</th></tr>"
+    hubDataMap.users.each {
+		String itRole = 'unknown'
+        if(it.admin == true)
+        	itRole = 'admin'
+        else
+            itRole = 'user'
+        basicData += "<tr><td style='min-width:10em;overflow-wrap:anywhere;'>${it.email}</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${itRole}</td></tr>"
+    }
+    basicData += "<tr><th colspan = '7'><hr></th></tr></table>"  
+
+    return basicData
+}
+
+void saveBaseData(){
+    bodyMap = [:]
+    settings.each { 
+        //log.debug "${it.properties}"
+        if(it.key != 'debugEnabled' && it.key != 'selectedDev' && it.key != 'nameOverride' && it.key != 'hubName') {
+            bodyMap.put(it.key, "${it.value}")
+        } else if(it.key == 'hubName')
+        	bodyMap.put('name', "${it.value}")
+    }
+    if(debugEnabled) log.debug bodyMap
+    
+    try{
+        params = [
+            uri: "http://${location.hub.localIP}:8080/location/update",
+            headers: [
+				"Content-Type": "application/x-www-form-urlencoded",
+            ],
+			body:bodyMap
+		]
+        if(debugEnabled) 
+        	log.debug "$params"
+        httpPost(params){ resp ->
+            if(debugEnabled) 
+            log.debug "$resp.data"
+		}
+    }catch (e){
+        
+    }
+    
 }
 
 String getAttr(aRange){
@@ -368,14 +466,11 @@ def refresh(){
 
 }
 
-void genClockWidget(tFormat){
+String genClockWidget(tFormat){
     String htmlStr = """
-<div style='text-align:center'><hr><div><h3> Current Time </h3>
-<div id='clock'></div></div>
-<div><hr><h3 > Hub Up Time </h3>
-<div id='upTimeElement'>Initializing...</div></div></div>
-
+<div style='border-radius:15px;background-color:#e6ffff'><span id='clock'></span><span id='upTimeElement'>Initializing...</span></div>
 <script>
+tRemain = 300;
 function rFresh() {
 	window.location.reload();
 }
@@ -386,7 +481,7 @@ function checkTime(i) {
 }
 
 setInterval(utimer,1000,parseInt(${now()-(location.hub.uptime*1000)}/1000));
-setInterval(rFresh,5*60*1000)
+setInterval(rFresh,5*60*1000);
 
 function utimer(ht){
 	tnow = Math.floor(Date.now()/1000)
@@ -396,8 +491,9 @@ function utimer(ht){
     min = Math.floor( (ut -  ((days * (3600*24)) + (hrs * 3600))) /60);
     sec = Math.floor(ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60)));
     oString = days+'days, '+hrs+'hrs, '+min+'min, '+sec+'sec';
-    document.getElementById('upTimeElement').textContent = oString;
-	updateClock()
+	tRemain--;
+	oString += "<span style='font-weight:bold;font-size:smaller;'>&nbsp;&nbsp;&nbsp;Page Refresh in&nbsp;</span>"+tRemain+" seconds";
+    document.getElementById('upTimeElement').innerHTML = updateClock()+"<span style='font-weight:bold;font-size:smaller;'>&nbsp;&nbsp;&nbsp;Hub Up Time&nbsp;</span>"+oString;
 }
 
 
@@ -413,7 +509,7 @@ function updateClock() {
       minutes = checkTime(minutes);
       seconds = checkTime(seconds);
 
-      document.getElementById('clock').textContent =  hours + ":" + minutes + ":" + seconds;
+      return "<span style='font-weight:bold;font-size:smaller;'>Current Time&nbsp;</span>"+hours + ":" + minutes + ":" + seconds;
 }
 </script>
 """
@@ -430,14 +526,14 @@ function updateClock() {
   hours = hours ? hours : 12; // the hour '0' should be '12'
 
   formattedTime = hours+':'+minutes+':'+seconds+ampm;
-  document.getElementById('clock').textContent = formattedTime;
+  return "<span style='font-weight:bold;font-size:smaller;'>Current Time&nbsp;</span>"+formattedTime;
 }
 
 </script>
 """
     }
-	uploadHubFile("clockWidget.html",htmlStr.getBytes("UTF-8"))
-    
+	//uploadHubFile("clockWidget.html",htmlStr.getBytes("UTF-8"))
+    return htmlStr
     
 }
 

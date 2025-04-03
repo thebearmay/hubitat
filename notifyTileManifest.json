@@ -1,10 +1,10 @@
 {
   "packageName": "Notification Tile Device",
   "author": "Jean P. May, Jr.",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2021-12-06",
-  "releaseNotes": "2.0.11 - additional dateTime format\n2.0.10 - code cleanup\n2.0.9 - fix state comig back as string instead of int\n2.0.8 - add None as a valid date/time format\n2.0.7 - make date/time a selectable drop down\n2.0.6 - add time only format\n2.0.5 - Arnb rewrite of core functions, reduce attributes to last5 and last5H, streamline processing flow\n***NOTE: Must hit Configure and update Preferences after upgrading"',
+  "dateReleased": "2025-04-03",
+  "releaseNotes": "2.0.12 - add timeDate formats, lower minumum message count to 1\n2.0.11 - additional dateTime format\n2.0.10 - code clean up\n2.0.8 - fix state comig back as string instead of int\n2.0.7 - add None as a valid date/time format\n2.0.6 - make date/time a selectable drop down\n2.0.6 - add time only format\n2.0.5 - Arnb rewrite of core functions, reduce attributes to last5 and last5H, streamline processing flow\n***NOTE: Must hit Configure and update Preferences after upgrading",
   "drivers": [
     {
       "id": "5af8354f-afef-4d6b-be80-f802a4ac2962",

@@ -18,6 +18,7 @@
 *	13Mar2025							Added hoverText, code cleanup
 *	15Mar2025							Expand btnIcon to handle he- and fa- icons
 *	18Mar2025							Add btnDivHide to hide/display div's (uiType='divHide')
+* 	03Apr2025							Enable a default value for enums
 */
 
 import groovy.transform.Field
@@ -30,7 +31,7 @@ library (
     name: "uiInputElements",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
-    version: "0.0.5",
+    version: "0.0.6",
     documentationLink: ""
 )
 
@@ -278,7 +279,7 @@ String inputEnum(HashMap opt){
             	selOpt.add("$it")
         	}
        }
-    }
+    } else if(opt.defaultValue) selOpt.add("${opt.defaultValue}")
     if(mult != 'multiple') retVal+="<option value=''>Click to set</option>"
     opt.options.each{ option -> 
         if("$option".contains(':')){
@@ -292,7 +293,7 @@ String inputEnum(HashMap opt){
         sel = ' '
         selOpt.each{
             //log.debug "$it $optVal ${"$it" == "$optVal"}"
-            if("$it" == "$optVal") 
+            if("$it" == "$optVal" ) 
             	sel = 'selected'
         }
         retVal += "<option value='${optVal}' ${sel}>${optDis}</option>"

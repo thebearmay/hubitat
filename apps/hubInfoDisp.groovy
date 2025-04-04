@@ -1,4 +1,4 @@
-/*
+i/*
  * Hub Information Display
  * 
  *
@@ -28,7 +28,7 @@ import groovy.transform.Field
 
 
 definition (
-	name: 			"Hub Information Display", 
+	name: 			"Hub Details Information Display", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
 	description: 	"App to show details collected by the Hub Information Driver v3",

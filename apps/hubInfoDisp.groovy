@@ -355,7 +355,7 @@ String buildChart(opts) {
     ArrayList cList = opts.cList
     ArrayList wList = opts.wList
     attrSelect = opts.attrSelect
-    if(!opts.scale) opts.scale = 1
+   if(!opts.scale || opts.scale == null) opts.scale = 1
     i=opts.i
     valueScaled = selectedDev.currentValue(attrSelect)/opts.scale
     String visualRep = """<div id='container${i}' style='padding:0;position:relative;margin:0;height:vh;width:vw;border:inset;border-radius:15px;background-color:#80b3ff'>

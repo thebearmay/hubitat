@@ -4,6 +4,16 @@
  "version":"0.1.0",
  "minimumHEVersion":"2.4.0.1",
  "dateReleased":"2025-04-04",
+  "files": [
+  {
+     "id":"6e21a3eb-6a98-43c3-9f44-37756fc02473",
+     "name":"chart.js",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/chart.js",
+     "required":true,
+     "description":"ChartJS Javascript Graphing Library"
+  }
+  ],
  "apps": [
   {
      "id":"e02119c2-3320-4157-9f7f-d958ca734421",
@@ -13,6 +23,15 @@
      "required":true,
      "oauth":false,
      "primary":true
+  }
+  ],
+ "libraries": [
+  {
+     "id":"7acacfb4-8dab-4ee7-a511-a02e6f1c5bdc",
+     "name":"uiInputElements",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/libraries/uiInputElements.groovy",
+     "required":true
   }
   ]
 }

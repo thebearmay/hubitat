@@ -14,11 +14,12 @@
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
  *    23Mar2025        thebearmay            v0.0.1 - Original code
+ *	  04Apr2025								 v0.1.0 - Beta Ready Code
  */
     
 
 
-static String version()	{  return '0.0.5'  }
+static String version()	{  return '0.1.0'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -45,10 +46,11 @@ preferences {
 
 }
 mappings {
-    path("/refresh") {
+/*    path("/refresh") {
         action: [POST: "refresh",
                  GET: "refresh"]
     }
+*/
 }
 
 def installed() {
@@ -71,16 +73,17 @@ void logsOff(){
 }
 
 def configPage(){
-    dynamicPage (name: "configPage", title: "<h2>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
+    dynamicPage (name: "configPage", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
         section (name:'cPageHndl', title:'Configuration Page'){
-            paragraph getInputElemStr(name:'debugEnabled', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'Debug Enabled')
-	        if(state.accessToken == null) createAccessToken()
+            db = getInputElemStr(name:'debugEnabled', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Debug Enabled</b>')
+/*	        if(state.accessToken == null) createAccessToken()
     	    apiSection = getInputElemStr(name:'api', type:'divHide', width:'15em', radius:'12px', background:'#669999', title:'API Information', divName:'apiSection', hidden:true)
         	String pStr = "<div id='apiSection' ${divStyle}><p><b>Local Server API:</b> ${getFullLocalApiServerUrl()}/refresh?access_token=${state.accessToken}</p>"
         	pStr+="<p><b>Cloud Server API: </b>${getFullApiServerUrl()}/refresh?access_token=${state.accessToken}</p>"
         	pStr+="<p><b>Access Token: </b>${state.accessToken}</p></div>"
 
         	paragraph "${apiSection}${pStr}"
+*/
             fileList = getFiles()
             state.jsInstalled = false
             fileList.each {
@@ -88,13 +91,14 @@ def configPage(){
 				state.jsInstalled = true                    
             }
             if(!state?.jsInstalled)
-             	paragraph getInputElemStr(name:'jsInstall', type:'button', width:'15em', radius:'12px', background:'#e6ffff', title:'Install ChartJS')
-            String sDev = getInputElemStr(name:'selectedDev', type:'capability.*', width:'15em', radius:'12px', background:'#e6ffff', title:'Hub Info Device')
-			String aRename = getInputElemStr(name:"nameOverride", type:"text", title: "New Name for Application", multiple: false, defaultValue: app.getLabel(), width:'15em', radius:'12px', background:'#e6ffff')
-			paragraph "<table><tr><td style='min-width:15em'>$sDev</td><td>$aRename</td></tr></table>"
+             	paragraph getInputElemStr(name:'jsInstall', type:'button', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Install ChartJS</b>')
+            String sDev = getInputElemStr(name:'selectedDev', type:'capability.*', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Select Hub Info Device</b>')
+			String aRename = getInputElemStr(name:"nameOverride", type:"text", title: "<b>New Name for Application</b>", multiple: false, defaultValue: app.getLabel(), width:'15em', radius:'12px', background:'#e6ffff')
+            paragraph "<table><tr><td style='min-width:15em'>${db}</td><td style='position:relative;top:0px;padding:0px;margin:0px'>${aRename}</td></tr><tr><td>${sDev}</td></tr></table>"
             if(selectedDev) {
                 state.configured = true
-				paragraph getInputElemStr(name:"pRender", type:'href', title:"Hub Information", destPage:'pageRender', width:'15em', radius:'12px', background:'#669999')
+                ci = btnIcon(name:'computer', size:'14px')
+                paragraph getInputElemStr(name:"pRender", type:'href', title:"${ci} Hub Information", destPage:'pageRender', width:'10em', radius:'15px', background:'#669999')
             } else
                 state.configured = false
             if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
@@ -103,12 +107,12 @@ def configPage(){
 }
 
 def pageRender(){
-    dynamicPage (name: "pageRender", title: "<h2>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: false, uninstall: false) { 
+    dynamicPage (name: "pageRender", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: false, uninstall: false) { 
         section(name:"visualDisp",title:"", hideable: false, hidden: false){
             if(!state.configured)
             	configPage()
             else {
-                log.debug "${state.lastLoad} : ${new Date().getTime() - (5*60*1000)}" 
+                //log.debug "${state.lastLoad} : ${new Date().getTime() - (5*60*1000)}  ${state.lastLoad < (new Date().getTime() - (5*60*1000))}" 
                 if(state.lastLoad) {
                     tNow = new Date().getTime()
                     if(state.lastLoad < (tNow - (5*60*1000))){
@@ -200,7 +204,7 @@ String buildPage(){
     String gToPdivB = getInputElemStr(name:'gToPdiv', type:'divHide', width:'5em', radius:'12px', background:'#669999', title:'G-P', divName:'gToPdiv', hidden:true)
     String qToZdivB = getInputElemStr(name:'qToZdiv', type:'divHide', width:'5em', radius:'12px', background:'#669999', title:'Q-Z', divName:'qToZdiv', hidden:true)
     String hiRefreshBtn = getInputElemStr(name:'getRefresh', type:'button', width:'5em', radius:'12px', background:'#669999', title:'Refresh')
-    String cPage = getInputElemStr(name:'cPage',type:'href', width:'5em', radius:'5px', background:'#669999', title:'Configure', destPage:'configPage')
+    String cPage = getInputElemStr(name:'cPage',type:'href', radius:'15px', width:'2em',title:"<i class='material-icons app-column-info-icon' style='font-size: 24px; color:#669999;'>settings_applications</i>", destPage:'configPage')
     
     String pContent = "<table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
     pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
@@ -259,7 +263,7 @@ String buildBase(hubDataMap){
     String basicData ="<table style='border:solid 1px black;border-radius:15px'><tr><td>${hubName}</td><td>${mDNS}</td><td>${tempScale}</td><td></td></tr>"
     basicData += "<tr><td>${zipCode}</td><td>${latitude}</td><td>${longitude}</td><td></td></tr>"
     basicData += "<tr><td>${timeFormat}</td><td>${timeZone}</td><td>${ttsCurrent}</td><td></td></tr>"
-    String bi = "<span style='font-size:8px;vertical-align:bottom;'>${btnIcon([name:'save'])}</span>"
+    String bi = btnIcon([name:'save', size:'14px'])
     basicData += "<tr><td></td><td></td><td></td><td>${getInputElemStr(name:'saveBasic', type:'button', width:'5em', radius:'12px', background:'#00cc00', title:"<span style='font-weight:bold;color:white'>${bi} Save</span>")}</td></tr></table>"
     
     basicData += "<table><tr><td colspan='7'>&nbsp;</td></tr><tr><td style='font-size:small;font-weight:bold;'>MAC Address</td><td>&nbsp;</td><td style='min-width:10em;overflow-wrap:anywhere;'>${hubDataMap.macAddress}</td><td>&nbsp;</td>"
@@ -295,9 +299,10 @@ void saveBaseData(){
     
     try{
         params = [
-            uri: "http://${location.hub.localIP}:8080/location/update",
+            uri: "http://127.0.0.1:8080/location/update",
             headers: [
 				"Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json"
             ],
 			body:bodyMap
 		]
@@ -305,10 +310,12 @@ void saveBaseData(){
         	log.debug "$params"
         httpPost(params){ resp ->
             if(debugEnabled) 
-            log.debug "$resp.data"
+            	log.debug "$resp.data"
+            if(resp.data.message != null)
+            	log.error resp.data.message
 		}
     }catch (e){
-        
+        log.error "$e"
     }
     
 }
@@ -481,7 +488,6 @@ function checkTime(i) {
 }
 
 setInterval(utimer,1000,parseInt(${now()-(location.hub.uptime*1000)}/1000));
-setInterval(rFresh,5*60*1000);
 
 function utimer(ht){
 	tnow = Math.floor(Date.now()/1000)
@@ -492,6 +498,7 @@ function utimer(ht){
     sec = Math.floor(ut -  ((days * (3600*24)) + (hrs * 3600) + (min * 60)));
     oString = days+'days, '+hrs+'hrs, '+min+'min, '+sec+'sec';
 	tRemain--;
+	if (tRemain <= 0) rFresh();
 	oString += "<span style='font-weight:bold;font-size:smaller;'>&nbsp;&nbsp;&nbsp;Page Refresh in&nbsp;</span>"+tRemain+" seconds";
     document.getElementById('upTimeElement').innerHTML = updateClock()+"<span style='font-weight:bold;font-size:smaller;'>&nbsp;&nbsp;&nbsp;Hub Up Time&nbsp;</span>"+oString;
 }

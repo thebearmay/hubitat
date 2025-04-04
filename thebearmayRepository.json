@@ -357,6 +357,13 @@
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/ruleRruleManifest.json",
       "description":"Rules References Rules Table.  App generates 2 cross reference tables of Rule Machine Rules that reference other rules.  These views allow one to quickly identify a rule that calls other rules, or all of the rules that a specific rule is referenced in."
+    },
+    {
+      "id":"4079be7f-a66d-4fea-bca8-6027ceb18ada",
+      "name":"Hub Detailed Information Display",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/hubInfoDispManifest.json",
+      "description":"Hub Detailed Information Display - An app to combine the Hub Details page with information collected by the Hub Information Driver v3"
     }
   ]
 }

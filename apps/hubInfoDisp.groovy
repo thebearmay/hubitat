@@ -28,12 +28,12 @@ import groovy.transform.Field
 
 
 definition (
-	name: 			"Hub Details Information Display", 
+	name: 			"Hub Detailed Information Display", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"App to show details collected by the Hub Information Driver v3",
+	description: 	"App to combine the Hub Details page with information collected by the Hub Information Driver v3",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxx.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoDisp.groovy",
     installOnOpen:  true,
 	oauth: 			true,
     iconUrl:        "",

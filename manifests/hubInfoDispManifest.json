@@ -1,0 +1,18 @@
+{
+ "packageName":"Hub Detailed Information Display",
+ "author":"Jean P. May, Jr.",
+ "version":"0.1.0",
+ "minimumHEVersion":"2.4.0.1",
+ "dateReleased":"2025-04-04",
+ "apps": [
+  {
+     "id":"e02119c2-3320-4157-9f7f-d958ca734421",
+     "name":"Hub Detailed Information Display",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/apps/hubInfoDisp.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

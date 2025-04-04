@@ -14,15 +14,6 @@
      "description":"ChartJS Javascript Graphing Library"
   }
   ],
- "libraries": [
-  {
-     "id":"7acacfb4-8dab-4ee7-a511-a02e6f1c5bdc",
-     "name":"uiInputElements",
-     "namespace":"thebearmay",
-     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/libraries/uiInputElements.groovy",
-     "required":true
-  }
- ], 
  "apps": [
   {
      "id":"e02119c2-3320-4157-9f7f-d958ca734421",

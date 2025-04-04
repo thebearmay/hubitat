@@ -19,6 +19,7 @@
 *	15Mar2025							Expand btnIcon to handle he- and fa- icons
 *	18Mar2025							Add btnDivHide to hide/display div's (uiType='divHide')
 * 	03Apr2025							Enable a default value for enums
+*	04Apr2025							Size option for icons
 */
 
 import groovy.transform.Field
@@ -31,7 +32,7 @@ library (
     name: "uiInputElements",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
-    version: "0.0.6",
+    version: "0.0.7",
     documentationLink: ""
 )
 
@@ -528,13 +529,15 @@ String btnDivHide(HashMap opt) {
 *****************************************************************************/
 
 String btnIcon(HashMap opt) {  //modified from jtp10181's code
-    
+    String computedStyle = ' '
+    if(opt.size) computedStyle += "font-size:${opt.size};"
+    if(opt.color) computedStyle += "color:${opt.color};"
 	if(opt.name.startsWith('he'))
-    	return "<i class='p-button-icon p-button-icon-left pi ${opt.name}' data-pc-section='icon'></i>"
+    	return "<i class='p-button-icon p-button-icon-left pi ${opt.name}' data-pc-section='icon' style='${computedStyle}'></i>"
 	else if(opt.name.startsWith('fa'))                               
-        return "<i class='fa-regular ${opt.name}'></i>"//fa-circle-info
+        return "<i class='fa-regular ${opt.name}' style='${computedStyle}'></i>"//fa-circle-info
     else 
-        return "<i class='material-icons ${opt.name}'>${opt.name}</i>"
+        return "<i class='material-icons ${opt.name}' style='${computedStyle}'>${opt.name}</i>"
 }
 
 /*****************************************************************************

@@ -15,11 +15,12 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    23Mar2025        thebearmay            v0.0.1 - Original code
  *	  04Apr2025								 v0.1.0 - Beta Ready Code
+ *    05Apr2025								 v0.1.1 - Freememory fix for MB
  */
     
 
 
-static String version()	{  return '0.1.0'  }
+static String version()	{  return '0.1.1'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -190,7 +191,14 @@ String buildPage(){
     HashMap hubDataMap = getHubJson()
     String basicData = buildBase(hubDataMap)    
     String c1 = buildChart([attrSelect:'cpuPct',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[8,20,100],i:0])
-    String c2 = buildChart([attrSelect:'freeMemory',cList:['\"#fd0a03\"','\"#fdf503\"','\"#0efb1c\"'],wList:[100,200,2000], scale:1000, i:1])
+    String fmUnit = selectedDev.currentState('freeMemory')?.unit
+    if(fmUnit == 'MB') 
+    	cScale = 1 
+    else if(fmUnit == 'GB')
+        cScale = 0.001
+    else
+        cScale = 1000
+    String c2 = buildChart([attrSelect:'freeMemory',cList:['\"#fd0a03\"','\"#fdf503\"','\"#0efb1c\"'],wList:[100,200,2000], scale:cScale, i:1])
     String lat = selectedDev.currentValue('latitude')
     String lon = selectedDev.currentValue('longitude')
     String ifrm = "<iframe style='height:370px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
@@ -355,7 +363,7 @@ String buildChart(opts) {
     ArrayList cList = opts.cList
     ArrayList wList = opts.wList
     attrSelect = opts.attrSelect
-   if(!opts.scale || opts.scale == null) opts.scale = 1
+    if(!opts.scale || opts.scale == null) opts.scale = 1
     i=opts.i
     valueScaled = selectedDev.currentValue(attrSelect)/opts.scale
     String visualRep = """<div id='container${i}' style='padding:0;position:relative;margin:0;height:vh;width:vw;border:inset;border-radius:15px;background-color:#80b3ff'>
@@ -376,7 +384,7 @@ var title = '${attrSelect}';
 
 canvas = document.getElementById('myChart${i}');
 document.getElementById('cValue${i}').style.width = canvas.width+'px';
-document.getElementById('cValue${i}').innerHTML = nValue+'${selectedDev.currentState(attrSelect)?.unit}';
+document.getElementById('cValue${i}').innerHTML = '${selectedDev.currentValue(attrSelect, true)} '+'${selectedDev.currentState(attrSelect)?.unit}';
 document.getElementById('cTitle${i}').style.width = canvas.width+'px';
 document.getElementById('cTitle${i}').innerHTML = title;
 document.getElementById('container${i}').style.width = canvas.width+'px';

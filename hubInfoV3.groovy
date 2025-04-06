@@ -77,6 +77,7 @@
  *                               v3.1.11 - Fix degree symbol when using File Manager output
  *    2024-11-16                 v3.1.12 - fix min version check
  *    2025-01-31				 v3.1.13 - add zwaveJS(enabled/disabled), zwaveRegion, zwaveUpdateAvail(true/false), zigbeeUpdateAvail(true/false)
+ *    2025-04-06				 v3.1.14 - Add jvmSize, jvmFree, zwHealthy, zbHealthy
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -183,6 +184,11 @@ metadata {
         attribute "zwaveRegion","string"
 		attribute "zwaveUpdateAvail", "string"
 		attribute "zigbeeUpdateAvail", "string"
+        // HE v2.4.1.154
+        attribute "jvmFree", "number"
+        attribute "jvmSize", "number"
+        attribute "zbHealthy", "string"
+        attribute "zwHealthy", "string"
         // Virtual URL Device attributes
         attribute "URL", "string"
         attribute "type", "string"//iframe, image, link, or video
@@ -490,7 +496,7 @@ void updateAttr(String aKey, aValue, String aUnit = ""){
     if(aValue.contains("Your hub is starting up"))
        return
 
-    sendEvent(name:aKey, value:aValue, unit:aUnit)
+    sendEvent(name:aKey, value:aValue, unit:aUnit, descriptionText:"$aKey : $aValue$aUnit")
     if(attrLogging) log.info "$aKey : $aValue$aUnit"
 }
 
@@ -538,6 +544,7 @@ void freeMemoryReq(){
     ]
     if (debugEnable) log.debug params
         asynchttpGet("getFreeMemory", params)    
+    jvmReq()
 }
 
 @SuppressWarnings('unused')
@@ -569,6 +576,40 @@ void getFreeMemory(resp, data) {
     } catch(ignored) {
         def respStatus = resp.getStatus()
         if (!warnSuppress) log.warn "getFreeMem httpResp = $respStatus but returned invalid data, will retry next cycle"    
+    }
+}
+
+void jvmReq(){
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/advanced/freeOSMemoryHistory",
+        headers: [
+            "Connection-Timeout":600
+        ]
+    ]
+    if (debugEnable) log.debug params
+        asynchttpGet("getJvm", params)    
+}
+
+@SuppressWarnings('unused')
+void getJvm(resp, data) {
+    try {
+        if(resp.getStatus() == 200 || resp.getStatus() == 207) {
+            //log.debug "${resp.data}"
+            ArrayList memRecs = resp.data.toString().split('\n')
+            String memRec = memRecs[memRecs.size()-1]
+            ArrayList memWork = memRec.split(',')
+            if(debugEnable) 
+            	log.debug "JVM record ${memRecs.size()} ${memWork.size()} $memRec<br> $memWork"
+                           
+        	if(memWork.size() == 5){
+               updateAttr("jvmSize",memWork[3], "KB")
+               updateAttr("jvmFree",memWork[4], "KB")
+            }
+    	}
+    } catch(ignored) {
+        def respStatus = resp.getStatus()
+        if (!warnSuppress) log.warn "getJvm httpResp = $respStatus but returned invalid data, will retry next cycle"    
     }
 }
 
@@ -830,7 +871,7 @@ void parseZwave(String zString){
         	updateAttr("zwaveVersion","${zMap?.firmware0Version}.${zMap?.firmware0SubVersion}.${zMap?.hardwareVersion}")
         }
     }else
-       updateAttr("zwaveVersion","${zString}.x")
+       updateAttr("zwaveVersion","$zString")
                   
     if(!minVerCheck("2.3.8.124"))
         updateAttr("zwaveSDKVersion","${((List)zMap.targetVersions)[0].version}.${((List)zMap.targetVersions)[0].subVersion}")
@@ -979,6 +1020,7 @@ void hub2DataReq() {
         asynchttpGet("getHub2Data", params)
     
     checkSecurity()
+    zHealthReq()
 }
 
 @SuppressWarnings('unused')
@@ -1198,24 +1240,37 @@ void getUpdateCheck(resp, data) {
     }
 
 }
-/*
-void zigbeeStackReq(){
+
+void zHealthReq(){
+    if(!minVerCheck("2.4.1.154"))
+    	return
     params = [
         uri: "http://127.0.0.1:8080",
-        path:"/hub/currentZigbeeStack"
+        path:"/hub/zigbee/healthStatus"
     ]
-        asynchttpGet("getZigbeeStack",params) 
+        asynchttpGet("getZbHealth",params) 
+    
+    params = [
+        uri: "http://127.0.0.1:8080",
+        path:"/hub/zwave/healthStatus"
+    ]
+        asynchttpGet("getZwHealth",params) 
 }
 
-void getZigbeeStack(resp, data) {
+void getZbHealth(resp, data) {
     try {
-        if(resp.data.toString().indexOf('standard') > -1)
-            updateAttr("zigbeeStack","standard")
-        else
-            updateAttr("zigbeeStack","new")      
+        updateAttr("zgHealthy",resp.data)
+      
     } catch(ignore) { }
 }
-*/
+
+void getZwHealth(resp, data) {
+    try {
+        updateAttr("zwHealthy",resp.data)
+      
+    } catch(ignore) { }
+}
+
 void checkCloud(){
     if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/")) {
         updateAttr("cloud", "invalid endpoint")
@@ -1885,7 +1940,7 @@ void logsOff(){
 @Field static List <String> pollList = ["0", "1", "2", "3", "4"]
 @Field static prefList = [
 [parm01:[desc:"CPU Temperature Polling", attributeList:"temperatureF, temperatureC, temperature", method:"cpuTemperatureReq"]],
-[parm02:[desc:"Free Memory Polling", attributeList:"freeMemory", method:"freeMemoryReq"]],
+[parm02:[desc:"Free Memory Polling", attributeList:"freeMemory,jvmSize,jvmFree", method:"freeMemoryReq"]],
 [parm03:[desc:"CPU Load Polling", attributeList:"cpuLoad, cpuPct", method:"cpuLoadReq"]],
 [parm04:[desc:"DB Size Polling", attributeList:"dbSize", method:"dbSizeReq"]],
 [parm05:[desc:"Public IP Address", attributeList:"publicIP", method:"publicIpReq"]],
@@ -1896,7 +1951,7 @@ void logsOff(){
 [parm10:[desc:"Hub Mesh Data", attributeList:"hubMeshData, hubMeshCount", method:"hubMeshReq"]],
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
-[parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud", method:"hub2DataReq"]],
+[parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud, zbHealthy, zwHealthy", method:"hub2DataReq"]],
 [parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zigbeePower, zigbeeUpdateAvail, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
 [parm16:[desc:"Active Cloud Connection Check",attributeList:"cloud", method:"checkCloud"]],

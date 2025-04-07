@@ -16,11 +16,12 @@
  *    23Mar2025        thebearmay            v0.0.1 - Original code
  *	  04Apr2025								 v0.1.0 - Beta Ready Code
  *    05Apr2025								 v0.1.1 - Freememory fix for MB
+ *    07Apr2025								 v0.1.2 - Add Memory History
  */
     
 
 
-static String version()	{  return '0.1.1'  }
+static String version()	{  return '0.1.2'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -199,9 +200,10 @@ String buildPage(){
     else
         cScale = 1000
     String c2 = buildChart([attrSelect:'freeMemory',cList:['\"#fd0a03\"','\"#fdf503\"','\"#0efb1c\"'],wList:[100,200,2000], scale:cScale, i:1])
+    String t1 = buildTrend()
     String lat = selectedDev.currentValue('latitude')
     String lon = selectedDev.currentValue('longitude')
-    String ifrm = "<iframe style='height:370px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
+    String ifrm = "<iframe style='height:300px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
     String aToF = getAttr('a'..'f')
     String gToP = getAttr('g'..'p')
     String qToZ = getAttr('q'..'z')
@@ -214,16 +216,17 @@ String buildPage(){
     String hiRefreshBtn = getInputElemStr(name:'getRefresh', type:'button', width:'5em', radius:'12px', background:'#669999', title:'Refresh')
     String cPage = getInputElemStr(name:'cPage',type:'href', radius:'15px', width:'2em',title:"<i class='material-icons app-column-info-icon' style='font-size: 24px; color:#669999;'>settings_applications</i>", destPage:'configPage')
     
-    String pContent = "<table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
+    String pContent = "<div style='white-space:normal !important;'><table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
     pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
-    pContent+= "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;height:371px;'><tr><td style='height:371px'>${c1}</td><td>&nbsp;</td><td style='height:371px'>${c2}</td><td>&nbsp;</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td></tr></table>"//<td style='vertical-align:top;padding:0;margin:0'>${ifrm2}</td>
+    pContent += "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'><tr style=''><td style=''>${c1}</td><td>&nbsp;</td><td style=''>${c2}</td><td>&nbsp;</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td></tr>"
+    pContent += "<tr style='max-height:270px !important;'><td colspan=5>${t1}</td></tr></table>"
 	pContent += genClockWidget(hubDataMap.timeFormat)
     pContent += "<div id='basicDiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${basicData}</div>"   
     pContent += "<div id='aToFdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${aToF}</div>"
     pContent += "<div id='gToPdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${gToP}</div>"
     pContent += "<div id='qToZdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${qToZ}</div>"
     pContent += "<table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
-    pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
+    pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table></div>"
 	
     return pContent
 }
@@ -468,6 +471,107 @@ function maxToWidths(maxVals){
     return(visualRep)
 }
 
+String getHistory(){
+    def params = [
+        uri: "http://127.0.0.1:8080",
+        path: "/hub/advanced/freeOSMemoryHistory",
+        contentType: "text/html",
+        textParser: true  
+    ]
+    try {
+        httpGet(params) { resp ->
+            if(resp!= null) {
+                return """${resp.data}"""
+            }
+            else {
+                log.error "getHistory - Null Response"
+                return null
+            }
+        }
+    } catch (exception) {
+        log.error "getHistory Error: ${exception.message}"
+        return null
+    }
+}
+
+def buildTrend() {
+	hData = getHistory()
+	ArrayList tLbl = []
+	ArrayList mem = []
+	ArrayList jvm = []    
+	ArrayList splitRec = []
+    String respData
+	ArrayList tData = []
+	tData = hData.split('\n')
+	Boolean firstRec = true
+	tData.each{
+		splitRec = it.split(',')
+		if(!firstRec){
+			tLbl.add("\'${splitRec[0]}\'")
+			mem.add(splitRec[1])
+            if(cols > 3){
+				jvm.add(splitRec[4])
+            }
+		} else {
+			firstRec = false
+			cols = splitRec.size()
+		}
+	}    
+	Integer i = 4
+	visualRep = """<div id='container${i}' style='padding:0;position:relative;margin:0;max-height:300;width:vw;border:inset;border-radius:15px;background-color:#80b3ff'>
+<canvas id="myChart${i}"></canvas>
+	</div>
+
+<script>
+${insertJS()}
+</script>
+
+<script>
+ctx = document.getElementById('myChart${i}');
+  new Chart(ctx, {
+    type: "line",
+    data: {
+	labels: ${tLbl.toString()},
+    datasets: [     
+      {
+        label: " Free Memory",
+		data: ${mem},
+        borderWidth: 2,
+		borderColor: "#ff0000",
+		fill:{
+			target:true
+		}
+      },      {
+        label: " JVM Memory",
+		data: ${jvm},
+        borderWidth: 2,
+		borderColor: "#0000ff",
+		fill:{
+			target:true
+		}
+      }
+      ]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      },
+	  elements: {
+          point:{
+            radius: 0
+          }
+      }
+    }
+  });
+</script>
+""" 
+    uploadHubFile ("pageBuildWork2.txt",visualRep.toString().getBytes("UTF-8"))
+	return visualRep
+}
+
+
 def refresh(){
     visualRep = buildPage()
     contentBlock = [
@@ -554,7 +658,7 @@ function updateClock() {
 
 
 HashMap getHubJson(){
-        def params = [
+   def params = [
         uri: 'http://127.0.0.1:8080/hub/details/json',
         contentType: "application/json"
     ]

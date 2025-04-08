@@ -17,12 +17,13 @@
  *	  04Apr2025								 v0.1.0 - Beta Ready Code
  *    05Apr2025								 v0.1.1 - Freememory fix for MB
  *    07Apr2025								 v0.1.2 - Add Memory History
- *									 v0.1.3 - Fix height on history graph
+ *	  										 v0.1.3 - Fix graph sizes
+ *	  08Apr2025								 v0.1.4 - Change Windy URL
  */
     
 
 
-static String version()	{  return '0.1.3'  }
+static String version()	{  return '0.1.2'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -204,7 +205,8 @@ String buildPage(){
     String t1 = buildTrend()
     String lat = selectedDev.currentValue('latitude')
     String lon = selectedDev.currentValue('longitude')
-    String ifrm = "<iframe style='height:300px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
+    //https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}
+    String ifrm = "<iframe style='height:300px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&marker=true' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
     String aToF = getAttr('a'..'f')
     String gToP = getAttr('g'..'p')
     String qToZ = getAttr('q'..'z')

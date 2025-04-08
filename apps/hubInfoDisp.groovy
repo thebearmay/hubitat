@@ -518,7 +518,7 @@ def buildTrend() {
 		}
 	}    
 	Integer i = 4
-	visualRep = """<div id='container${i}' style='padding:0;position:relative;margin:0;max-height:300;width:vw;border:inset;border-radius:15px;background-color:#80b3ff'>
+	visualRep = """<div id='container${i}' style='padding:0;position:relative;margin:0;max-height:300px;width:vw;border:inset;border-radius:15px;background-color:#80b3ff'>
 <canvas id="myChart${i}"></canvas>
 	</div>
 

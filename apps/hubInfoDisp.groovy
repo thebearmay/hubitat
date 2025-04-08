@@ -17,11 +17,12 @@
  *	  04Apr2025								 v0.1.0 - Beta Ready Code
  *    05Apr2025								 v0.1.1 - Freememory fix for MB
  *    07Apr2025								 v0.1.2 - Add Memory History
+ *									 v0.1.3 - Fix height on history graph
  */
     
 
 
-static String version()	{  return '0.1.2'  }
+static String version()	{  return '0.1.3'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput

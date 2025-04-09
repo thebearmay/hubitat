@@ -222,7 +222,7 @@ String buildPage(){
     String pContent = "<div style='white-space:normal !important;'><table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
     pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
     pContent += "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'><tr style=''><td style=''>${c1}</td><td>&nbsp;</td><td style=''>${c2}</td><td>&nbsp;</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td></tr>"
-    pContent += "<tr style='max-height:270px !important;'><td colspan=5>${t1}</td></tr></table>"
+    pContent += "<tr style='max-height:270px !important;'><td colspan=4>${t1}</td></tr></table>"
 	pContent += genClockWidget(hubDataMap.timeFormat)
     pContent += "<div id='basicDiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${basicData}</div>"   
     pContent += "<div id='aToFdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${aToF}</div>"

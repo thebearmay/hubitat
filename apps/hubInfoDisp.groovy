@@ -19,11 +19,12 @@
  *    07Apr2025								 v0.1.2 - Add Memory History
  *	  										 v0.1.3 - Fix graph sizes
  *	  08Apr2025								 v0.1.4 - Change Windy URL
+ *	  10Apr2025								 v0.1.5	- Add CPU Temperature chart
  */
     
 
 
-static String version()	{  return '0.1.4'  }
+static String version()	{  return '0.1.5'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -202,10 +203,16 @@ String buildPage(){
     else
         cScale = 1000
     String c2 = buildChart([attrSelect:'freeMemory',cList:['\"#fd0a03\"','\"#fdf503\"','\"#0efb1c\"'],wList:[100,200,2000], scale:cScale, i:1])
+    String tUnit = selectedDev.currentState('temperature')?.unit
+    String c3
+    if(tUnit.contains('C')){
+        c3 = buildChart([attrSelect:'temperature',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[65,80,104],i:2])
+    }else {     
+    	c3 = buildChart([attrSelect:'temperature',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[150,176,220],i:2])    
+    }
     String t1 = buildTrend()
     String lat = selectedDev.currentValue('latitude')
     String lon = selectedDev.currentValue('longitude')
-    //https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}
     String ifrm = "<iframe style='height:300px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&marker=true' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
     String aToF = getAttr('a'..'f')
     String gToP = getAttr('g'..'p')
@@ -221,8 +228,8 @@ String buildPage(){
     
     String pContent = "<div style='white-space:normal !important;'><table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
     pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
-    pContent += "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'><tr style=''><td style=''>${c1}</td><td>&nbsp;</td><td style=''>${c2}</td><td>&nbsp;</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td></tr>"
-    pContent += "<tr style='max-height:270px !important;'><td colspan=4>${t1}</td></tr></table>"
+    pContent += "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'><tr><td>${c1}</td><td>&nbsp;</td><td>${c2}</td><td>&nbsp;</td><td>${c3}</td></tr>"
+    pContent += "<tr style='max-height:270px !important;'><td colspan=4>${t1}</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td></tr></table>"
 	pContent += genClockWidget(hubDataMap.timeFormat)
     pContent += "<div id='basicDiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${basicData}</div>"   
     pContent += "<div id='aToFdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${aToF}</div>"
@@ -338,7 +345,7 @@ String getAttr(aRange){
     ArrayList attrList = []
     selectedDev.supportedAttributes.each{
         String attr = it.toString()
-        if(aRange.contains(attr.substring(0,1)) && it.toString() != 'html'){
+        if(aRange.contains(attr.substring(0,1)) && it.toString() != 'html' && it.toString() != 'type'){
         	tMap = [key:"${it}", value:"${selectedDev.currentValue("$it", true)}"]
         	attrList.add(tMap)
         }
@@ -469,7 +476,7 @@ function maxToWidths(maxVals){
 </script>
 """
     
-    if(debugEnabled)
+    //if(debugEnabled)
         uploadHubFile ("pageBuildWork.txt",visualRep.toString().getBytes("UTF-8"))    
     return(visualRep)
 }
@@ -570,7 +577,8 @@ ctx = document.getElementById('myChart${i}');
   });
 </script>
 """ 
-    uploadHubFile ("pageBuildWork2.txt",visualRep.toString().getBytes("UTF-8"))
+    if(debugEnabled)
+    	uploadHubFile ("pageBuildWork2.txt",visualRep.toString().getBytes("UTF-8"))
 	return visualRep
 }
 

@@ -36,10 +36,11 @@
 *    2022-09-15  thebearmay    issue with clean install
 *    2022-12-06  thebearmay    additional date/time format
 * 	 2025-04-03	 thebearmay	   add time/date formats, lowered mininum message count to 1
+*    2025-04-20  amithalp	   add color options
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
-static String version()	{  return '2.0.12'  }
+static String version()	{  return '2.0.13'  }
 
 @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "MM/dd h:mma", "HH:mm", "H:mm","h:mma", "HH:mm ddMMMyyyy","HH:mm:ss ddMMMyyyy","hh:mma ddMMMyyyy", "HH:mm:ss dd/MM/yyyy", "HH:mm:ss MM/dd/yyyy", "hh:mma dd/MM/yyyy ", "hh:mma MM/dd/yyyy", "HH:mm yyyy-MM-dd", "None"]
 
@@ -68,6 +69,12 @@ metadata {
 		input("leadingDate", "bool", title:"Use leading date instead of trailing")
 		input("msgLimit", "number", title:"Number of messages from 1 to 20",defaultValue:5, range:1..20)
 		input("create5H", "bool", title: "Create horizontal message tile?")
+		
+        input("colorE", "text", title: "Color for [E] Emergency", defaultValue: "red")
+        input("colorH", "text", title: "Color for [H] High", defaultValue: "orange")
+        input("colorL", "text", title: "Color for [L] Low", defaultValue: "goldenrod")
+        input("colorN", "text", title: "Color for [N] Normal", defaultValue: "green")
+        input("colorDefault", "text", title: "Default color (no tag)", defaultValue: "black")
 
 	}
 
@@ -154,23 +161,46 @@ metadata {
 	}
 
 void deviceNotification(notification){
-	if (debugEnable) log.debug "deviceNotification entered: ${notification}" 
-	dateNow = new Date()
-    if(sdfPref == null) device.updateSetting("sdfPref",[value:"ddMMMyyyy HH:mm",type:"enum"])
-    if(sdfPref != "None") {
-        SimpleDateFormat sdf = new SimpleDateFormat(sdfPref)
-	    if (leadingDate)
-			notification = sdf.format(dateNow) + " " + notification
-		else
-			notification += " " + sdf.format(dateNow)
-    }
+        if (debugEnable) log.debug "deviceNotification entered: ${notification}" 
+
+        dateNow = new Date()
+        if(sdfPref == null) device.updateSetting("sdfPref",[value:"ddMMMyyyy HH:mm",type:"enum"])
+
+        String originalMsg = notification?.trim()
+
+        // Keep the tag for parsing, remove after colorization
+        String msgForColor = originalMsg
+        String tag = msgForColor.find(/\[[A-Z]\]/)  // e.g. [E], [H], etc.
+        String cleanedMsg = originalMsg.replaceFirst(/\[[A-Z]\]/, '').trim()
+
+        // Add timestamp
+        String timestamp = ""
+        if (sdfPref != "None") {
+            SimpleDateFormat sdf = new SimpleDateFormat(sdfPref)
+            timestamp = sdf.format(dateNow)
+        }
+
+        String msgWithTime = leadingDate ? "${timestamp} ${cleanedMsg}" : "${cleanedMsg} ${timestamp}"
+
+        // Reattach the tag temporarily for coloring
+        String msgWithTag = tag ? "${tag} ${msgWithTime}".trim() : msgWithTime
+
+        // Colorize
+        notification = colorizeNotification(msgWithTag)
+        //if (debugEnable) log.debug "deviceNotification entered: ${notification}"
+		if (debugEnable) log.debug "Final colorized notification: ${notification}"
+
+    
 
 	//	insert new message at beginning	of last5 string
 		msgFilled = state.msgCount.toInteger()
-		if (msgFilled>0)
-			wkTile=device.currentValue("last5").replace('<span class="last5">','<span class="last5">' + notification + '<br />')
-		else
-			wkTile=device.currentValue("last5").replace('<span class="last5">','<span class="last5">' + notification)
+		String existing = device.currentValue("last5")?.replace('<span class="last5">', '')?.replace('</span>', '')?.trim()
+		if (msgFilled > 0 && existing) {
+            wkTile = '<span class="last5">' + notification + '<br />' + existing + '</span>'
+        } else {
+            wkTile = '<span class="last5">' + notification + '</span>'
+        }
+
 
 	//	when msg count exceeds limit, purge last message
 		if (debugEnable) log.debug "deviceNotification2 msgFilled: ${msgFilled} msgLimit: ${settings.msgLimit}" 
@@ -210,10 +240,35 @@ void deviceNotification(notification){
 			sendEvent(name:"last5H", value: " ** "+wkTile.replaceAll("<br />"," ** ")+" ** ")
 	}    
 
-	void logsOff(){
-		device.updateSetting("debugEnable",[value:"false",type:"bool"])
-	}
+String colorizeNotification(String msg) {
+    String color
+    String cleanedMsg
 
-	void push() {
-        	configure()
-	}
+    if (msg.startsWith("[E]")) {
+        color = settings.colorE ?: "red"
+        cleanedMsg = msg.replaceFirst(/\[E\]/, '').trim()
+    } else if (msg.startsWith("[H]")) {
+        color = settings.colorH ?: "orange"
+        cleanedMsg = msg.replaceFirst(/\[H\]/, '').trim()
+    } else if (msg.startsWith("[L]")) {
+        color = settings.colorL ?: "goldenrod"
+        cleanedMsg = msg.replaceFirst(/\[L\]/, '').trim()
+    } else if (msg.startsWith("[N]")) {
+        color = settings.colorN ?: "gray"
+        cleanedMsg = msg.replaceFirst(/\[N\]/, '').trim()
+    } else {
+        color = settings.colorDefault ?: "black"
+        cleanedMsg = msg
+    }
+
+    String formatted = "<span style='color:${color};'>${cleanedMsg}</span>"
+    return formatted
+}
+
+void logsOff(){
+	device.updateSetting("debugEnable",[value:"false",type:"bool"])
+}
+
+void push() {
+	configure()
+}

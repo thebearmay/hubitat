@@ -78,6 +78,7 @@
  *    2024-11-16                 v3.1.12 - fix min version check
  *    2025-01-31				 v3.1.13 - add zwaveJS(enabled/disabled), zwaveRegion, zwaveUpdateAvail(true/false), zigbeeUpdateAvail(true/false)
  *    2025-04-06				 v3.1.14 - Add jvmSize, jvmFree, zwHealthy, zbHealthy
+ *	  2025-05-02				 v3.1.15 - Trap file write attempt without data 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -85,7 +86,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.14"}
+static String version() {return "3.1.15"}
 
 metadata {
     definition (
@@ -1473,10 +1474,7 @@ String readExtFile(fName){
     def params = [
         uri: fName,
         contentType: "text/html",
-        textParser: true,
-        headers: [
-				
-            ]        
+        textParser: true,   
     ]
 
     try {
@@ -1511,10 +1509,10 @@ Boolean fileExists(fName){
             byte[] rData = downloadHubFile("$fName")
             fContent = new String(rData, "UTF-8")
             if(fContent.size() > 0) {
-                if(debugEnable) log.debug "File Exist: true"
+                if(debugEnable) log.debug "$fName File Exist: true"
                 return true;
             } else {
-                if(debugEnable) log.debug "File Exist: false"
+                if(debugEnable) log.debug "$fName File Exist: false"
                 return false;                
             }
         }
@@ -1532,10 +1530,10 @@ Boolean fileExists(fName){
     try {
         httpGet(params) { resp ->
             if (resp != null){
-                if(debugEnable) log.debug "File Exist: true"
+                if(debugEnable) log.debug "$fName File Exist: true"
                 return true;
             } else {
-                if(debugEnable) log.debug "File Exist: false"
+                if(debugEnable) log.debug "$fName File Exist: false"
                 return false
             }
         }
@@ -1669,6 +1667,10 @@ String readFile(fName){
 }
 @SuppressWarnings('unused')
 Boolean writeFile(String fName, String fData) {
+    if(fData.size() < 1) {
+        log.error "$fName cannot be created with size ${fData.size()}"
+        return false
+    }
     if(minVerCheck("2.3.4.134")){
         wData = fData.getBytes("UTF-8")
         uploadHubFile("$fName",wData)

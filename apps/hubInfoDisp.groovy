@@ -20,11 +20,12 @@
  *	  										 v0.1.3 - Fix graph sizes
  *	  08Apr2025								 v0.1.4 - Change Windy URL
  *	  10Apr2025								 v0.1.5	- Add CPU Temperature chart
+ *    12May2025                              v0.1.6 - Add Full Screen option
  */
     
 
 
-static String version()	{  return '0.1.5'  }
+static String version()	{  return '0.1.6'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -89,6 +90,7 @@ def configPage(){
 
         	paragraph "${apiSection}${pStr}"
 */
+            fs = getInputElemStr(name:'fullScreen', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Display Full Screen</b>', defaultValue: "${settings['fullScreen']}")
             fileList = getFiles()
             state.jsInstalled = false
             fileList.each {
@@ -99,7 +101,7 @@ def configPage(){
              	paragraph getInputElemStr(name:'jsInstall', type:'button', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Install ChartJS</b>')
             String sDev = getInputElemStr(name:'selectedDev', type:'capability.*', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Select Hub Info Device</b>')
 			String aRename = getInputElemStr(name:"nameOverride", type:"text", title: "<b>New Name for Application</b>", multiple: false, defaultValue: app.getLabel(), width:'15em', radius:'12px', background:'#e6ffff')
-            paragraph "<table><tr><td style='min-width:15em'>${db}</td><td style='position:relative;top:0px;padding:0px;margin:0px'>${aRename}</td></tr><tr><td>${sDev}</td></tr></table>"
+            paragraph "<table><tr><td style='min-width:15em'>${db}</td><td>${fs}</td><td>${aRename}</td></tr><tr><td>${sDev}</td></tr></table>"
             if(selectedDev) {
                 state.configured = true
                 ci = btnIcon(name:'computer', size:'14px')
@@ -213,7 +215,8 @@ String buildPage(){
     String t1 = buildTrend()
     String lat = selectedDev.currentValue('latitude')
     String lon = selectedDev.currentValue('longitude')
-    String ifrm = "<iframe style='height:300px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&marker=true' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
+    //String ifrm = "<iframe style='height:300px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&marker=true' data-fs='false' onload='(() => {const body = this.contentDocument.body;const start = () => {if(this.dataset.fs == 'false') {this.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;';this.dataset.fs = 'true';} else {this.style = 'width: 100%; height: 100%;';this.dataset.fs = 'false';}}body.addEventListener('dblclick', start);})()'></iframe>"
+    String ifrm = "<iframe style='height:300px;padding:0;margin:0;border-radius:15px' src='https://embed.windy.com/embed2.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=radar&product=ecmwf&level=surface&lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&marker=true'></iframe>"
     String aToF = getAttr('a'..'f')
     String gToP = getAttr('g'..'p')
     String qToZ = getAttr('q'..'z')
@@ -226,7 +229,8 @@ String buildPage(){
     String hiRefreshBtn = getInputElemStr(name:'getRefresh', type:'button', width:'5em', radius:'12px', background:'#669999', title:'Refresh')
     String cPage = getInputElemStr(name:'cPage',type:'href', radius:'15px', width:'2em',title:"<i class='material-icons app-column-info-icon' style='font-size: 24px; color:#669999;'>settings_applications</i>", destPage:'configPage')
     
-    String pContent = "<div style='white-space:normal !important;'><table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
+    String fullScrn = "<script>document.getElementById('divSideMenu').setAttribute('style','display:none !important');document.getElementById('divMainUIHeader').setAttribute('style','height: 0 !important;');document.getElementById('divMainUIContent').setAttribute('style','padding: 0 !important;');document.getElementById('divMainUIFooter').setAttribute('style','display:none !important');const contentHeight = Math.round(window.innerHeight * 1.2);document.getElementById('divMainUIContentContainer').setAttribute('style', 'background: white; height: ' + contentHeight + 'px !important;');document.getElementById('divLayoutControllerL2').setAttribute('style', 'height: ' + contentHeight + 'px !important;');</script><style>overflow-y: scroll !important;</style>"
+    String pContent = "<div style='white-space:normal !important;'><table><caption>${hubDataMap.hubName}</caption><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
     pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table>"
     pContent += "<table id='chartSection', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'><tr><td>${c1}</td><td>&nbsp;</td><td>${c2}</td><td>&nbsp;</td><td>${c3}</td></tr>"
     pContent += "<tr style='max-height:270px !important;'><td colspan=4>${t1}</td><td style='vertical-align:top;padding:0;margin:0'>${ifrm}</td></tr></table>"
@@ -237,6 +241,8 @@ String buildPage(){
     pContent += "<div id='qToZdiv', style='padding:0;margin:0;background-color:#e6ffff;border-radius:12px;'>${qToZ}</div>"
     pContent += "<table><tr><td>${headDiv}</td><td>${basicDivB}</td><td>${aToFdivB}</td><td>${gToPdivB}</td><td>${qToZdivB}</td><td style='min-width:5em'>&nbsp;</td>"
     pContent += "<td>${hiRefreshBtn}</td><td>${cPage}</td></tr></table></div>"
+    if(fullScreen)
+    	pContent += "${fullScrn}"
 	
     return pContent
 }

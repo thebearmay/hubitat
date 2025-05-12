@@ -81,7 +81,7 @@ void logsOff(){
 def configPage(){
     dynamicPage (name: "configPage", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
         section (name:'cPageHndl', title:'Configuration Page'){
-            db = getInputElemStr(name:'debugEnabled', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Debug Enabled</b>')
+            db = getInputElemStr(name:'debugEnabled', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Debug Enabled</b>', defaultValue: "${settings['debugEnabled']}")
 /*	        if(state.accessToken == null) createAccessToken()
     	    apiSection = getInputElemStr(name:'api', type:'divHide', width:'15em', radius:'12px', background:'#669999', title:'API Information', divName:'apiSection', hidden:true)
         	String pStr = "<div id='apiSection' ${divStyle}><p><b>Local Server API:</b> ${getFullLocalApiServerUrl()}/refresh?access_token=${state.accessToken}</p>"
@@ -124,7 +124,7 @@ def pageRender(){
                     tNow = new Date().getTime()
                     if(state.lastLoad < (tNow - (5*60*1000))){
                         settings.each {
-                            if(it.key != 'debugEnabled' && it.key != 'selectedDev' && it.key != 'nameOverride')
+                            if(it.key != 'debugEnabled' && it.key != 'selectedDev' && it.key != 'nameOverride' && it.key !='fullScreen')
                             	app.removeSetting("${it.key}")
                         }
                     }
@@ -134,7 +134,7 @@ def pageRender(){
                 if(state.hiRefresh) {
                     state.hiRefresh = false
                     settings.each {
-						if(it.key != 'debugEnabled' && it.key != 'selectedDev' && it.key != 'nameOverride')
+						if(it.key != 'debugEnabled' && it.key != 'selectedDev' && it.key != 'nameOverride' && it.key !='fullScreen')
 							app.removeSetting("${it.key}")
 					}
                     selectedDev.refresh()

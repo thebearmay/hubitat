@@ -770,7 +770,7 @@ void energyHandler(evt) {
 	devId = evt.device.id
 	devName = evt.device
     if(!settings["maxVal${devId}"]) app.updateSetting("maxVal${devId}",[value:500,type:"number"])
-    log.debug "${evt.value} ${settings["maxVal${devId}"]}"
+    //log.debug "${evt.value} ${settings["maxVal${devId}"]}"
     if(evt.value.toLong() > settings["maxVal${devId}"]) {
         log.warn " Energy value skipped for $devName, value=${evt.value}"
 		return    

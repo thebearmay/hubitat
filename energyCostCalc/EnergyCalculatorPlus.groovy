@@ -47,7 +47,8 @@
  * v0.7.4	RLE		Removed the requirement to have the # when setting the hex code for the table background.
  * v0.7.5	RLE		Language fix on app page
  * v0.7.6	RLE		Added logic to discard erroneous energy reportings over 500 kWh. Unify menu color scheme.
- * v0.7.7	thebearmay	Added max energy per device 
+ * v0.7.7	thebearmay	Added max energy per device
+ * v0.7.8               Change engery value check location
  */
 
 import java.util.regex.*
@@ -768,6 +769,12 @@ void energyHandler(evt) {
     logDebug "Energy change for ${evt.device} ${evt.device.id}"
 	devId = evt.device.id
 	devName = evt.device
+    if(!settings["maxVal${devId}"]) app.updateSetting("maxVal${devId}",[value:500,type:"number"])
+    log.debug "${evt.value} ${settings["maxVal${devId}"]}"
+    if(evt.value.toLong() > settings["maxVal${devId}"]) {
+        log.warn " Energy value skipped for $devName, value=${evt.value}"
+		return    
+    }
 	updateSingleDeviceEnergy(devName,devId)
 }
 
@@ -798,8 +805,7 @@ void updateSingleDeviceEnergy(devName,devId) {
 
 	energyCheck = currentEnergy - start
 	logTrace "${devName} energyCheck is ${energyCheck}"
-    if(!settings["${maxVal$devId}"]) app.updateSetting("${maxVal$devId}",[value:500,type:"number"])
-	if(energyCheck > 500 || currentEnergy > settings["${maxVal$devId}"]) {
+	if(energyCheck > 500) {
 		log.warn "Probable erroneous energy report - $currentEnergy; if this is a valid report, please report this in the community thread."
 		return
 		}

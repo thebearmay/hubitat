@@ -20,6 +20,7 @@
 *	18Mar2025							Add btnDivHide to hide/display div's (uiType='divHide')
 * 	03Apr2025							Enable a default value for enums
 *	04Apr2025							Size option for icons
+*	23May2025							Add device.<driverName> to capability
 */
 
 import groovy.transform.Field
@@ -89,7 +90,7 @@ String getInputElemStr(HashMap opt){
 	   return btnDivHide(opt)
 	   break
 default:
-       if(opt.type && opt.type.contains('capability'))
+       if(opt.type && (opt.type.contains('capability') || opt.type.contains('device')))
 	       return inputCap(opt)
        else 
 	       return "Type ${opt.type} is not supported"

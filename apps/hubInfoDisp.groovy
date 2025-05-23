@@ -21,11 +21,12 @@
  *	  08Apr2025								 v0.1.4 - Change Windy URL
  *	  10Apr2025								 v0.1.5	- Add CPU Temperature chart
  *    12May2025                              v0.1.6 - Add Full Screen option
+ *	  25May2025								 v0.1.7 - Change capability to device.HubInformationDriverv3
  */
     
 
 
-static String version()	{  return '0.1.6'  }
+static String version()	{  return '0.1.7'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -99,7 +100,7 @@ def configPage(){
             }
             if(!state?.jsInstalled)
              	paragraph getInputElemStr(name:'jsInstall', type:'button', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Install ChartJS</b>')
-            String sDev = getInputElemStr(name:'selectedDev', type:'capability.*', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Select Hub Info Device</b>')
+            String sDev = getInputElemStr(name:'selectedDev', type:'device.HubInformationDriverv3', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Select Hub Info Device</b>')
 			String aRename = getInputElemStr(name:"nameOverride", type:"text", title: "<b>New Name for Application</b>", multiple: false, defaultValue: app.getLabel(), width:'15em', radius:'12px', background:'#e6ffff')
             paragraph "<table><tr><td style='min-width:15em'>${db}</td><td>${fs}</td><td>${aRename}</td></tr><tr><td>${sDev}</td></tr></table>"
             if(selectedDev) {
@@ -832,7 +833,7 @@ String getInputElemStr(HashMap opt){
 	   return btnDivHide(opt)
 	   break
 default:
-       if(opt.type && opt.type.contains('capability'))
+       if(opt.type && (opt.type.contains('capability') || opt.type.contains('device')))
 	       return inputCap(opt)
        else 
 	       return "Type ${opt.type} is not supported"

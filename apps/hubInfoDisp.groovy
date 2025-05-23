@@ -42,7 +42,7 @@ definition (
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/hubInfoDisp.groovy",
     installOnOpen:  true,
-	oauth: 			true,
+	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      ""
 ) 

@@ -29,7 +29,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Demonstrates the use of a HTML/JS app to capture QR Code data and ",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/xxxx.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/qrReader/qrToHub.groovy",
     installOnOpen:  true,
 	oauth: 			true,
     iconUrl:        "",

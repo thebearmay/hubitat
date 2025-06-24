@@ -79,11 +79,18 @@
  *    2025-01-31				 v3.1.13 - add zwaveJS(enabled/disabled), zwaveRegion, zwaveUpdateAvail(true/false), zigbeeUpdateAvail(true/false)
  *    2025-04-06				 v3.1.14 - Add jvmSize, jvmFree, zwHealthy, zbHealthy
  *	  2025-05-02				 v3.1.15 - Trap file write attempt without data 
+ *	  2025-06-24				 v3.1.16 - Add sunriseTomorrow and sunsetTomorrow
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.TimeZone
 
 @SuppressWarnings('unused')
 static String version() {return "3.1.15"}
@@ -180,6 +187,8 @@ metadata {
         attribute "matterStatus", "string"
         attribute "releaseNotesUrl", "string"
         attribute "accessList","string"
+        attribute "sunriseTomorrow","string"
+        attribute "sunsetTomorrow","string"
 		//HE v2.7.3.1
 		attribute "zwaveJS", "string"
         attribute "zwaveRegion","string"
@@ -465,14 +474,36 @@ void everyPoll(whichPoll=null){
     sunrise = sdfIn.parse(location.sunrise.toString())
     sunset = sdfIn.parse(location.sunset.toString())
     
+    int yearST=new Date().getYear() + 1900
+    int monthST=new Date().getMonth() + 1
+    int dayST=new Date().getDate() + 1
+    
+    try {
+    	LocalDate.of(yearST,monthST,dayST)
+    } catch (dCheck){
+    	monthST++
+        dayST = 1
+        if(monthST > 12) 
+            monthST = 1
+    }
+    
+    ZonedDateTime ssTom = calculateSunset(yearST, monthST, dayST)
+    ZonedDateTime srTom = calculateSunrise(yearST, monthST, dayST)
+       
 	if(sunSdfPref == null) device.updateSetting("sunSdfPref",[value:"HH:mm:ss",type:"enum"])
+    	
     if(sunSdfPref != "Milliseconds") {
         SimpleDateFormat sdf = new SimpleDateFormat(sunSdfPref)
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern(sunSdfPref)
         updateAttr("sunrise", sdf.format(sunrise))
 	    updateAttr("sunset", sdf.format(sunset))
+        updateAttr("sunsetTomorrow",ssTom.format(dtf))
+    	updateAttr("sunriseTomorrow",srTom.format(dtf))
     } else {
         updateAttr("sunrise", sunrise.getTime())
-	    updateAttr("sunset", sunset.getTime())  
+	    updateAttr("sunset", sunset.getTime())
+        updateAttr("sunsetTomorrow",ssTom.toInstant().toEpochMilli())
+    	updateAttr("sunriseTomorrow",srTom.toInstant().toEpochMilli())
     }
     updateAttr("localIP",location.hub.localIP)
 
@@ -1931,6 +1962,135 @@ Boolean minVerCheck(vStr){  //check if HE is >= to the requirement
     return rValue
 }
 
+ZonedDateTime calculateSunrise(int year=new Date().getYear() + 1900, int month=new Date().getMonth() + 1, int day=new Date().getDate()) {
+    final double ZENITH = 90.83333 // Official zenith for sunrise/sunset
+    LocalDate date = LocalDate.of(year, month, day)
+    double latitude = location.latitude
+    double longitude = location.longitude
+    int dayOfYear = date.dayOfYear
+    
+    double lngHour = longitude / 15
+    double t = dayOfYear + ((6 - lngHour) / 24)
+
+    // Mean anomaly
+    double M = (0.9856 * t) - 3.289
+    
+    // Sun's true longitude
+    double L = (M + (1.916 * Math.sin(Math.toRadians(M))) + (0.020 * Math.sin(Math.toRadians(2 * M))) + 282.634) % 360
+
+    // Right ascension
+    double RA = Math.toDegrees(Math.atan(0.91764 * Math.tan(Math.toRadians(L))))
+    RA = RA % 360
+
+    // Adjust RA to be in the same quadrant as L
+    double Lquadrant = (Math.floor(L / 90)) * 90
+    double RAquadrant = (Math.floor(RA / 90)) * 90
+    RA = RA + (Lquadrant - RAquadrant)
+
+    // Convert RA into hours
+    RA = RA / 15
+
+    // Calculate declination of the sun
+    double sinDec = 0.39782 * Math.sin(Math.toRadians(L))
+    double cosDec = Math.cos(Math.asin(sinDec))
+
+    // Calculate the sun's local hour angle
+    double cosH = (Math.cos(Math.toRadians(ZENITH)) - (sinDec * Math.sin(Math.toRadians(latitude)))) / (cosDec * Math.cos(Math.toRadians(latitude)))
+
+    if (cosH > 1) {
+        return -1 //no sunrise at this location for this date 
+    }
+
+    // Calculate H and convert into hours
+    double H = 360 - Math.toDegrees(Math.acos(cosH))
+    H = H / 15
+
+    // Calculate local mean time
+    double T = H + RA - (0.06571 * t) - 6.622
+
+    // Adjust time back to UTC
+    double UT = (T - lngHour) % 24
+
+    // Convert UT to Local Time Zone
+    ZoneId zone = ZoneId.systemDefault()
+    ZonedDateTime utcTime = date.atTime((int) UT, (int) ((UT % 1) * 60)).atZone(ZoneId.of("UTC"))
+    ZonedDateTime localTime = utcTime.withZoneSameInstant(zone)
+
+    // Return the local sunrise time
+    return localTime//.toLocalTime()
+}
+    
+ZonedDateTime calculateSunset(int year=new Date().getYear() + 1900, int month=new Date().getMonth() + 1, int day=new Date().getDate()) {
+    final double ZENITH = 90.83333 // Official zenith for sunrise/sunset
+    day++
+    
+    try {
+    	LocalDate.of(year,month,day)
+    } catch (dCheck){
+    	month++
+        day = 1
+        if(month > 12) 
+            month = 1
+    }
+    
+    LocalDate date=LocalDate.of(year,month,day)
+    int dayOfYear = date.dayOfYear
+    double latitude = location.latitude
+    double longitude = location.longitude 
+
+    // Approximate time in hours
+    double lngHour = longitude / 15
+    double t = dayOfYear + ((18 - lngHour) / 24)
+
+    // Sun's mean anomaly
+    double M = (0.9856 * t) - 3.289
+
+    // Sun's true longitude
+    double L = M + (1.916 * Math.sin(Math.toRadians(M))) + (0.020 * Math.sin(Math.toRadians(2 * M))) + 282.634
+    L = (L + 360) % 360
+
+    // Sun's right ascension
+    double RA = Math.toDegrees(Math.atan(0.91764 * Math.tan(Math.toRadians(L))))
+    RA = (RA + 360) % 360
+
+    // Right ascension value needs to be in the same quadrant as L
+    double Lquadrant = (Math.floor(L / 90)) * 90
+    double RAquadrant = (Math.floor(RA / 90)) * 90
+    RA = RA + (Lquadrant - RAquadrant)
+
+    // Convert RA into hours
+    RA = RA / 15
+
+    // Sun's declination
+    double sinDec = 0.39782 * Math.sin(Math.toRadians(L))
+    double cosDec = Math.cos(Math.asin(sinDec))
+
+    // Sun's local hour angle
+    double cosH = (Math.cos(Math.toRadians(ZENITH)) - (sinDec * Math.sin(Math.toRadians(latitude)))) / (cosDec * Math.cos(Math.toRadians(latitude)))
+    if (cosH > 1) {
+        return -1  // Sun never sets
+    } else if (cosH < -1) {
+        return -1  // Sun never rises
+    }
+    
+    // H = local hour angle in degrees
+    double H = Math.toDegrees(Math.acos(cosH)) / 15
+
+    // Local mean time of sunset
+    double T = H + RA - (0.06571 * t) - 6.622
+
+    // Adjust back to UTC
+    double UT = (T - lngHour) % 24
+    if (UT < 0) UT += 24
+
+    // Convert UT to Local Time Zone
+    ZoneId zone = ZoneId.systemDefault()
+    ZonedDateTime utcTime = date.atTime((int) UT, (int) ((UT % 1) * 60)).atZone(ZoneId.of("UTC"))
+    ZonedDateTime localTime = utcTime.withZoneSameInstant(zone)
+
+    // Return the local sunset time
+    return localTime//.toLocalTime()
+}
 
 @SuppressWarnings('unused')
 void logsOff(){

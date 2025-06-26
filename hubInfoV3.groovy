@@ -80,6 +80,7 @@
  *    2025-04-06				 v3.1.14 - Add jvmSize, jvmFree, zwHealthy, zbHealthy
  *	  2025-05-02				 v3.1.15 - Trap file write attempt without data 
  *	  2025-06-24				 v3.1.16 - Add sunriseTomorrow and sunsetTomorrow
+ *	  2025-06-26				 v3.1.17 - negative hour fix for sunriseTomorrow
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -93,7 +94,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.16"}
+static String version() {return "3.1.17"}
 
 metadata {
     definition (
@@ -2010,7 +2011,8 @@ ZonedDateTime calculateSunrise(int year=new Date().getYear() + 1900, int month=n
 
     // Adjust time back to UTC
     double UT = (T - lngHour) % 24
-
+    if (UT < 0) UT += 24
+    
     // Convert UT to Local Time Zone
     ZoneId zone = ZoneId.systemDefault()
     ZonedDateTime utcTime = date.atTime((int) UT, (int) ((UT % 1) * 60)).atZone(ZoneId.of("UTC"))

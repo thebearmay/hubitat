@@ -52,6 +52,7 @@ LocalTime calculateSunrise(int year=new Date().getYear() + 1900, int month=new D
 
     // Adjust time back to UTC
     double UT = (T - lngHour) % 24
+    if (UT < 0) UT += 24
 
     // Convert UT to Local Time Zone
     ZoneId zone = ZoneId.systemDefault()

@@ -364,6 +364,13 @@
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/hubInfoDispManifest.json",
       "description":"Hub Detailed Information Display - An app to combine the Hub Details page with information collected by the Hub Information Driver v3"
+    },
+    {
+      "id":"593eb15c-367e-4987-b47b-817a5f00757d",
+      "name":"Lock History",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/lockHistManifest.json",
+      "description":"Displays lock use history and allows the use of alternate names for lock codes (useful for fingerprint devices that report unknown) and lock device names"
     }
   ]
 }

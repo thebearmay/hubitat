@@ -147,6 +147,12 @@ def deviceData(){
                     if(it.name == s) varOut+= "$s: ${it.value}<br>"
                  }
               }
+			  if(otherElem) {
+				othData = getOthData(x)
+				othData.each { o ->
+					varOut+= "$o.key: $o.value<br>"
+				}
+        	  }              
               paragraph varOut
             }
             input "createChild", "bool", title: "Create a child device for dashboard use", required: false, submitOnChange: true
@@ -178,6 +184,12 @@ def refreshDevice(evt=null){
             x.properties.currentStates.each {
                 if(it.name == s) varOut+= "<p>$s: ${it.value}</p>"
             }
+        }
+		if(otherElem) {
+			othData = getOthData(x)
+			othData.each { o ->
+				varOut+= "<p>$o.key: $o.value</p>"
+			}
         }
 		if(varOut.length() + html[inx].length() + 6 > 1024){
 			html[inx]+="</div>"

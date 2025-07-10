@@ -2,7 +2,6 @@
  "packageName":"Lock History",
  "author":"Jean P. May, Jr.",
  "version":"0.2.4",
- "minimumHEVersion":"2.4.0.1",
  "dateReleased":"2025-07-10",
  "apps": [
   {

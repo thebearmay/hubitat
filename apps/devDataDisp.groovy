@@ -23,11 +23,12 @@
  *    06Apr2022   thebearmay    allow multiple instances via rename
  *    20Jun2022   thebearmay    embedded section correction
  *    10Jul2022   jtp10181      CSV changes
+ *	  10Jul2025	  thebearmay	Additional fields
 */
 
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.3.4'  }
+static String version()	{  return '1.3.5'  }
 
 
 definition (
@@ -81,6 +82,7 @@ def mainPage(){
                     input "varList", "enum", title: "Select data items to display", options: dataList, multiple: true, required: false, submitOnChange: true
                     stateList = buildStateList()
                     input "stList", "enum", title: "Select states to display", options: stateList, multiple: true, required: false, submitOnChange: true
+                    input "otherElem", "bool", title: "Add Room, DNI, etc.", submitOnChange:true
                 }
               }
               section(""){
@@ -98,7 +100,7 @@ def mainPage(){
 	    } else {
               section("Change Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
-               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
+               if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
               }   
 		    section("") {
 			    paragraph title: "Click Done", "Please click Done to install app before continuing"
@@ -205,6 +207,10 @@ def createChildDev(){
     return cd
 }
 
+def getOthData(dev) {
+    return [driverType:"${dev.driverType}",dni:"${dev.deviceNetworkId}",zgId:"${dev.zigbeeId}",roomName:"${dev.roomName}",controllerType:"${dev.controllerType}"]
+}
+
 def jsonDown(){
     dynamicPage (name: "jsonDown", title: "", install: false, uninstall: false) {
 	  section("<b><u>JSON Data</u></b>"){
@@ -223,6 +229,12 @@ def jsonDown(){
                     jData += "\"$s\": \"$it.value\","
                 }
              }
+            if(otherElem) {
+            	othData = getOthData(x)
+            	othData.each { o ->
+                	jData += "\"$o.key\": \"$o.value\","
+            	}
+            }
             jData = jData.substring(0,jData.length()-1)
             jData += "}},"
       }
@@ -237,10 +249,6 @@ def jsonDown(){
               input "wFile", "button", title:"Write to Hub File", submitOnChange:true
           }
       }        
-        section("Hub Security", hideable: true, hidden: true){
-            input "username", "string", title:"Hub User ID", submitOnChange: true
-            input "password", "string", title:"Hub Password", submitOnChange: true
-        }
 
   }
 }
@@ -251,6 +259,10 @@ def csvDown(){
         jData="\"id\",\"displayName\",\"name\""
         varList.each { jData += ",\"$it\"" }
         stList.each { jData += ",\"$it\"" }
+        if(otherElem) {
+			othData = getOthData(qryDevice[0])
+            othData.each {jData += ",\"$it.key\"" } 
+        }
         jData += "\n"  
 
         qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
@@ -263,6 +275,12 @@ def csvDown(){
                 x.properties.currentStates.each {
                     jData += (it.name == s ? ",\"$it.value\"" : ",")
                 }
+            }
+            if(otherElem) {
+                othData = getOthData(x)
+            	othData.each { o ->
+                	jData += ",\"$o.value\"" 
+	            }
             }
             jData += "\n"
       }
@@ -295,78 +313,9 @@ void uninstalled(){
     }          
 }
 
-HashMap securityLogin(){
-    def result = false
-    try{
-        httpPost(
-				[
-					uri: "http://127.0.0.1:8080",
-					path: "/login",
-					query: 
-					[
-						loginRedirect: "/"
-					],
-					body:
-					[
-						username: username,
-						password: password,
-						submit: "Login"
-					],
-					textParser: true,
-					ignoreSSLIssues: true
-				]
-		)
-		{ resp ->
-//			log.debug resp.data?.text
-				if (resp.data?.text?.contains("The login information you supplied was incorrect."))
-					result = false
-				else {
-					cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0)
-					result = true
-		    	}
-		}
-    }catch (e){
-			log.error "Error logging in: ${e}"
-			result = false
-            cookie = null
-    }
-	return [result: result, cookie: cookie]
-}
 
 Boolean writeFile(String fName, String fData) {
     now = new Date()
     String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
-    
-try {
-		def params = [
-			uri: 'http://127.0.0.1:8080',
-			path: '/hub/fileManager/upload',
-			query: [
-				'folder': '/'
-			],
-			headers: [
-				'Content-Type': "multipart/form-data; boundary=$encodedString"
-			],
-            body: """--${encodedString}
-Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
-Content-Type: text/plain
-
-${fData}
-
---${encodedString}
-Content-Disposition: form-data; name="folder"
-
-
---${encodedString}--""",
-			timeout: 300,
-			ignoreSSLIssues: true
-		]
-		httpPost(params) { resp ->
-		}
-		return true
-	}
-	catch (e) {
-		log.error "Error writing file $fName: ${e}"
-	}
-	return false
+	uploadHubFile(fName,fData.getBytes("UTF-8"))
 }

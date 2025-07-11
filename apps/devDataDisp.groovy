@@ -24,11 +24,12 @@
  *    20Jun2022   thebearmay    embedded section correction
  *    10Jul2022   jtp10181      CSV changes
  *	  10Jul2025	  thebearmay	Additional fields
+ *	  11Jul2025					Add Driver Name
 */
 
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.3.5'  }
+static String version()	{  return '1.3.6'  }
 
 
 definition (
@@ -220,7 +221,11 @@ def createChildDev(){
 }
 
 def getOthData(dev) {
-    return [driverType:"${dev.driverType}",dni:"${dev.deviceNetworkId}",zgId:"${dev.zigbeeId}",roomName:"${dev.roomName}",controllerType:"${dev.controllerType}"]
+    String drName
+    httpGet([uri:"http://127.0.0.1:8080/device/fullJson/${dev.id}"]) { resp ->
+        drName = "${resp.data.device.deviceTypeName}"
+    }
+    return [driverType:"${dev.driverType}",driverName:"${drName}",dni:"${dev.deviceNetworkId}",zgId:"${dev.zigbeeId}",roomName:"${dev.roomName}",controllerType:"${dev.controllerType}"]
 }
 
 def jsonDown(){

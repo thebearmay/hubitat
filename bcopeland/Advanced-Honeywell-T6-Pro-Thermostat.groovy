@@ -571,6 +571,10 @@ void zwaveEvent(hubitat.zwave.commands.associationv2.AssociationGroupingsReport 
 
 void zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
     if (logEnable) log.debug "got battery report: ${cmd.batteryLevel}"
+    if (cmd.batteryLevel == device.currentValue("battery")) {
+        if (logEnable) log.debug "Battery level same as before. Ignoring."
+        return
+    }
     Map evt = [name: "powerSource", value: "battery"]
     if(device.currentValue("powerSource") == null)
         eventProcess(evt)
@@ -590,12 +594,22 @@ void zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 void zwaveEvent(hubitat.zwave.commands.sensormultilevelv5.SensorMultilevelReport cmd) {
     if (cmd.sensorType.toInteger() == 1) {
         if (logEnable) log.debug "got temp: ${cmd.scaledSensorValue}"
+        if (celsiusToFahrenheit(cmd.scaledSensorValue) == device.currentValue("temperature") 
+            || fahrenheitToCelsius(cmd.scaledSensorValue) == device.currentValue("temperature") 
+            || cmd.scaledSensorValue == device.currentValue("temperature")) {
+            if (logEnable) log.debug "Temperature same as before. Ignoring."
+            return
+        }
         if(configParam2.toInteger() != cmd.scale.toInteger()) //temperature scale and configParam2 have reversed values
             eventProcess(name: "temperature", value: cmd.scaledSensorValue, unit: cmd.scale == 1 ? "F" : "C")//, isStateChange: sendAllTemps)
         else //Temperature Scale reported mismatch 
             adjustReportedTemp(cmd.scaledSensorValue, cmd.scale)
     } else if (cmd.sensorType.toInteger() == 5) {
         if (logEnable) log.debug "got humidity: ${cmd.scaledSensorValue}"//if (logEnable) log.debug "got temp: ${cmd.scaledSensorValue}"
+        if (cmd.scaledSensorValue == device.currentValue("humidity")) {
+            if (logEnable) log.debug "Humidity same as before. Ignoring."
+            return
+        }
         if(cmd.scaledSensorValue>=0 && cmd.scaledSensorValue<=100) 
             eventProcess(name: "humidity", value: Math.round(cmd.scaledSensorValue), unit: cmd.scale == 0 ? "%": "g/m³")//, isStateChange: sendAllTemps)
     }

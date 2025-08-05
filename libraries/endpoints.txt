@@ -251,6 +251,7 @@
 * Zwave  * /hub/zwave/healthStatus //>= 2.4.1.154 true if stack is up   
 * Zwave	 *
 * Zwave	 * 2.1.4.110 ZWave JS 
+* Zwave	 * /hub/zwave2/forceInstallZWaveJS
 * Zwave	 * /hub/zwave2/enable
 * Zwave	 * /hub/zwave2/disable
 * Zwave	 * /hub/zwave2/status

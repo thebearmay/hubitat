@@ -1,8 +1,8 @@
 {
  "packageName":"Lock History",
  "author":"Jean P. May, Jr.",
- "version":"0.2.4",
- "dateReleased":"2025-07-10",
+ "version":"0.2.5",
+ "dateReleased":"2025-08-06",
  "apps": [
   {
      "id":"bae8e7ec-48a2-444a-b9e0-b49df78bfe82",

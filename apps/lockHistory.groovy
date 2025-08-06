@@ -21,6 +21,7 @@
  *    2022-06-20    thebearmay    remove embedded sections
  *    2023-05-16    thebearmay    allow leading zeros in code
  *	  2025-07-10	thebearmay	  allow alternate names for lock devices
+ *	  2025-08-06	thebearmay	  fix the ignorePhysical logic
  */
 
 import java.text.SimpleDateFormat
@@ -103,16 +104,19 @@ def lockSubscribe(){
 def lockHandler(evt){ 
     if(evt.value == "unlocked") {
         notifyDevice.each {
-            evtDev = evt.getDevice()
-            if(settings["lock${evt.deviceId}"]) evtDev = settings["lock${evt.deviceId}"]
-            if(evt.descriptionText.contains("unknown codeNumber:") || evt.descriptionText.contains("code #")){
-                altNam = findAltName(evt.descriptionText)
-                it.deviceNotification("$evtDev was unlocked by $altNam")
-            } else if(ignorePhysical && evt.type != 'digital') {
+			if(ignorePhysical && evt.type != 'digital') {
                 log.info "$evtDev physical unlock event notification skipped"
-            } else
-                evtDesc = evt.descriptionText.substring(evt.descriptionText.indexOf("was"))
-                it.deviceNotification("$evtDev ${evtDesc}")
+            } else {
+	            evtDev = evt.getDevice()
+    	        if(settings["lock${evt.deviceId}"]) evtDev = settings["lock${evt.deviceId}"]
+        	    if(evt.descriptionText.contains("unknown codeNumber:") || evt.descriptionText.contains("code #")){
+            	    altNam = findAltName(evt.descriptionText)
+                	it.deviceNotification("$evtDev was unlocked by $altNam")
+                } else {
+                	evtDesc = evt.descriptionText.substring(evt.descriptionText.indexOf("was"))
+                	it.deviceNotification("$evtDev ${evtDesc}")
+                }
+            }
         }
     }
 }

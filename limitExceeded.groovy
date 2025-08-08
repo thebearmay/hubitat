@@ -77,6 +77,7 @@ void configure() {
 
 void initialize(){
     runIn(30, "connect")
+	reset()
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){

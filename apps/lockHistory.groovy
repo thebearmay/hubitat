@@ -22,10 +22,11 @@
  *    2023-05-16    thebearmay    allow leading zeros in code
  *	  2025-07-10	thebearmay	  allow alternate names for lock devices
  *	  2025-08-06	thebearmay	  fix the ignorePhysical logic
+ *	  2025-08-08	thebearmay	  digital event not being sent for keypad/fingerprint 
  */
 
 import java.text.SimpleDateFormat
-static String version()	{  return '0.2.5'  }
+static String version()	{  return '0.2.6'  }
 
 
 definition (
@@ -104,7 +105,7 @@ def lockSubscribe(){
 def lockHandler(evt){ 
     if(evt.value == "unlocked") {
         notifyDevice.each {
-			if(ignorePhysical && evt.type != 'digital') {
+			if(ignorePhysical && evt.descriptionText.indexOf(' by ') < 0) {
                 log.info "$evtDev physical unlock event notification skipped"
             } else {
 	            evtDev = evt.getDevice()

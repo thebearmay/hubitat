@@ -70,7 +70,7 @@ void configure() {
 	log.trace "configure()"
 	if(msgCount == null) device.updateSetting("nmsgCount",[value:5,type:"number"])
     if(resetInterval == null) device.updateSetting("resetInterval",[value:5,type:"number"])
-    state.flagCount = 0
+    reset()
 	runIn(5, "connect")
     runIn(resetInterval*60,"reset")
 }

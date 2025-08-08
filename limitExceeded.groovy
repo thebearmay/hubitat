@@ -106,7 +106,7 @@ void push() {
 void parse(String description) {
 
     def descData = new JsonSlurper().parseText(description)
-    if(device.currentValue("limitExceededFlag",true) != 'true' ) {
+    if(descData.indexOf('imitExceeded') > 0 && device.currentValue("limitExceededFlag",true) != 'true' ) {
         state.flagCount++
         if(msgCount < state.flagCount) 
             updateAttr("limitExceededFlag",'true')

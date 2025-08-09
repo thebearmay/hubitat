@@ -14,7 +14,7 @@
 *
 *    Date        Who            What
 *    ----        ---            ----
-*
+*	2025-08-09	thebearmay		Fixed run away error condition due to missing data field
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
@@ -24,7 +24,7 @@ import hubitat.device.HubAction
 import hubitat.device.Protocol
 
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 metadata {
 	definition (
@@ -76,8 +76,8 @@ void configure() {
 }
 
 void initialize(){
+    reset()
     runIn(30, "connect")
-	reset()
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
@@ -106,10 +106,11 @@ void push() {
 void parse(String description) {
 
     def descData = new JsonSlurper().parseText(description)
-    if(descData.indexOf('imitExceeded') > 0 && device.currentValue("limitExceededFlag",true) != 'true' ) {
+    //log.debug "${descData.properties}"
+    if(descData.msg.indexOf('imitExceeded') > 0) {
         state.flagCount++
         if(msgCount < state.flagCount) 
-            updateAttr("limitExceededFlag",'true')
+           updateAttr("limitExceededFlag",'true')
     } 
 }
     

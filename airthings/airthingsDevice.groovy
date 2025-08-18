@@ -25,15 +25,16 @@
  *    15Jan2023    thebearmay    add descriptionText
  *                               trap relayDeviceType
  *    04Dec2023    thebearmay    PM25 -> AQI
+ *    28Mar2024	   gfa 			 add option for BaroPres conversion from mBar -> inHg
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
-#include thebearmay.localFileMethods
-#include thebearmay.templateProcessing
+//#include thebearmay.localFileMethods
+//#include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.18a"}
+static String version() {return "0.0.19"}
 
 metadata {
     definition (
@@ -79,11 +80,11 @@ metadata {
         attribute "pm29", "number"
         attribute "pm25Aqi","number"
         attribute "pm25AqiText","string"
-//        attribute "valuesAsOf", "string"
+        attribute "lastPoll", "string" //GFA
         attribute "absHumidity", "number"
         attribute "mold", "number"
         attribute "html", "string"
-
+    	attribute "relayDeviceType", "string"    //GFA
         attribute "rssi", "number"
         attribute "relayDeviceType", "string"
 
@@ -95,14 +96,15 @@ preferences {
     input("debugEnabled", "bool", title: "Enable debug logging?", defaultValue:false)
     input("useFahrenheit", "bool", title: "Use Fahrenheit", defaultValue:false)
     input("usePicoC", "bool", title: "Use pCi/L for Radon", defaultValue:false)
+    input("useinHg", "bool", title: "Use inHg for Barometric Pressure", defaultValue:false) //GFA Added
     input("forceInt", "bool", title: "Store values as Integer", defaultValue: false)
     input("pollRate", "number", title: "Sensor Polling Rate (minutes)\nZero for no polling:", defaultValue:0)
-    input("security", "bool", title: "Enable if using Hub Security", defaultValue: false, submitOnChange:true)
-    if(security){
-        input("username","string", title:"Hub Security Username")
-        input("password","string", title:"Hub Security Password")
-    }
-    //input("tileTemplate", "string", title:"Template for generating HTML for dashboard tile")
+    input("lstPollSdfPref", "enum", title: "Date/Time Format for Last Poll", options:sdfList, defaultValue:"yyyy-MM-dd HH:mm:ss", width:4)
+//    input("security", "bool", title: "Enable if using Hub Security", defaultValue: false, submitOnChange:true)
+//    if(security){
+//        input("username","string", title:"Hub Security Username")
+//        input("password","string", title:"Hub Security Password")
+//    }
     fileList = []
     fileList = listFiles()
 
@@ -167,7 +169,7 @@ void dataRefresh(retData){
                 break
             case("radonShortTermAvg"):
                 if(usePicoC){
-                    it.value = (it.value/37).toFloat().round(1)
+                    it.value = (it.value/37).toFloat().round(2)
                     unit="pCi/L"
                 }else
                     unit="Bq/m<sup>3</sup>"
@@ -183,7 +185,11 @@ void dataRefresh(retData){
                 updateAttr("carbonDioxide", it.value, unit) //required for capability CarbonDioxideMeasurement, co2 retained for backward compatibility
                 break
             case("pressure"):
-                unit="mBar"
+            	if(useinHg){ //GFA
+					it.value = (it.value/33.86389).toFloat().round(3) //GFA
+					unit = "inHg" //GFA
+				}else //GFA
+                	unit="mBar"
                 if(forceInt) it.value = it.value.toFloat().toInteger()
                 break
             case("voc"):
@@ -206,7 +212,13 @@ void dataRefresh(retData){
                 break
             case("time"):// update timestamp
                 unit=null
-                state.lastUpdate = it.value.toInteger()
+            	//GFA
+            	it.key = "lastPoll"
+				Date lastPoll = new Date(1000 * it.value.longValue()) // As need UNIX date which is in msec (and API value is in secs)
+				SimpleDateFormat sdf = new SimpleDateFormat(lstPollSdfPref)
+				it.value = sdf.format(lastPoll)
+                //state.lastUpdate = it.value.toInteger()
+            	//GFA
                 break
             default:
                 unit=""
@@ -272,13 +284,19 @@ void calcPm25Aqi(pm25Val){
     Float a = pm25Val.toFloat();
 
     // breakpoints - February 7, 2024 update as per https://www.epa.gov/system/files/documents/2024-02/pm-naaqs-air-quality-index-fact-sheet.pdf
+    // New BreakPoints GFA
     Float c = a < 0 ? 0 // values below 0 are considered beyond AQI
-        : a < 9.1 ? lerp(  0.0,  9.0,   0,  50, a)
+        //: a < 9.1 ? lerp(  0.0,  9.0,   0,  50, a)
+    	: a < 12.1 ? lerp( 0.0, 12.0, 0, 50, a)
         : a < 35.5 ? lerp( 12.1,  35.4,  51, 100, a)
         : a < 55.5 ? lerp( 35.5,  55.4, 101, 150, a)
-        : a < 125.5 ? lerp( 55.5, 125.4, 151, 200, a)
-        : a < 225.5 ? lerp(150.5, 225.4, 201, 300, a)
-        : a < 325.5 ? lerp(225.5, 325.4, 301, 500, a)
+        //: a < 125.5 ? lerp( 55.5, 125.4, 151, 200, a)
+        //: a < 225.5 ? lerp(150.5, 225.4, 201, 300, a)
+        //: a < 325.5 ? lerp(225.5, 325.4, 301, 500, a)
+		: a < 150.5 ? lerp( 55.5, 150.4, 151, 200, a)
+		: a < 250.5 ? lerp(150.5, 250.4, 201, 300, a)
+		: a < 350.5 ? lerp(250.5, 350.4, 301, 400, a)
+		: a < 500.5 ? lerp(350.5, 500.4, 401, 500, a)
         : 500// values above 500 are considered beyond AQI
     if(debugEnabled) log.debug "lerp returned $c"
     Float aLevel = Math.floor(10 * c) / 10
@@ -304,7 +322,7 @@ float lerp(plo, phi, ilo, ihi, p) {
 
 @SuppressWarnings('unused')
 List<String> listFiles(){
-    if(security) cookie = securityLogin().cookie
+//    if(security) cookie = securityLogin().cookie
     if(debugEnabled) log.debug "Getting list of files"
     uri = "http://127.0.0.1:8080/hub/fileManager/json";
     def params = [
@@ -338,3 +356,5 @@ List<String> listFiles(){
 void logsOff(){
      device.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }
+
+@Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

@@ -30,8 +30,8 @@
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
-//#include thebearmay.localFileMethods
-//#include thebearmay.templateProcessing
+#include thebearmay.localFileMethods
+#include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
 static String version() {return "0.0.19"}

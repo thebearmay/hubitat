@@ -1,10 +1,10 @@
 {
  "packageName":"Hub Updater v2",
  "author":"Jean P. May, Jr.",
- "version":"2.0.10",
+ "version":"2.0.11",
  "minimumHEVersion":"2.3.8.0",
  "dateReleased":"2025-08-19",
- "releaseNotes":"2.0.10 add delayed update option\n2.0.9 - allow the use a list of hubs instead of Hub Mesh\n2.0.8 - add switch capability to make HomeKit work\n2.0.7 - add initialize capability to load current hub version into msg attribute\n2.0.6 - push request even if publisher current, notesUrl fix\n2.0.5 - fix code reversion issue",
+ "releaseNotes":"2.0.11 - 'permanent' delay preference option\n2.0.10 - add delayed update option\n2.0.9 - allow the use a list of hubs instead of Hub Mesh\n2.0.8 - add switch capability to make HomeKit work\n2.0.7 - add initialize capability to load current hub version into msg attribute\n2.0.6 - push request even if publisher current, notesUrl fix\n2.0.5 - fix code reversion issue",
  "drivers": [
   {
      "id":"a7fd30ee-a09d-4d84-8452-91555fa27ca0",

@@ -20,6 +20,7 @@
  *    06Nov2024					 v2.0.8 add "Switch" capability to enable HomeKit usage
  *    21Nov2024                  v2.0.9 add capability to use a list of hubs for updates
  *	  19Aug2025					 v2.0.10 add delayed update option
+ *								 v2.0.11 add a preference for update time that could be used instead of the command
  *
  */
 import groovy.transform.Field
@@ -59,6 +60,7 @@ preferences {
     input("termsAccepted","bool",title: "By using this driver you are agreeing to the <a href='https://hubitat.com/terms-of-service'>Hubitat Terms of Service</a>",required:true)
     input("updMesh","bool", title: "Push Update Request to All HubMeshed Hubs")
     input("useHubList","bool",title: "Push Update Request using Hub List Attribute")
+    input("updateTime","string",title: "Delay updates until this time (will override Delayed Update command)")
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }
 
@@ -145,6 +147,7 @@ void delayedUpdate(dTime='02:00'){
 
 void clearScheduledUpdate(){
     unschedule()
+    state.pending = 'false'
 }
 
 def on(){
@@ -158,18 +161,24 @@ def off(){
 }
 
 def push(){
-    log.info "Firmware Update Requested"
-    if(!termsAccepted) {
-        updateAttr("msg", "Please accept terms and conditions first")
-        return
-    }    
-    updateAttr ("msg", "Update Requested at ${new Date()}")
-    params = [
-        uri: "http://127.0.0.1:8080",
-        path:"/hub/cloud/checkForUpdate",
-        timeout: 10
-    ]
-    asynchttpGet("getUpdateCheck", params)    
+    if(updateTime && state.pending != 'true') {
+        delayedUpdate(updateTime)
+        state.pending = 'true'
+    } else {
+        state.pending = 'false'
+	    log.info "Firmware Update Requested"
+    	if(!termsAccepted) {
+        	updateAttr("msg", "Please accept terms and conditions first")
+        	return
+    	}    
+    	updateAttr ("msg", "Update Requested at ${new Date()}")
+    	params = [
+        	uri: "http://127.0.0.1:8080",
+        	path:"/hub/cloud/checkForUpdate",
+        	timeout: 10
+    	]
+    	asynchttpGet("getUpdateCheck", params)    
+    }
 }
 
 void getUpdateCheck(resp, data) {

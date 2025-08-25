@@ -1,4 +1,4 @@
-/* Contact Sensor Close / Motion Sensor Inactive
+/* Contact Sensor Close / Motion Sensor Inactive / Switch-Bulb Off
 
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -9,9 +9,12 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Date		Who			Description
+ *	---------	----------	-----------------------------------------------
+ *	25Aug2025	thebearmay	added switch/bulbs off command
  */
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 
 definition (
@@ -63,13 +66,14 @@ def mainPage(){
 		    {
                 input "qryDevice", "capability.contactSensor", title: "Contact Sensors Selected:", multiple: true, required: false, submitOnChange: true
                 input "qryDevice2", "capability.motionSensor", title: "Motion Sensors Selected:", multiple: true, required: false, submitOnChange: true
+                input "qryDevice3", "capability.switch", title: "Bulbs/Switches Selected:", multiple: true, required: false, submitOnChange: true
                 input "createChild", "bool", title: "Create Button Device?", defaultValue: false, submitOnChange: true
                 if(createChild) {
 					addDevice()
                 } else {
                     removeDevice()
                 }				
-                if (qryDevice != null || qryDevide2 != null) href "deviceCharacteristics", title: "Send Close-Inactive Event", required: false
+                if (qryDevice != null || qryDevice2 != null || qryDevice3 != null) href "deviceCharacteristics", title: "Send Close-Inactive-Off Event", required: false
 		    }
 	    } else {
 		    section("") {
@@ -99,6 +103,9 @@ def closeContacts(evt = "pushed"){
 	}
     qryDevice2.each{
 		it.sendEvent(name:"motion",value:"inactive",isStateChange:true)
+	}
+	qryDevice3.each{
+		it.sendEvent(name:"switch",value:"off",isStateChange:true)
 	}
 }
 

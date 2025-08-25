@@ -93,6 +93,9 @@ def deviceCharacteristics(){
         qryDevice2.each{
           paragraph "<p>${it.displayName} ${it.currentValue('motion')}</p>"
         }
+        qryDevice3.each{
+          paragraph "<p>${it.displayName} ${it.currentValue('switch')}</p>"
+        }   
       }
     }
 }

@@ -26,15 +26,16 @@
  *                               trap relayDeviceType
  *    04Dec2023    thebearmay    PM25 -> AQI
  *    28Mar2024	   gfa 			 add option for BaroPres conversion from mBar -> inHg
-*/
+ *    31Aug2025	   thebearmay	 make sure format is selected before use
+ */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.transform.Field
-#include thebearmay.localFileMethods
-#include thebearmay.templateProcessing
+//#include thebearmay.localFileMethods
+//#include thebearmay.templateProcessing
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.19"}
+static String version() {return "0.0.20"}
 
 metadata {
     definition (
@@ -215,7 +216,8 @@ void dataRefresh(retData){
             	//GFA
             	it.key = "lastPoll"
 				Date lastPoll = new Date(1000 * it.value.longValue()) // As need UNIX date which is in msec (and API value is in secs)
-				SimpleDateFormat sdf = new SimpleDateFormat(lstPollSdfPref)
+				SimpleDateFormat sdf = new SimpleDateFormat(lstPollSdfPref ?: "yyyy-MM-dd HH:mm:ss")
+            //SimpleDateFormat sdf = new SimpleDateFormat(lstPollSdfPref)
 				it.value = sdf.format(lastPoll)
                 //state.lastUpdate = it.value.toInteger()
             	//GFA

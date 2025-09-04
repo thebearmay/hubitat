@@ -87,7 +87,7 @@ metadata {
         attribute "html", "string"
     	attribute "relayDeviceType", "string"    //GFA
         attribute "rssi", "number"
-        attribute "relayDeviceType", "string"
+//        attribute "relayDeviceType", "string"
 
 //        command "test",[[name:"val*", type:"NUMBER", description:"pm25 Value"]]
     }

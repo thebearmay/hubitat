@@ -1,5 +1,6 @@
 
-// Find namespace based on driver name - app usage only
+// Find namespace based on driver name - works in both apps and drivers
+
 String findNameSpace(String driverName) {
   String nSpace = ''
 	this.installedDrivers.each{

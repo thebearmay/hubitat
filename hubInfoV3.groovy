@@ -81,6 +81,7 @@
  *	  2025-05-02				 v3.1.15 - Trap file write attempt without data 
  *	  2025-06-24				 v3.1.16 - Add sunriseTomorrow and sunsetTomorrow
  *	  2025-06-26				 v3.1.17 - negative hour fix for sunriseTomorrow
+ *	  2025-09-23				 v3.1.18 - Add app state compression attribute
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -94,7 +95,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.17"}
+static String version() {return "3.1.18"}
 
 metadata {
     definition (
@@ -203,6 +204,8 @@ metadata {
         // Virtual URL Device attributes
         attribute "URL", "string"
         attribute "type", "string"//iframe, image, link, or video
+        //HE v2.4.3.121
+        attribute "appStateCompression", "string"
 
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -263,6 +266,8 @@ void initialize() {
         runIn(30,"updateCheck")
     if(!state?.v2Cleaned)
         v2Cleanup()
+    if(driverVersionCheck())
+    	runIn(5,"updated")
     log.info "Hub Information v${version()} initialized"
     runIn(120,"baseData")
 
@@ -335,7 +340,7 @@ void updated(){
     device.updateSetting("htmlOutput",[value:toCamelCase(htmlOutput),type:"string"])
     if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/"))
         cloudFontStyle = 'font-weight:bold;color:red'
-    else
+    elseversion
         cloudFontStyle = ''
 
     if(remUnused) removeUnused()
@@ -355,6 +360,14 @@ void v2Cleanup() {
     device.deleteCurrentState("nextPoll")
     device.deleteCurrentState("hubVersion")
     state.v2Cleaned = true
+}
+
+boolean driverVersionCheck(){
+    if(version() != getDataValue('driverVersion')){
+    	updateDataValue('driverVersion', "${version()}")
+        return true
+    } else
+        return false
 }
 
 
@@ -464,6 +477,8 @@ void baseData(dummy=null){
         extendedZigbee()
     if(minVerCheck("2.4.1.103"))
     	zwaveJsStat()
+    if(minVerCheck("2.4.3.121"))
+    	checkAppComp()
     everyPoll("baseData")
 }
 
@@ -1483,6 +1498,25 @@ void getAccess(resp, data) {
     }
 }
 
+void checkAppComp(){
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/advanced/stateCompressionStatus",
+        headers: [
+            "Connection-Timeout":600
+        ]
+    ]
+    if (debugEnabled) log.debug params
+    asynchttpGet("getCompressStatus", params)     
+}
+
+void getCompressStatus(resp, data) {
+    try{
+		updateAttr('appStateCompression',"${resp.data.toString()}")
+    } catch (e) {    
+    }
+}
+
 @SuppressWarnings('unused')
 boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement
     String model = getHubVersion()
@@ -2116,7 +2150,7 @@ void logsOff(){
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud, zbHealthy, zwHealthy", method:"hub2DataReq"]],
-[parm14:[desc:"Base Data",attributeList:"firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zigbeePower, zigbeeUpdateAvail, zipCode",method:"baseData"]],
+[parm14:[desc:"Base Data",attributeList:"appStateCompression, firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zigbeePower, zigbeeUpdateAvail, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
 [parm16:[desc:"Active Cloud Connection Check",attributeList:"cloud", method:"checkCloud"]],
 [parm17:[desc:"Matter Status (C-5 and > only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]],

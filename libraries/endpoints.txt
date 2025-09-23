@@ -6,12 +6,16 @@
 * Access List	 * Clear: /hub/advanced/limitAccess?addresses=  // Requires reboot			
 * Access List	 * Get: /hub/advanced/getLimitedAccessAddresses 			
 * Access List	 *			
-* Apps	 * App Type List			
+* Apps	 * 			
 * Apps	 * /app/appTypeList
 * Apps   * /hub2/appsList
 * Apps   * /hub2/userAppTypes
 * Apps   * /hub/advanced/reloadAppAndDriverDefinitions //Resets 'Error 404' conditions
 * Apps   * /installedapp/statusJson/<appID> //>=HE 2.4.0.xx returns the application status page data
+* Apps	 *	// 2.4.3.121
+* Apps	 *	/hub/advanced/stateCompressionStatus // returns true/false to show whether features is enabled.
+* Apps	 *	/hub/advanced/enableStateCompression
+* Apps	 *	/hub/advanced/disableStateCompression
 * Apps	 *	
 * Backup    * Backup Download
 * Backup    * /hub/backupDB?fileName=latest

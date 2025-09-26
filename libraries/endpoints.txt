@@ -254,6 +254,8 @@
 * Zwave	 * /hub/zwaveDetails/json
 * Zwave  * /hub/zwave/healthStatus //>= 2.4.1.154 true if stack is up   
 * Zwave	 *
+* Zwave	 * /hub/zwave2/getNodeState?node=<xx> //node number is decimal
+* Zwave	 *
 * Zwave	 * 2.1.4.110 ZWave JS 
 * Zwave	 * /hub/zwave2/forceInstallZWaveJS
 * Zwave	 * /hub/zwave2/enable

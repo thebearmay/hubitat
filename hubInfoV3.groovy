@@ -82,6 +82,7 @@
  *	  2025-06-24				 v3.1.16 - Add sunriseTomorrow and sunsetTomorrow
  *	  2025-06-26				 v3.1.17 - negative hour fix for sunriseTomorrow
  *	  2025-09-23				 v3.1.18 - Add app state compression attribute
+ *	  2025-10-02				 v3.1.19 - fix typo on zbHealthy
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -95,7 +96,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.18"}
+static String version() {return "3.1.19"}
 
 metadata {
     definition (
@@ -1307,7 +1308,7 @@ void zHealthReq(){
 
 void getZbHealth(resp, data) {
     try {
-        updateAttr("zgHealthy",resp.data)
+        updateAttr("zbHealthy",resp.data)
       
     } catch(ignore) { }
 }

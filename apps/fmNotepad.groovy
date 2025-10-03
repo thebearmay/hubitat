@@ -18,7 +18,7 @@
  */  
 //#include thebearmay.uiInputElements
 
-static String version()	{  return '1.0.0' }
+static String version()	{  return '0.0.1' }
 
 definition (
 	name: 			"fmNotePad", 

@@ -18,7 +18,7 @@
  */  
 //#include thebearmay.uiInputElements
 
-static String version()	{  return '0.0.1' }
+static String version()	{  return '1.0.0' }
 
 definition (
 	name: 			"fmNotePad", 
@@ -68,10 +68,10 @@ def mainPage(){
     dynamicPage (name: "mainPage", title: "<h2>FM Notepad<span style='font-size:small'> v${version()}</span></h2>", install: true, uninstall: true) {
 		section(""){
             fList = listFiles().fList
-            String fElem = getInputElemStr( [name:"fName", type:"enum", title:"<b>Select File</b>", options:fList, multiple:false, width:"15em", background:"#ADD8E6", radius:"15px"])
-            String saveBtn = getInputElemStr( [name:"saveBtn", type:"button", title:"<b>Save</b>", multiple:false, width:"5em", background:"#FF000A", radius:"15px"])
+            String fElem = getInputElemStr( [name:"fName", type:"enum", title:"<b>Open File</b>", options:fList, multiple:false, width:"15em", background:"#ADD8E6", radius:"15px"])
+            String saveBtn = getInputElemStr( [name:"saveBtn", type:"button", title:"<b>Save As</b>", multiple:false, width:"5em", background:"#FF000A", radius:"15px"])
             String saveName = getInputElemStr( [name:"saveFileName", type:"text", title:"<b>Save as Name</b>",multiple:false, width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:fName])
-            String tStr = "<table><tr><td style='max-width:18em'>${fElem}</td><td>${saveName}</td><td>&nbsp;</td></tr><tr><td>${saveBtn}</td></tr>"
+            String tStr = "<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>&nbsp;</td></tr><tr><td>${saveBtn}</td></tr>"
             
             if((!saveFileName || saveFileName == null || saveFileName == 'null') && fName != null ){
             	app.updateSetting('saveFileName',[value:"$fName",type:'text'])
@@ -83,45 +83,49 @@ def mainPage(){
                 	fBuff = fileText
                 else {
                     state.lastFile = fName
+                    app.removeSetting('fileText')
                     app.updateSetting('saveFileName',[value:"$fName",type:'text'])
                 	fBuff = new String(downloadHubFile("${fName}"), "UTF-8")
-                    app.updateSetting('fileText',[value:fBuff,type:'text'])
+                    app.updateSetting('fileText',[value:"""${fBuff}""",type:'text'])
                     saveName = getInputElemStr( [name:"saveFileName", type:"text", title:"<b>Save as Name</b>",multiple:false, width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:fName])
-                    tStr = "<table><tr><td style='max-width:18em'>${fElem}</td><td>${saveName}</td><td>&nbsp;</td></tr><tr><td>${saveBtn}</td></tr>"
-                    //paragraph "<script type='text/javascript'>location.reload()</script>"
+                    tStr = "<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>&nbsp;</td></tr><tr><td>${saveBtn}</td></tr>"
                 }
-                String fData = getInputElemStr( [name:"fileText", type:"textarea", title:"<b>File Content</b>", width:"70vw", height:"15em", background:"#ADD8E6", radius:"15px", defaultValue:"""${fBuff}"""])
-                tStr +="<tr><td colspan='3'>${fData}</td></tr><tr><td>${saveBtn}</td></tr>"
-                
-/*            } else if(saveFileName){
-                state.lastFile = saveFileName
-                fBuff = fileText
-                String fData = getInputElemStr( [name:"fileText", type:"textarea", title:"<b>File Content</b>", width:"80vw", height:"15em", background:"#ADD8E6", radius:"15px", defaultValue:"""${fBuff}"""])
-                tStr +="<tr><td colspan='3'>${fData}</td></tr><tr><td>${saveBtn}</td></tr>"
-*/                
+                String fData = getInputElemStr( [name:"fileText", type:"textarea", title:"<b>File Content</b>", height:"60vh", background:"#E3E3E3", radius:"15px", defaultValue:"""${fBuff}"""])
+                tStr +="<tr><td colspan=3>${fData}</td></tr><tr><td>${saveBtn}</td></tr>"
+                                
+            } else if(!fName ){
+                if(saveFileName == state.lastFile) {
+                    app.updateSetting('saveFileName',[value:'newFile.txt',type:'text'])
+                    app.removeSetting('fileText')
+                }
+                String newBtn = getInputElemStr( [name:"newFileBtn", type:"button", title:"<b>Create New File</b>", multiple:false, width:"12em", background:"#00FF0A", radius:"15px"])
+                saveName = getInputElemStr( [name:"saveFileName", type:"text", title:"<b>Save as Name</b>",multiple:false, width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:'newFile.txt'])
+                tStr = "<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>&nbsp;</td></tr><tr><td>${newBtn}</td></tr>"
             } else if(!saveFileName || saveFileName == null || saveFileName == 'null'){
             	fBuff = ''
-                app.removeSetting('fileText')
-                String fData = getInputElemStr( [name:"fileText", type:"textarea", title:"<b>File Content</b>", width:"80vw", height:"15em", background:"#ADD8E6", radius:"15px", defaultValue:"""${fBuff}"""])
-                tStr +="<tr><td colspan='3'>${fData}</td></tr><tr><td>${saveBtn}</td></tr>"
-                
-            }
+                app.removeSetting('fileText')           
+            } 
             tStr += "</table></div>"
              
             paragraph tStr            
             if(state.execSave) {
 				state.execSave = false
-                if(!saveFileName || saveFileName == null || saveFileName == 'null') 
-                	saveFileName = fName
-                uploadHubFile("${saveFileName}",fileText.getBytes("UTF-8"))
-                app.removeSetting('fileText')
-                app.removeSetting('fName') 
-                app.removeSetting('saveFileName')                 
+				saveFiles("${saveFileName}")
+				paragraph "<script type='text/javascript'>location.reload()</script>"                 
+			}
+			if(state.newFile) {
+				state.newFile = false
+                app.updateSetting('fileText',[value:' ',type:'text'])
+//                uploadHubFile("${saveFileName}",fileText.getBytes("UTF-8"))
+				retName = saveFiles("${saveFileName}")
+
+                app.updateSetting('fName',[value:"${retName}",type:'text'])               
 				paragraph "<script type='text/javascript'>location.reload()</script>"
-			}        
+			} 
         }    
     }
 }
+
 
 @SuppressWarnings('unused')
 HashMap listFiles(retType='nameOnly'){
@@ -139,6 +143,43 @@ HashMap listFiles(retType='nameOnly'){
         return [fList: fileList.sort()]
 }
 
+
+String toCamelCase(init) {
+    if (init == null)
+        return null;
+    while(init.contains('  ')){
+        init = init.replace('  ', ' ')
+    }
+    String ret = ""
+    List word = init.split(" ")
+    if(word.size == 1)
+        return init
+    word.each{
+		ret+=Character.toUpperCase(it.charAt(0))
+        ret+=it.substring(1).toLowerCase()
+    }
+    ret="${Character.toLowerCase(ret.charAt(0))}${ret.substring(1)}"
+
+    if(debugEnabled) log.debug "toCamelCase return $ret"
+    return ret;
+}
+
+String saveFiles(fName2){
+	if(!saveFileName || saveFileName == null || saveFileName == 'null') 
+		saveFileName = fName2
+    while(fName2 ==~ /^\p{P}.*/) {
+        fName2 = fName2.substring(1,)
+    }
+    if(fName2.contains(' '))
+       fName2 = toCamelCase(fName2)
+
+	uploadHubFile("${fName2}",fileText.getBytes("UTF-8"))
+	app.removeSetting('fileText')
+	app.removeSetting('fName') 
+	app.removeSetting('saveFileName')                 
+	return fName2
+}
+
 def appButtonHandler(btn) {
     switch(btn) {
         case "newFileBtn":
@@ -151,7 +192,8 @@ def appButtonHandler(btn) {
             log.error "Undefined button $btn pushed"
             break
     }
-}               
+}
+
 
 /*
 *
@@ -337,7 +379,7 @@ String inputTarea(HashMap opt) {
     if(!opt.name || !opt.type) return "Error missing name or type"
     typeAlt = opt.type
         
-    String computedStyle = 'resize:vertical;'
+    String computedStyle = 'resize:both;'
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.height) computedStyle += "height:${opt.height};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
@@ -350,8 +392,8 @@ String inputTarea(HashMap opt) {
     	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     }
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='false'></div>"
-	retVal+="<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield has-placeholder is-dirty is-upgraded' style='' data-upgraded=',MaterialTextfield'>"
-    retVal+="<label for='settings[${opt.name}]' style='min-width:${opt.width};' class='control-label'>${opt.title}</label><div class='flex'><textarea type='textarea' name='settings[${opt.name}]' class='submitOnChange' style='${computedStyle}'  placeholder='Click to set' id='settings[${opt.name}]' >${opt.defaultValue}</textarea>"
+	retVal+="<div class='mdl-cell mdl-cell--12-col mdl-textfield mdl-js-textfield' style='' data-upgraded=',MaterialTextfield'><div style='display: inline-flex'>"
+    retVal+="<label for='settings[${opt.name}]' style='min-width:${opt.width};' class='control-label'>${opt.title}</label></div><div class='flex'><textarea type='textarea' name='settings[${opt.name}]' class='form-control' style='${computedStyle}'  placeholder='Click to set' id='settings[${opt.name}]' >${opt.defaultValue}</textarea>"
     retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"
     return retVal
 }

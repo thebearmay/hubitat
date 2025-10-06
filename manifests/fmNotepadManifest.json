@@ -1,0 +1,18 @@
+{
+ "packageName":"File Manager Notepad",
+ "author":"Jean P. May, Jr.",
+ "version":"1.0.0",
+ "minimumHEVersion":"2.4.0.1",
+ "dateReleased":"2025-10-06",
+ "apps": [
+  {
+     "id":"34a17b9e-49ab-4577-945a-6453c1c8f36a",
+     "name":"fmNotePad",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/apps/fmNotepad.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

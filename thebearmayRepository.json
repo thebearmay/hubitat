@@ -371,6 +371,16 @@
       "category":"Utility",
       "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/lockHistManifest.json",
       "description":"Displays lock use history and allows the use of alternate names for lock codes (useful for fingerprint devices that report unknown) and lock device names"
+    },
+    {
+      "id":"da4f6cac-1522-4e1c-8ebb-e21d22a1bf79",
+      "name":"File Manager Notepad",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/fmNotepadManifest.json",
+      "description":"Allows the creation and editting of small text files inside of File Manager",
+      "tags":[
+        "Tools & Utilities"
+       ]
     }
   ]
 }

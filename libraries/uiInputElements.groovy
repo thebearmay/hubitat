@@ -21,6 +21,7 @@
 * 	03Apr2025							Enable a default value for enums
 *	04Apr2025							Size option for icons
 *	23May2025							Add device.<driverName> to capability
+*	06Oct2025							Add textarea uiType
 */
 
 import groovy.transform.Field
@@ -33,7 +34,7 @@ library (
     name: "uiInputElements",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
-    version: "0.0.7",
+    version: "0.0.8",
     documentationLink: ""
 )
 
@@ -65,6 +66,9 @@ String getInputElemStr(HashMap opt){
 	case "color":
 	   return inputItem(opt)
 	   break
+	case "textarea":
+	   return inputTarea(opt)
+	   break       
    	case "enum":
 	   return inputEnum(opt)
 	   break
@@ -153,6 +157,47 @@ String inputItem(HashMap opt) {
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
 	retVal+="<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield has-placeholder is-dirty is-upgraded' style='' data-upgraded=',MaterialTextfield'>"
     retVal+="<label for='settings[${opt.name}]' style='min-width:${opt.width}' class='control-label'>${opt.title}</label><div class='flex'><input type='${typeAlt}' ${step} name='settings[${opt.name}]' class='mdl-textfield__input submitOnChange' style='${computedStyle}' value='${opt.defaultValue}' placeholder='Click to set' id='settings[${opt.name}]'>"
+    retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"
+    return retVal
+}
+
+
+/*****************************************************************************
+* Returns a string that will create an textArea element for an app -         *
+*                                                                            *
+* HashMap fields:                                                            *
+*	name - (required) name to store the input as a setting, no spaces or 	 *
+*		special characters					     							 *
+*	type - (required) input type					     					 *
+*	title - displayed description for the input element		     			 * 
+*	width - CSS descriptor for field width									 *
+*	height - CSS descriptor for field height								 *
+*	background - CSS color descriptor for the input background color     	 *
+*	color - CSS color descriptor for text color			     				 *
+*	fontSize - CSS text size descriptor				     					 *
+*	defaultValue - default for the field				     				 *
+*	radius - CSS border radius value (rounded corners)						 *
+*	hoverText - Text to display as a tool tip								 *
+*****************************************************************************/
+String inputTarea(HashMap opt) {
+    if(!opt.name || !opt.type) return "Error missing name or type"
+    typeAlt = opt.type
+        
+    String computedStyle = 'resize:both;'
+    if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
+    if(opt.height) computedStyle += "height:${opt.height};"
+    if(opt.background) computedStyle += "background-color:${opt.background};"
+    if(opt.color) computedStyle += "color:${opt.color};"
+    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
+	if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    
+    
+    if(opt.hoverText && opt.hoverText != 'null'){  
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    }
+    String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='false'></div>"
+	retVal+="<div class='mdl-cell mdl-cell--12-col mdl-textfield mdl-js-textfield' style='' data-upgraded=',MaterialTextfield'><div style='display: inline-flex'>"
+    retVal+="<label for='settings[${opt.name}]' style='min-width:${opt.width};' class='control-label'>${opt.title}</label></div><div class='flex'><textarea type='textarea' name='settings[${opt.name}]' class='form-control' style='${computedStyle}'  placeholder='Click to set' id='settings[${opt.name}]' >${opt.defaultValue}</textarea>"
     retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"
     return retVal
 }

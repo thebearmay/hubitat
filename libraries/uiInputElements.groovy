@@ -21,7 +21,7 @@
 * 	03Apr2025							Enable a default value for enums
 *	04Apr2025							Size option for icons
 *	23May2025							Add device.<driverName> to capability
-*	06Oct2025							Add textarea uiType
+*   07Oct2025							Added textarea uiType
 */
 
 import groovy.transform.Field
@@ -197,8 +197,8 @@ String inputTarea(HashMap opt) {
     }
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='false'></div>"
 	retVal+="<div class='mdl-cell mdl-cell--12-col mdl-textfield mdl-js-textfield' style='' data-upgraded=',MaterialTextfield'><div style='display: inline-flex'>"
-    retVal+="<label for='settings[${opt.name}]' style='min-width:${opt.width};' class='control-label'>${opt.title}</label></div><div class='flex'><textarea type='textarea' name='settings[${opt.name}]' class='form-control' style='${computedStyle}'  placeholder='Click to set' id='settings[${opt.name}]' >${opt.defaultValue}</textarea>"
-    retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"
+    retVal+="<label for='settings[${opt.name}]' class='control-label'>${opt.title}</label></div><div><textarea type='textarea' name='settings[${opt.name}]' class='form-control submitOnChange' style='${computedStyle}'  placeholder='Click to set' id='settings[${opt.name}]' >${opt.defaultValue}</textarea></div>"
+    //retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"
     return retVal
 }
 	
@@ -480,8 +480,9 @@ String buttonLink(HashMap opt) { //modified slightly from jtp10181's code
     if(opt.color) computedStyle += "color:${opt.color};"
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
     if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.icon) opt.icon = [name:'fa-circle-info']
     if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon(opt.icon)}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     return "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 
@@ -511,6 +512,7 @@ String buttonHref(HashMap opt) { //modified jtp10181's code
     if(opt.color) computedStyle += "color:${opt.color};"
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
     if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.icon) opt.icon = [name:'fa-circle-info']
     if(opt.destPage) {
     	inx = appLocation().lastIndexOf("/")
     	dest = appLocation().substring(0,inx)+"/${opt.destPage}"
@@ -518,7 +520,7 @@ String buttonHref(HashMap opt) { //modified jtp10181's code
     	dest=opt.destUrl
     }
 	if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    opt.title ="${opt.title}<div class='tTip'> ${btnIcon(opt.icon)}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     return "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='window.location.replace(\"$dest\")' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 
@@ -548,6 +550,7 @@ String btnDivHide(HashMap opt) {
     if(opt.color) computedStyle += "color:${opt.color};"
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
     if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.icon) opt.icon = [name:'fa-circle-info']
     if(opt.destPage) {
     	inx = appLocation().lastIndexOf("/")
     	dest = appLocation().substring(0,inx)+"/${opt.destPage}"
@@ -563,7 +566,7 @@ String btnDivHide(HashMap opt) {
     
     opt.title = "${btnElem}&nbsp;${opt.title}"
 	if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon(opt.icon)}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     return "$script<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='btn=document.getElementById(\"btn${opt.name}\");div=document.getElementById(\"${opt.divName}\");if(div.style.display==\"none\"){btn.classList.remove(\"he-enlarge2\");btn.classList.add(\"he-shrink2\");div.style.display=\"block\";} else {btn.classList.remove(\"he-shrink2\");btn.classList.add(\"he-enlarge2\");div.style.display=\"none\";}' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 

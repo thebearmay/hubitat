@@ -14,11 +14,10 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
-
  */  
 //#include thebearmay.uiInputElements
 
-static String version()	{  return '1.0.0' }
+static String version()	{  return '1.0.1' }
 
 definition (
 	name: 			"fmNotePad", 
@@ -116,7 +115,6 @@ def mainPage(){
 			if(state.newFile) {
 				state.newFile = false
                 app.updateSetting('fileText',[value:' ',type:'text'])
-//                uploadHubFile("${saveFileName}",fileText.getBytes("UTF-8"))
 				retName = saveFiles("${saveFileName}")
 
                 app.updateSetting('fName',[value:"${retName}",type:'text'])               
@@ -167,7 +165,7 @@ String toCamelCase(init) {
 String saveFiles(fName2){
 	if(!saveFileName || saveFileName == null || saveFileName == 'null') 
 		saveFileName = fName2
-    while(fName2 ==~ /^\p{P}.*/) {
+    while(fName2.startsWith('.')) {
         fName2 = fName2.substring(1,)
     }
     if(fName2.contains(' '))

@@ -14,10 +14,11 @@
  *
  *    Date         Who           What
  *    ----         ---           ----
+ *	07Oct2025	thebearmay		Add the Utilities Page
  */  
 //#include thebearmay.uiInputElements
 
-static String version()	{  return '1.0.1' }
+static String version()	{  return '1.0.2' }
 
 definition (
 	name: 			"fmNotePad", 
@@ -34,7 +35,9 @@ definition (
 ) 
 
 preferences {
+    page name: "decisionPage"
     page name: "mainPage"
+    page name: "uiPage"
 }
 
 mappings {
@@ -63,14 +66,30 @@ void logsOff(){
      app.updateSetting("debugEnable",[value:"false",type:"bool"])
 }
 
+def decisionPage(){
+    dynamicPage (name: "decisionPage") {
+        section("") {
+            if(!page2Def)
+            	mainPage()
+            else
+                uiPage()
+        }
+    }
+}
+
 def mainPage(){
     dynamicPage (name: "mainPage", title: "<h2>FM Notepad<span style='font-size:small'> v${version()}</span></h2>", install: true, uninstall: true) {
 		section(""){
             fList = listFiles().fList
+		    settings.each {
+        		if(it.key.startsWith('sA'))
+        			app.removeSetting("${it.key}")
+    		}            
+            String p2 = getInputElemStr([name:"utilPage",type:"href",icon:[name:"build"],title:" ",destPage:"uiPage",width:"2em",radius:"15px", hoverText:"File Utilities"])
             String fElem = getInputElemStr( [name:"fName", type:"enum", title:"<b>Open File</b>", options:fList, multiple:false, width:"15em", background:"#ADD8E6", radius:"15px"])
             String saveBtn = getInputElemStr( [name:"saveBtn", type:"button", title:"<b>Save As</b>", multiple:false, width:"5em", background:"#FF000A", radius:"15px"])
             String saveName = getInputElemStr( [name:"saveFileName", type:"text", title:"<b>Save as Name</b>",multiple:false, width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:fName])
-            String tStr = "<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>&nbsp;</td></tr><tr><td>${saveBtn}</td></tr>"
+            String tStr = "${ttStyleStr}<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>${p2}</td></tr><tr><td>${saveBtn}</td></tr>"
             
             if((!saveFileName || saveFileName == null || saveFileName == 'null') && fName != null ){
             	app.updateSetting('saveFileName',[value:"$fName",type:'text'])
@@ -87,7 +106,7 @@ def mainPage(){
                 	fBuff = new String(downloadHubFile("${fName}"), "UTF-8")
                     app.updateSetting('fileText',[value:"""${fBuff}""",type:'text'])
                     saveName = getInputElemStr( [name:"saveFileName", type:"text", title:"<b>Save as Name</b>",multiple:false, width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:fName])
-                    tStr = "<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>&nbsp;</td></tr><tr><td>${saveBtn}</td></tr>"
+                    tStr = "${ttStyleStr}<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>${p2}</td></tr><tr><td>${saveBtn}</td></tr>"
                 }
                 String fData = getInputElemStr( [name:"fileText", type:"textarea", title:"<b>File Content</b>", height:"60vh", background:"#E3E3E3", radius:"15px", defaultValue:"""${fBuff}"""])
                 tStr +="<tr><td colspan=3>${fData}</td></tr><tr><td>${saveBtn}</td></tr>"
@@ -99,7 +118,7 @@ def mainPage(){
                 }
                 String newBtn = getInputElemStr( [name:"newFileBtn", type:"button", title:"<b>Create New File</b>", multiple:false, width:"12em", background:"#00FF0A", radius:"15px"])
                 saveName = getInputElemStr( [name:"saveFileName", type:"text", title:"<b>Save as Name</b>",multiple:false, width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:'newFile.txt'])
-                tStr = "<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>&nbsp;</td></tr><tr><td>${newBtn}</td></tr>"
+                tStr = "${ttStyleStr}<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>${p2}</td></tr><tr><td>${newBtn}</td></tr>"
             } else if(!saveFileName || saveFileName == null || saveFileName == 'null'){
             	fBuff = ''
                 app.removeSetting('fileText')           
@@ -124,6 +143,63 @@ def mainPage(){
     }
 }
 
+def uiPage(){
+    dynamicPage (name: "uiPage", title: "<h2>FM Notepad<span style='font-size:small'> v${version()}</span></h2>", install: true, uninstall: true) {
+		section(""){
+            String p1 = getInputElemStr([name:"utilPage",type:"href",icon:[name:"create"],title:" ",destPage:"mainPage",width:"2em",radius:"15px", hoverText:" Editor Page"])
+            paragraph "${ttStyleStr}<div style='margin-left:59vw;'>${p1}</div>"
+            fList = listFiles().fList
+            paragraph listTable()
+            if(state.btnEdit){
+                state.btnEdit = false
+                inx = appLocation().lastIndexOf("/")
+                paragraph "<script>window.location.replace(\"${appLocation().substring(0,inx)}/mainPage\")</script>"
+            }
+        }
+    }
+}
+
+
+String listTable() {
+    fList = listFiles().fList
+    
+    ArrayList<String> tHead = ["","","","Name","Rename/Copy to","<i style='font-size:1.125rem' class='material-icons he-bin'></i>"]
+    String X = "<i class='he-checkbox-checked'></i>"
+    String O = "<i class='he-checkbox-unchecked'></i>"
+    String settingsIcon = "<i class='material-icons app-column-info-icon' style='font-size: 24px;'>settings_applications</i>"
+    String removeIcon = "<i class='material-icons he-bin'></i>"
+
+
+    String str = "<script src='https://code.iconify.design/iconify-icon/1.0.0/iconify-icon.min.js'></script>"
+    str += "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px } tr {border-right:2px solid black;}" +
+            "</style><div style='overflow-x:auto'><table class='mdl-data-table tstat-col' style='border-left:2px solid black;border-top:2px solid black;'>" +
+            "<thead><tr style='border-bottom:2px solid black;background-color:#E1F5FE;'>"
+    tHead.each { str += "<th><strong>${it}</strong></th>" }
+    str += "</tr></thead>"
+    int tSize=0
+    fList.each{
+        if(it.size() > tSize)
+        	tSize = it.size()
+    }
+    int rowNum = 0
+    fList.each {
+        if(rowNum % 2 == 1) 
+        	rColor = '#ffffff'
+        else 
+            rColor = '#f0f0f0'
+        rowNum++
+        editIcon = getInputElemStr([name:"edit${it}",type:"button",icon:[name:"edit"],title:" ", width:"2.5em",radius:"15px", hoverText:" Edit "])
+        delIcon = getInputElemStr([name:"del${it}",type:"button",icon:[name:"he-bin"],title:" ", width:"2.5em",radius:"15px", hoverText:" Delete "])
+        copyIcon = getInputElemStr([name:"copy${it}",type:"button",icon:[name:"content_copy"],title:" ", width:"2.5em",radius:"15px", hoverText:" Copy "])
+        renIcon = getInputElemStr([name:"ren${it}",type:"button",icon:[name:"autorenew"],title:" ", width:"3em",radius:"15px", hoverText:" Rename "])
+        target = getInputElemStr( [name:"sA${it}", type:"text", title:" ",multiple:false, width:"${tSize*0.55}em", background:"#ADD8E6", radius:"15px", defaultValue:"${it}"])
+        str += "<tr style='background-color:${rColor}'><td style='padding-top:1px;padding-bottom:1px;'>${editIcon}</td><td style='padding-top:1px;padding-bottom:1px;'>${copyIcon}</td><td style='padding-top:1px;padding-bottom:1px;'>${renIcon}</td><td style='text-align:left;padding-top:1px;padding-bottom:1px;''>${it}</td><td style='text-align:left;padding:0px;vertical-align:center;'>${target}</td><td>${delIcon}</td></tr>"
+    }
+
+    String defPage = getInputElemStr([name:"page2Def",type:"bool",title:"Make this the Default Page",background:"#ADD8E6", width:"20em",radius:"15px", hoverText:" Use as the starting page instead of the editor "])
+    str += "<tr style='border-left:none;border-right:none;border-top:2px solid black;'><td colspan=6 style='text-align:left'>${defPage}</td></tr></table></div>"
+    return str
+}
 
 @SuppressWarnings('unused')
 HashMap listFiles(retType='nameOnly'){
@@ -187,7 +263,27 @@ def appButtonHandler(btn) {
             state.execSave = true
             break
         default: 
-            log.error "Undefined button $btn pushed"
+            if(btn.startsWith('edit')){
+                app.updateSetting('fName',[value:"${btn.substring(4,)}",type:'enum'])
+				state.btnEdit = true
+            } else if(btn.startsWith('del')){
+                deleteHubFile(btn.substring(3,))
+            } else if(btn.startsWith('copy')){
+                target = btn.substring(4,)
+                if(!settings["sA${target}"]) 
+                	break
+                fBuff = downloadHubFile("${target}")
+                uploadHubFile("${settings["sA${target}"]}",fBuff)
+            } else if(btn.startsWith('ren')){                
+                target = btn.substring(3,)
+                if(!settings["sA${target}"] || settings["sA${target}"] == "${target}" ) 
+                	break
+                fBuff = downloadHubFile("${target}")               
+                uploadHubFile("${settings["sA${target}"]}",fBuff)
+                deleteHubFile(target)             
+    		} else {
+            	log.error "Undefined button $btn pushed"
+            }
             break
     }
 }
@@ -228,7 +324,7 @@ library (
     name: "uiInputElements",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
-    version: "0.0.7",
+    version: "0.0.8",
     documentationLink: ""
 )
 
@@ -674,8 +770,9 @@ String buttonLink(HashMap opt) { //modified slightly from jtp10181's code
     if(opt.color) computedStyle += "color:${opt.color};"
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
     if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.icon) opt.icon = [name:'fa-circle-info']
     if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon(opt.icon)}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     return "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='buttonClick(this)' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 
@@ -705,6 +802,7 @@ String buttonHref(HashMap opt) { //modified jtp10181's code
     if(opt.color) computedStyle += "color:${opt.color};"
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
     if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.icon) opt.icon = [name:'fa-circle-info']
     if(opt.destPage) {
     	inx = appLocation().lastIndexOf("/")
     	dest = appLocation().substring(0,inx)+"/${opt.destPage}"
@@ -712,7 +810,7 @@ String buttonHref(HashMap opt) { //modified jtp10181's code
     	dest=opt.destUrl
     }
 	if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    opt.title ="${opt.title}<div class='tTip'> ${btnIcon(opt.icon)}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     return "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='window.location.replace(\"$dest\")' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 
@@ -742,6 +840,7 @@ String btnDivHide(HashMap opt) {
     if(opt.color) computedStyle += "color:${opt.color};"
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
     if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.icon) opt.icon = [name:'fa-circle-info']
     if(opt.destPage) {
     	inx = appLocation().lastIndexOf("/")
     	dest = appLocation().substring(0,inx)+"/${opt.destPage}"
@@ -757,7 +856,7 @@ String btnDivHide(HashMap opt) {
     
     opt.title = "${btnElem}&nbsp;${opt.title}"
 	if(opt.hoverText && opt.hoverText != 'null')  
-    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon(opt.icon)}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     return "$script<div class='form-group'><input type='hidden' name='${opt.name}.type' value='button'></div><div><div class='submitOnChange' onclick='btn=document.getElementById(\"btn${opt.name}\");div=document.getElementById(\"${opt.divName}\");if(div.style.display==\"none\"){btn.classList.remove(\"he-enlarge2\");btn.classList.add(\"he-shrink2\");div.style.display=\"block\";} else {btn.classList.remove(\"he-shrink2\");btn.classList.add(\"he-enlarge2\");div.style.display=\"none\";}' style='$computedStyle'>${opt.title}</div></div><input type='hidden' name='settings[${opt.name}]' value=''>"
 }
 

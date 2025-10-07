@@ -15,10 +15,11 @@
  *    Date         Who           What
  *    ----         ---           ----
  *	07Oct2025	thebearmay		Add the Utilities Page
+ *								Fixed the 500 error when exiting
  */  
 //#include thebearmay.uiInputElements
 
-static String version()	{  return '1.0.2' }
+static String version()	{  return '1.0.3' }
 
 definition (
 	name: 			"fmNotePad", 
@@ -89,8 +90,8 @@ def mainPage(){
             String fElem = getInputElemStr( [name:"fName", type:"enum", title:"<b>Open File</b>", options:fList, multiple:false, width:"15em", background:"#ADD8E6", radius:"15px"])
             String saveBtn = getInputElemStr( [name:"saveBtn", type:"button", title:"<b>Save As</b>", multiple:false, width:"5em", background:"#FF000A", radius:"15px"])
             String saveName = getInputElemStr( [name:"saveFileName", type:"text", title:"<b>Save as Name</b>",multiple:false, width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:fName])
-            String tStr = "${ttStyleStr}<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>${p2}</td></tr><tr><td>${saveBtn}</td></tr>"
-            
+            String tStr = "${ttStyleStr}<div><table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>${p2}</td></tr><tr><td>${saveBtn}</td></tr>"
+           
             if((!saveFileName || saveFileName == null || saveFileName == 'null') && fName != null ){
             	app.updateSetting('saveFileName',[value:"$fName",type:'text'])
                 paragraph "<script type='text/javascript'>location.reload()</script>"
@@ -106,11 +107,11 @@ def mainPage(){
                 	fBuff = new String(downloadHubFile("${fName}"), "UTF-8")
                     app.updateSetting('fileText',[value:"""${fBuff}""",type:'text'])
                     saveName = getInputElemStr( [name:"saveFileName", type:"text", title:"<b>Save as Name</b>",multiple:false, width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:fName])
-                    tStr = "${ttStyleStr}<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>${p2}</td></tr><tr><td>${saveBtn}</td></tr>"
+                    tStr = "${ttStyleStr}<div><table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>${p2}</td></tr><tr><td>${saveBtn}</td></tr>"
                 }
                 String fData = getInputElemStr( [name:"fileText", type:"textarea", title:"<b>File Content</b>", height:"60vh", background:"#E3E3E3", radius:"15px", defaultValue:"""${fBuff}"""])
                 tStr +="<tr><td colspan=3>${fData}</td></tr><tr><td>${saveBtn}</td></tr>"
-                                
+             
             } else if(!fName ){
                 if(saveFileName == state.lastFile) {
                     app.updateSetting('saveFileName',[value:'newFile.txt',type:'text'])
@@ -118,13 +119,14 @@ def mainPage(){
                 }
                 String newBtn = getInputElemStr( [name:"newFileBtn", type:"button", title:"<b>Create New File</b>", multiple:false, width:"12em", background:"#00FF0A", radius:"15px"])
                 saveName = getInputElemStr( [name:"saveFileName", type:"text", title:"<b>Save as Name</b>",multiple:false, width:"15em", background:"#ADD8E6", radius:"15px", defaultValue:'newFile.txt'])
-                tStr = "${ttStyleStr}<table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>${p2}</td></tr><tr><td>${newBtn}</td></tr>"
+                tStr = "${ttStyleStr}<div><table style='min-width:60vw'><tr><td style='max-width:18em'>${fElem}</td><td style='max-width:18em'>${saveName}</td><td>${p2}</td></tr><tr><td>${newBtn}</td></tr>"
             } else if(!saveFileName || saveFileName == null || saveFileName == 'null'){
             	fBuff = ''
                 app.removeSetting('fileText')           
             } 
+
             tStr += "</table></div>"
-             
+            
             paragraph tStr            
             if(state.execSave) {
 				state.execSave = false
@@ -487,8 +489,8 @@ String inputTarea(HashMap opt) {
     }
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='false'></div>"
 	retVal+="<div class='mdl-cell mdl-cell--12-col mdl-textfield mdl-js-textfield' style='' data-upgraded=',MaterialTextfield'><div style='display: inline-flex'>"
-    retVal+="<label for='settings[${opt.name}]' style='min-width:${opt.width};' class='control-label'>${opt.title}</label></div><div class='flex'><textarea type='textarea' name='settings[${opt.name}]' class='form-control' style='${computedStyle}'  placeholder='Click to set' id='settings[${opt.name}]' >${opt.defaultValue}</textarea>"
-    retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"
+    retVal+="<label for='settings[${opt.name}]' class='control-label'>${opt.title}</label></div><div><textarea type='textarea' name='settings[${opt.name}]' class='form-control submitOnChange' style='${computedStyle}'  placeholder='Click to set' id='settings[${opt.name}]' >${opt.defaultValue}</textarea></div>"
+    //retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"
     return retVal
 }
 	

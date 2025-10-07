@@ -1,10 +1,10 @@
 {
  "packageName":"File Manager Notepad",
  "author":"Jean P. May, Jr.",
- "version":"1.0.2",
+ "version":"1.0.3",
  "minimumHEVersion":"2.4.0.1",
  "dateReleased":"2025-10-07",
- "releaseNotes": "v1.02 - Added a file utilities page to allow file copy, rename, and delete from inside the app",
+ "releaseNotes": "v1.0.3 - fixed the 500 error on exit\nv1.02 - Added a file utilities page to allow file copy, rename, and delete from inside the app",
  "apps": [
   {
      "id":"34a17b9e-49ab-4577-945a-6453c1c8f36a",

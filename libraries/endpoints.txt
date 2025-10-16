@@ -75,10 +75,12 @@
 * Events	 *    Set: /hub/advanced/deviceStateHistorySize/2000			
 * Events	 * 			
 * Events	 * Max State Retention Days			
-* Events	 * /hub/advanced/maxDeviceStateAgeDays			
+* Events	 * /hub/advanced/maxDeviceStateAgeDays	
+* Events	 * /hub/advanced/maxDeviceStateAgeDays/nnn			
 * Events	 *			
 * Events	 * Max Event Retention Days			
 * Events	 * /hub/advanced/maxEventAgeDays			
+* Events	 * /hub/advanced/maxEventAgeDays/nnn
 * Events	 *			
 * Files	 * Local File List			
 * Files	 * /hub/fileManager/json			
@@ -144,7 +146,6 @@
 * Net	 * /hub2/networkConfiguration			
 * Net	 *			
 * Other	 * Other	
-* Other	 *  /hub/cloud/updatePlatform	
 * Other  *  /hub/data
 * Other  *  /hub/list/data   //returns the same data as the /hub/data
 * Other	 *  /api/hubitat.xml

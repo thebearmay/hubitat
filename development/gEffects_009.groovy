@@ -22,7 +22,7 @@
 
 import java.time.*
 import java.time.format.DateTimeFormatter
-static String version()	{  return '0.0.9'  }
+static String version()	{  return '0.0.10'  }
 
 
 import groovy.transform.Field
@@ -182,7 +182,7 @@ void runEffectList(){
                         if(flds[0] == 'set')
 							it.setEffect(flds[1])
                         else if(flds[0] == 'act')
-                            it.activevateDIY("${flds[1]}")
+                            it.activateDIY("${flds[1]}")
                         else 
                             log.error "Invalid method, found ${flds[1]} expecting 'set' or 'act'"
                                 
@@ -220,7 +220,7 @@ void overRideEffectRun(evt){
 						if(flds[0] == 'set')
 							it.setEffect(flds[1])
                         else if(flds[0] == 'act')
-                            it.activevateDIY("${flds[1]}")
+                            it.activateDIY("${flds[1]}")
                         else 
                             log.error "Invalid method, found ${flds[1]} expecting 'set' or 'act'"
 					}
@@ -228,7 +228,7 @@ void overRideEffectRun(evt){
 				if(flds.size() > 2){
 					if(debugEnable)
 						log.debug "pausing ${flds[3].toInteger()} minutes"				
-					pauseExecution(flds[2].toInteger() * 60 * 1000)
+					pauseExecution(flds[3].toInteger() * 60 * 1000)
 				} else {
 					if(!minEff) minEff = 5
 					if(debugEnable)

@@ -1,9 +1,11 @@
 {
  "packageName":"Govee Effect Player",
  "author":"Jean P. May, Jr.",
- "version":"0.0.8",
+ "version":"0.0.10",
  "minimumHEVersion":"2.3.8.0",
  "dateReleased":"2024-12-21",
+ "releaseNotes":"v0.0.10 text format change to use either setEffect or activateDIY",
+ "documentationLink":"https://community.hubitat.com/t/govee-effect-player/147382",
  "apps": [
   {
      "id":"f24709ae-939b-445b-8990-2a6ac6d6887c",

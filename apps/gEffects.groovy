@@ -16,12 +16,13 @@
  *	18Dec2024	thebearmay	Add overRide processing, check for stop during effect list processing, kill switch
  *	19Dec2024				Add debug logging, additional kill switch checking
  *	20Dec2024				UI Cleanup
+ *  24Oct2025				Change Text input to differentiate a setEffect call from a activateDIY call
  *    
  */
 
 import java.time.*
 import java.time.format.DateTimeFormatter
-static String version()	{  return '0.0.8'  }
+static String version()	{  return '0.0.10'  }
 
 
 import groovy.transform.Field
@@ -163,6 +164,11 @@ void runEffectList(){
     fileRecords = (new String (downloadHubFile("${effFile}"))).split("\n")
     
     eTime = LocalTime.parse(endTime, formatter)
+    // 24Oct2025 Format changes from:
+	// 			effectNumber:description:minutesToDisplay
+    //		to:
+    //			setOrAct:effectNumber:description:minutesToDisplay
+    
     while (LocalTime.now() < eTime && app.getSetting('killSw')==false){
         fileRecords.each {
 			if(debugEnable) 
@@ -173,17 +179,23 @@ void runEffectList(){
 					if(app.getSetting('killSw')==false){
 						if(debugEnable) 
 							log.debug "set effect ${flds[0]} on ${it.displayName}"
-						it.setEffect(flds[0])
+                        if(flds[0] == 'set')
+							it.setEffect(flds[1])
+                        else if(flds[0] == 'act')
+                            it.activateDIY("${flds[1]}")
+                        else 
+                            log.error "Invalid method, found ${flds[1]} expecting 'set' or 'act'"
+                                
 					}
 				}
 				if(flds.size() > 2){
 					if(debugEnable)
-						log.debug "pausing ${flds[2].toInteger()} minutes"
-					pauseExecution(flds[2].toInteger() * 60 * 1000)
+						log.debug "pausing ${flds[3].toInteger()} minutes"
+					pauseExecution(flds[3].toInteger() * 60 * 1000)
 				} else {
 					if(!minEff) minEff = 5
 					if(debugEnable)
-						log.debug "pausing ${flds[2].toInteger()} minutes"
+						log.debug "pausing ${flds[3].toInteger()} minutes"
 					pause(minEff * 60 * 1000)
 				}
 			}
@@ -204,18 +216,23 @@ void overRideEffectRun(evt){
 				devList.each {
 					if(app.getSetting('killSw')==false){			
 						if(debugEnable) 
-							log.debug "set effect ${flds[0]} on ${it.displayName}"				
-						it.setEffect(flds[0])
+							log.debug "set effect ${flds[1]} on ${it.displayName}"				
+						if(flds[0] == 'set')
+							it.setEffect(flds[1])
+                        else if(flds[0] == 'act')
+                            it.activateDIY("${flds[1]}")
+                        else 
+                            log.error "Invalid method, found ${flds[1]} expecting 'set' or 'act'"
 					}
 				}
 				if(flds.size() > 2){
 					if(debugEnable)
-						log.debug "pausing ${flds[2].toInteger()} minutes"				
-					pauseExecution(flds[2].toInteger() * 60 * 1000)
+						log.debug "pausing ${flds[3].toInteger()} minutes"				
+					pauseExecution(flds[3].toInteger() * 60 * 1000)
 				} else {
 					if(!minEff) minEff = 5
 					if(debugEnable)
-						log.debug "pausing ${flds[2].toInteger()} minutes"					
+						log.debug "pausing ${flds[3].toInteger()} minutes"					
 					pause(minEff * 60 * 1000)
 				}
 			}

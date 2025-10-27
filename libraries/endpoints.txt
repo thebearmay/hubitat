@@ -270,4 +270,6 @@
 * ZWave  * /hub/zwave2/reinterview?node=<0x9999>
 * ZWave  * /hub/zwave2/enableDebugLogging
 * ZWave  * /hub/zwave2/disableDebugLogging
+* ZWave  * 2.4.3.145
+* ZWave  * /hub/zwave2/cleanInstallZWaveJS
 /* 

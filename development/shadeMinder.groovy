@@ -178,6 +178,8 @@ def evtTime(evt) {
 }
 
 void forceOpen(){
+    if (avgWind && maxWind && avgWind >= maxWind) // don't time force if recorded wind is too high
+    	return 
 	shadeDev.each {
 		it.open()
 		if(debugEnabled) 
@@ -196,6 +198,8 @@ void forceClose(){
 }
 
 void openCheck(){
+    if(eTime || sTime) // open and close are being overridden
+    	return
     Date tNow = new Date()
     if(tNow > location.sunrise && tNow < location.sunset && state.avgWind <= maxWind && state.avgLight >= minLight ) {
         shadeDev.each {

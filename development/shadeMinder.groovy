@@ -14,6 +14,7 @@
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
  *    27Oct2025        thebearmay            v0.0.1 - Original code
+ *    28Oct2025        thebearmay            v0.0.2 - Add the Data Management Screen, Reverse Shade option, Daily Avg Scheduling option
  */
     
 
@@ -366,7 +367,8 @@ void setByAvg() {
             eaTime = item[2]
         }
     }
-        log.debug "$aList<br>$saTime $eaTime<br>$targetInx"
+    if(debugEnabled)
+    	log.debug "$aList<br>$saTime $eaTime<br>$targetInx"
     app.updateSetting('sTime',[type:"time",value:"${saTime.substring(0,2)}:${saTime.substring(2,4)}"])
     app.updateSetting('eTime',[type:"time",value:"${eaTime.substring(0,2)}:${eaTime.substring(2,4)}"])
 	schedule("0 ${Integer.parseInt(saTime.substring(2,4))} ${Integer.parseInt(saTime.substring(0,2))} * * ? *", "forceClose")

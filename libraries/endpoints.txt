@@ -264,6 +264,7 @@
 * Zwave	 *
 * Zwave	 * 2.1.4.110 ZWave JS 
 * Zwave	 * /hub/zwave2/forceInstallZWaveJS
+* Zwave	 * /hub/zwave2/forceEnable
 * Zwave	 * /hub/zwave2/enable
 * Zwave	 * /hub/zwave2/disable
 * Zwave	 * /hub/zwave2/status

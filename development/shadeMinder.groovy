@@ -1,6 +1,6 @@
 /*
  * Shade Minder
- * 
+ * Simple App to control outdoor shades based on illumance and wind speed
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -18,8 +18,8 @@
     
 
 
-static String version()	{  return '0.0.1'  }
-
+static String version()	{  return '0.0.2'  }
+import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
@@ -40,7 +40,9 @@ definition (
 ) 
 
 preferences {
+    page name: "decision"
     page name: "configPage"
+    page name: "dataFileMgmt"
 
 }
 mappings {
@@ -70,12 +72,25 @@ void logsOff(){
      app.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }
 
+def decision(){
+    dynamicPage (name: "decision", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
+        section (name:'cPageHndl', title:''){
+            if(!dmFirst) 
+            	configPage()
+            else
+                dataFileMgmt()
+        }
+    }
+}
+
 def configPage(){
     dynamicPage (name: "configPage", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
         section (name:'cPageHndl', title:'Configuration Page'){
             String db = getInputElemStr(name:'debugEnabled', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Debug Enabled</b>', defaultValue: "${settings['debugEnabled']}")
+            String rev = getInputElemStr(name:'reverseDir', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Reverse Shade Direction</b>', defaultValue: "${settings['reverseDir']}")
+            String uDf = getInputElemStr(name:'useDataFile', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Use Avg Settings from File</b>', defaultValue: "${settings['useDataFile']}")
 			String wind = getInputElemStr(name:'windDev', type:'capability.*', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Device for Wind Speed</b>', defaultValue: "${settings['windDev']}")
-            //windSpeed_avg_10m or windSpeed
+            //windSpeed
             String sunLight = getInputElemStr(name:'luxDev', type:'capability.illuminanceMeasurement', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Device for Light Measurement</b>', defaultValue: "${settings['luxDev']}")
             //illuminance
             String shades = getInputElemStr(name:'shadeDev', type:'capability.windowShade', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Shade Devices</b>', defaultValue: "${settings['shadeDev']}, multiple:true")
@@ -88,33 +103,81 @@ def configPage(){
             cTable += "<tr><td>${mLight}</td><td>${mWind}</td></tr>"            
             cTable += "<tr><td>${endTime}</td><td>${begTime}</td><td></td></tr></table>"
 
+            ci = btnIcon(name:'event', size:'14px')
+            paragraph getInputElemStr(name:"dMgmt", type:'href', title:"${ci} Data Management", destPage:'dataFileMgmt', width:'10em', radius:'15px', background:'#669999')
+            
             paragraph cTable
-            paragraph "<table><tr><td>${db}</td></tr><tr><td>${aRename}</td></tr></table>"
+            paragraph "<table><tr><td>${db}</td><td>${rev}</td></tr><tr><td>${aRename}</td><td></td></tr></table>"
             if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
             if(luxDev) 
             	subscribe(luxDev, "illuminance", evtLux)
             else 
                 unsubscribe(evtLux)
-            if(windDev)
+            if(windDev){
             	subscribe(windDev, "windSpeed", evtWind)
-            else
+                if(windDev.hasAttribute('windGust'))
+                	subscribe (windDev,'windGust', evtWind)
+            } else
                 unsubscribe(evtWind)
             subscribe(location,"sunrise", evtTime)
             subscribe(location,"sunset", evtTime)
-            if(sTime) {
-                tWork = sTime.toString()
-                tW2 = tWork.substring(tWork.indexOf("T")+1,tWork.indexOf("T")+6)
-                tW3 = tW2.split(":")
-                schedule("0 ${Integer.parseInt(tW3[1])} ${Integer.parseInt(tW3[0])} * * ? *", "forceClose")
+            checkSched()
+            if(useAvg) 
+            	paragraph "<span style='color:#FF000A;font-weight:bold'>Schedule is being run using the Daily Average File</span>"
+        }
+    }
+}
+
+
+
+def dataFileMgmt(){
+    dynamicPage (name: "dataFileMgmt", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
+        section (name:'dFileHndl', title:'Data Management'){
+            SimpleDateFormat sdfJulD = new SimpleDateFormat("DDD")
+            String dmF = getInputElemStr(name:'dmFirst', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Make this the first page</b>', defaultValue: "${settings['dmFirst']}")            
+            String cfg = getInputElemStr(name:"cfgPg", type:'href', title:"<i class='material-icons app-column-info-icon' style='font-size: 24px;'>settings_applications</i> Configuration Page", destPage:'configPage', width:'11em', radius:'15px', background:'#669999')
+            paragraph "<table><tr><td>${cfg}</td><td>${dmF}</td></tr></table>"
+            String fBuffer=''
+            try {
+            	fBuffer = new String(downloadHubFile("${app.id}.txt"),"UTF-8")
+            } catch (e) {
+                fBuffer = '000:1100:1300\n'
+                uploadHubFile("${app.id}.txt",fBuffer.getBytes('UTF-8'))
+            }
+            String begTime = getInputElemStr(name:'s2Time', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Opening Time</b>', defaultValue: "${settings['s2Time']}")
+            String endTime = getInputElemStr(name:'e2Time', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Closing Time</b>', defaultValue: "${settings['e2Time']}")
+            String stoDate = getInputElemStr(name:'entryDate', type:'date', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Day to Log</b>', defaultValue: "${settings['entryDate']}")
+            String storeD = getInputElemStr(name:'storeData', type:'button', width:'5em', radius:'12px', background:'#669999', title:'Add to File')
+            String pData = "<table><tr><td>${stoDate}</td><td>${begTime}</td><td>${endTime}</td></tr>"
+            pData += "<tr><td>${storeD}</td><td></td><td></td></table>"
+            paragraph pData
+            if(state.updFile) {
+                if(entryDate  && s2Time && e2Time){
+	                state.updFile = false
+    	            eDate = new Date(Integer.parseInt(entryDate.substring(0,4))-1900,Integer.parseInt(entryDate.substring(5,7))-1,Integer.parseInt(entryDate.substring(8,10)))            
+        	        p1 = "${sdfJulD.format(eDate)}:"
+            	    tWork = s2Time.toString()
+                	tW2 = tWork.substring(tWork.indexOf("T")+1,tWork.indexOf("T")+6)
+	                tW3 = tW2.split(":")
+    	            p2 = "${tW3[0]}${tW3[1]}:"
+					tWork = e2Time.toString()
+            	    tW2 = tWork.substring(tWork.indexOf("T")+1,tWork.indexOf("T")+6)
+	                tW3 = tW2.split(":")
+    	            p3 = "${tW3[0]}${tW3[1]}\n"
+        	        newEntry = "${p1}${p2}${p3}"
+            	    if(debugEnabled) 
+                		log.debug newEntry
+	                fBuffer += newEntry             
+    	            uploadHubFile("${app.id}.txt",fSort(fBuffer).getBytes('UTF-8'))
+        	        app.removeSetting("entryDate")
+                }
+            }
+            paragraph getInputElemStr(name:'useAvg', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Schedule using daily average</b>', defaultValue: "${settings['useAvg']}")            
+            if(useAvg){
+            	setByAvg()
+                schedule("0 17 4 * * ? *", "setByAvg")
             } else
-                unschedule("forceClose")
-			if(eTime) {
-                tWork = eTime.toString()
-                tW2 = tWork.substring(tWork.indexOf("T")+1,tWork.indexOf("T")+6)
-                tW3 = tW2.split(":")
-                schedule("0 ${Integer.parseInt(tW3[1])} ${Integer.parseInt(tW3[0])} * * ? *", "forceOpen")
-            } else
-                unschedule("forceOpen")
+                unschedule("setByAvg")
         }
     }
 }
@@ -162,18 +225,16 @@ def evtWind(evt){
     if(!holdTime || holdTime < 0)
     	holdTime = new Long(0)
     
-    if(Float.parseFloat(evt.value) > (1.2*maxWind)) { // close if wind gust of 120% of max
+    if(Float.parseFloat(evt.value) > (1.2*maxWind)) { // open the shade if wind gust of 120% of max
        forceOpen()
     } else if(state.windUpdateTime - holdTime >= (10*60*1000)){
         state.avgWind = (holdLevel + state.preWindSpeed + state.windSpeed)/3
         openCheck()
     }
-    
-
-    
+   
 }
 
-def evtTime(evt) {
+def evtTime(evt) {  //sunrise sunset check
     openCheck()
 }
 
@@ -181,42 +242,153 @@ void forceOpen(){
     if (avgWind && maxWind && avgWind >= maxWind) // don't time force if recorded wind is too high
     	return 
 	shadeDev.each {
-		it.open()
-		if(debugEnabled) 
-			log.debug "<b>Force</b> opening $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
+        if(!reverseDir){
+			it.open()
+			if(debugEnabled) 
+				log.debug "Oopening $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
+        } else {	
+			it.close()
+			if(debugEnabled) 
+				log.debug "Closing $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
+        }
 	} 
-	state.lastCommand = 'open'
+    if(!reverseDir){
+		state.lastCommand = 'open'
+    } else {
+        state.lastCommand = 'close'
+    }
 }
 
 void forceClose(){
 	shadeDev.each {
-		it.close()
-		if(debugEnabled) 
-			log.debug "<b>Force</b> closing $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
-	} 
-	state.lastCommand = 'close'
+        if(!reverseDir){
+	        it.close()
+			if(debugEnabled) 
+				log.debug "Closing $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
+        } else {	
+			it.open()
+			if(debugEnabled) 
+				log.debug "Opening $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
+        }            
+	}
+    if(!reverseDir){
+		state.lastCommand = 'close'
+    } else {
+        state.lastCommand = 'open'
+    }
 }
 
 void openCheck(){
     if(eTime || sTime) // open and close are being overridden
     	return
     Date tNow = new Date()
-    if(tNow > location.sunrise && tNow < location.sunset && state.avgWind <= maxWind && state.avgLight >= minLight ) {
-        shadeDev.each {
-            it.close()
-            if(debugEnabled) 
-            	log.debug "closing $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
-        } 
-        state.lastCommand = 'close'
+    if(tNow > location.sunrise && tNow < location.sunset && state.avgWind < maxWind && state.avgLight >= minLight ) {
+		forceOpen()
     } else {
-        shadeDev.each {
-            it.open()
-            if(debugEnabled)
-            	log.debug "opening $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
-        }
-        state.lastCommand = 'open'
+		forceClose()
     }
 }
+
+String fSort(fBuff){
+    String sortedBuff = ''
+    fList = fBuff.split("\n")
+    fList = fList.sort()
+    fList.each{
+        sortedBuff += "$it\n"
+    }
+    return sortedBuff
+}
+
+List dailyAvg(){
+	String fBuffer=''
+	try {
+		fBuffer = new String(downloadHubFile("${app.id}.txt"),"UTF-8")
+	} catch (e) {
+		fBuffer = '000:1100:1300\n'
+        uploadHubFile("${app.id}.txt",fBuffer.getBytes('UTF-8'))
+	} 
+    fList = fBuffer.split("\n")
+    List aList = []
+   	String dayHold = '000'
+    int i=0
+    int sHold=0
+    int eHold=0
+    List dRec = []
+    fList.each{
+        dRec = it.split(':')
+        if (dRec[0] == dayHold){
+            sHold += Integer.parseInt(dRec[1])
+            eHold += Integer.parseInt(dRec[2])
+            i++
+		} else {
+            if(debugEnabled)
+            	log.debug "$dayHold $sHold $eHold<br>$aList"
+            sHoldS = (sHold/i).toString()
+            eHoldS = (eHold/i).toString()
+            while (sHoldS.size() < 4){
+                sHoldS = "0$sHoldS"
+            }
+			while (eHoldS.size() < 4){
+                eHoldS = "0$eHoldS"
+            }
+            aList.add("${dayHold}:${sHoldS}:${eHoldS}")
+            i=1
+            sHold=Integer.parseInt(dRec[1])
+            eHold=Integer.parseInt(dRec[2])
+            dayHold = dRec[0]
+        } 
+    }            
+    sHoldS = (sHold/i).toString()
+	eHoldS = (eHold/i).toString()
+	while (sHoldS.size() < 4){
+		sHoldS = "0$sHoldS"
+	}
+	while (eHoldS.size() < 4){
+		eHoldS = "0$eHoldS"
+	}
+    aList.add("${dayHold}:${sHoldS}:${eHoldS}")
+    return aList
+}
+
+void setByAvg() {
+    SimpleDateFormat sdfJulD = new SimpleDateFormat("DDD")
+    List aList = dailyAvg()
+    String targetInx = sdfJulD.format(new Date())
+    String saTime
+    String eaTime
+    aList.each {
+        item = it.split(':')
+        if(item[0] <= targetInx){
+            saTime = item[1]
+            eaTime = item[2]
+        }
+    }
+        log.debug "$aList<br>$saTime $eaTime<br>$targetInx"
+    app.updateSetting('sTime',[type:"time",value:"${saTime.substring(0,2)}:${saTime.substring(2,4)}"])
+    app.updateSetting('eTime',[type:"time",value:"${eaTime.substring(0,2)}:${eaTime.substring(2,4)}"])
+	schedule("0 ${Integer.parseInt(saTime.substring(2,4))} ${Integer.parseInt(saTime.substring(0,2))} * * ? *", "forceClose")
+	schedule("0 ${Integer.parseInt(eaTime.substring(2,4))} ${Integer.parseInt(eaTime.substring(0,2))} * * ? *", "forceOpen")
+
+}
+
+void checkSched(){
+	if(sTime) {
+		tWork = sTime.toString()
+		tW2 = tWork.substring(tWork.indexOf("T")+1,tWork.indexOf("T")+6)
+		tW3 = tW2.split(":")
+		schedule("0 ${Integer.parseInt(tW3[1])} ${Integer.parseInt(tW3[0])} * * ? *", "forceClose")
+	} else
+		unschedule("forceClose")
+	if(eTime) {
+		tWork = eTime.toString()
+		tW2 = tWork.substring(tWork.indexOf("T")+1,tWork.indexOf("T")+6)
+		tW3 = tW2.split(":")
+		schedule("0 ${Integer.parseInt(tW3[1])} ${Integer.parseInt(tW3[0])} * * ? *", "forceOpen")
+	} else
+		unschedule("forceOpen")
+}
+
+/*
 
 ArrayList getFiles(){
     fileList =[]
@@ -235,9 +407,13 @@ ArrayList getFiles(){
     
     return fileList.sort()
 }
+*/
 
 def appButtonHandler(btn) {
     switch(btn) {
+        case "storeData":
+        	state.updFile = true
+        	break
         default: 
               log.error "Undefined button $btn pushed"
               break

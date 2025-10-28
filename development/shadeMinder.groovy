@@ -176,8 +176,11 @@ def dataFileMgmt(){
             if(useAvg){
             	setByAvg()
                 schedule("0 17 4 * * ? *", "setByAvg")
-            } else
+            } else {
                 unschedule("setByAvg")
+                unschedule("forceClose")
+                unschedule("forceOpen")
+            }
         }
     }
 }

@@ -16,10 +16,11 @@
  *    ----         ---           ----
  *	07Oct2025	thebearmay		Add the Utilities Page
  *								Fixed the 500 error when exiting
+ *  29Nov2025					getHubFiles() error
  */  
 //#include thebearmay.uiInputElements
 
-static String version()	{  return '1.0.3' }
+static String version()	{  return '1.0.4' }
 
 definition (
 	name: 			"fmNotePad", 
@@ -206,8 +207,7 @@ String listTable() {
 @SuppressWarnings('unused')
 HashMap listFiles(retType='nameOnly'){
     fileList = []
-    json=getHubFiles("")
-    //for (rec in json) {
+    json=getHubFiles()
     json.each {
         if(it.type == 'file')
             fileList << it.name.trim()
@@ -314,6 +314,7 @@ def appButtonHandler(btn) {
 * 	03Apr2025							Enable a default value for enums
 *	04Apr2025							Size option for icons
 *	23May2025							Add device.<driverName> to capability
+*	07Oct2025							Add textarea uiType
 */
 
 import groovy.transform.Field

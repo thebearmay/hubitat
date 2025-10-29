@@ -15,11 +15,12 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    27Oct2025        thebearmay            v0.0.1 - Original code
  *    28Oct2025        thebearmay            v0.0.2 - Add the Data Management Screen, Reverse Shade option, Daily Avg Scheduling option
- */
+ *    29Oct2025        thebearmay            v0.0.3 - Fix edge case in time averaging
+*/
     
 
 
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -327,8 +328,10 @@ List dailyAvg(){
 		} else {
             if(debugEnabled)
             	log.debug "$dayHold $sHold $eHold<br>$aList"
-            sHoldS = (sHold/i).toString()
-            eHoldS = (eHold/i).toString()
+            sHoldS = (sHold/i).intValue().toString()
+            eHoldS = (eHold/i).intValue().toString()
+            if(debugEnabled)
+            	log.debug "$dayHold $sHoldS $eHoldS<br>$aList"
             while (sHoldS.size() < 4){
                 sHoldS = "0$sHoldS"
             }
@@ -342,8 +345,8 @@ List dailyAvg(){
             dayHold = dRec[0]
         } 
     }            
-    sHoldS = (sHold/i).toString()
-	eHoldS = (eHold/i).toString()
+    sHoldS = (sHold/i).intValue().toString()
+	eHoldS = (eHold/i).intValue().toString()
 	while (sHoldS.size() < 4){
 		sHoldS = "0$sHoldS"
 	}
@@ -393,26 +396,6 @@ void checkSched(){
 		unschedule("forceOpen")
 }
 
-/*
-
-ArrayList getFiles(){
-    fileList =[]
-    params = [
-        uri    : "http://127.0.0.1:8080",
-        path   : "/hub/fileManager/json",
-        headers: [
-            accept : "application/json"
-        ],
-    ]
-    httpGet(params) { resp ->
-        resp.data.files.each {
-            fileList.add(it.name)
-        }
-    }
-    
-    return fileList.sort()
-}
-*/
 
 def appButtonHandler(btn) {
     switch(btn) {

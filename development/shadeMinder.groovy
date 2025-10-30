@@ -172,6 +172,7 @@ def dataFileMgmt(){
 	                fBuffer += newEntry             
     	            uploadHubFile("${app.id}.txt",fSort(fBuffer).getBytes('UTF-8'))
         	        app.removeSetting("entryDate")
+					paragraph "<script type='text/javascript'>location.reload()</script>"
                 }
             }
             paragraph getInputElemStr(name:'useAvg', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Schedule using daily average</b>', defaultValue: "${settings['useAvg']}")            

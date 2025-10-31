@@ -16,11 +16,12 @@
  *    27Oct2025        thebearmay            v0.0.1 - Original code
  *    28Oct2025        thebearmay            v0.0.2 - Add the Data Management Screen, Reverse Shade option, Daily Avg Scheduling option
  *    29Oct2025        thebearmay            v0.0.3 - Fix edge case in time averaging
+ *    30Oct2025        thebearmay            v0.0.4 - Add the initialization values, and Tool Tips
 */
     
 
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -68,6 +69,14 @@ def updated(){
 }
 
 def initialize(){
+	if(!state.avgWind)
+    	state.avgWind = 0
+    if(!maxWind)
+    	app.updateSetting("maxWind",[type:"number",value:75])
+    if(!state.avgLight)
+    	state.avgLight = 0
+    if(!minLight)
+    	app.updateSetting("minLight",[type:"number",value:1000])
 }
 
 void logsOff(){
@@ -89,27 +98,27 @@ def configPage(){
     dynamicPage (name: "configPage", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
         section (name:'cPageHndl', title:'Configuration Page'){
             String db = getInputElemStr(name:'debugEnabled', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Debug Enabled</b>', defaultValue: "${settings['debugEnabled']}")
-            String rev = getInputElemStr(name:'reverseDir', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Reverse Shade Direction</b>', defaultValue: "${settings['reverseDir']}")
-            String uDf = getInputElemStr(name:'useDataFile', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Use Avg Settings from File</b>', defaultValue: "${settings['useDataFile']}")
+            String rev = getInputElemStr(name:'reverseDir', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Reverse Shade Direction</b>', defaultValue: "${settings['reverseDir']}", hoverText:"Reverse the Open/Close commands issued")
+            String uDf = getInputElemStr(name:'useAvg', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Use Avg Settings from File</b>', defaultValue: "${settings['useDataFile']}", hoverText:"Turn on to schedule using average daily values from the data file")
 			String wind = getInputElemStr(name:'windDev', type:'capability.*', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Device for Wind Speed</b>', defaultValue: "${settings['windDev']}")
             //windSpeed
             String sunLight = getInputElemStr(name:'luxDev', type:'capability.illuminanceMeasurement', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Device for Light Measurement</b>', defaultValue: "${settings['luxDev']}")
             //illuminance
             String shades = getInputElemStr(name:'shadeDev', type:'capability.windowShade', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Shade Devices</b>', defaultValue: "${settings['shadeDev']}, multiple:true")
-			String begTime = getInputElemStr(name:'sTime', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Opening Time Override</b>', defaultValue: "${settings['sTime']}")
-            String endTime = getInputElemStr(name:'eTime', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Closing Time Override</b>', defaultValue: "${settings['eTime']}")
+			String begTime = getInputElemStr(name:'sTime', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Opening Time Override</b>', defaultValue: "${settings['sTime']}", hoverText:"This value will override the illumination setting")
+            String endTime = getInputElemStr(name:'eTime', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Closing Time Override</b>', defaultValue: "${settings['eTime']}", hoverText:"This value will override the illumination setting")
             String mWind = getInputElemStr(name:'maxWind', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Maximum Wind Speed</b>', defaultValue: "${settings['maxWind']}")
             String mLight = getInputElemStr(name:'minLight', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Minimum Lux to Close</b>', defaultValue: "${settings['minLight']}")
-			String aRename = getInputElemStr(name:"nameOverride", type:"text", title: "<b>New Name for Application</b>", multiple: false, defaultValue: app.getLabel(), width:'15em', radius:'12px', background:'#e6ffff')
-            String cTable = "<table><tr><td>${wind}</td><td>${sunLight}</td><td>${shades}</td></tr>"
+			String aRename = getInputElemStr(name:"nameOverride", type:"text", title: "<b>New Name for Application</b>", multiple: false, defaultValue: app.getLabel(), width:'15em', radius:'12px', background:'#e6ffff', hoverText:"Change this if you need multiple instances of the app")
+            String cTable = "${ttStyleStr}<table><tr><td>${wind}</td><td>${sunLight}</td><td>${shades}</td></tr>"
             cTable += "<tr><td>${mLight}</td><td>${mWind}</td></tr>"            
             cTable += "<tr><td>${endTime}</td><td>${begTime}</td><td></td></tr></table>"
 
             ci = btnIcon(name:'event', size:'14px')
-            paragraph getInputElemStr(name:"dMgmt", type:'href', title:"${ci} Data Management", destPage:'dataFileMgmt', width:'10em', radius:'15px', background:'#669999')
+            paragraph getInputElemStr(name:"dMgmt", type:'href', title:"${ci} Data Management", destPage:'dataFileMgmt', width:'11em', radius:'15px', background:'#669999', hoverText:"Go to the maintenance page for the data file")
             
             paragraph cTable
-            paragraph "<table><tr><td>${db}</td><td>${rev}</td></tr><tr><td>${aRename}</td><td></td></tr></table>"
+            paragraph "<table><tr><td>${db}</td><td>${rev}</td></tr><tr><td>${aRename}</td><td>${uDf}</td></tr></table>"
             if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
             if(luxDev) 
             	subscribe(luxDev, "illuminance", evtLux)
@@ -123,9 +132,15 @@ def configPage(){
                 unsubscribe(evtWind)
             subscribe(location,"sunrise", evtTime)
             subscribe(location,"sunset", evtTime)
+			if(useAvg){
+            	setByAvg()
+                schedule("0 17 4 * * ? *", "setByAvg")
+				paragraph "<span style='color:#FF000A;font-weight:bold'>Schedule is being run using the Daily Average File</span>"
+            } else {
+                unschedule("setByAvg")
+            }
             checkSched()
-            if(useAvg) 
-            	paragraph "<span style='color:#FF000A;font-weight:bold'>Schedule is being run using the Daily Average File</span>"
+
         }
     }
 }
@@ -146,11 +161,11 @@ def dataFileMgmt(){
                 fBuffer = '000:1100:1300\n'
                 uploadHubFile("${app.id}.txt",fBuffer.getBytes('UTF-8'))
             }
-            String begTime = getInputElemStr(name:'s2Time', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Opening Time</b>', defaultValue: "${settings['s2Time']}")
-            String endTime = getInputElemStr(name:'e2Time', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Closing Time</b>', defaultValue: "${settings['e2Time']}")
-            String stoDate = getInputElemStr(name:'entryDate', type:'date', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Day to Log</b>', defaultValue: "${settings['entryDate']}")
+            String begTime = getInputElemStr(name:'s2Time', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Opening Time</b>', defaultValue: "${settings['s2Time']}", hoverText:"Required, can be before or after Closing Time")
+            String endTime = getInputElemStr(name:'e2Time', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Closing Time</b>', defaultValue: "${settings['e2Time']}", hoverText:"Required, can be before or after Opening Time")
+            String stoDate = getInputElemStr(name:'entryDate', type:'date', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Day to Log</b>', defaultValue: "${settings['entryDate']}", hoverText:"Required, only the Julian Day value is stored; multiple entries will be averaged")
             String storeD = getInputElemStr(name:'storeData', type:'button', width:'5em', radius:'12px', background:'#669999', title:'Add to File')
-            String pData = "<table><tr><td>${stoDate}</td><td>${begTime}</td><td>${endTime}</td></tr>"
+            String pData = "${ttStyleStr}<table><tr><td>${stoDate}</td><td>${begTime}</td><td>${endTime}</td></tr>"
             pData += "<tr><td>${storeD}</td><td></td><td></td></table>"
             paragraph pData
             if(state.updFile) {
@@ -175,7 +190,7 @@ def dataFileMgmt(){
 					paragraph "<script type='text/javascript'>location.reload()</script>"
                 }
             }
-            paragraph getInputElemStr(name:'useAvg', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Schedule using daily average</b>', defaultValue: "${settings['useAvg']}")            
+            paragraph getInputElemStr(name:'useAvg', type:'bool', width:'16em', radius:'12px', background:'#e6ffff', title:'<b>Schedule using daily average</b>', defaultValue: "${settings['useAvg']}",hoverText:"Turn on to schedule using average daily values from the data file")            
             if(useAvg){
             	setByAvg()
                 schedule("0 17 4 * * ? *", "setByAvg")
@@ -288,6 +303,7 @@ void openCheck(){
     if(eTime || sTime) // open and close are being overridden
     	return
     Date tNow = new Date()
+
     if(tNow > location.sunrise && tNow < location.sunset && state.avgWind < maxWind && state.avgLight >= minLight ) {
 		forceOpen()
     } else {

@@ -381,6 +381,16 @@
       "tags":[
         "Tools & Utilities"
        ]
+    },
+    {
+      "id":"20d2f9d5-0f56-45f7-b738-b4f94dc8aafa",
+      "name":"Shade Minder",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/shadeMinderManifest.json",
+      "description":"Automates shade opening and closing based on luminance/lux, or schedule.  Also monitors windSpeed/windGust attributes to close/open (depending on type) when exceeded.",
+      "tags":[
+        "Tools & Utilities"
+       ]
     }
   ]
 }

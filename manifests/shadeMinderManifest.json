@@ -1,0 +1,19 @@
+{
+ "packageName":"Shade Minder",
+ "author":"Jean P. May, Jr.",
+ "version":"0.0.4",
+ "minimumHEVersion":"2.4.0.1",
+ "dateReleased":"2025-10-06",
+ "releaseNotes":"v0.0.4 - Production Release",
+ "apps": [
+  {
+     "id":"5262d90f-fad2-4a40-88b1-142070b68b31",
+     "name":"Shade Minder",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/apps/shadeMinder.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

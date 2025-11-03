@@ -17,11 +17,12 @@
  *    28Oct2025        thebearmay            v0.0.2 - Add the Data Management Screen, Reverse Shade option, Daily Avg Scheduling option
  *    29Oct2025        thebearmay            v0.0.3 - Fix edge case in time averaging
  *    30Oct2025        thebearmay            v0.0.4 - Add the initialization values, and Tool Tips
+ *    03Nov2025        thebearmay            v0.0.5 - Add sunrise/sunset offset logic
 */
     
 
 
-static String version()	{  return '0.0.4'  }
+static String version()	{  return '0.0.5'  }
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -107,12 +108,19 @@ def configPage(){
             String shades = getInputElemStr(name:'shadeDev', type:'capability.windowShade', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Shade Devices</b>', defaultValue: "${settings['shadeDev']}, multiple:true")
 			String begTime = getInputElemStr(name:'sTime', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Opening Time Override</b>', defaultValue: "${settings['sTime']}", hoverText:"This value will override the illumination setting")
             String endTime = getInputElemStr(name:'eTime', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Closing Time Override</b>', defaultValue: "${settings['eTime']}", hoverText:"This value will override the illumination setting")
+            String bSrS = getInputElemStr(name:'begSunRiseSet', type:'enum', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Use Opening Sunrise/Sunset</b>', defaultValue: "${settings['begSunRiseSet']}", options:['Sunrise','Sunset'], hoverText:"This value will override the Opening Time above")
+            String eSrS = getInputElemStr(name:'endSunRiseSet', type:'enum', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Use Closing Sunrise/Sunset</b>', defaultValue: "${settings['endSunRiseSet']}", options:['Sunrise','Sunset'], hoverText:"This value will override the Closing Time above")
+			String bSrsO = getInputElemStr(name:'begOffset', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Offset in Minutes</b>', defaultValue: "${settings['begOffset']}")
+            String eSrsO = getInputElemStr(name:'endOffset', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Offset in Minutes</b>', defaultValue: "${settings['endOffset']}")
             String mWind = getInputElemStr(name:'maxWind', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Maximum Wind Speed</b>', defaultValue: "${settings['maxWind']}")
             String mLight = getInputElemStr(name:'minLight', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Minimum Lux to Close</b>', defaultValue: "${settings['minLight']}")
 			String aRename = getInputElemStr(name:"nameOverride", type:"text", title: "<b>New Name for Application</b>", multiple: false, defaultValue: app.getLabel(), width:'15em', radius:'12px', background:'#e6ffff', hoverText:"Change this if you need multiple instances of the app")
+			            
             String cTable = "${ttStyleStr}<table><tr><td>${wind}</td><td>${sunLight}</td><td>${shades}</td></tr>"
             cTable += "<tr><td>${mLight}</td><td>${mWind}</td></tr>"            
-            cTable += "<tr><td>${endTime}</td><td>${begTime}</td><td></td></tr></table>"
+            cTable += "<tr><td>${endTime}</td><td>${begTime}</td><td></td></tr>"
+            cTable += "<tr><td>${eSrS}</td><td>${eSrsO}</td><td></td></tr>"
+            cTable += "<tr><td>${bSrS}</td><td>${bSrsO}</td><td></td></tr></table>"
 
             ci = btnIcon(name:'event', size:'14px')
             paragraph getInputElemStr(name:"dMgmt", type:'href', title:"${ci} Data Management", destPage:'dataFileMgmt', width:'11em', radius:'15px', background:'#669999', hoverText:"Go to the maintenance page for the data file")
@@ -132,6 +140,14 @@ def configPage(){
                 unsubscribe(evtWind)
             subscribe(location,"sunrise", evtTime)
             subscribe(location,"sunset", evtTime)
+            if(begSunRiseSet || endSunRiseSet){
+                setByOffset()
+                schedule("0 15 4 * * ? *", "setByOffset")
+            } else {
+                unschedule("setByOffset")
+            }
+            
+       
 			if(useAvg){
             	setByAvg()
                 schedule("0 17 4 * * ? *", "setByAvg")
@@ -140,6 +156,11 @@ def configPage(){
                 unschedule("setByAvg")
             }
             checkSched()
+			if(state.sTimeOld != sTime || state.eTimeOld != eTime){
+                state.sTimeOld = sTime
+                state.eTimeOld = eTime
+                paragraph "<script type='text/javascript'>location.reload()</script>"
+            }
 
         }
     }
@@ -394,6 +415,49 @@ void setByAvg() {
 	schedule("0 ${Integer.parseInt(saTime.substring(2,4))} ${Integer.parseInt(saTime.substring(0,2))} * * ? *", "forceClose")
 	schedule("0 ${Integer.parseInt(eaTime.substring(2,4))} ${Integer.parseInt(eaTime.substring(0,2))} * * ? *", "forceOpen")
 
+}
+
+void setByOffset(){
+    SimpleDateFormat sdfIn = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
+    
+    if(begSunRiseSet){
+        if(begSunRiseSet == 'Sunrise'){
+        	workTime = sdfIn.parse(location.sunrise.toString())
+        } else
+            workTime = sdfIn.parse(location.sunset.toString())
+		if(begOffset){
+        	begOffset = begOffset * 60000
+        } else
+        	begOffSet = 0
+        nTime = new Date(workTime.getTime() + begOffset)
+        nHours = nTime.getHours().toString()
+        if(nHours.size()<2)
+        	nHours="0${nHours}"
+        nMinutes = nTime.getMinutes().toString()
+        if(nMinutes.size()<2)
+        	nMinutes="0${nMinutes}"
+        app.updateSetting('sTime',[type:"time",value:"${nHours}:${nMinutes}"])    
+    }
+    if(endSunRiseSet){
+        if(endSunRiseSet == 'Sunrise'){
+        	workTime = sdfIn.parse(location.sunrise.toString())
+        } else
+            workTime = sdfIn.parse(location.sunset.toString())
+		if(begOffset){
+        	begOffset = begOffset * 60000
+        } else
+        	begOffSet = 0
+        nTime = new Date(workTime.getTime() + begOffset)
+        nHours = nTime.getHours().toString()
+        if(nHours.size()<2)
+        	nHours="0${nHours}"
+        nMinutes = nTime.getMinutes().toString()
+        if(nMinutes.size()<2)
+        	nMinutes="0${nMinutes}"
+        app.updateSetting('eTime',[type:"time",value:"${nHours}:${nMinutes}"])           
+    }
+    checkSched()
+      
 }
 
 void checkSched(){

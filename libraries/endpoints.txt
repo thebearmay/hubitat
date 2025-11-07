@@ -259,8 +259,8 @@
 * ZWave  * /hub/zwave/reset
 * Zwave	 * /hub/zwaveDetails/json
 * Zwave  * /hub/zwave/healthStatus //>= 2.4.1.154 true if stack is up   
+* Zwave	 * /hub/zwaveTopology
 * Zwave	 *
-* Zwave	 * /hub/zwave2/getNodeState?node=<xx> //node number is decimal
 * Zwave	 *
 * Zwave	 * 2.1.4.110 ZWave JS 
 * Zwave	 * /hub/zwave2/forceInstallZWaveJS
@@ -268,13 +268,15 @@
 * Zwave	 * /hub/zwave2/enable
 * Zwave	 * /hub/zwave2/disable
 * Zwave	 * /hub/zwave2/status
+* Zwave	 * /hub/zwave2/getNodeState?node=<xx> //node number is decimal
 * ZWave  * /hub/zwave2/reinterview?node=<0x9999>
 * ZWave  * /hub/zwave2/enableDebugLogging
 * ZWave  * /hub/zwave2/disableDebugLogging
 * ZWave  * 
 * ZWave  * to resolve a firmware bug 
-* ZWave  * /hub/zwave2/watchdog/disable 
+* ZWave  * /hub/zwave2/watchdog/disable
+* ZWave  * /hub/zwave2/watchdog/enable
 * ZWave  * 
-* ZWave  * 2.4.3.145
+* ZWave  * 2.4.3.145 - complete reset of the JS install
 * ZWave  * /hub/zwave2/cleanInstallZWaveJS
 /* 

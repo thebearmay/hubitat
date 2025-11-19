@@ -16,6 +16,7 @@
 * Apps	 *	/hub/advanced/stateCompressionStatus // returns true/false to show whether features is enabled.
 * Apps	 *	/hub/advanced/enableStateCompression
 * Apps	 *	/hub/advanced/disableStateCompression
+* Apps   *  /app/editor/<appCodeId>
 * Apps	 *	
 * Backup    * Backup Download
 * Backup    * /hub/backupDB?fileName=latest
@@ -72,7 +73,10 @@
 * DNS	 * Opt out: /hub/advanced/setDNSFallback/false			
 * DNS	 * Opt In: /hub/advanced/setDNSFallback/true			
 * DNS	 * Get: /hub/advanced/getDNSFallback			
-* DNS	 *			
+* DNS	 *	
+* Driver  *
+* Driver  * /driver/editor/<driverCodeId>  //has source attribute in the JSON
+* Driver  *
 * Events	 * Events 			
 * Events	 *    Get: /hub/advanced/event/limit			
 * Events	 *    Set: /hub/advanced/event/limit/2000			
@@ -106,7 +110,8 @@
 * Libraries    * /hub2/userLibraries
 * Libraries    *
 * Logs	 * Logs 			
-* Logs	 * /logs/json			
+* Logs	 * /logs/json	
+* Logs	 * /logs/eventsJson
 * Logs	 *			
 * Manage	 * Management Endpoints			
 * Manage	 * /hub/advanced/getManagementToken 			

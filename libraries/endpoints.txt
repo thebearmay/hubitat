@@ -41,6 +41,8 @@
 * Dashboards  * /dashboard/all?pinToken=xxxxxx
 * Dashboards  * // use dashboard accessToken from /hub2/HubData 
 * Dashboards  *
+* Dashboards  * /dashboard/devices
+* Dashboards  *
 * DB	 * Database			
 * DB	 * /hub/advanced/databaseSize			
 * DB	 * /hub/cleanupDatabase

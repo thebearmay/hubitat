@@ -16,7 +16,7 @@
 * Apps	 *	/hub/advanced/stateCompressionStatus // returns true/false to show whether features is enabled.
 * Apps	 *	/hub/advanced/enableStateCompression
 * Apps	 *	/hub/advanced/disableStateCompression
-* Apps   *  /app/editor/<appCodeId>
+* Apps   *  /app/list/single/data/<appCodeId>
 * Apps	 *	
 * Backup    * Backup Download
 * Backup    * /hub/backupDB?fileName=latest
@@ -75,7 +75,7 @@
 * DNS	 * Get: /hub/advanced/getDNSFallback			
 * DNS	 *	
 * Driver  *
-* Driver  * /driver/editor/<driverCodeId>  //has source attribute in the JSON
+* Driver  * /driver/list/single/data/<driverCodeId>  //has source attribute in the JSON
 * Driver  *
 * Events	 * Events 			
 * Events	 *    Get: /hub/advanced/event/limit			
@@ -108,6 +108,7 @@
 * Jobs	*
 * Libraries    *
 * Libraries    * /hub2/userLibraries
+* Libraries    * /library/list/single/data/<libID>
 * Libraries    *
 * Logs	 * Logs 			
 * Logs	 * /logs/json	

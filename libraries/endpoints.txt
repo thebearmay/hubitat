@@ -141,7 +141,8 @@
 * Mesh	 * /hubMesh/localLinkedDevice/<hostDevId>
 * Mesh	 *
 * Mesh	 * Hub Mesh Initialize			
-* Mesh	 *   /hub/advanced/setInitialHubMeshPeers?<Hub IP List>			
+* Mesh	 *   /hub/advanced/setInitialHubMeshPeers?<Hub IP List>	
+* Mesh	 *   /device/hubMeshReconnect
 * Mesh	 *		
 * Mesh	 * Token
 * Mesh   * /device/showHubMeshToken

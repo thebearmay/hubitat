@@ -83,6 +83,8 @@
  *	  2025-06-26				 v3.1.17 - negative hour fix for sunriseTomorrow
  *	  2025-09-23				 v3.1.18 - Add app state compression attribute
  *	  2025-10-02				 v3.1.19 - fix typo on zbHealthy
+ *	  2025-11-25				 v3.1.20 - Extend H2 data timeout to 1500
+ *	  2025-11-27				 v3.1.21 - change H2 to httpGet
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -96,7 +98,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.19"}
+static String version() {return "3.1.21"}
 
 metadata {
     definition (
@@ -1060,23 +1062,17 @@ void hub2DataReq() {
     params = [
         uri    : "http://127.0.0.1:8080",
         path   : "/hub2/hubData",
+        timeout: 300,
         headers: [
-            "Connection-Timeout": 800
+            "Connection-Timeout": 1500
         ]                   
     ]
     
         if(debugEnable)log.debug params
-        asynchttpGet("getHub2Data", params)
-    
-    checkSecurity()
-    zHealthReq()
-}
-
-@SuppressWarnings('unused')
-void getHub2Data(resp, data){
-    try{
-        if (resp.getStatus() == 200){
-            if (debugEnable) log.debug resp.data
+    httpGet(params) {resp ->
+	    try{
+            if (debugEnable) 
+        		log.debug resp.data
             try{
 				def jSlurp = new JsonSlurper()
 			    h2Data = (Map)jSlurp.parseText((String)resp.data)
@@ -1119,13 +1115,14 @@ void getHub2Data(resp, data){
             } else {
                 updateAttr("pCloud", "not connected")
             }
-            //log.debug "H2 Request successful"
-        } else {
-            if (!warnSuppress) log.warn "Status ${resp.getStatus()} on H2 request"
-        } 
-    } catch (Exception ex){
-        if (!warnSuppress) log.warn ex
+	    } catch (Exception ex){
+    	    if (!warnSuppress) log.warn ex
+    	}  
     }
+
+    checkSecurity()
+    zHealthReq()
+
 }
 
 void checkSecurity(){

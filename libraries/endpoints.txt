@@ -31,6 +31,8 @@
 * Backup    * 
 * Backup    * // List of cloud backups for the account
 * Backup    * /hub2/cloudBackups?force=false
+* Backup    * // List of local backups
+* Backup    * /hub2/localBackups
 * Bundles    *
 * Bundles    * /hub2/userBundles
 * Bundles    *

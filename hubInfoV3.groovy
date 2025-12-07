@@ -85,6 +85,7 @@
  *	  2025-10-02				 v3.1.19 - fix typo on zbHealthy
  *	  2025-11-25				 v3.1.20 - Extend H2 data timeout to 1500
  *	  2025-11-27				 v3.1.21 - change H2 to httpGet
+ *	  2025-12-07				 v3.1.22 - add javaDirect
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -98,7 +99,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.21"}
+static String version() {return "3.1.22"}
 
 metadata {
     definition (
@@ -209,7 +210,7 @@ metadata {
         attribute "type", "string"//iframe, image, link, or video
         //HE v2.4.3.121
         attribute "appStateCompression", "string"
-
+		attribute "javaDirect","number"
         command "hiaUpdate", ["string"]
         command "reboot"
         command "rebootW_Rebuild"
@@ -653,9 +654,12 @@ void getJvm(resp, data) {
             if(debugEnable) 
             	log.debug "JVM record ${memRecs.size()} ${memWork.size()} $memRec<br> $memWork"
                            
-        	if(memWork.size() == 5){
+        	if(memWork.size() >= 5){
                updateAttr("jvmSize",memWork[3], "KB")
                updateAttr("jvmFree",memWork[4], "KB")
+            }
+            if(memWork.size >= 6) {
+                updateAttr("javaDirect",memWork[5], "KB")
             }
     	}
     } catch(ignored) {

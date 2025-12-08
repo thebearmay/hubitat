@@ -40,7 +40,7 @@ definition (
 	description: 	"Display selected items out of the device data area for one or more devices.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devDataDisp.groovy",
-	oauth: 			false,
+	oauth: 			true,
     iconUrl:        "",
     iconX2Url:      ""
 ) 

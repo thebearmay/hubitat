@@ -300,7 +300,7 @@ def buildJson(){
 
 def jsonDisp(){
 	contentBlock = [
-		contentType: "text/html; charset:utf-8 ",
+		contentType: "application/json",
 		gzipContent: true,
 		data: buildJson(),
 		status:200
@@ -311,7 +311,7 @@ def jsonDisp(){
 }
 
 def jsonEpDown(){
-	jData = buildJson().getBytes("UTF-8")
+	jData = buildJson()//.getBytes("UTF-8")
     tNow=new Date()
     fName = "${toCamelCase(location.hub.name)}Json${new Date().getTime()}.json"
 
@@ -340,9 +340,9 @@ def csvDown(){
 
 def csvDisp(){
 	contentBlock = [
-		contentType: "text/html; charset:utf-8 ",
+		contentType: "text/csv",
 		gzipContent: true,
-		data: buildCsv().replace("\n","<br>"),
+		data: buildCsv(),//.replace("\n","<br>"),
 		status:200
 	]
     if(debugEnabled)
@@ -351,7 +351,7 @@ def csvDisp(){
 }
 
 def csvEpDown(){
-	jData = buildCsv().getBytes("UTF-8")
+	jData = buildCsv()//.getBytes("UTF-8")
     fName = "${toCamelCase(location.hub.name)}Csv${new Date().getTime()}.csv"
 
     contentBlock = [

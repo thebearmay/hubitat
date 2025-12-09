@@ -25,11 +25,12 @@
  *    10Jul2022   jtp10181      CSV changes
  *	  10Jul2025	  thebearmay	Additional fields
  *	  11Jul2025					Add Driver Name
+ *	  08Dec2025	  				Add a CSV/JSON display/download endpoints
 */
 
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.3.6'  }
+static String version()	{  return '1.3.7'  }
 
 
 definition (
@@ -39,7 +40,7 @@ definition (
 	description: 	"Display selected items out of the device data area for one or more devices.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/devDataDisp.groovy",
-	oauth: 			false,
+	oauth: 			true,
     iconUrl:        "",
     iconX2Url:      ""
 ) 
@@ -51,6 +52,22 @@ preferences {
    page name: "csvDown"
 
 }
+
+mappings {
+    path("/csvDisp") {
+        action: [GET: "csvDisp"]
+    }
+	path("/jsonDisp") {
+        action: [GET: "jsonDisp"]
+    }
+    path("/csvDown") {
+        action: [GET: "csvEpDown"]
+    }
+	path("/jsonDown") {
+        action: [GET: "jsonEpDown"]
+    }
+}
+
 
 def installed() {
 //	log.trace "installed()"
@@ -95,15 +112,23 @@ def mainPage(){
               }
               section("Change Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
-               if(nameOverride != app.getLabel) app.updateLabel(nameOverride)
-              }   
+               if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
+              }
+			  section("Endpoint Information", hideable: true, hidden: true){
+                paragraph "<b>Local Server API:</b> ${getFullLocalApiServerUrl()}"
+                paragraph "<b>Cloud Server API: </b>${getFullApiServerUrl()}"
+                if(state.accessToken == null) createAccessToken()
+                paragraph "<b>Access Token: </b>${state.accessToken}"
+                paragraph "<b>Cloud Request Formats: </b><br>${getFullApiServerUrl()}/csvDisp?access_token=${state.accessToken}<br>${getFullApiServerUrl()}/jsonDisp?access_token=${state.accessToken}<br>${getFullApiServerUrl()}/csvDown?access_token=${state.accessToken}<br>${getFullApiServerUrl()}/jsonDown?access_token=${state.accessToken}"
+                paragraph "<b>Local Request Formats: </b><br>${getFullLocalApiServerUrl()}/csvDisp?access_token=${state.accessToken}<br>${getFullLocalApiServerUrl()}/jsonDisp?access_token=${state.accessToken}<br>${getFullLocalApiServerUrl()}/csvDown?access_token=${state.accessToken}<br>${getFullLocalApiServerUrl()}/jsonDown?access_token=${state.accessToken}"
+              }
 //		    }
 	    } else {
               section("Change Application Name", hideable: true, hidden: true){
                input "nameOverride", "text", title: "New Name for Application", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
                if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
               }   
-		    section("") {
+            section("") {
 			    paragraph title: "Click Done", "Please click Done to install app before continuing"
 		    }
 	    }
@@ -231,32 +256,7 @@ def getOthData(dev) {
 def jsonDown(){
     dynamicPage (name: "jsonDown", title: "", install: false, uninstall: false) {
 	  section("<b><u>JSON Data</u></b>"){
-        jData = "["
-        qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
-        qryDevice.each{ x->
- //           jData += "{\"$x.displayName\": {"
-            jData +=  "{\"$x.id\": {\"displayName\": \"$x.displayName\","
-            varList.each {
-                if(x.properties.data["$it"]) 
-                    jData += "\"$it\": \"${x.properties.data["$it"]}\","
-            }
-            stList.each { s->
-                x.properties.currentStates.each {
-                    if(it.name == s) 
-                    jData += "\"$s\": \"$it.value\","
-                }
-             }
-            if(otherElem) {
-            	othData = getOthData(x)
-            	othData.each { o ->
-                	jData += "\"$o.key\": \"$o.value\","
-            	}
-            }
-            jData = jData.substring(0,jData.length()-1)
-            jData += "}},"
-      }
-          jData = jData.substring(0,jData.length()-1)
-          jData += "]"
+          jData = buildJson()
           oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.json';a.href = 'data:text/json,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
           oData +="<button onclick='download()'>Download JSON</button><hr /><div id='jData'>$jData</div><hr />"
           paragraph oData  
@@ -270,42 +270,132 @@ def jsonDown(){
   }
 }
 
+def buildJson(){
+	jData = "["
+	qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
+	qryDevice.each{ x->
+		jData +=  "{\"$x.id\": {\"displayName\": \"$x.displayName\","
+		varList.each {
+			if(x.properties.data["$it"]) 
+				jData += "\"$it\": \"${x.properties.data["$it"]}\","
+		}
+		stList.each { s->
+			x.properties.currentStates.each {
+				if(it.name == s) 
+                    jData += "\"$s\": \"$it.value\","
+            }
+        }
+        if(otherElem) {
+            othData = getOthData(x)
+            othData.each { o ->
+                jData += "\"$o.key\": \"$o.value\","
+            }
+        }
+        jData = jData.substring(0,jData.length()-1)
+        jData += "}},"
+	}
+	jData = jData.substring(0,jData.length()-1)
+	jData += "]"    
+}
+
+def jsonDisp(){
+	contentBlock = [
+		contentType: "application/json",
+		gzipContent: true,
+		data: buildJson(),
+		status:200
+	]
+    if(debugEnabled)
+        log.debug "$contentBlock"
+    render (contentBlock)
+}
+
+def jsonEpDown(){
+	jData = buildJson()//.getBytes("UTF-8")
+    tNow=new Date()
+    fName = "${toCamelCase(location.hub.name)}Json${new Date().getTime()}.json"
+
+    contentBlock = [
+        contentType: "application/octet-stream", 
+        contentLength:jData.size(),
+        contentDisposition: "attachment; filename=$fName",
+		gzipContent: true,
+        data:jData,
+		status:200
+    ]
+    //log.debug "$contentBlock"
+    render(contentBlock)
+}
+
 def csvDown(){
     dynamicPage (name: "csvDown", title: "", install: false, uninstall: false) {
       section("CSV Data"){
-        jData="\"id\",\"displayName\",\"name\""
-        varList.each { jData += ",\"$it\"" }
-        stList.each { jData += ",\"$it\"" }
-        if(otherElem) {
-			othData = getOthData(qryDevice[0])
-            othData.each {jData += ",\"$it.key\"" } 
-        }
-        jData += "\n"  
-
-        qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
-        qryDevice.each{ x->
-            jData += "\"$x.id\",\"$x.displayName\",\"$x.name\""
-            varList.each {
-                jData += (x.properties.data["$it"] ? ",\"${x.properties.data["$it"]}\"" : ",")
-            }
-            stList.each { s->
-                x.properties.currentStates.each {
-                    jData += (it.name == s ? ",\"$it.value\"" : ",")
-                }
-            }
-            if(otherElem) {
-                othData = getOthData(x)
-            	othData.each { o ->
-                	jData += ",\"$o.value\"" 
-	            }
-            }
-            jData += "\n"
-      }
+	  jData = buildCsv()
       oData = "<script type='text/javascript'>function download() {var a = document.body.appendChild( document.createElement('a') );a.download = 'deviceData.csv';a.href = 'data:text/plain,' + encodeURIComponent(document.getElementById('jData').innerHTML);a.click();}</script>"
       oData +="<button onclick='download()'>Download CSV</button><hr /><div id='jData'>$jData</div><hr />"
       paragraph oData    
     }
   }
+}
+
+def csvDisp(){
+	contentBlock = [
+		contentType: "text/csv",
+		gzipContent: true,
+		data: buildCsv(),//.replace("\n","<br>"),
+		status:200
+	]
+    if(debugEnabled)
+        log.debug "$contentBlock"
+    render (contentBlock)
+}
+
+def csvEpDown(){
+	jData = buildCsv()//.getBytes("UTF-8")
+    fName = "${toCamelCase(location.hub.name)}Csv${new Date().getTime()}.csv"
+
+    contentBlock = [
+        contentType: "application/octet-stream", 
+        contentLength:jData.size(),
+        contentDisposition: "attachment; filename=$fName",
+		gzipContent: true,
+        data:jData,
+		status:200
+    ]
+    
+    render(contentBlock)
+}
+
+def buildCsv(){
+	jData="\"id\",\"displayName\",\"name\""
+    varList.each { jData += ",\"$it\"" }
+	stList.each { jData += ",\"$it\"" }
+	if(otherElem) {
+		othData = getOthData(qryDevice[0])
+		othData.each {jData += ",\"$it.key\"" } 
+	}
+	jData += "\n"  
+
+	qryDevice.sort({m1, m2 -> m1.displayName <=> m2.displayName})
+	qryDevice.each{ x->
+		jData += "\"$x.id\",\"$x.displayName\",\"$x.name\""
+		varList.each {
+			jData += (x.properties.data["$it"] ? ",\"${x.properties.data["$it"]}\"" : ",")
+		}
+		stList.each { s->
+			x.properties.currentStates.each {
+				jData += (it.name == s ? ",\"$it.value\"" : ",")
+			}
+		}
+		if(otherElem) {
+			othData = getOthData(x)
+			othData.each { o ->
+				jData += ",\"$o.value\"" 
+            }
+        }
+		jData += "\n"
+	}
+    return jData
 }
 
 def appButtonHandler(btn) {
@@ -335,4 +425,22 @@ Boolean writeFile(String fName, String fData) {
     now = new Date()
     String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
 	uploadHubFile(fName,fData.getBytes("UTF-8"))
+}
+
+String toCamelCase(init) {
+    if (init == null)
+        return null;
+
+    String ret = ""
+    List word = init.split(" ")
+    if(word.size == 1)
+        return init
+    word.each{
+        ret+=Character.toUpperCase(it.charAt(0))
+        ret+=it.substring(1).toLowerCase()        
+    }
+    ret="${Character.toLowerCase(ret.charAt(0))}${ret.substring(1)}"
+
+    if(debugEnabled) log.debug "toCamelCase return $ret"
+    return ret;
 }

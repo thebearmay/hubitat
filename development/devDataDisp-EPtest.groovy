@@ -30,7 +30,7 @@
 
 import java.text.SimpleDateFormat
 import java.net.URLEncoder
-static String version()	{  return '1.3.7-Beta'  }
+static String version()	{  return '1.3.7'  }
 
 
 definition (
@@ -316,10 +316,12 @@ def jsonEpDown(){
     fName = "${toCamelCase(location.hub.name)}Json${new Date().getTime()}.json"
 
     contentBlock = [
-        contentType: "application/octet-stream, Content-Disposition: attachment; filename=$fName", 
+        contentType: "application/octet-stream", 
         contentLength:jData.size(),
         contentDisposition: "attachment; filename=$fName",
-		data:jData
+		gzipContent: true,
+        data:jData,
+		status:200
     ]
     //log.debug "$contentBlock"
     render(contentBlock)
@@ -353,10 +355,12 @@ def csvEpDown(){
     fName = "${toCamelCase(location.hub.name)}Csv${new Date().getTime()}.csv"
 
     contentBlock = [
-        "Content-Disposition" : "attachment; fileName=\"$fName\"", 
-        "Content-Type" : "application/octet-stream", 
-        "Content-Length":jData.size(),
-        data:jData
+        contentType: "application/octet-stream", 
+        contentLength:jData.size(),
+        contentDisposition: "attachment; filename=$fName",
+		gzipContent: true,
+        data:jData,
+		status:200
     ]
     
     render(contentBlock)

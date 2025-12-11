@@ -340,9 +340,9 @@ def csvDown(){
 
 def csvDisp(){
 	contentBlock = [
-		contentType: "text/csv",
+		contentType: "text/plain",
 		gzipContent: true,
-		data: buildCsv(),//.replace("\n","<br>"),
+		data: buildCsv().replace("\n","<br>"),
 		status:200
 	]
     if(debugEnabled)

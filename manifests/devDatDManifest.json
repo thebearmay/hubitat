@@ -1,10 +1,10 @@
 {
   "packageName": "Device Data Item Display",
   "author": "Jean P. May, Jr.",
-  "version": "1.3.7",
+  "version": "1.3.8",
   "minimumHEVersion": "2.2.5.131",
-  "dateReleased": "2025-07-11",
-  "releaseNotes": "1.3.7 - add endpoints for CSV/JSON downloads\n1.3.6 - Add driverName\n1.3.5 - Option to pull Driver Type, DNI, Zigbee ID, Rooom Name, and Controller Type\n1.3.4 - jtp10181 CSV changes\n1.3.3 - embedded section correction\n1.3.2 - allow multiple instances of the app\n1.3.1 - allow up to 10 html attributes\n1.3.0 - Add option to create html tile device\n1.2.2 - Add ID as the key for JSON\n1.2.1 - Add option to save JSON to Hub FileManager\n1.2.0 - Add State Data option\n1.1.0 - Add JSON and CSV download options",
+  "dateReleased": "2025-12-12",
+  "releaseNotes": "1.3.8 code cleanup\n1.3.7 - add endpoints for CSV/JSON downloads\n1.3.6 - Add driverName\n1.3.5 - Option to pull Driver Type, DNI, Zigbee ID, Rooom Name, and Controller Type\n1.3.4 - jtp10181 CSV changes\n1.3.3 - embedded section correction\n1.3.2 - allow multiple instances of the app\n1.3.1 - allow up to 10 html attributes\n1.3.0 - Add option to create html tile device\n1.2.2 - Add ID as the key for JSON\n1.2.1 - Add option to save JSON to Hub FileManager\n1.2.0 - Add State Data option\n1.1.0 - Add JSON and CSV download options",
   "apps": [
     {
       "id": "c31b025b-b0c1-4d67-9443-e80d6c11eda5",
@@ -26,4 +26,5 @@
     }
   ]
 }
+
 

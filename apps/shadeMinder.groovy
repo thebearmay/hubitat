@@ -18,11 +18,10 @@
  *    29Oct2025        thebearmay            v0.0.3 - Fix edge case in time averaging
  *    30Oct2025        thebearmay            v0.0.4 - Add the initialization values, and Tool Tips
  *    03Nov2025        thebearmay            v0.0.5 - Add sunrise/sunset offset logic
+ *	  15Dec2025		   thebearmay			 v0.0.6 - Add Pause Date Range, additional tool tips, and rain detect option
 */
-    
 
-
-static String version()	{  return '0.0.5'  }
+static String version()	{  return '0.0.6'  }
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -105,28 +104,47 @@ def configPage(){
             //windSpeed
             String sunLight = getInputElemStr(name:'luxDev', type:'capability.illuminanceMeasurement', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Device for Light Measurement</b>', defaultValue: "${settings['luxDev']}")
             //illuminance
+			String rain = getInputElemStr(name:'rainDev', type:'capability.*', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Device for Rain Rate</b>', defaultValue: "${settings['windDev']}")
+			//rainRate
             String shades = getInputElemStr(name:'shadeDev', type:'capability.windowShade', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Shade Devices</b>', defaultValue: "${settings['shadeDev']}, multiple:true")
 			String begTime = getInputElemStr(name:'sTime', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Opening Time Override</b>', defaultValue: "${settings['sTime']}", hoverText:"This value will override the illumination setting")
             String endTime = getInputElemStr(name:'eTime', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Closing Time Override</b>', defaultValue: "${settings['eTime']}", hoverText:"This value will override the illumination setting")
+			String begDate = getInputElemStr(name:'sPauseDate', type:'date', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Pause Starting Date</b>', defaultValue: "${settings['sPauseDate']}", hoverText:"Suspend app execution starting on this date")
+            String endDate = getInputElemStr(name:'ePauseDate', type:'date', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Pause Ending Date</b>', defaultValue: "${settings['ePauseDate']}", hoverText:"End app suspension after this date")
             String bSrS = getInputElemStr(name:'begSunRiseSet', type:'enum', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Use Opening Sunrise/Sunset</b>', defaultValue: "${settings['begSunRiseSet']}", options:['Sunrise','Sunset'], hoverText:"This value will override the Opening Time above")
             String eSrS = getInputElemStr(name:'endSunRiseSet', type:'enum', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Use Closing Sunrise/Sunset</b>', defaultValue: "${settings['endSunRiseSet']}", options:['Sunrise','Sunset'], hoverText:"This value will override the Closing Time above")
 			String bSrsO = getInputElemStr(name:'begOffset', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Offset in Minutes</b>', defaultValue: "${settings['begOffset']}")
             String eSrsO = getInputElemStr(name:'endOffset', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Offset in Minutes</b>', defaultValue: "${settings['endOffset']}")
-            String mWind = getInputElemStr(name:'maxWind', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Maximum Wind Speed</b>', defaultValue: "${settings['maxWind']}")
-            String mLight = getInputElemStr(name:'minLight', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Minimum Lux to Close</b>', defaultValue: "${settings['minLight']}")
+            String mWind = getInputElemStr(name:'maxWind', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Maximum Wind Speed</b>', defaultValue: "${settings['maxWind']}", hoverText:"Retract if 10min average or a gust of 120% exceeds this value")
+            String mLight = getInputElemStr(name:'minLight', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Minimum Lux to Close</b>', defaultValue: "${settings['minLight']}", hoverText:"Shade will not deploy until this value is met/exceeded")
+			String mRain = getInputElemStr(name:'minRain', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Maximum Rain Rate per hour</b>', defaultValue: "${settings['minRain']}", hoverText:"Retract if 10min average exceeds this value")
 			String aRename = getInputElemStr(name:"nameOverride", type:"text", title: "<b>New Name for Application</b>", multiple: false, defaultValue: app.getLabel(), width:'15em', radius:'12px', background:'#e6ffff', hoverText:"Change this if you need multiple instances of the app")
 			            
-            String cTable = "${ttStyleStr}<table><tr><td>${wind}</td><td>${sunLight}</td><td>${shades}</td></tr>"
-            cTable += "<tr><td>${mLight}</td><td>${mWind}</td></tr>"            
+            String cTable = "${ttStyleStr}<style>td {max-width:18em}</style><table><tr><td>${shades}</td></tr><tr><td>${wind}</td><td>${sunLight}</td><td>${rain}</td></tr>"
+            cTable += "<tr><td>${mLight}</td><td>${mWind}</td><td>${mRain}</td></tr>" 
             cTable += "<tr><td>${endTime}</td><td>${begTime}</td><td></td></tr>"
             cTable += "<tr><td>${eSrS}</td><td>${eSrsO}</td><td></td></tr>"
-            cTable += "<tr><td>${bSrS}</td><td>${bSrsO}</td><td></td></tr></table>"
+            cTable += "<tr><td>${bSrS}</td><td>${bSrsO}</td><td></td></tr>"
+            cTable += "<tr><td>${begDate}</td><td>${endDate}</td><td></td></tr></table>"
+               
+			if(ePauseDate && sPauseDate){
+                tNow = new Date()
+				dWork = sPauseDate.split('-')
+    			sDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())
+				dWork = ePauseDate.split('-')
+    			eDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())  
+                if(sDate <= tNow && eDate > tNow){ //app is paused
+					paragraph "<span style='font-weight:bold;font-size:larger;background-color:yellow;'>Application is Paused</span>"                   
+                }
+    		}
+            
 
             ci = btnIcon(name:'event', size:'14px')
             paragraph getInputElemStr(name:"dMgmt", type:'href', title:"${ci} Data Management", destPage:'dataFileMgmt', width:'11em', radius:'15px', background:'#669999', hoverText:"Go to the maintenance page for the data file")
             
             paragraph cTable
-            paragraph "<table><tr><td>${db}</td><td>${rev}</td></tr><tr><td>${aRename}</td><td>${uDf}</td></tr></table>"
+            paragraph "<table><tr><td>${db}</td><td>${rev}</td><td>${uDf}</td></tr><tr><td>${aRename}</td></tr></table>"
+            
             if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
             if(luxDev) 
             	subscribe(luxDev, "illuminance", evtLux)
@@ -138,6 +156,10 @@ def configPage(){
                 	subscribe (windDev,'windGust', evtWind)
             } else
                 unsubscribe(evtWind)
+			if(rainDev && rainDev.hasAttribute('rainRate')) 
+            	subscribe(rainDev, "rainRate", evtRain)
+            else 
+                unsubscribe(evtRain)
             subscribe(location,"sunrise", evtTime)
             subscribe(location,"sunset", evtTime)
             if(begSunRiseSet || endSunRiseSet){
@@ -174,7 +196,7 @@ def dataFileMgmt(){
             SimpleDateFormat sdfJulD = new SimpleDateFormat("DDD")
             String dmF = getInputElemStr(name:'dmFirst', type:'bool', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Make this the first page</b>', defaultValue: "${settings['dmFirst']}")            
             String cfg = getInputElemStr(name:"cfgPg", type:'href', title:"<i class='material-icons app-column-info-icon' style='font-size: 24px;'>settings_applications</i> Configuration Page", destPage:'configPage', width:'11em', radius:'15px', background:'#669999')
-            paragraph "<table><tr><td>${cfg}</td><td>${dmF}</td></tr></table>"
+            paragraph "<table id='dfm'><tr><td>${cfg}</td><td>${dmF}</td></tr></table>"
             String fBuffer=''
             try {
             	fBuffer = new String(downloadHubFile("${app.id}.txt"),"UTF-8")
@@ -186,9 +208,10 @@ def dataFileMgmt(){
             String endTime = getInputElemStr(name:'e2Time', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Closing Time</b>', defaultValue: "${settings['e2Time']}", hoverText:"Required, can be before or after Opening Time")
             String stoDate = getInputElemStr(name:'entryDate', type:'date', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Day to Log</b>', defaultValue: "${settings['entryDate']}", hoverText:"Required, only the Julian Day value is stored; multiple entries will be averaged")
             String storeD = getInputElemStr(name:'storeData', type:'button', width:'5em', radius:'12px', background:'#669999', title:'Add to File')
-            String pData = "${ttStyleStr}<table><tr><td>${stoDate}</td><td>${begTime}</td><td>${endTime}</td></tr>"
-            pData += "<tr><td>${storeD}</td><td></td><td></td></table>"
-            paragraph pData
+            String pData = "${ttStyleStr}<span style='float:left'>${stoDate}</span><span style='float:left'>${begTime}</span>${endTime}<br>${storeD}"
+            
+
+            paragraph "$pData"
             if(state.updFile) {
                 if(entryDate  && s2Time && e2Time){
 	                state.updFile = false
@@ -275,6 +298,29 @@ def evtWind(evt){
     }
    
 }
+def evtRain(evt){
+    holdLevel = state?.preRainRate
+    holdTime = state?.preRainUpdate 
+    if(state.rainRate) 
+    	state.preRainRate = state?.rainRate
+    else
+        state.preRainRate = Float.parseFloat(evt.value)
+    state.preRainUpdate = state?.rainUpdateTime
+    state.rainRate = Float.parseFloat(evt.value)
+    state.rainUpdateTime = new Date().getTime()
+    
+	if(!holdLevel || holdLevel < 0) 
+    	holdLevel = Float.parseFloat(evt.value)
+    
+    if(!holdTime || holdTime < 0)
+    	holdTime = new Long(0)
+    
+	if(state.rainUpdateTime - holdTime >= (10*60*1000)){
+        state.avgRain = (holdLevel + state.preRainRate + state.rainRate)/3
+        openCheck()
+    }
+   
+}
 
 def evtTime(evt) {  //sunrise sunset check
     openCheck()
@@ -283,11 +329,23 @@ def evtTime(evt) {  //sunrise sunset check
 void forceOpen(){
     if (avgWind && maxWind && avgWind >= maxWind) // don't time force if recorded wind is too high
     	return 
+	if (avgRain && maxRain && avgRain >= maxRain) // don't time force if recorded rain rate is too high
+    	return 
+  
+    if(ePauseDate && sPauseDate){
+        tNow = new Date()
+		dWork = sPauseDate.split('-')
+    	sDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())
+		dWork = ePauseDate.split('-')
+    	eDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())        
+        if(sDate <= tNow && eDate > tNow) //app is paused
+			return
+    }
 	shadeDev.each {
         if(!reverseDir){
 			it.open()
 			if(debugEnabled) 
-				log.debug "Oopening $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
+				log.debug "Opening $it ${location.sunrise} $tNow ${location.sunset} ${state.avgWind} $maxWind ${state.avgLight} $minLight"
         } else {	
 			it.close()
 			if(debugEnabled) 
@@ -302,6 +360,15 @@ void forceOpen(){
 }
 
 void forceClose(){
+    if(ePauseDate && sPauseDate){
+        tNow = new Date()
+		dWork = sPauseDate.split('-')
+    	sDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())
+		dWork = ePauseDate.split('-')
+    	eDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())        
+        if(sDate <= tNow && eDate > tNow) //app is paused
+			return
+    }
 	shadeDev.each {
         if(!reverseDir){
 	        it.close()
@@ -324,8 +391,17 @@ void openCheck(){
     if(eTime || sTime) // open and close are being overridden
     	return
     Date tNow = new Date()
+	
+    if(ePauseDate && sPauseDate){
+		dWork = sPauseDate.split('-')
+    	sDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())
+		dWork = ePauseDate.split('-')
+    	eDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())        
+        if(sDate <= tNow && eDate > tNow) //app is paused
+			return
+    }
 
-    if(tNow > location.sunrise && tNow < location.sunset && state.avgWind < maxWind && state.avgLight >= minLight ) {
+    if(tNow > location.sunrise && tNow < location.sunset && state.avgWind < maxWind && state.avgLight >= minLight  && state.avgRain < minRain ) {
 		forceOpen()
     } else {
 		forceClose()

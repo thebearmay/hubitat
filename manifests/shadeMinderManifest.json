@@ -1,10 +1,10 @@
 {
  "packageName":"Shade Minder",
  "author":"Jean P. May, Jr.",
- "version":"0.0.6",
+ "version":"0.0.7",
  "minimumHEVersion":"2.4.0.1",
- "dateReleased":"2025-12-16",
- "releaseNotes":"v0.0.6 - Add Pause Date Range, additional tool tips, and rain detect option\nv0.0.5 - Add sunrise/sunset options with offsets\nv0.0.4 - Production Release",
+ "dateReleased":"2025-12-17",
+ "releaseNotes":"v0.0.7 - Add Pause Reoccurance\nv0.0.6 - Add Pause Date Range, additional tool tips, and rain detect option\nv0.0.5 - Add sunrise/sunset options with offsets\nv0.0.4 - Production Release",
  "apps": [
   {
      "id":"5262d90f-fad2-4a40-88b1-142070b68b31",

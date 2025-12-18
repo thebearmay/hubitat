@@ -19,9 +19,10 @@
  *    30Oct2025        thebearmay            v0.0.4 - Add the initialization values, and Tool Tips
  *    03Nov2025        thebearmay            v0.0.5 - Add sunrise/sunset offset logic
  *	  15Dec2025		   thebearmay			 v0.0.6 - Add Pause Date Range, additional tool tips, and rain detect option
+ *	  16Dec2025		   thebearmay			 v0.0.7 - Add Pause Reoccurance 
 */
 
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.0.7'  }
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -111,6 +112,7 @@ def configPage(){
             String endTime = getInputElemStr(name:'eTime', type:'time', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Closing Time Override</b>', defaultValue: "${settings['eTime']}", hoverText:"This value will override the illumination setting")
 			String begDate = getInputElemStr(name:'sPauseDate', type:'date', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Pause Starting Date</b>', defaultValue: "${settings['sPauseDate']}", hoverText:"Suspend app execution starting on this date")
             String endDate = getInputElemStr(name:'ePauseDate', type:'date', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Pause Ending Date</b>', defaultValue: "${settings['ePauseDate']}", hoverText:"End app suspension after this date")
+            String dateReoccur = getInputElemStr(name:'pauseReoccur', type:'enum', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Pause Reoccurs</b>', defaultValue: "${settings['dateReoccur']}", hoverText:"Sets next occurance automatically", options:['Weekly','Monthly','Annually'])            
             String bSrS = getInputElemStr(name:'begSunRiseSet', type:'enum', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Use Opening Sunrise/Sunset</b>', defaultValue: "${settings['begSunRiseSet']}", options:['Sunrise','Sunset'], hoverText:"This value will override the Opening Time above")
             String eSrS = getInputElemStr(name:'endSunRiseSet', type:'enum', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Use Closing Sunrise/Sunset</b>', defaultValue: "${settings['endSunRiseSet']}", options:['Sunrise','Sunset'], hoverText:"This value will override the Closing Time above")
 			String bSrsO = getInputElemStr(name:'begOffset', type:'number', width:'15em', radius:'12px', background:'#e6ffff', title:'<b>Offset in Minutes</b>', defaultValue: "${settings['begOffset']}")
@@ -125,8 +127,11 @@ def configPage(){
             cTable += "<tr><td>${endTime}</td><td>${begTime}</td><td></td></tr>"
             cTable += "<tr><td>${eSrS}</td><td>${eSrsO}</td><td></td></tr>"
             cTable += "<tr><td>${bSrS}</td><td>${bSrsO}</td><td></td></tr>"
-            cTable += "<tr><td>${begDate}</td><td>${endDate}</td><td></td></tr></table>"
-               
+            cTable += "<tr><td>${begDate}</td><td>${endDate}</td><td>${dateReoccur}</td></tr></table>"
+            
+            //app.removeSetting('sPauseDate')
+            //app.removeSetting('ePauseDate')
+            
 			if(ePauseDate && sPauseDate){
                 tNow = new Date()
 				dWork = sPauseDate.split('-')
@@ -135,7 +140,8 @@ def configPage(){
     			eDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())  
                 if(sDate <= tNow && eDate > tNow){ //app is paused
 					paragraph "<span style='font-weight:bold;font-size:larger;background-color:yellow;'>Application is Paused</span>"                   
-                }
+                } else if(pauseReoccur && eDate < tNow)
+                    setReoccur()
     		}
             
 
@@ -340,6 +346,8 @@ void forceOpen(){
     	eDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())        
         if(sDate <= tNow && eDate > tNow) //app is paused
 			return
+        else if(pauseReoccur && eDate < tNow)
+			setReoccur()
     }
 	shadeDev.each {
         if(!reverseDir){
@@ -368,6 +376,8 @@ void forceClose(){
     	eDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())        
         if(sDate <= tNow && eDate > tNow) //app is paused
 			return
+        else if(pauseReoccur  && eDate < tNow)
+			setReoccur()
     }
 	shadeDev.each {
         if(!reverseDir){
@@ -399,6 +409,8 @@ void openCheck(){
     	eDate = new Date(dWork[0].toInteger()-1900,dWork[1].toInteger()-1,dWork[2].toInteger())        
         if(sDate <= tNow && eDate > tNow) //app is paused
 			return
+        else if(pauseReoccur && eDate < tNow)
+			setReoccur()        
     }
 
     if(tNow > location.sunrise && tNow < location.sunset && state.avgWind < maxWind && state.avgLight >= minLight  && state.avgRain < minRain ) {
@@ -406,6 +418,50 @@ void openCheck(){
     } else {
 		forceClose()
     }
+}
+
+void setReoccur(){
+	sdWork = sPauseDate.split('-')
+	sDate = new Date(sdWork[0].toInteger()-1900,sdWork[1].toInteger()-1,sdWork[2].toInteger())
+	edWork = ePauseDate.split('-')
+	eDate = new Date(edWork[0].toInteger()-1900,edWork[1].toInteger()-1,edWork[2].toInteger())
+    long eDateL = eDate.getTime()
+    long sDateL = sDate.getTime()
+    Date tNow = new Date()
+    long tNowL = tNow.getTime()
+
+    if(pauseReoccur == 'Weekly') {
+        while (sDateL < tNowL) {
+            sDateL += (7*24*60*60*1000)
+            eDateL += (7*24*60*60*1000)
+        }
+        sDate = new Date(sDateL)
+        eDate = new Date(eDateL)
+    } else if(pauseReoccur == 'Monthly') {
+        while(sDate < tNow) {
+        	sDate.setMonth(sDate.getMonth() % 12 + 1)
+        	eDate.setMonth(eDate.getMonth() % 12 + 1)
+        }
+    } else if(pauseReoccur == 'Annually') {
+        while(sDate < tNow) {
+        	sDate.setYear(sDate.getYear() + 1)
+        	eDate.setYear(eDate.getYear() + 1)
+        }
+    }
+	app.updateSetting('sPauseDate',[value:"${formatDatePref(sDate)}", type:'date'])
+    app.updateSetting('ePauseDate',[value:"${formatDatePref(eDate)}",type:'date'])
+    
+}
+
+String formatDatePref(inDate) {
+	mWork = inDate.getMonth()+1
+	if(mWork < 10) 
+    	mWork = "0${mWork}"
+    dWork = inDate.getDate()
+    if(dWork < 10)
+    	dWork = "0${dWork}"
+	prefStr = "${inDate.getYear()+1900}-${mWork}-${dWork}"
+    return prefStr
 }
 
 String fSort(fBuff){

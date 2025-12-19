@@ -198,11 +198,11 @@ HashMap jsonResponse(retMap){
 String buildPage(){
     HashMap hubDataMap = getHubJson()
     String basicData = buildBase(hubDataMap)
-	if(selectedDev.currentValue('cpuPct'))
+	if(selectedDev.currentValue('cpuPct') != null)
 		String c1 = buildChart([attrSelect:'cpuPct',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[8,20,100],i:0])
 	else 
 		c1 = '<p style="font-weight:bold;background-color:yellow">CPU Percentage Not Available - check Hub Info Device</p>'
-	if(selectedDev.currentValue('freeMemory')){
+	if(selectedDev.currentValue('freeMemory') != null){
 		String fmUnit = selectedDev.currentState('freeMemory')?.unit
 		if(fmUnit == 'MB') 
 			cScale = 1 
@@ -213,7 +213,7 @@ String buildPage(){
 		String c2 = buildChart([attrSelect:'freeMemory',cList:['\"#fd0a03\"','\"#fdf503\"','\"#0efb1c\"'],wList:[100,200,2000], scale:cScale, i:1])
 	} else 
 		c2 = '<p style="font-weight:bold;background-color:yellow">Free Memory Not Available - check Hub Info Device</p>'
-	if(selectedDev.currentValue('temperature')){
+	if(selectedDev.currentValue('temperature') != null){
 		String tUnit = selectedDev.currentState('temperature')?.unit
 		String c3
 		if(tUnit.contains('C')){

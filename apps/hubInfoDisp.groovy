@@ -198,7 +198,7 @@ HashMap jsonResponse(retMap){
 String buildPage(){
     HashMap hubDataMap = getHubJson()
     String basicData = buildBase(hubDataMap)
-	String c1 == '<p style="font-weight:bold;background-color:yellow">CPU Percentage Not Available - check Hub Info Device</p>'
+	String c1 = '<p style="font-weight:bold;background-color:yellow">CPU Percentage Not Available - check Hub Info Device</p>'
 	String c2 = '<p style="font-weight:bold;background-color:yellow">Free Memory Not Available - check Hub Info Device</p>'
 	String c3 = '<p style="font-weight:bold;background-color:yellow">Hub Temperature Not Available - check Hub Info Device</p>'
 	if(selectedDev.currentValue('cpuPct') != null)

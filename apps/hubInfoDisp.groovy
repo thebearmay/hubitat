@@ -22,11 +22,12 @@
  *	  10Apr2025								 v0.1.5	- Add CPU Temperature chart
  *    12May2025                              v0.1.6 - Add Full Screen option
  *	  25May2025								 v0.1.7 - Change capability to device.HubInformationDriverv3
+ *	  19Dec2025								 v0.1.8 - Trap the start up error when the Hub Info device hasn't fully populated
  */
     
 
 
-static String version()	{  return '0.1.7'  }
+static String version()	{  return '0.1.8'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -196,23 +197,32 @@ HashMap jsonResponse(retMap){
 
 String buildPage(){
     HashMap hubDataMap = getHubJson()
-    String basicData = buildBase(hubDataMap)    
-    String c1 = buildChart([attrSelect:'cpuPct',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[8,20,100],i:0])
-    String fmUnit = selectedDev.currentState('freeMemory')?.unit
-    if(fmUnit == 'MB') 
-    	cScale = 1 
-    else if(fmUnit == 'GB')
-        cScale = 0.001
-    else
-        cScale = 1000
-    String c2 = buildChart([attrSelect:'freeMemory',cList:['\"#fd0a03\"','\"#fdf503\"','\"#0efb1c\"'],wList:[100,200,2000], scale:cScale, i:1])
-    String tUnit = selectedDev.currentState('temperature')?.unit
-    String c3
-    if(tUnit.contains('C')){
-        c3 = buildChart([attrSelect:'temperature',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[65,80,104],i:2])
-    }else {     
-    	c3 = buildChart([attrSelect:'temperature',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[150,176,220],i:2])    
-    }
+    String basicData = buildBase(hubDataMap)
+	if(selectedDev.currentValue('cpuPct'))
+		String c1 = buildChart([attrSelect:'cpuPct',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[8,20,100],i:0])
+	else 
+		c1 = '<p style="font-weight:bold;background-color:yellow">CPU Percentage Not Available - check Hub Info Device</p>'
+	if(selectedDev.currentValue('freeMemory')){
+		String fmUnit = selectedDev.currentState('freeMemory')?.unit
+		if(fmUnit == 'MB') 
+			cScale = 1 
+		else if(fmUnit == 'GB')
+			cScale = 0.001
+		else
+			cScale = 1000
+		String c2 = buildChart([attrSelect:'freeMemory',cList:['\"#fd0a03\"','\"#fdf503\"','\"#0efb1c\"'],wList:[100,200,2000], scale:cScale, i:1])
+	} else 
+		c2 = '<p style="font-weight:bold;background-color:yellow">Free Memory Not Available - check Hub Info Device</p>'
+	if(selectedDev.currentValue('temperature')){
+		String tUnit = selectedDev.currentState('temperature')?.unit
+		String c3
+		if(tUnit.contains('C')){
+			c3 = buildChart([attrSelect:'temperature',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[65,80,104],i:2])
+		}else {     
+			c3 = buildChart([attrSelect:'temperature',cList:['\"#0efb1c\"','\"#fdf503\"','\"#fd0a03\"'],wList:[150,176,220],i:2])    
+		}
+	} else 
+		c3 = '<p style="font-weight:bold;background-color:yellow">Hub Temperature Not Available - check Hub Info Device</p>'	
     String t1 = buildTrend()
     String lat = selectedDev.currentValue('latitude')
     String lon = selectedDev.currentValue('longitude')

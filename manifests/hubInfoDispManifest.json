@@ -1,10 +1,10 @@
 {
  "packageName":"Hub Detailed Information Display",
  "author":"Jean P. May, Jr.",
- "version":"0.1.7",
+ "version":"0.1.8",
  "minimumHEVersion":"2.4.0.1",
- "dateReleased":"2025-05-23",
- "releaseNotes":"v0.1.7 Change capability to device.HubInformationDriverv3 to make selecting the device easier\nv0.1.6 add full screen option\nv0.1.5 add cpu temperature chart\nv0.1.4 Change windy url\nv0.1.3 fix history height\nv0.1.2 add memory history graph\nv0.1.1 fix for freememory units other than KB",
+ "dateReleased":"2025-12-19",
+ "releaseNotes":"v0.1.8 - capture null return from the HID\nv0.1.7 Change capability to device.HubInformationDriverv3 to make selecting the device easier\nv0.1.6 add full screen option\nv0.1.5 add cpu temperature chart\nv0.1.4 Change windy url\nv0.1.3 fix history height\nv0.1.2 add memory history graph\nv0.1.1 fix for freememory units other than KB",
   "files": [
   {
      "id":"6e21a3eb-6a98-43c3-9f44-37756fc02473",

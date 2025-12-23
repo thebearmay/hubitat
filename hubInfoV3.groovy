@@ -86,6 +86,7 @@
  *	  2025-11-25				 v3.1.20 - Extend H2 data timeout to 1500
  *	  2025-11-27				 v3.1.21 - change H2 to httpGet
  *	  2025-12-07				 v3.1.22 - add javaDirect
+ *	  2025-12-23				 v3.1.23 - move driver version update code
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -99,7 +100,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.22"}
+static String version() {return "3.1.23"}
 
 metadata {
     definition (
@@ -416,6 +417,8 @@ void poll4(){
 }
 
 void baseData(dummy=null){
+	if(driverVersionCheck())
+    	runIn(5,"updated")
     String model = getHubVersion() // requires >=2.2.8.141
     updateAttr("hubModel", model)
     

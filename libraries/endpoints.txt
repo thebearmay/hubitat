@@ -286,6 +286,7 @@
 * ZWave  * /hub/zwave2/reinterview?node=<0x9999>
 * ZWave  * /hub/zwave2/enableDebugLogging
 * ZWave  * /hub/zwave2/disableDebugLogging
+* ZWave  * /hub/zwave2/getControllerState
 * ZWave  * 
 * ZWave  * to resolve a firmware bug 
 * ZWave  * /hub/zwave2/watchdog/disable

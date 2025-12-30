@@ -26,7 +26,7 @@ definition (
 	author: 		"Jean P. May, Jr.",
 	description: 	"Search Devices for port 39501 using IP and MAC",
 	category: 		"Utility",
-	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/xxx.groovy",
+	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/apps/dniSearch.groovy",
     installOnOpen:  true,
 	oauth: 			false,
     iconUrl:        "",

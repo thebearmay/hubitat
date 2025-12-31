@@ -126,8 +126,9 @@
 * Manage	 * /management/setStaticIp?token=<TOKEN>&address=<IP>&netmask=<net mask>&gateway=<gateway IP>&nameserver=<nameserver IP>			
 * Manage	 * 			
 * Matter	 * Matter Details			
-* Matter	 * /hub/matterDetails/json			
-* Matter	 *			
+* Matter	 * /hub/matterDetails/json		
+* Matter	 * Reset all Matter settings
+* Matter   * /hub/matterDetails?fullui=true		
 * Mem	 * Free Memory			
 * Mem	 * /hub/advanced/freeOSMemory			
 * Mem	 * /hub/advanced/freeOSMemoryHistory			

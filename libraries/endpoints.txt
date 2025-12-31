@@ -129,6 +129,7 @@
 * Matter	 * /hub/matterDetails/json		
 * Matter	 * Reset all Matter settings
 * Matter   * /hub/matterDetails?fullui=true		
+* Matter   *
 * Mem	 * Free Memory			
 * Mem	 * /hub/advanced/freeOSMemory			
 * Mem	 * /hub/advanced/freeOSMemoryHistory			

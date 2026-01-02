@@ -16,7 +16,7 @@
 * Apps	 *	/hub/advanced/stateCompressionStatus // returns true/false to show whether features is enabled.
 * Apps	 *	/hub/advanced/enableStateCompression
 * Apps	 *	/hub/advanced/disableStateCompression
-* Apps   *  /app/list/single/data/<appCodeId>
+* Apps   *  /app/list/single/data/<appCodeId> // app meta data and source
 * Apps	 *	
 * Backup    * Backup Download
 * Backup    * /hub/backupDB?fileName=latest

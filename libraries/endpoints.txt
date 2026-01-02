@@ -121,14 +121,15 @@
 * Manage	 * /hub/advanced/getManagementToken 			
 * Manage	 * /management/firmwareUpdate?token=<tokenValue> //update firmware			
 * Manage	 * /management/firmwareUpdateStatus?token=<tokenValue> //get current firmware update status.			
-* Manage	*  /management/clone?token=tokenValue&source=<sourceHubIpAddress>&sourceToken=<sourceHubTokenValue> //clones hub's database from the source hub, preserving current hub's management token			
+* Manage	 * //clones hub's database from the source hub, preserving current hub's management token		
+* Manage	 * /management/clone?token=tokenValue&source=<sourceHubIpAddress>&sourceToken=<sourceHubTokenValue> 
 * Manage	 * /management/reboot?token=<TOKEN>			
 * Manage	 * /management/setStaticIp?token=<TOKEN>&address=<IP>&netmask=<net mask>&gateway=<gateway IP>&nameserver=<nameserver IP>			
 * Manage	 * 			
 * Matter	 * Matter Details			
 * Matter	 * /hub/matterDetails/json		
-* Matter	 * Reset all Matter settings
-* Matter   * /hub/matterDetails?fullui=true		
+* Matter	 * Get Button to Reset all Matter settings
+* Matter	 * /hub/matterDetails?fullui=true		
 * Matter   *
 * Mem	 * Free Memory			
 * Mem	 * /hub/advanced/freeOSMemory			

@@ -101,6 +101,8 @@
 * Hub    *
 * Hub    * /hub/details/json //2.4.0.x
 * Hub    * /hub/messages
+* Hub    * /hub/cpuInfo
+* Hub    * /hub/echoDiscovery  //Can Amazon Echo see hub
 * Hub    *
 * Hub Vars    *
 * Hub Vars    * /installedapp/configure/json/<ID of HubVar app>/hubVar

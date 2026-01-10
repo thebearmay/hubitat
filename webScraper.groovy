@@ -18,11 +18,12 @@
  *    27Mar2022    thebearmay    allow scraping of Hub UI with Security
  *    31Mar2022    thebearmay    option to show raw source
  *    27Jul2024    thebearmay    fix polling issue
+ *	  10Jan2026					 Fix Offsets not carrying correctly
 */
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.5"}
+static String version() {return "0.0.8"}
 
 metadata {
     definition (
@@ -98,7 +99,9 @@ void scrape() {
     scrape(null,null,null,null,null)
 }
 
-void scrape (url=null, searchStr=null, beg=0, end=1, follow){
+void scrape (String url, String searchStr, BigDecimal beg, BigDecimal end, follow='false'){
+    beg=beg.toInteger()
+    end=end.toInteger()
     if(debugEnabled) log.debug "$url, /$searchStr/, $beg, $end"
     if(url == null){
         url = device.currentValue("lastURL",true)

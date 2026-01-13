@@ -87,6 +87,7 @@
  *	  2025-11-27				 v3.1.21 - change H2 to httpGet
  *	  2025-12-07				 v3.1.22 - add javaDirect
  *	  2025-12-23				 v3.1.23 - move driver version update code
+ *	  2026-01-13				 v3.1.24 - h2Data issue
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -100,7 +101,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.23"}
+static String version() {return "3.1.24"}
 
 metadata {
     definition (
@@ -1021,17 +1022,16 @@ void getHubMesh(resp, data){
         if (resp.getStatus() == 200){
             if (debugEnable) log.info resp.data
             def jSlurp = new JsonSlurper()
-            Map h2Data = (Map)jSlurp.parseText((String)resp.data)
+            Map hmData = (Map)jSlurp.parseText((String)resp.data)
             i=0
             subMap2=[:]
             jStr="["
-            h2Data.hubList.each{
+            hmData.hubList.each{
                 if(i>0) jStr+=","
                 jStr+="{\"hubName\":\"$it.name\","
                 jStr+="\"active\":\"$it.active\","
                 jStr+="\"offline\":\"$it.offline\","
-                jStr+="\"ipAddress\":\"$it.ipAddress\"}"
-               // jStr+="\"meshProtocol\":\"$h2Data.hubMeshProtocol\"}"          
+                jStr+="\"ipAddress\":\"$it.ipAddress\"}"        
                 i++
             }
             jStr+="]"
@@ -1075,16 +1075,19 @@ void hub2DataReq() {
         ]                   
     ]
     
-        if(debugEnable)log.debug params
+	if(debugEnable)
+    	log.debug params
     httpGet(params) {resp ->
 	    try{
             if (debugEnable) 
         		log.debug resp.data
             try{
-				def jSlurp = new JsonSlurper()
-			    h2Data = (Map)jSlurp.parseText((String)resp.data)
-            } catch (eIgnore) {
-                if (debugEnable) log.debug "H2: $h2Data <br> ${resp.data}"
+//				def jSlurp = new JsonSlurper()
+//			    h2Data = (Map)jSlurp.parseText((String)resp.data)
+            	h2Data = (Map)resp.data
+            } catch (eMsg) {
+                if (debugEnable) 
+                	log.debug "H2: $eMsg<br>$h2Data <br> ${resp.data}"
                 return
             }
             

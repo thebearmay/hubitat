@@ -24,7 +24,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.6"}
+static String version() {return "0.1.7"}
 
 metadata {
     definition (
@@ -124,7 +124,7 @@ void getPollValues(){
 @SuppressWarnings('unused')
 void getPTData(resp, data){
     if(debugEnable) log.debug "getPTData"
-    //String simString = '{"free_space":"667648","rx_id":"227","tx_id":"50","tx_rssi":"-71","rx_rssi":"-59","firmware_version":"212","hardware_version":"4","id":"483FDA91E94F","ip":"10.54.25.254","subnet":"255.255.255.0","gateway":"10.54.25.1","dns":"unknown","tx_firmware_version":"7","tx_hardware_version":"5","fails":"3","rx_sensors":"[]","tx_sensors":"[{"1":366,"z":58},{"2":6.16},{"3":-15.01}]"}'
+    //String simString = '{"free_space":"667648","rx_id":"227","tx_id":"50","tx_rssi":"-71","rx_rssi":"-59","firmware_version":"212","hardware_version":"4","id":"483FDA91E94F","ip":"10.54.25.254","subnet":"255.255.255.0","gateway":"10.54.25.1","dns":"unknown","tx_firmware_version":"7","tx_hardware_version":"5","fails":"3","rx_sensors":"[]","tx_sensors":"[{"1":356,"z":58},{"2":6.16},{"3":-15.01}]"}'
     try{
         if (resp.getStatus() == 200 || simString){
             if (debugEnable) log.info resp.data
@@ -135,12 +135,19 @@ void getPTData(resp, data){
             focusData = dataIn.substring(dataIn.indexOf('"tx_sensors":"')+14,dataIn.length()-2)
             focusData = focusData.replace("{","")
             focusData = focusData.replace("}","")
-            updateAttr("debug",focusData)
-            HashMap retData=(HashMap)evaluate(focusData)
-            updateAttr("tx1",retData['1'])
-            updateAttr("tx1z",retData['z'])
-            updateAttr("tx2",retData['2'])
-            updateAttr("tx3",retData['3'])
+            focusData = focusData.replace("]","")
+            focusData = focusData.replace("[","")
+            focusData = focusData.replace("\"","")
+            fdSplit = focusData.split(",")
+            //updateAttr("debug1","$focusData")
+            //updateAttr("debug",fdSplit)
+            fdSplit.each {
+                items=it.split(":")
+                if(items[0] == 'z')
+                	updateAttr("tx1z","${items[1]}")
+                else
+                    updateAttr("tx${items[0]}","${items[1]}")
+            }
             computeValues()
         } else {
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} while fetching IP"

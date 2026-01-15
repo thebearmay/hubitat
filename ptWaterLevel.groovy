@@ -24,7 +24,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.7"}
+static String version() {return "0.1.9"}
 
 metadata {
     definition (
@@ -124,7 +124,7 @@ void getPollValues(){
 @SuppressWarnings('unused')
 void getPTData(resp, data){
     if(debugEnable) log.debug "getPTData"
-    //String simString = '{"free_space":"667648","rx_id":"227","tx_id":"50","tx_rssi":"-71","rx_rssi":"-59","firmware_version":"212","hardware_version":"4","id":"483FDA91E94F","ip":"10.54.25.254","subnet":"255.255.255.0","gateway":"10.54.25.1","dns":"unknown","tx_firmware_version":"7","tx_hardware_version":"5","fails":"3","rx_sensors":"[]","tx_sensors":"[{"1":356,"z":58},{"2":6.16},{"3":-15.01}]"}'
+    //String simString = '{"free_space":"667648","rx_id":"227","tx_id":"50","tx_rssi":"-71","rx_rssi":"-59","firmware_version":"212","hardware_version":"4","id":"483FDA91E94F","ip":"10.54.25.254","subnet":"255.255.255.0","gateway":"10.54.25.1","dns":"unknown","tx_firmware_version":"7","tx_hardware_version":"5","fails":"3","rx_sensors":"[]","tx_sensors":"[{"1":359,"z":58},{"2":6.16},{"3":-15.01}]"}'
     try{
         if (resp.getStatus() == 200 || simString){
             if (debugEnable) log.info resp.data
@@ -160,29 +160,30 @@ void getPTData(resp, data){
 @SuppressWarnings('unused')
 void computeValues() {
     if(debugEnable) log.debug "Computing Values"
-    if((obsFull && obsEmpty) || (obsFull && factoryZero)){
-        if(factoryZero) zValue = device.currentValue("tx1z", true).toInteger()
-        else zValue =  obsEmpty
-        Integer fillPct = (((device.currentValue("tx1", true).toInteger() - zValue)/(obsFull - zValue))*100)
-        updateAttr("fillPct", fillPct, "%")
-        if(tankCap > 0){
-            Integer computedFill = (tankCap * (fillPct / 100)) 
-            updateAttr("compLiquid", computedFill, volumeUnit)
-        }        
+    try{
+	    if((obsFull && obsEmpty) || (obsFull && factoryZero)){
+    	    if(factoryZero) 
+        		zValue = device.currentValue("tx1z", true).toInteger()
+        	else 
+            	zValue =  obsEmpty
+	        Integer fillPct = (((device.currentValue("tx1", true).toInteger() - zValue)/(obsFull - zValue))*100)
+    	    updateAttr("fillPct", fillPct, "%")
+        	if(tankCap > 0){
+            	Integer computedFill = (tankCap * (fillPct / 100)) 
+            	updateAttr("compLiquid", computedFill, volumeUnit)
+        	}        
+    	}	
+    	// Unit uses 4 AA batteries with a nominal voltage reported of ~6.0v, 1.5v/battery is considered full and 1.2v is considered "dead"
+    	Integer battery = (((device.currentValue("tx2", true).toDouble() - (1.2 * 4)) / (6 - (1.2 * 4)))*100)
+   		if(battery > 100) battery = 100
+    	if(battery < 0) battery = 0
+    	if(debugEnable)
+    		log.debug "Battery: $battery"
+    	updateAttr("battery", battery, "%")
+    } catch (msg) {
+    	log.error "Compute Values failed - $msg<br>Other processing continues"
     }
-    // Unit uses 4 AA batteries with a nominal voltage reported of ~6.0v, 1.5v/battery is considered full and 1.2v is considered "dead"
-    Integer battery = (((device.currentValue("tx2").toDouble() - (1.2 * 4)) / (6 - (1.2 * 4)))*100)
-    if(battery > 100) battery = 100
-    if(battery < 0) battery = 0
-    if(debugEnable)
-    	log.debug "Battery: $battery"
-    updateAttr("battery", battery, "%")
-    buildHtml()
-                                                                            
-}
-
-@SuppressWarnings('unused')
-void buildHtml() {
+    
     String htmlStr = ""
     htmlStr+="<div class='tile-contents'>"
     htmlStr+="<div class='tile-primary'>Fill Level ${device.currentValue('fillPct',true)}%<br/>${device.currentValue('compLiquid',true)} ${device.currentState('compLiquid')?.unit}</div>"

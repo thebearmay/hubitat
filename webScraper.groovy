@@ -19,11 +19,12 @@
  *    31Mar2022    thebearmay    option to show raw source
  *    27Jul2024    thebearmay    fix polling issue
  *	  10Jan2026					 Fix Offsets not carrying correctly
+ *	  15Jan2026					 fix recurring logic
 */
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.8"}
+static String version() {return "0.0.9"}
 
 metadata {
     definition (
@@ -42,6 +43,7 @@ metadata {
         attribute "lastSearch", "STRING"
         attribute "offsets", "STRING"
         attribute "lastRun", "STRING"
+        attribute "followed", "STRING"
  
         command "scrape",[[name:"inputURL*", type:"STRING", description:"Input URL"],
                           [name:"searchStr*", type:"STRING", description:"String to look for"],
@@ -65,11 +67,6 @@ preferences {
         input("sitePwd", "password", title: "Site Password", required: false)
         input("siteSubmit", "string", title: "Site Submit function (normally Login):", required: false)
     }    
-    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true)
-    if (security) { 
-        input("username", "string", title: "Hub Security Username", required: false)
-        input("password", "password", title: "Hub Security Password", required: false)
-    }
 }
 
 @SuppressWarnings('unused')
@@ -95,28 +92,21 @@ void updated(){
 }
 
 void scrape() {
-    //log.error "No Parameters Passed"
-    scrape(null,null,null,null,null)
+    offset = device.currentValue("offsets", true).replace('[','').replace(']','').split(',')
+    scrape(device.currentValue('lastURL'),device.currentValue('lastSearch'),offset[0].toInteger(),offset[1].toInteger(),device.currentValue('followed'))
 }
 
-void scrape (String url, String searchStr, BigDecimal beg, BigDecimal end, follow='false'){
+void scrape (url, searchStr, beg, end, follow='false'){
     beg=beg.toInteger()
     end=end.toInteger()
     if(debugEnabled) log.debug "$url, /$searchStr/, $beg, $end"
-    if(url == null){
-        url = device.currentValue("lastURL",true)
-        searchStr = device.currentValue("lastSearch",true)
-        ArrayList offset = device.currentValue("offsets", true).replace('[','').replace(']','').split(',')
-        beg = offset[0].toInteger()
-        end = offset[1].toInteger()
-    }
-    //log.debug"$beg $end"
     updateAttr("lastURL", url)
     updateAttr("lastSearch",searchStr)
     ofList = [beg, end]
     updateAttr("offsets", ofList.toString())
     updateAttr("successful","running")
     updateAttr("textReturned","null")
+    updateAttr("followed","$follow")
     dataRet = readExtFile(url, follow).toString()
     if(debugEnabled) "${dataRet.length()} characters returned"
     if(showSrc) {
@@ -146,42 +136,11 @@ void scrape (String url, String searchStr, BigDecimal beg, BigDecimal end, follo
 }
 
 String readExtFile(fName, follow){
-    String cookie=(String)null
-    if(security) {
-        httpPost(
-            [
-                uri: "http://${location.hub.localIP}:8080",
-                path: "/login",
-                query: [ loginRedirect: "/" ],
-                body: [
-                    username: username,
-                    password: password,
-                    submit: "Login"
-                ]
-            ]
-        ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
-    } 
-    
-    if(siteLogin) {
-        httpPost(
-            [
-                uri: sitePath,
-                query: [ loginRedirect: "/" ],
-                body: [
-                    username: siteUname,
-                    password: sitePwd,
-                    submit: siteSubmit
-                ]
-            ]
-        ) { resp -> cookie = ((List)((String)resp?.headers?.'Set-Cookie')?.split(';'))?.getAt(0) }
-    }
-   
     def params = [
         uri: fName,
         contentType: "text/html",
         textParser: true,
-        followRedirects: follow,
-        headers: ["Cookie": cookie]                   
+        followRedirects: follow,            
     ]
 
     try {

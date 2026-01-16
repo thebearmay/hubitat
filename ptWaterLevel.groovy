@@ -24,7 +24,7 @@ import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 
 @SuppressWarnings('unused')
-static String version() {return "0.1.9"}
+static String version() {return "0.1.10"}
 
 metadata {
     definition (
@@ -138,6 +138,7 @@ void getPTData(resp, data){
             focusData = focusData.replace("]","")
             focusData = focusData.replace("[","")
             focusData = focusData.replace("\"","")
+            focusData = focusData.replace("\\","")
             fdSplit = focusData.split(",")
             //updateAttr("debug1","$focusData")
             //updateAttr("debug",fdSplit)

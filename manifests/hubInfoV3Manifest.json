@@ -1,10 +1,10 @@
 {
  "packageName":"Hub Information Driver v3",
  "author":"Jean P. May, Jr.",
- "version":"3.1.24",
+ "version":"3.1.25",
  "minimumHEVersion":"2.2.8.141",
- "dateReleased":"2026.01-13",
- "releaseNotes":"v3.1.24 - h2Data issue\nv3.1.23 - move driver version update code\nv3.1.22 - add javaDirect\nv3.1.21 - H2 408 error fix",
+ "dateReleased":"2026-01-20",
+ "releaseNotes":"v3.1.25 - make freeMem15 unit agree with freeMemory\nv3.1.24 - h2Data issue\nv3.1.23 - move driver version update code\nv3.1.22 - add javaDirect\nv3.1.21 - H2 408 error fix",
  "documentationLink":"https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html",
  "communityLink":"https://community.hubitat.com/t/coming-soon-hub-information-driver-v3/109902",
  "drivers": [

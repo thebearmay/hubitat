@@ -88,6 +88,7 @@
  *	  2025-12-07				 v3.1.22 - add javaDirect
  *	  2025-12-23				 v3.1.23 - move driver version update code
  *	  2026-01-13				 v3.1.24 - h2Data issue
+ *	  2023-01-20				 v3.1.25 - make freeMem15 unit agree with freeMemory
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -722,8 +723,23 @@ void get15Min(resp, data){
         updateAttr("cpu15Min",cpuWork.round(2))
         cpuWork = (cpuWork/4.0D)*100.0D //Load / #Cores - if cores change will need adjusted to reflect
         updateAttr("cpu15Pct",cpuWork.round(2),"%")
-        updateAttr("freeMem15",memWork)
-    }
+        
+		if(freeMemUnit == "Dynamic"){
+			if(memWork > 1048575){ 
+				freeMemUnit = "GB"
+			}else if(memWork > 150000){
+				freeMemUnit = "MB"
+            }else 
+                freeMemUnit = "KB"
+        }
+    	if(freeMemUnit == "GB")
+			updateAttr("freeMem15",(new Float(memWork/1024/1024).round(2)), "GB")
+		else
+		if(freeMemUnit == "MB")
+			updateAttr("freeMem15",(new Float(memWork/1024).round(2)), "MB")
+		else
+			updateAttr("freeMem15",memWork, "KB")
+        }
 }
 
 void cpuLoadReq(){

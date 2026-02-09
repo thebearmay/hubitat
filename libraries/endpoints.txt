@@ -53,6 +53,7 @@
 * Device    * Device
 * Device    * /device/forceDelete/<devID>/yes
 * Device    * /hub2/devicesList
+* Device    * /device/drivers
 * Device    * /hub2/userDeviceTypes
 * Device    * /device/fullJson/<devID>  //2.4.0.x
 * Devive    * /device/listJson?capability=capability.* //any valid capability
@@ -209,6 +210,7 @@
 * Retry    *
 * Rooms    *
 * Rooms    * /hub2/roomsList
+* Rooms    * /room/listRoomsJson
 * Rooms    *
 * Security	 * Security in Use			
 * Security	 * /logout 			

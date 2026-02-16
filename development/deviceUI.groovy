@@ -15,13 +15,12 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    
  */
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
 //include thebearmay.uiInputElements
-
 
 definition (
 	name: 			"Device UI", 
@@ -150,23 +149,27 @@ def appButtonHandler(btn) {
         default: 
             //state."${btn}Pushed" = true
             bParms = ''
+        	pList = []
         	inx=0
         	settings.sort().each {               
                 if(it.key.startsWith("$btn")){
                  //   log.debug "${it.properties}"
                     
                 	if(inx>0) bParms += ','
-                	bParms+=it.value
-                    bParms = "${it.value}"
+                	bParms=it.value
+                   	pList.add(it.value)
+                    app.removeSetting("$btn$inx")
                     inx++
                 }
         	}
         
-        	if(inx > 0)
-            	selDev."$btn"(bParms)
+        	if(inx > 1)
+        		selDev."$btn"(pList.each{it.value})
+        	else if(inx==1)
+                selDev."$btn"(bParms)
             else
                 selDev."$btn"()
-        //	log.debug "command $btn($bParms) requested"
+       		//log.debug "command selDev.$btn(${pList.each{it.value}}) requested"
 			state.message ="Command Executed"
         	state.refreshNeeded = true
             break

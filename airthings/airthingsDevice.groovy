@@ -145,7 +145,7 @@ def configure() {
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
-    desc = "${aKey} level of ${aValue} detected"
+    def desc = "${aKey} level of ${aValue} detected"
     sendEvent(name:aKey, value:aValue, unit:aUnit, descriptionText:desc)
 }
 
@@ -159,7 +159,7 @@ void dataRefresh(retData){
     if(debugEnabled) log.debug "$retData.data ${retData.data.size()}"
     retData.data.each{
         if(debugEnabled) log.debug "Each:${it.key}"
-        unit=""
+        def unit = ""
         switch (it.key){
             case("temp"):
                 unit="°C"
@@ -222,6 +222,7 @@ void dataRefresh(retData){
 				it.value = sdf.format(lastPoll)
                 //state.lastUpdate = it.value.toInteger()
             	//GFA
+                updateAttr("lastPoll", it.value, "") // unit=null above prevents generic path; call explicitly here
                 break
             default:
                 unit=""
@@ -243,7 +244,7 @@ void dataRefresh(retData){
     }
     calcAbsHumidity()
     if(tileTemplate && tileTemplate != "No selection" && tileTemplate != "--No Selection--"){
-        tileHtml = genHtml(tileTemplate)
+        def tileHtml = genHtml(tileTemplate)
         updateAttr("html","$tileHtml")
     }
 
@@ -252,6 +253,7 @@ void dataRefresh(retData){
 void calcAbsHumidity() {
     if(device.currentValue("temperature",true) == null || device.currentValue("humidity",true) == null)
         return //Calculation cannot continue
+    def deviceTempInCelsius
     if(useFahrenheit)
         deviceTempInCelsius = fahrenheitToCelsius(device.currentValue("temperature",true).toFloat())
     else
@@ -262,7 +264,7 @@ void calcAbsHumidity() {
     Double absHumidity = numerator/denominator
     //updateAttr("d", denominator)
     //updateAttr("n", numerator)
-    absHumidityR =  absHumidity.round(2)
+    def absHumidityR = absHumidity.round(2)
     updateAttr("absHumidity", absHumidityR, "g/m<sup>3</sup>")
 }
 
@@ -305,10 +307,10 @@ void calcPm25Aqi(pm25Val){
     Float aLevel = Math.floor(10 * c) / 10
     updateAttr("pm25Aqi",aLevel)
     updateAttr("airQualityIndex",aLevel.toInteger())
-    for (i=0;i<aqiLevel.size();i++){
+    for (int i=0;i<aqiLevel.size();i++){
         if(debugEnabled) log.debug "$aLevel:${aqiLevel[i].max}"
         if(aLevel <= aqiLevel[i].max){
-            pm25AqiText = "<span style='color:${aqiLevel[i].color}'>${aqiLevel[i].name}</span>"
+            def pm25AqiText = "<span style='color:${aqiLevel[i].color}'>${aqiLevel[i].name}</span>"
             updateAttr("pm25AqiText",pm25AqiText)
             break
         }

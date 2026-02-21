@@ -15,12 +15,13 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    
  */
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
 //include thebearmay.uiInputElements
+
 
 definition (
 	name: 			"Device UI", 
@@ -89,14 +90,14 @@ def uiRender(){
     dynamicPage (name: "uiRender", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: false, uninstall: false) { 
         section(name:"visualDisp",title:"", hideable: false, hidden: false){
             if(state.message){
-                paragraph "<span style='background-color:#006611;font-weight:bold;color:#ffffff'>${state.message}</span>"
+                paragraph "<span style='background-color:lightGreen;font-weight:bold;'>${state.message}</span>"
                 state.message =''
             }
             if(state.refreshNeeded){
                 state.refreshNeeded = false
                 paragraph "<script>window.location.reload()</script>"
             }
-            ndBtn = getInputElemStr(name:"newDev", type:'button', width:'10em', radius:'12px', background:'#2596be', title:"<span style='font-weight:bold;color:white'>New Device</span>")
+            ndBtn = getInputElemStr(name:"newDev", type:'button', width:'10em', radius:'12px', background:'#2596be', title:"<span style='font-weight:bold;color:white'>Change Device</span>")
 			stoPos = getInputElemStr(name:"savePos", type:'hidden', width:'1em', radius:'12px', background:'#2596be', title:"", submitOnChange:true, defaultValue:"")
             resetLO = getInputElemStr(name:"resetLayout", type:'button', width:'10em', radius:'12px', background:'#2596be', title:"<span style='font-weight:bold;color:white'>Reset Layout</span>")
             String fullScrn = "<script>document.getElementById('divSideMenu').setAttribute('style','display:none !important');document.getElementById('divMainUIHeader').setAttribute('style','height: 0 !important;');document.getElementById('divMainUIContent').setAttribute('style','padding: 0 !important;');document.getElementById('divMainUIFooter').setAttribute('style','display:none !important');contentHeight = Math.round(window.innerHeight * 1.2);document.getElementById('divMainUIContentContainer').setAttribute('style', 'background: white; height: ' + contentHeight + 'px !important;');document.getElementById('divLayoutControllerL2').setAttribute('style', 'height: ' + contentHeight + 'px !important;');</script><style>overflow-y: scroll !important;</style>"
@@ -124,6 +125,19 @@ def uiRender(){
                 app.removeSetting("savePos")
                 paragraph "<script>window.location.reload();</script>"
             }
+            if(state.savePrefPushed){
+                state.savePrefPushed = false               
+				settings.each{                 
+                    if(it.key.startsWith('pref')) {
+                        nKey = it.key.substring(4,).trim()
+                        sType = app.getSettingType("${it.key}")
+                        log.debug "$nKey $sType ${it.value}"
+                        selDev.updateSetting("${nKey}",[value:"${it.value}".trim(),type:"$sType"])
+                    }
+            	}
+                paragraph "<script>window.location.reload();</script>"
+                
+            }
             
             pContent= buildPage(devId)
            	pname = "devUIWork${app.id}.htm"
@@ -145,6 +159,10 @@ def appButtonHandler(btn) {
         	break
         case 'resetLayout':
         	state.resetLayoutPushed = true
+        	break
+        case 'savePref':
+        	state.message = 'Saving'
+        	state.savePrefPushed = true
         	break
         default: 
             //state."${btn}Pushed" = true
@@ -207,7 +225,12 @@ String buildPage(devId){
     }
     region2 += '<br><br><br>'
     
-    String pContent = html1+region1+html2+region2+html3+region3+html4+region4+html5+region5+html6+region6+html7   
+    region3 = buildPreference(deviceMap.settings)
+    region3 += "<br><br><br>"
+    savePref = getInputElemStr(name:"savePref", type:'button', width:'10em', radius:'12px', background:'#2596be', title:"<span style='font-weight:bold;color:white'>Save Prefs</span>")
+    region3 += savePref+"<br><br><br>"
+    
+    String pContent = ttStyleStr+html1+region1+html2+region2+html3+region3+html4+region4+html5+region5+html6+region6+html7   
     if(settings["savePos"])
     	pContent+="<script>parseStr('${settings["savePos"]}');</script>"
     else 
@@ -237,11 +260,6 @@ HashMap getDevice(devId){
 }
 
 String buildCommandBlock(parms){
-    /******************************************************************
-    *  Still need to address capability:true without parameters listed
-	*     but have them ie. !vShade
-    *  and commands with just arguments
-	*******************************************************************/
     
     LinkedList textType=["text","number","decimal","date","time","password","color"]
     String cBlock = ''
@@ -282,6 +300,35 @@ String buildCommandBlock(parms){
 
 	//log.debug "$cBlock<br>"
     return cBlock
+}
+
+
+String buildPreference(pSet){
+    ArrayList textType=["text","number","decimal","date","time","password","color"]
+    pBlock = ''
+    pSet.each {
+        if (it.options) {
+            //optsWork = "${it.options}".replace('[','').replace(']','').split(',')
+            optsWork = "${it.options}".split(',')
+            //log.debug optsWork
+        }
+        
+		defVal = it.value?:it.defaultValue
+        //log.debug "${it.name} $defVal"
+        
+        if (it.type == 'string') 
+        	it.type = 'text'
+        
+        if(textType.contains(pType)) {
+              pBlock +=getInputElemStr( [name:"pref${it.name}", type:"${it.type}", title:"<b>${it.title}</b>", width:"35em", background:"#ADD8E6", radius:"15px", options:optsWork, defaultValue:defVal, submitOnChange:true ])
+        }
+        if(it.type == 'enum') {
+        	pBlock +="</div>" // need to determine why this is needed
+        }
+ 
+    }
+    return pBlock
+    
 }
 
 String reverseCamel(sVal){
@@ -831,7 +878,7 @@ String inputItem(HashMap opt) {
     } else {
         step = ' '
     }
-    
+   
 	String computedStyle = ''
     if(opt.type == 'hidden'){
         opt.type='text'
@@ -839,6 +886,7 @@ String inputItem(HashMap opt) {
         computedStyle += 'visibility:hidden'
     }        
         
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -888,6 +936,7 @@ String inputTarea(HashMap opt) {
     if(opt.color) computedStyle += "color:${opt.color};"
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
 	if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+        if (opt.float) computedStyle +="float:${opt.float};"
     
     
     if(opt.hoverText && opt.hoverText != 'null'){  
@@ -919,6 +968,7 @@ String inputTarea(HashMap opt) {
 
 String inputCap(HashMap opt) {
     String computedStyle = ''
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -996,6 +1046,7 @@ String inputCap(HashMap opt) {
 
 String inputEnum(HashMap opt){
     String computedStyle = ''
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.type == 'mode') opt.options = location.getModes()
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
@@ -1027,24 +1078,40 @@ String inputEnum(HashMap opt){
     } else if(opt.defaultValue) selOpt.add("${opt.defaultValue}")
     if(mult != 'multiple') retVal+="<option value=''>Click to set</option>"
     opt.options.each{ option -> 
-        if("$option".contains(':')){
+        colonCount = "$option".count(':')
+        if(colonCount == 1 ){
             optSplit = "$option".replace('[','').replace(']','').split(':')
             optVal = optSplit[0]
             optDis = optSplit[1]
+        } else if (colonCount > 1 ) {
+            ord = colonCount%2
+            inx = ordinalIndexOf(option.toString(),':',ord)
+            if(inx > -1){
+            	optVal = "$option".substring(0,inx)
+            	optDis = "$option".substring(inx+1,)
+            }
         } else {
             optVal = option
             optDis = option
         }
         sel = ' '
         selOpt.each{
-            //log.debug "$it $optVal ${"$it" == "$optVal"}"
-            if("$it" == "$optVal" ) 
+            //log.debug "$it $optVal ${"$it".trim() == "$optVal".trim()}"
+            if("$it".trim() == "$optVal".trim() ) 
             	sel = 'selected'
         }
         retVal += "<option value='${optVal}' ${sel}>${optDis}</option>"
     }
     retVal+= "</select></div></div>"
     return retVal
+}
+
+int ordinalIndexOf(String str, String substr, int n) {
+    int pos = -1
+    (0..n).each { 
+        if (pos != -1 || it == 0) pos = str.indexOf(substr, pos + 1) 
+    }
+    pos
 }
 
 /*****************************************************************************
@@ -1072,6 +1139,7 @@ String inputBool(HashMap opt) {
     	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     
     String computedStyle = ''
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -1123,6 +1191,7 @@ String inputCheckbox(HashMap opt) {
     	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
 	opt.type = 'bool'
     String computedStyle = ''
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -1172,7 +1241,9 @@ String inputCheckbox(HashMap opt) {
 String buttonLink(HashMap opt) { //modified slightly from jtp10181's code
     if(!opt.name || !opt.title ) 
     	return "Error missing name or title"
+    
     String computedStyle = 'cursor:pointer;text-align:center;box-shadow: 2px 2px 4px #71797E;'
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -1205,6 +1276,7 @@ String buttonHref(HashMap opt) { //modified jtp10181's code
     if(!opt.destPage && !opt.destUrl) 
     	return "Error missing Destination info"
     String computedStyle = 'cursor:pointer;text-align:center;box-shadow: 2px 2px 4px #71797E;'
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -1242,6 +1314,7 @@ String btnDivHide(HashMap opt) {
     if(!opt.name || !opt.title || !opt.divName) 
     	return "Error missing name, title or division"
     String computedStyle = 'cursor:pointer;box-shadow: 2px 2px 4px #71797E;'
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(!opt.width) opt.width = '100%'
     computedStyle += "width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"

@@ -106,7 +106,6 @@ preferences {
 //        input("username","string", title:"Hub Security Username")
 //        input("password","string", title:"Hub Security Password")
 //    }
-    fileList = []
     fileList = listFiles()
 
     input("tileTemplate", "enum", title:"Template for generating HTML for dashboard tile", options:fileList, defaultValue:"--No Selection--", submitOnChange:true)
@@ -340,7 +339,7 @@ List<String> listFiles(){
             }
             fileList.add("--No Selection--")
         }
-        if(debugEnabled) log.debug fileList.sort()
+        //if(debugEnabled) log.debug fileList.sort()
         return fileList.sort()
     } catch (e) {
         log.error e
@@ -352,4 +351,4 @@ void logsOff(){
      device.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }
 
-@Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]
+@Field static final sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

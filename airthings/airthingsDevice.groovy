@@ -88,7 +88,6 @@ metadata {
         attribute "html", "string"
     	attribute "relayDeviceType", "string"    //GFA
         attribute "rssi", "number"
-//        attribute "relayDeviceType", "string"
 
 //        command "test",[[name:"val*", type:"NUMBER", description:"pm25 Value"]]
     }
@@ -107,7 +106,6 @@ preferences {
 //        input("username","string", title:"Hub Security Username")
 //        input("password","string", title:"Hub Security Password")
 //    }
-    fileList = []
     fileList = listFiles()
 
     input("tileTemplate", "enum", title:"Template for generating HTML for dashboard tile", options:fileList, defaultValue:"--No Selection--", submitOnChange:true)
@@ -145,7 +143,7 @@ def configure() {
 }
 
 void updateAttr(String aKey, aValue, String aUnit = ""){
-    desc = "${aKey} level of ${aValue} detected"
+    def desc = "${aKey} level of ${aValue} detected"
     sendEvent(name:aKey, value:aValue, unit:aUnit, descriptionText:desc)
 }
 
@@ -159,91 +157,83 @@ void dataRefresh(retData){
     if(debugEnabled) log.debug "$retData.data ${retData.data.size()}"
     retData.data.each{
         if(debugEnabled) log.debug "Each:${it.key}"
-        unit=""
-        switch (it.key){
+        def unit = ""
+        def attr = it.key
+        def value = it.value
+        switch (attr){
             case("temp"):
+            	attr = "temperature"
                 unit="°C"
                 if(useFahrenheit){
-                    it.value = celsiusToFahrenheit(it.value)
+                    value = celsiusToFahrenheit(value)
                     unit = "°F"
                 }
-                updateAttr("temperature", "${it.value}", unit)
                 break
             case("radonShortTermAvg"):
                 if(usePicoC){
-                    it.value = (it.value/37).toFloat().round(2)
+                    value = (value/37).toFloat().round(2)
                     unit="pCi/L"
                 }else
                     unit="Bq/m<sup>3</sup>"
-                if(forceInt) it.value = it.value.toFloat().toInteger()
+                if(forceInt) value = value.toFloat().toInteger()
                 break
             case("humidity"):
                 unit="%"
-                if(forceInt) it.value = it.value.toFloat().toInteger()
+                if(forceInt) value = value.toFloat().toInteger()
                 break
             case("co2"):
                 unit="ppm"
-                if(forceInt) it.value = it.value.toFloat().toInteger()
-                updateAttr("carbonDioxide", it.value, unit) //required for capability CarbonDioxideMeasurement, co2 retained for backward compatibility
+                if(forceInt) value = value.toFloat().toInteger()
+                updateAttr("carbonDioxide", value, unit) //required for capability CarbonDioxideMeasurement, co2 retained for backward compatibility
                 break
             case("pressure"):
             	if(useinHg){ //GFA
-					it.value = (it.value/33.86389).toFloat().round(3) //GFA
+					value = (value/33.86389).toFloat().round(3) //GFA
 					unit = "inHg" //GFA
 				}else //GFA
                 	unit="mBar"
-                if(forceInt) it.value = it.value.toFloat().toInteger()
+                if(forceInt) value = value.toFloat().toInteger()
                 break
             case("voc"):
                 unit="ppb"
-                if(forceInt) it.value = it.value.toFloat().toInteger()
+                if(forceInt) value = value.toFloat().toInteger()
                 break
             case("battery"):
                 unit="%"
                 break
             case("rssi"):
                 unit="dBm"
-                if(forceInt) it.value = it.value.toFloat().toInteger()
+                if(forceInt) value = value.toFloat().toInteger()
                 break
             case("mold")://mold risk index - integer 0-10
-                unit=""
-                if(forceInt) it.value = it.value.toFloat().toInteger()
+                if(forceInt) value = value.toFloat().toInteger()
                 break
-            case("relayDeviceType")://ignore
-                unit=""
+            case("relayDeviceType"):
                 break
             case("time"):// update timestamp
-                unit=null
-            	//GFA
-            	it.key = "lastPoll"
-				Date lastPoll = new Date(1000 * it.value.longValue()) // As need UNIX date which is in msec (and API value is in secs)
+            	attr = "lastPoll"
+				Date lastPoll = new Date(1000 * value.longValue()) // As need UNIX date which is in msec (and API value is in secs)
 				SimpleDateFormat sdf = new SimpleDateFormat(lstPollSdfPref ?: "yyyy-MM-dd HH:mm:ss")
-            //SimpleDateFormat sdf = new SimpleDateFormat(lstPollSdfPref)
-				it.value = sdf.format(lastPoll)
-                //state.lastUpdate = it.value.toInteger()
-            	//GFA
+				value = sdf.format(lastPoll)
+                //state.lastUpdate = value.toInteger()
                 break
             default:
-                unit=""
                 try{
-                    it.value = Math.floor(10 * it.value.toFloat()) / 10
+                    value = Math.floor(10 * value.toFloat()) / 10
                 } catch(e) {
-                    log.warn "Return Data Mismatch, Key: ${it.key} Value: ${it.value} - value will be set to zero"
-                    it.value = 0
+                    log.warn "Return Data Mismatch, Key: ${attr} Value: ${value} - value will be set to zero"
+                    value = 0
                 }
                 break
         }
-        if(debugEnabled) log.debug "${it.key}:${it.value}"
-        if((it.key != "temp" && unit != null) || it.key.startsWith('pm') || it.key == "mold") {//unit will be null for any values not tracked
-            updateAttr(it.key, it.value, unit)
-            if(debugEnabled) log.debug "${it.key}"
-            if("${it.key}" == "pm25")
-                calcPm25Aqi(it.value)
-        }
+        if(debugEnabled) log.debug "${attr}:${value}${unit}"
+        updateAttr(attr, value, unit)
+        if(attr == "pm25")
+            calcPm25Aqi(value)
     }
     calcAbsHumidity()
     if(tileTemplate && tileTemplate != "No selection" && tileTemplate != "--No Selection--"){
-        tileHtml = genHtml(tileTemplate)
+        def tileHtml = genHtml(tileTemplate)
         updateAttr("html","$tileHtml")
     }
 
@@ -252,6 +242,7 @@ void dataRefresh(retData){
 void calcAbsHumidity() {
     if(device.currentValue("temperature",true) == null || device.currentValue("humidity",true) == null)
         return //Calculation cannot continue
+    def deviceTempInCelsius
     if(useFahrenheit)
         deviceTempInCelsius = fahrenheitToCelsius(device.currentValue("temperature",true).toFloat())
     else
@@ -262,7 +253,7 @@ void calcAbsHumidity() {
     Double absHumidity = numerator/denominator
     //updateAttr("d", denominator)
     //updateAttr("n", numerator)
-    absHumidityR =  absHumidity.round(2)
+    def absHumidityR = absHumidity.round(2)
     updateAttr("absHumidity", absHumidityR, "g/m<sup>3</sup>")
 }
 
@@ -305,10 +296,10 @@ void calcPm25Aqi(pm25Val){
     Float aLevel = Math.floor(10 * c) / 10
     updateAttr("pm25Aqi",aLevel)
     updateAttr("airQualityIndex",aLevel.toInteger())
-    for (i=0;i<aqiLevel.size();i++){
+    for (int i=0;i<aqiLevel.size();i++){
         if(debugEnabled) log.debug "$aLevel:${aqiLevel[i].max}"
         if(aLevel <= aqiLevel[i].max){
-            pm25AqiText = "<span style='color:${aqiLevel[i].color}'>${aqiLevel[i].name}</span>"
+            def pm25AqiText = "<span style='color:${aqiLevel[i].color}'>${aqiLevel[i].name}</span>"
             updateAttr("pm25AqiText",pm25AqiText)
             break
         }
@@ -348,7 +339,7 @@ List<String> listFiles(){
             }
             fileList.add("--No Selection--")
         }
-        if(debugEnabled) log.debug fileList.sort()
+        //if(debugEnabled) log.debug fileList.sort()
         return fileList.sort()
     } catch (e) {
         log.error e
@@ -360,4 +351,4 @@ void logsOff(){
      device.updateSetting("debugEnabled",[value:"false",type:"bool"])
 }
 
-@Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]
+@Field static final sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

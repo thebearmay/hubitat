@@ -83,10 +83,7 @@ def mainPage(){
                     apiGet("devices")
                 }
                 if(state.temp_token != null) {
-                    if(state.temp_token.size() > 50)
-                        eos = 50
-                    else 
-                        eos = state.temp_token.size()
+                    def eos = state.temp_token.size() > 50 ? 50 : state.temp_token.size()
                     paragraph "<b>Token:</b> ${state.temp_token.toString().substring(0,eos)}. . . . ."
                     paragraph "<b>Expires:</b> ${state?.tokenExpiresDisp}"
                 }
@@ -112,7 +109,7 @@ def mainPage(){
                         state.numberDevices+=2
                 }*/
                 if (state?.numberDevices > 0){
-                    chdList = []
+                    def chdList = []
                     getChildDevices().each{
                         chdList.add("$it")
                     }
@@ -146,7 +143,7 @@ def mainPage(){
 //Begin App Authorization 
 
 void getAuth(command){
-    bodyMap = [grant_type:"client_credentials",client_id:"$userName", client_secret:"$pwd","scope": ["read:device:current_values"]]
+    def bodyMap = [grant_type:"client_credentials",client_id:"$userName", client_secret:"$pwd","scope": ["read:device:current_values"]]
 
     def bodyText = JsonOutput.toJson(bodyMap)
 	Map requestParams =
@@ -208,8 +205,8 @@ def getApi(resp, data){
         if(resp.getStatus() == 200 || resp.getStatus() == 207){
             if(resp.data){
                 if(data.cmd == "devices"){
-                    jsonData = (HashMap) resp.json
-                    numDev = 0
+                    def jsonData = (HashMap) resp.json
+                    def numDev = 0
                     jsonData.devices.each{
                         if(debugEnabled) log.debug "${it.id}, ${it.deviceType}, ${it.segment.name}"
                         createChildDev(it.id, it.deviceType, it.segment.name, it.location.name)
@@ -217,12 +214,12 @@ def getApi(resp, data){
                     }
                     state.numberDevices = numDev
                 } else if(data.cmd.contains("latest-samples")) {
-                    start = data.cmd.indexOf('/')+1
-                    end = data.cmd.indexOf('/',start)
-                    devId = data.cmd.substring(start,end)
-                    cd = getChildDevice("${app.id}-$devId")
-                    jsonData = (HashMap) resp.json
-                    cd.dataRefresh(jsonData)                    
+                    def start = data.cmd.indexOf('/')+1
+                    def end = data.cmd.indexOf('/',start)
+                    def devId = data.cmd.substring(start,end)
+                    def cd = getChildDevice("${app.id}-$devId")
+                    def jsonData = (HashMap) resp.json
+                    cd.dataRefresh(jsonData)
                 } else {
                     log.error "Unhandled Command: '${data.cmd}'"
                 }
@@ -239,6 +236,7 @@ def getApi(resp, data){
 // End API
 
 void createChildDev(devId, devType, devName, devLoc){
+    def cd
     if(!this.getChildDevice("${app.id}-$devId"))
         cd = addChildDevice("thebearmay", "Air Things Device", "${app.id}-$devId", [name: "${devName}", isComponent: true, deviceId:"$devId", label:"$devName"])
     else
@@ -275,7 +273,7 @@ void intialize() {
 }
 
 void uninstalled(){
-    chdList = getChildDevices()
+    def chdList = getChildDevices()
     chdList.each{
         deleteChildDevice(it.getDeviceNetworkId())
     }

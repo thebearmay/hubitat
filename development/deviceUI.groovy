@@ -15,7 +15,7 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    
  */
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -126,6 +126,7 @@ def uiRender(){
                 paragraph "<script>window.location.reload();</script>"
             }
             if(state.savePrefPushed){
+                state.prefDirty = false
                 state.savePrefPushed = false               
 				settings.each{                 
                     if(it.key.startsWith('pref')) {
@@ -145,8 +146,9 @@ def uiRender(){
             if(selDev){
             	paragraph "${fullScrn}<table><tr><td><span class='font-bold text-xl'>${selDev.displayName}(${selDev.id})</span></td><td>${ndBtn}</td><td>${resetLO}</td></tr></table>${stoPos}"
             	paragraph pContent
-            }           
-
+            }    
+            if(state.prefDirty)
+            	paragraph '<script>document.getElementById("prefHeader").classList.add("region-header-dirty")</script>'
         }
     }
 }
@@ -306,6 +308,7 @@ String buildCommandBlock(parms){
 String buildPreference(pSet){
     ArrayList textType=["text","number","decimal","date","time","password","color"]
     pBlock = ''
+    state.prefDirty = false
     pSet.each {
         if (it.options) {
             //optsWork = "${it.options}".replace('[','').replace(']','').split(',')
@@ -313,15 +316,26 @@ String buildPreference(pSet){
             //log.debug optsWork
         }
         
-		defVal = it.value?:it.defaultValue
-        //log.debug "${it.name} $defVal"
+        if(settings["pref${it.name}"] != null)
+        	defVal = settings["pref${it.name}"]
+        else if(it.value)
+        	defVal = it.value
+        else
+            defVal = it.defaultValue
+        //log.debug "${it.name} ${settings["pref${it.name}"]} ${it.value} ${it.defaultValue} => $defVal"
+        
+        if("$defVal".trim() != "${it.value}".trim()){
+            //log.debug "${it.name} is dirty: $defVal / ${it.value}"
+        	state.prefDirty = true
+        }
         
         if (it.type == 'string') 
         	it.type = 'text'
         
-        if(textType.contains(pType)) {
-              pBlock +=getInputElemStr( [name:"pref${it.name}", type:"${it.type}", title:"<b>${it.title}</b>", width:"35em", background:"#ADD8E6", radius:"15px", options:optsWork, defaultValue:defVal, submitOnChange:true ])
-        }
+     //   if(textType.contains(pType)) {
+            pBlock +=getInputElemStr( [name:"pref${it.name}", type:"${it.type}", title:"<b>${it.title}</b>", width:"35em", background:"#ADD8E6", radius:"15px", options:optsWork, defaultValue:defVal, submitOnChange:true ])
+       // }
+       
         if(it.type == 'enum') {
         	pBlock +="</div>" // need to determine why this is needed
         }
@@ -423,6 +437,7 @@ String reverseCamel(sVal){
         }
 
         .region-header {
+
 			-webkit-user-select: none;
 			touch-action: none;
             background: linear-gradient(135deg, #2596be 0%, #bbbbcc 100%);
@@ -434,6 +449,10 @@ String reverseCamel(sVal){
             justify-content: space-between;
             align-items: center;
         }
+		
+		.region-header-dirty {
+			background: linear-gradient(135deg, #ff9625 0%, #ccbbbb 100%);
+		}
 
         .region-title {
             font-weight: 600;
@@ -559,7 +578,7 @@ String reverseCamel(sVal){
         </div>
 
         <div class="region" id="region-3">
-            <div class="region-header">
+            <div class="region-header" id='prefHeader'>
                 <div class="region-title">Preferences</div>
             </div>
             <div class="region-content">

@@ -29,7 +29,7 @@ library (
     description: "Set of methods that allow the customization of the UI ",
     name: "uiRegions",
     namespace: "thebearmay",
-    importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiRegions.groovy",
+    importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/libraries/uiRegions.groovy",
     version: "0.0.1",
     documentationLink: ""
 )

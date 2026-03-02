@@ -22,6 +22,7 @@
 *	04Apr2025							Size option for icons
 *	23May2025							Add device.<driverName> to capability
 *   07Oct2025							Added textarea uiType
+*	20Feb2026							Minor enhancements and added 'hidden' as a valid input field type
 */
 
 import groovy.transform.Field
@@ -48,6 +49,9 @@ String getInputElemStr(HashMap opt){
 	case "text":
 	   return inputItem(opt)
 	   break
+	case "hidden":
+	   return inputItem(opt)
+	   break       
 	case "number":
 	   return inputItem(opt)
 	   break
@@ -142,8 +146,15 @@ String inputItem(HashMap opt) {
     } else {
         step = ' '
     }
+   
+	String computedStyle = ''
+    if(opt.type == 'hidden'){
+        opt.type='text'
+        typeAlt = 'hidden'
+        computedStyle += 'visibility:hidden;'
+    }        
         
-    String computedStyle = ''
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -157,7 +168,10 @@ String inputItem(HashMap opt) {
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
 	retVal+="<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield has-placeholder is-dirty is-upgraded' style='' data-upgraded=',MaterialTextfield'>"
     retVal+="<label for='settings[${opt.name}]' style='min-width:${opt.width}' class='control-label'>${opt.title}</label><div class='flex'><input type='${typeAlt}' ${step} name='settings[${opt.name}]' class='mdl-textfield__input submitOnChange' style='${computedStyle}' value='${opt.defaultValue}' placeholder='Click to set' id='settings[${opt.name}]'>"
-    retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\"><div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div></div></div></div>"
+    retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\">"
+    if(typeAlt != 'hidden')
+    	retVal +="<div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div>"
+    retVal +="</div></div></div>"
     return retVal
 }
 
@@ -190,6 +204,7 @@ String inputTarea(HashMap opt) {
     if(opt.color) computedStyle += "color:${opt.color};"
     if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
 	if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+        if (opt.float) computedStyle +="float:${opt.float};"
     
     
     if(opt.hoverText && opt.hoverText != 'null'){  
@@ -221,6 +236,7 @@ String inputTarea(HashMap opt) {
 
 String inputCap(HashMap opt) {
     String computedStyle = ''
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -298,6 +314,7 @@ String inputCap(HashMap opt) {
 
 String inputEnum(HashMap opt){
     String computedStyle = ''
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.type == 'mode') opt.options = location.getModes()
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
@@ -319,34 +336,58 @@ String inputEnum(HashMap opt){
     retVal += "<div style='${computedStyle}'><select id='settings[${opt.name}]' ${mult} name='settings[${opt.name}]' class='selectpicker form-control mdl-switch__input submitOnChange SumoUnder' placeholder='Click to set' data-default='' tabindex='-1' style='${computedStyle}'></div>"
     ArrayList selOpt = []
 	if(settings["${opt.name}"]){
-        if("${settings["${opt.name}"].class}" == 'class java.lang.String')
-        	selOpt.add("${settings["${opt.name}"]}")
-       else {               
+        if("${settings["${opt.name}"].class}" == 'class java.lang.String' || "${settings["${opt.name}"].class}" == 'class org.codehaus.groovy.runtime.GStringImpl'){
+           	selOpt.add("${settings["${opt.name}"]}")
+        } else {
         	settings["${opt.name}"].each{
             	selOpt.add("$it")
         	}
        }
-    } else if(opt.defaultValue) selOpt.add("${opt.defaultValue}")
+    } else if(opt.defaultValue) {
+        if("${opt.defaultValue.class}" == 'class java.lang.String' || "${opt.defaultValue.class}" == 'class org.codehaus.groovy.runtime.GStringImpl')
+        	selOpt.add("${opt.defaultValue}")
+        else {
+ 			opt.defaultValue.each {
+              	selOpt.add("$it")
+            }
+        }
+    }
     if(mult != 'multiple') retVal+="<option value=''>Click to set</option>"
     opt.options.each{ option -> 
-        if("$option".contains(':')){
+        colonCount = "$option".count(':')
+        if(colonCount == 1 ){
             optSplit = "$option".replace('[','').replace(']','').split(':')
             optVal = optSplit[0]
             optDis = optSplit[1]
+        } else if (colonCount > 1 ) {
+            ord = colonCount%2
+            inx = ordinalIndexOf(option.toString(),':',ord)
+            if(inx > -1){
+            	optVal = "$option".substring(0,inx)
+            	optDis = "$option".substring(inx+1,)
+            }
         } else {
             optVal = option
             optDis = option
         }
         sel = ' '
         selOpt.each{
-            //log.debug "$it $optVal ${"$it" == "$optVal"}"
-            if("$it" == "$optVal" ) 
+            //	log.debug "|$it| |$optVal| ${"$it".trim() == "$optVal".trim()}"
+            if("$it".trim() == "$optVal".trim() ) 
             	sel = 'selected'
         }
         retVal += "<option value='${optVal}' ${sel}>${optDis}</option>"
     }
     retVal+= "</select></div></div>"
     return retVal
+}
+
+int ordinalIndexOf(String str, String substr, int n) {
+    int pos = -1
+    (0..n).each { 
+        if (pos != -1 || it == 0) pos = str.indexOf(substr, pos + 1) 
+    }
+    pos
 }
 
 /*****************************************************************************
@@ -374,6 +415,7 @@ String inputBool(HashMap opt) {
     	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
     
     String computedStyle = ''
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -425,6 +467,7 @@ String inputCheckbox(HashMap opt) {
     	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
 	opt.type = 'bool'
     String computedStyle = ''
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -474,7 +517,9 @@ String inputCheckbox(HashMap opt) {
 String buttonLink(HashMap opt) { //modified slightly from jtp10181's code
     if(!opt.name || !opt.title ) 
     	return "Error missing name or title"
+    
     String computedStyle = 'cursor:pointer;text-align:center;box-shadow: 2px 2px 4px #71797E;'
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -507,6 +552,7 @@ String buttonHref(HashMap opt) { //modified jtp10181's code
     if(!opt.destPage && !opt.destUrl) 
     	return "Error missing Destination info"
     String computedStyle = 'cursor:pointer;text-align:center;box-shadow: 2px 2px 4px #71797E;'
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
     if(opt.color) computedStyle += "color:${opt.color};"
@@ -544,6 +590,7 @@ String btnDivHide(HashMap opt) {
     if(!opt.name || !opt.title || !opt.divName) 
     	return "Error missing name, title or division"
     String computedStyle = 'cursor:pointer;box-shadow: 2px 2px 4px #71797E;'
+    if (opt.float) computedStyle +="float:${opt.float};"
     if(!opt.width) opt.width = '100%'
     computedStyle += "width:${opt.width};"
     if(opt.background) computedStyle += "background-color:${opt.background};"
@@ -609,6 +656,6 @@ String listTable() {
     ...
 }
 */
-	
+@Field static String fullScrn = "<script>document.getElementById('divSideMenu').setAttribute('style','display:none !important');document.getElementById('divMainUIHeader').setAttribute('style','height: 0 !important;');document.getElementById('divMainUIContent').setAttribute('style','padding: 0 !important;');document.getElementById('divMainUIFooter').setAttribute('style','display:none !important');contentHeight = Math.round(window.innerHeight * 1.2);document.getElementById('divMainUIContentContainer').setAttribute('style', 'background: white; height: ' + contentHeight + 'px !important;');document.getElementById('divLayoutControllerL2').setAttribute('style', 'height: ' + contentHeight + 'px !important;');</script><style>overflow-y: scroll !important;</style>"	
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;text-align:left;}</style>"
 @Field static String tableStyle = "<style>.mdl-data-table tbody tr:hover{background-color:inherit} .tstat-col td,.tstat-col th { padding:8px 8px;text-align:center;font-size:12px} .tstat-col td {font-size:15px; padding:8px 8px 8px 8px;white-space: nowrap;} tr {border-right:2px solid black;}</style>"

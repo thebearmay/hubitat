@@ -23,6 +23,7 @@
 *	23May2025							Add device.<driverName> to capability
 *   07Oct2025							Added textarea uiType
 *	20Feb2026							Minor enhancements and added 'hidden' as a valid input field type
+*	06Mar2026							Fixed mis-matched <div></div> in capability element
 */
 
 import groovy.transform.Field
@@ -35,7 +36,7 @@ library (
     name: "uiInputElements",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
-    version: "0.0.8",
+    version: "0.0.9",
     documentationLink: ""
 )
 
@@ -273,11 +274,12 @@ String inputCap(HashMap opt) {
 
 	String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
     retVal += "<div class='capability ${capAlt} mdl-cell mdl-cell--4-col' style='margin: 8px 0; '>"//${computedStyle}
-	//retVal += "<button type='button' class='btn btn-default btn-lg btn-block device-btn-filled btn-device mdl-button--raised mdl-shadow--2dp' style='text-align:left; width:100%;' data-toggle='modal' data-target='#deviceListModal' "
+
     retVal += "<button type='button' class='btn btn-lg btn-block btn-device' style='border-radius:${opt.radius};border:0px;text-align:left; width:100%; min-width:${opt.width}' data-toggle='modal' data-target='#deviceListModal' "
     retVal += "data-capability='${opt.type}' data-elemname='${opt.name}' data-multiple='${opt.multiple}' data-ignore=''>"
     	retVal += "<span style='white-space:pre-wrap;'>${opt.title}</span><br><div style='${computedStyle}'>"
-	retVal += "<span id='${opt.name}devlist' class='device-text' style='text-align: left;'>${dList}</span></button>"
+	retVal += "<span id='${opt.name}devlist' class='device-text' style='text-align: left;'>${dList}</span></div></button>"
+    
 	retVal += "<input type='hidden' name='settings[${opt.name}]' class='form-control submitOnChange' value='${idList}' placeholder='Click to set' id='settings[${opt.name}]'>"
 	retVal += "<input type='hidden' name='deviceList' value='${opt.name}'><div class='device-list' style='display:none'>"
 	retVal += "<div id='deviceListModal' style='border:1px solid #ccc;padding:8px;max-height:300px;overflow:auto;min-width:${opt.width}'><div class='checkAllBoxes my-2'>"
@@ -287,7 +289,7 @@ String inputCap(HashMap opt) {
 	retVal += "<span class='mdl-checkbox__focus-helper'></span><span class='mdl-checkbox__box-outline'><span class='mdl-checkbox__tick-outline'></span></span>"
 	retVal += "<span class='mdl-checkbox__ripple-container mdl-js-ripple-effect mdl-ripple--center' data-upgraded=',MaterialRipple'><span class='mdl-ripple'></span></span></label></div>"
 	retVal += "<div id='${opt.name}-options' class='modal-body' style='overflow:unset'></div></div></div>"
-	retVal += "<div class='mdl-button mdl-js-button mdl-button--raised pull-right device-save' data-upgraded=',MaterialButton' style='${computedStyle};width:6em;min-width:6em;'>Update</div></div></div>"
+	retVal += "<div class='mdl-button mdl-js-button mdl-button--raised pull-right device-save' data-upgraded=',MaterialButton' style='${computedStyle};width:6em;min-width:6em;'>Update</div></div>"
     
     return retVal
 }
@@ -313,7 +315,7 @@ String inputCap(HashMap opt) {
 
 
 String inputEnum(HashMap opt){
-    String computedStyle = ''
+    String computedStyle = opt.style ? opt.style:''
     if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.type == 'mode') opt.options = location.getModes()
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
@@ -378,7 +380,7 @@ String inputEnum(HashMap opt){
         }
         retVal += "<option value='${optVal}' ${sel}>${optDis}</option>"
     }
-    retVal+= "</select></div></div>"
+    retVal+= "</select></div></div></div>"
     return retVal
 }
 

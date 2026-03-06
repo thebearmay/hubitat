@@ -1,4 +1,4 @@
-/*
+ /*
  * Device UI
  * 
  *
@@ -15,7 +15,7 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    
  */
-static String version()	{  return '0.0.6'  }
+static String version()	{  return '0.1.2'  }
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -70,24 +70,26 @@ void logsOff(){
 
 def deviceList(){
     dynamicPage (name: "deviceList", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
-        section (name:'cPageHndl', title:'Device List'){
-            // /hub2/devicesList
-            
-            input "selDev", "capability.*", submitOnChange:true, title: "Device to view"
+        section (name:'cPageHndl', title:''){
+		            
+            paragraph getInputElemStr(name:"selDev", type:'capability.*', width:'15em', radius:'12px', color:'#000000', background:'#2596be', title:"<b>Device to View</b>")
+            //log.debug "${getInputElemStr(name:"selDev", type:'capability.*', width:'15em', radius:'12px', color:'#000000', background:'#2596be', title:"<b>Device to View</b>").replace('<','&lt;')}"
+            paragraph getInputElemStr(name:"debugEnabled", type:'bool', width:'15em', radius:'12px', color:'#000000', background:'#2596be', title:"<b>Enable Debug</b>")
+            paragraph getInputElemStr(name:"nameOverride", type:'text', width:'15em', radius:'12px', color:'#000000', background:'#2596be', title:"<b>New Name for Application</b>", defaultValue:app.getLabel())
             if(selDev){
                 inx = appLocation().lastIndexOf("/")
                 paragraph "<script>window.location.replace('${appLocation().substring(0,inx)}/uiRender')</script>"
-            	//uiRender(selDev.id)
             }
             
-            
-            //if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
+            if(debugEnabled) runIn(1800, 'logsOff')
+            if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
+
         }
     }
 }
 
 def uiRender(){
-    dynamicPage (name: "uiRender", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: false, uninstall: false) { 
+    dynamicPage (name: "uiRender", title: "", install: false, uninstall: false) { 
         section(name:"visualDisp",title:"", hideable: false, hidden: false){
             if(state.message){
                 paragraph "<span style='background-color:lightGreen;font-weight:bold;'>${state.message}</span>"
@@ -98,7 +100,6 @@ def uiRender(){
                 paragraph "<script>window.location.reload()</script>"
             }
             ndBtn = getInputElemStr(name:"newDev", type:'button', width:'10em', radius:'12px', background:'#2596be', title:"<span style='font-weight:bold;color:white'>Change Device</span>")
-			stoPos = getInputElemStr(name:"savePos", type:'hidden', width:'1em', radius:'12px', background:'#2596be', title:"", submitOnChange:true, defaultValue:"")
             resetLO = getInputElemStr(name:"resetLayout", type:'button', width:'10em', radius:'12px', background:'#2596be', title:"<span style='font-weight:bold;color:white'>Reset Layout</span>")
             
 
@@ -118,21 +119,31 @@ def uiRender(){
             }
             
             if(selDev){
-            	paragraph "${fullScrn}<table><tr><td><span class='font-bold text-xl'>${selDev.displayName}(${selDev.id})</span></td><td>${ndBtn}</td><td>${resetLO}</td></tr></table>${stoPos}"
+            	paragraph "${fullScrn}<style>table.listTable  {border-radius:15px;border:1px solid black; border-radius:10px; border-collapse:collapse;} .listTable td, .listTable th{padding:5px;border:1px solid lightGray; border-radius:10px;}.listTable tr:nth-child(odd) { background-color: #f2f2f2; }</style><table><tr><td><span class='font-bold text-xl'>${selDev.displayName}(${selDev.id})</span></td><td>${ndBtn}</td><td>${resetLO}</td></tr></table>"
             	paragraph pContent
             }    
             if(state.prefDirty)
-            	paragraph '<script>document.getElementById("prefHeader").classList.add("region-header-dirty")</script>'
+            	paragraph '<script>document.getElementById("region-3-header").classList.add("region-header-dirty")</script>'
             if(state.devInfoDirty)
-            	paragraph '<script>document.getElementById("devInfoHeader").classList.add("region-header-dirty")</script>'
+            	paragraph '<script>document.getElementById("region-4-header").classList.add("region-header-dirty")</script>'
             
            
             if(state.ndBtnPushed){
                 state.ndBtnPushed = false
-                settings.each{
-                    if(it.key != 'savePos')
-                    app.removeSetting("${it.key}")
+                stateList = []
+                state.each{
+                	stateList.add(it.key)                    	
             	}
+                stateList.each{
+                    if(it != "isInstalled"  && it!= null ){
+	        			app.state.remove(it)
+        			}
+            	}
+            	settings.each {
+                    if(it.key != 'savePos')
+                    	app.removeSetting(it.key)
+            	}
+
                 inx = appLocation().lastIndexOf("/")
                 paragraph "<script>window.location.replace('${appLocation().substring(0,inx)}')</script>"
             }
@@ -177,7 +188,7 @@ def uiRender(){
  						app.removeSetting("${it.key}")
                     }
             	}
-                paragraph '<script>document.getElementById("prefHeader").classList.remove("region-header-dirty");window.location.reload();</script>'
+                paragraph '<script>document.getElementById("devInfHeader").classList.remove("region-header-dirty");window.location.reload();</script>'
             }
             if(state.unschedPushed) {
                 state.unschedPushed = false
@@ -191,7 +202,6 @@ def uiRender(){
 }
 
 def removeJob(jId){
-	// /hub/advanced/deleteScheduledJob?id=dev1Once.poll1 
     String jobId= "dev${selDev.id}${state["job$jId"].type}.${state["job$jId"].method}"
     try{		
         params = [
@@ -278,7 +288,8 @@ HashMap jsonResponse(retMap){
 String buildPage(deviceMap){
     if(!selDev)
     	return
-    //log.debug "Build Page"
+    if (debugEnabled)
+    	log.debug "Build Page"
     String region1 = ''
     String region2 = '<p class="region-subheader">Current States</p>'
     String region3 = ''
@@ -286,12 +297,9 @@ String buildPage(deviceMap){
     String region5 = ''              
     String region6 = ''
     
-    //deviceMap = getDevice(devId)
-
     deviceMap.commands.sort{it.name}.each {
 	   	region1 += buildCommandBlock(it)
     }
-    //region1 += '<br><br><br>'
     
     deviceMap.device.currentStates.sort().each{
 	    it.value.stringValue=it.value.stringValue.replace('\"','\\\"')
@@ -319,16 +327,22 @@ String buildPage(deviceMap){
    	region5 = buildEventList()
     region6 = buildJobList(deviceMap.scheduledJobs)
     
-    String pContent = ttStyleStr+html1+region1+html2+region2+html3+region3+html4+region4+html5+region5+html6+region6+html7   
-    if(settings["savePos"])
-    	pContent+="<script>parseStr('${settings["savePos"]}');</script>"
-    else 
-        pContent+="<script>loadRegionState();</script>"
+    String regionDef1 = getRegion('region-1', 'Commands', region1)
+    String regionDef2 = getRegion('region-2', 'States', region2)
+    String regionDef3 = getRegion('region-3', 'Preferences', region3)
+    String regionDef4 = getRegion('region-4', 'Device Information', region4)
+    String regionDef5 = getRegion('region-5', 'Events', region5)
+    String regionDef6 = getRegion('region-6', 'Scheduled Jobs', region6)
+    
+	pContent = getRegionsPage(['region-1':regionDef1,'region-2':regionDef2,'region-3':regionDef3,'region-4':regionDef4,'region-5':regionDef5,'region-6':regionDef6], true )
+
+    pContent+="<script>try {parseStr('${settings["savePos"]}'); }catch (e) {loadRegionState();}</script>"
+
     return pContent
 }
 
 HashMap getDevice(devId){
-    //log.debug "getDevice($devId)"
+
 	try{		
         params = [
             uri: "http://127.0.0.1:8080/device/fullJson/$devId",
@@ -350,7 +364,8 @@ HashMap getDevice(devId){
 }
 
 String buildCommandBlock(parms){
-    //log.debug "buildCommandBlock"
+    if(debugEnabled)
+    	log.debug "buildCommandBlock"
     
     LinkedList textType=["text","number","decimal","date","time","password","color"]
     String cBlock = ''
@@ -359,7 +374,8 @@ String buildCommandBlock(parms){
     cBlock = "<div style='width:15em;border:1px black solid;border-radius:12px;float:left;padding:4px;'><p style='font-weight:bold;'>$title</p>"
     String params = ''
     if(parms.parameters){
-        //log.debug "Found ${parms.parameters.size()} parameters"
+        if(debugEnabled)
+        	log.debug "Found ${parms.parameters.size()} parameters"
         int inx = 0
 	    parms.parameters.each {
     	    pType = it.type.toLowerCase().trim()
@@ -376,7 +392,6 @@ String buildCommandBlock(parms){
 	       		params += getInputElemStr( [name:"${parms.name}${inx}", type:"${pType}", title:"<span style='font-size:small'>${nameBlock}</span>", width:"12em", background:"#ADD8E6", radius:"15px", defaultValue:""])
             } else if(pType == 'enum') {
                 params += getInputElemStr( [name:"${parms.name}${inx}", type:"${pType}", title:"<span style='font-size:small'>${nameBlock}</span>", width:"12em", background:"#ADD8E6", radius:"15px", defaultValue:"", options:it.constraints])
-                params +="</div>" // need to determine why this is needed
             } else {
                 params += "Unknown pType - $pType"
             }
@@ -389,14 +404,15 @@ String buildCommandBlock(parms){
         	log.debug "Found ${parms?.arguments?.size()} arguments"
     }
 	cBlock+="$btn</div>"
-
-	//log.debug "$cBlock<br>"
+	if(debugEnabled)
+		log.debug "$cBlock<br>"
     return cBlock
 }
 
 
 String buildPreference(pSet){
-    //log.debug "buildPreferenceList($pSet)"
+    if(debugEnabled)
+    	log.debug "buildPreferenceList($pSet)"
     ArrayList textType=["text","number","decimal","date","time","password","color"]
     pBlock = ''
     state.prefDirty = false
@@ -414,21 +430,23 @@ String buildPreference(pSet){
         	defVal = it.value
         else
             defVal = it.defaultValue
-        //log.debug "${it.name} ${settings["pref${it.name}"]} ${it.value} ${it.defaultValue} => $defVal"
+        if(debugEnabled)
+        	log.debug "${it.name} ${settings["pref${it.name}"]} ${it.value} ${it.defaultValue} => $defVal"
         
         if("$defVal".trim() != "${it.value}".trim()){
-            //log.debug "${it.name} is dirty: $defVal / ${it.value}"
+            if(debugEnabled)
+            	log.debug "${it.name} is dirty: $defVal / ${it.value}"
         	state.prefDirty = true
         }
         
         if (it.type == 'string') 
         	it.type = 'text'
-        tLen = (it.title.size()) * 0.75
-		pBlock +=getInputElemStr( [name:"pref${it.name}", type:"${it.type}", title:"<b>${it.title}</b>", background:"#ADD8E6", width:"${tLen}em",radius:"15px", options:optsWork, defaultValue:defVal, submitOnChange:true ])
-       
-        if(it.type == 'enum') {
-        	pBlock +="</div>" // need to determine why this is needed
-        }
+        if(it.type == 'bool')
+        	itemWidth = "${it.title.size()*0.70}em"
+        else
+            itemWidth = '12em'
+        
+		pBlock +=getInputElemStr( [name:"pref${it.name}", type:"${it.type}", title:"<b>${it.title}</b>", background:"#ADD8E6", width:itemWidth, radius:"15px", options:optsWork, defaultValue:defVal, submitOnChange:true ])
  
     }
     return pBlock
@@ -436,7 +454,8 @@ String buildPreference(pSet){
 }
 
 String buildDevInfo(deviceMap) {
-    //log.debug "buildDevInfo"
+    if(debugEnabled)
+    	log.debug "buildDevInfo"
     dMap = deviceMap.device
 	state.devInfoDirty = false
     diBlock = ''
@@ -481,20 +500,29 @@ String buildDevInfo(deviceMap) {
     if("$dVal" != "${dMap.deviceTypeId}") {
         state.lastDirty = 'deviceTypeId'
     	state.devInfoDirty = true
-	}       
-    diBlock += "</td></tr><tr><td>"+getInputElemStr( [name:"devInfDevTypeId", type:"enum", title:"<b>Device Type</b>", width:"20em", background:"#ADD8E6", radius:"15px", options:dList, submitOnChange:true, defaultValue:"${dVal}" ])+"</div>"
-    dVal = settings["devInfRoom"]?:dMap.roomId?:""
+	} 
+    //log.debug "${getInputElemStr( [name:"devInfDevTypeId", type:"enum", title:"<b>Device Type</b>", width:"20em", background:"#ADD8E6", radius:"15px", options:dList, submitOnChange:true, defaultValue:"${dVal}" ]).replace('<','&lt;')}"
+    diBlock += "</td></tr><tr><td>"+getInputElemStr( [name:"devInfDevTypeId", type:"enum", title:"<b>Device Type</b>", width:"20em", background:"#ADD8E6", radius:"15px", options:dList, submitOnChange:true, defaultValue:"${dVal}" ])//+"</div>"
+    //dVal = "${settings["devInfRoom"]}"?:"${dMap.roomId}"?:""
+    if(settings["devInfRoom"])
+    	dVal = settings["devInfRoom"]
+    else if (dMap.roomId)
+        dVal = dMap.roomId
+    else
+        dVal = ''
+    //log.debug "${settings["devInfRoom"]} ${dMap.roomId} $dVal"
+    
     if("$dVal" != "${dMap.roomId}" && dMap.roomId != null) {
         state.lastDirty = 'roomId'
     	state.devInfoDirty = true
 	} 
-    diBlock += "</td><td>"+getInputElemStr( [name:"devInfRoom", type:"enum", title:"<b>Room</b>", width:"20em", background:"#ADD8E6", radius:"15px", options:rList, submitOnChange:true, defaultValue:"${dVal}" ])+"</div>"
+    diBlock += "</td><td>"+getInputElemStr( [name:"devInfRoom", type:"enum", title:"<b>Room</b>", width:"20em", background:"#ADD8E6", radius:"15px", options:rList, submitOnChange:true, defaultValue:"${dVal}" ])//+"</div>"
     dVal = settings["devInfDash"]?:dashSelList?:""
     if(dVal != dashSelList && dashSelList != []) {
         state.lastDirty = "dashSelList $dval $dashSelList"
     	state.devInfoDirty = true
 	} 
-    diBlock += "</td><td>"+getInputElemStr( [name:"devInfDash", type:"enum", title:"<b>Dashboards</b>", width:"20em", background:"#ADD8E6", radius:"15px", options:dashList, submitOnChange:true, defaultValue:dVal, multiple:true ])+"</div>"
+    diBlock += "</td><td>"+getInputElemStr( [name:"devInfDash", type:"enum", title:"<b>Dashboards</b>", width:"20em", background:"#ADD8E6", radius:"15px", options:dashList, submitOnChange:true, defaultValue:dVal, multiple:true ])//+"</div>"
     dVal = settings["devInfMaxEvent"]?:dMap.maxEvents?:11
     if(dVal != dMap.maxEvents && dMap.maxEvents != null) {
         state.lastDirty = 'maxEvents'
@@ -513,18 +541,26 @@ String buildDevInfo(deviceMap) {
     	state.devInfoDirty = true
 	}
     diBlock += "</td><td>"+getInputElemStr( [name:"devInfSpammy", type:"number", title:"<b>Too many events alert threshold</b><br><span style='font-size:smaller'>* per hour (100-2000)</span>", width:"20em", background:"#ADD8E6", radius:"15px", submitOnChange:true, defaultValue:dVal ])
-    dVal = settings["devInfMeshEnabled"]?:dMap.meshEnabled?:false
-	if(dVal != dMap.meshEnabled && dMap.meshEnabled != null) {
+    //dVal = "${settings['devInfMeshEnabled']}"?:"${dMap.meshEnabled}"?:false
+    if(settings['devInfMeshEnabled'])
+    	dVal = settings['devInfMeshEnabled']
+    else if(dMap.meshEnabled)
+        dVal = dMap.meshEnabled
+    else
+        dVal = false
+    if("${dVal}" != "${dMap.meshEnabled}" && (dVal != false && dMap.meshEnabled == null)) {
         state.lastDirty = 'meshEnabled'
     	state.devInfoDirty = true
+       	//log.debug "${settings["devInfMeshEnabled"]} ${dMap.meshEnabled} $dVal"
 	}
-    diBlock += "</td></tr><tr><td>"+getInputElemStr( [name:"devInfMeshEnabled", type:"bool", title:"<b><a href='https://docs2.hubitat.com/en/user-interface/settings/hub-mesh'>Hub Mesh</a> Enabled</b>", width:"20em", background:"#ADD8E6", radius:"15px", submitOnChange:true, defaultValue:dVal ])
-    dVal = settings["devInfHomeKitEnabled"]?:dMap.homeKitEnabled?:false
-    if(dVal != dMap.homeKitEnabled && dMap.homeKitEnabled != null) {
+    diBlock += "</td></tr><tr><td>"+getInputElemStr( [name:"devInfMeshEnabled", type:"bool", title:"<a href='https://docs2.hubitat.com/en/user-interface/settings/hub-mesh'>Hub Mesh</a> Enabled", width:"20em", background:"#ADD8E6", radius:"15px", submitOnChange:true, defaultValue:dVal ])
+    dVal = "${settings["devInfHomeKitEnabled"]}"?:"${dMap.homeKitEnabled}"?:false
+    if("${dVal}" != "${dMap.homeKitEnabled}" && (dVal == false && dMap.homeKitEnabled != null) ) {
         state.lastDirty = 'homeKitEnabled'
-    	state.devInfoDirty = true
+    	state.devInfoDirty = true 
+        //log.debug "${settings["devInfHomeKitEnabled"]} ${dMap.homeKitEnabled} $dVal"
 	}
-    diBlock += "</td><td>"+getInputElemStr( [name:"devInfHomeKitEnabled", type:"bool", title:"<b><a href='https://docs2.hubitat.com/en/apps/homekit-integration'>HomeKit</a> Enabled</b>", width:"20em", background:"#ADD8E6", radius:"15px", submitOnChange:true, defaultValue:dVal ])
+    diBlock += "</td><td>"+getInputElemStr( [name:"devInfHomeKitEnabled", type:"bool", title:"<a href='https://docs2.hubitat.com/en/apps/homekit-integration'>HomeKit</a> Enabled", width:"20em", background:"#ADD8E6", radius:"15px", submitOnChange:true, defaultValue:dVal ])
     dVal = settings["devInfNotes"]?:dMap.notes?:''
     if(dVal != dMap.notes && dMap.notes != null){ 
         state.lastDirty = 'notes'
@@ -536,13 +572,24 @@ String buildDevInfo(deviceMap) {
         notesBlock += "<b>${it.key}</b>:${it.value}<br>"
     }
     
+    String usedBy = '<u><b>In Use By</b></u><br>'
+    deviceMap.appsUsing.each {
+        usedBy+="<a href='/installedapp/configure/${it.id}'>${it.label}</a><br>"
+    }
+    String dateBlock = ''
     SimpleDateFormat sdfIn = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-    cDate = sdfIn.parse(dMap.createTime)
-    notesBlock += "<br><b>Create Date</b>: $cDate<br>"
-    cDate = sdfIn.parse(dMap.updateTime)
-	notesBlock += "<b>Last Update</b>: $cDate<br>"
-    cDate = sdfIn.parse(dMap.lastActivityTime)
-	notesBlock += "<b>Last Activity</b>: $cDate<br><br>"   
+    if(dMap.createTime)
+    	cDate = sdfIn.parse(dMap.createTime)
+    dateBlock += "<b><u>Dates</u></b><br><b>Create Date</b>: $cDate<br>"
+    if(dMap.updateTime)
+       cDate = sdfIn.parse(dMap.updateTime)
+	dateBlock += "<b>Last Update</b>: $cDate<br>"
+    if(dMap.lastActivityTime)
+    	cDate = sdfIn.parse(dMap.lastActivityTime)
+	dateBlock += "<b>Last Activity</b>: $cDate"
+    
+    notesBlock += "<br><br><style>.nbTable td{vertical-align:top;text-align:left;padding-right:5px;}</style><table class='nbTable'><tr><td>$usedBy</td><td>$dateBlock</td></tr></table>"
+
     diBlock += "<br><b>Device Data</b><br><div style='border:1px black solid; border-radius:15px;padding:5px;'>$notesBlock</div>"
     
     return diBlock
@@ -601,7 +648,7 @@ def saveDevInfo(deviceMap) {
 
 String buildEventList() {
     eList = selDev.events([max:settings['devInfMaxEvent']])
-    eTable = '<style>table{border:solid 1px black;}td, th{padding:5px;border:1px solid lightGray;}</style><table><tr><th>Date</th><th>Name</th><th>Value</th><th>Unit</th><th>Description</th><th>Descriptive Text</th><th>Source</th></tr>'
+    eTable = '<table class="listTable"><tr><th>Date</th><th>Name</th><th>Value</th><th>Unit</th><th>Description</th><th>Descriptive Text</th><th>Source</th></tr>'
     SimpleDateFormat sdfIn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
     SimpleDateFormat sdfOut = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS a")
     eList.each {
@@ -616,7 +663,7 @@ String buildEventList() {
 
 String buildJobList(jList) {
     String removeIcon = "<i class='material-icons he-bin'></i>"
-    jTable = '<style>table{border:solid 1px black;}td, th{padding:5px;border:1px solid lightGray;}</style><table><tr><th>Name</th><th>Schedule</th><th>Next</th><th>Previous</th><th>Status</th><th></th></tr>'
+    jTable = '<table class="listTable"><tr><th>Name</th><th>Schedule</th><th>Next</th><th>Previous</th><th>Status</th><th></th></tr>'
     SimpleDateFormat sdfIn = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
     SimpleDateFormat sdfOut = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS a")
     inx = 0
@@ -701,7 +748,87 @@ String reverseCamel(sVal){
     return result
 }
 
-@Field static String html1 = '''
+/*
+ * UI Regions
+ * 
+ * Library to produce an html block with dragable/resizable regions
+ * 
+ *
+ *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WIyTHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ *    Date            Who                    Description
+ *    -------------   -------------------    ---------------------------------------------------------
+ *    
+ */
+
+import java.text.SimpleDateFormat
+import groovy.transform.Field
+
+
+library (
+    base: "app",
+    author: "Jean P. May Jr.",
+    category: "UI",
+    description: "Set of methods that allow the customization of the UI ",
+    name: "uiRegions",
+    namespace: "thebearmay",
+    importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/libraries/uiRegions.groovy",
+    version: "0.0.1",
+    documentationLink: ""
+)
+
+String getRegion(regionName, regionTitle, regionContent){
+
+	String region = """<div class="region" id="${regionName}">
+            <div class="region-header" id="${regionName}-header">
+                <div class="region-title">${regionTitle}</div>
+				<span style='display:inline-table'>
+					<span class="toggleBtn" onclick="toggleRegion(this)" ontouchstart="toggleRegion(this)">-</span>
+					<span class="maxRstBtn" onclick="maxRstRegion(this)" ontouchstart="maxRstRegion(this)">&#9713;</span>
+				</span>
+            </div>
+            <div class="region-content">
+				${regionContent}
+			</div>
+            <div class="resize-handle se"></div>
+        </div>
+		"""
+		
+	return region
+
+}
+
+String getRegionsPage( regionsList, fullScreen ){
+	// regionsList should be a list of map elements [regionName:regionContentString]
+	String regionsMerged = ''
+	String dragList = ''
+	String defaultPos = ''
+	int regionsInx = 0
+	int l = 50
+	int t = 0
+	int w = 300
+	int h = 250
+	regionsList.each {
+		regionsMerged += it.value
+		if(regionsInx > 0) {
+			dragList += ','
+			defaultPos += ','
+		}
+		dragList += "'${it.key}'"
+		defaultPos += "'${it.key}': { left: '${l}px', top: '${t}px', width: '${w}px', height: '${h}px', zIndex: '${regionsInx+1}' }"
+		t+= 44
+		l+= 30
+		regionsInx++
+	}
+    
+	String bodyHtml = """
 <div>
     <style>
         * {
@@ -716,13 +843,14 @@ String reverseCamel(sVal){
             padding: 20px;
         }
 
-        .container {
-            position: relative;
+        .regContainer {
+			position: relative;
             width: 100%;
             height: calc(100vh - 40px);
         }
 
 		.toggleBtn {
+			width: 1em;
     		background: none;
 		    border: none;
 		    color: white;
@@ -734,6 +862,22 @@ String reverseCamel(sVal){
 		}
 
 		.toggleBtn:hover {
+    		color:red;
+		}
+		
+		.maxRstBtn {
+			width: 1em;
+    		background: none;
+		    border: none;
+		    color: white;
+    		cursor: pointer;
+    		font-size: 16px;
+    		padding: 0 5px;
+    		line-height: 1;
+    		font-weight: bold;
+		}
+
+		.maxRstBtn:hover {
     		color:red;
 		}
 
@@ -768,6 +912,7 @@ String reverseCamel(sVal){
 		.region-content {
     		flex: 1;
     		overflow: auto;
+			padding-left:5px;
 		}
 
         .region:hover {
@@ -780,6 +925,13 @@ String reverseCamel(sVal){
 
         .region.collapsed {
             height: 44px !important;
+        }
+		
+		.region.fullScreen {
+            top: 0px !important;
+			height: 95vh !important;
+			min-width: 80vw;
+			left: 0px !important;
         }
 
         .region-header {
@@ -870,9 +1022,8 @@ String reverseCamel(sVal){
     </style>
 	<script>
 		function toggleRegion(btn) {
-			//alert(btn.parentElement.parentElement.id);
 			event.stopPropagation()
-		    const region = document.getElementById(btn.parentElement.parentElement.id);
+		    const region = document.getElementById(btn.parentElement.parentElement.parentElement.id);
 			if(region.classList.contains('collapsed')){
 				//alert("case collasped")
 				btn.innerText = '-';
@@ -882,17 +1033,32 @@ String reverseCamel(sVal){
 				//alert("case expanded")
 				btn.innerText = '+';
 				region.classList.add('collapsed');
+				region.classList.remove('fullScreen');
+				savePos();
+			}
+		}
+		
+		function maxRstRegion(btn) {
+			event.stopPropagation()
+		    const region = document.getElementById(btn.parentElement.parentElement.parentElement.id);
+			if(region.classList.contains('fullScreen')){
+				region.classList.remove('fullScreen');
+				savePos()
+			} else { 
+				region.classList.add('fullScreen');
+				region.classList.remove('collapsed');
 				savePos();
 			}
 		}
 
 		function savePos(){
 			saveStr = '';
-			const regionList = ["region-1","region-2","region-3","region-4","region-5","region-6"];
+			const regionList = [${dragList}];
 			for(i=0;i<regionList.length;i++){
 				tRegion = document.getElementById(regionList[i]);
 				const collapsed = tRegion.classList.contains('collapsed') ? '1' : '0';
-				saveStr += regionList[i]+':{'+tRegion.style.left+','+tRegion.style.top+','+tRegion.style.width+','+tRegion.style.height+','+tRegion.style.zIndex+ ',' + collapsed+'};';
+				const maximized = tRegion.classList.contains('fullScreen') ? '1' : '0';
+				saveStr += regionList[i]+':{'+tRegion.style.left+','+tRegion.style.top+','+tRegion.style.width+','+tRegion.style.height+','+tRegion.style.zIndex+ ',' + collapsed+','+maximized+'};';
 				//alert("saving "+regionList[i]+":"+collapsed)
 			}
 			document.getElementById('settings[savePos]').value = saveStr;
@@ -922,97 +1088,24 @@ String reverseCamel(sVal){
             		const btn = elem.querySelector('.toggleBtn');
 		           	if (btn) btn.textContent = '−';
     	    	}
+        		if (xyVals[6] == '1') {
+            		elem.classList.add('fullScreen');
+					elem.classList.remove('collapsed');
+				} else {
+            		elem.classList.remove('fullScreen');
+    	    	} 
 			}
 
 
 		}
-	</script>
-    <div class="container" id="container">
-        <div class="region" id="region-1">
-            <div class="region-header">
-                <div class="region-title">Commands</div>
-				<span class="toggleBtn" onclick="toggleRegion(this)" ontouchstart="toggleRegion(this)">-</span>
-            </div>
-            <div class="region-content">
-'''
-@Field static String html2 = '''
-			</div>
-            <div class="resize-handle se"></div>
-        </div>
 
-        <div class="region" id="region-2">
-            <div class="region-header">
-                <div class="region-title">States</div>
-				<span class="toggleBtn" onclick="toggleRegion(this)" ontouchstart="toggleRegion(this)">-</span>
-            </div>
-            <div class="region-content">
-'''
-@Field static String html3 = '''
-			</div>
-            <div class="resize-handle se"></div>
-        </div>
-
-        <div class="region" id="region-3">
-            <div class="region-header" id='prefHeader'>
-                <div class="region-title">Preferences</div>
-				<span class="toggleBtn" onclick="toggleRegion(this)" ontouchstart="toggleRegion(this)">-</span>
-            </div>
-            <div class="region-content">
-'''
-@Field static String html4 = '''
-			</div>
-            <div class="resize-handle se"></div>
-        </div>
-
-        <div class="region" id="region-4">
-            <div class="region-header" id="devInfoHeader">
-                <div class="region-title">Device Info</div>
-				<span class="toggleBtn" onclick="toggleRegion(this)" ontouchstart="toggleRegion(this)">-</span>
-            </div>
-            <div class="region-content">
-'''
-@Field static String html5 = '''
-			</div>
-            <div class="resize-handle se"></div>
-        </div>
-
-        <div class="region" id="region-5">
-            <div class="region-header">
-				<div class="region-title">Events</div>
-				<span class="toggleBtn" onclick="toggleRegion(this)" ontouchstart="toggleRegion(this)">-</span>
-        	</div>
-            <div class="region-content">
-'''
-@Field static String html6 = '''
-			</div>
-            <div class="resize-handle se"></div>
-        </div>
-
-        <div class="region" id="region-6">
-            <div class="region-header">
-                <div class="region-title">Scheduled Jobs</div>
-				<span class="toggleBtn" onclick="toggleRegion(this)" ontouchstart="toggleRegion(this)">-</span>
-            </div>
-            <div class="region-content">
-'''
-@Field static String html7 = '''
-			</div>
-            <div class="resize-handle se"></div>
-        </div>
-    </div>
-    <script>
-        draggableRegions = ['region-1', 'region-2', 'region-3', 'region-4', 'region-5', 'region-6'];
-        var maxZIndex = 6;
+        draggableRegions = [${dragList}];
+        var maxZIndex = ${regionsInx};
         
         // Default positions for initial load
 
 		var defaultPositions = {
-            'region-1': { left: '50px', top: '0px', width: '300px', height: '250px', zIndex: '1' },
-            'region-2': { left: '400px', top: '0px', width: '300px', height: '250px', zIndex: '2' },
-            'region-3': { left: '750px', top: '0px', width: '300px', height: '250px', zIndex: '3' },
-            'region-4': { left: '50px', top: '300px', width: '300px', height: '250px', zIndex: '4' },
-            'region-5': { left: '400px', top: '300px', width: '300px', height: '250px', zIndex: '5' },
-            'region-6': { left: '750px', top: '300px', width: '300px', height: '250px', zIndex: '6' }
+			${defaultPos}
         };
 
         // Bring region to front
@@ -1022,7 +1115,7 @@ String reverseCamel(sVal){
         }
 
         // Load saved states on page load 
-        loadRegionState();//- only runs if no saved setting value
+        //loadRegionState();//- only runs if no saved setting value
         function loadRegionState() {
             draggableRegions.forEach(regionId => {
                 region = document.getElementById(regionId);
@@ -1034,101 +1127,155 @@ String reverseCamel(sVal){
                 region.style.zIndex = defaults.zIndex;
             });
         }
-//begin 260214        
-draggableRegions.forEach(regionId => {
-    const region = document.getElementById(regionId);
-    const header = region.querySelector('.region-header');
-    const resizeHandle = region.querySelector('.resize-handle.se');
+      
+	draggableRegions.forEach(regionId => {
+			const region = document.getElementById(regionId);
+			const header = region.querySelector('.region-header');
+			const resizeHandle = region.querySelector('.resize-handle.se');
 
-    let isDragging = false;
-    let isResizing = false;
-    let currentX, currentY, initialX, initialY;
-    let initialWidth, initialHeight, resizeStartX, resizeStartY;
+			let isDragging = false;
+			let isResizing = false;
+			let currentX, currentY, initialX, initialY;
+			let initialWidth, initialHeight, resizeStartX, resizeStartY;
 
-    function getClient(e) {
-        return e.touches ? e.touches[0] : e;
-    }
+			function getClient(e) {
+				return e.touches ? e.touches[0] : e;
+			}
 
-    region.addEventListener('mousedown', () => bringToFront(region));
-    region.addEventListener('touchstart', () => bringToFront(region), { passive: true });
+			region.addEventListener('mousedown', () => bringToFront(region));
+			region.addEventListener('touchstart', () => bringToFront(region), { passive: true });
 
-    function onDragStart(e) {
-        if (e.target === resizeHandle || resizeHandle.contains(e.target)) return;
-        e.preventDefault();
-        isDragging = true;
-        const client = getClient(e);
-        initialX = client.clientX - (parseInt(region.style.left) || 0);
-        initialY = client.clientY - (parseInt(region.style.top) || 0);
-        region.classList.add('active');
-        bringToFront(region);
-    }
+			function onDragStart(e) {
+				if (e.target === resizeHandle || resizeHandle.contains(e.target)) return;
+				e.preventDefault();
+				isDragging = true;
+				const client = getClient(e);
+				initialX = client.clientX - (parseInt(region.style.left) || 0);
+				initialY = client.clientY - (parseInt(region.style.top) || 0);
+				region.classList.add('active');
+				bringToFront(region);
+			}
 
-    function onDragMove(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        const client = getClient(e);
-        currentX = client.clientX - initialX;
-        currentY = client.clientY - initialY;
-        region.style.left = currentX + 'px';
-        region.style.top = currentY + 'px';
-    }
+			function onDragMove(e) {
+				if (!isDragging) return;
+				e.preventDefault();
+				const client = getClient(e);
+				currentX = client.clientX - initialX;
+				currentY = client.clientY - initialY;
+				region.style.left = currentX + 'px';
+				region.style.top = currentY + 'px';
+			}
 
-    function onDragEnd() {
-        if (isDragging) { isDragging = false; savePos(); }
-    }
+			function onDragEnd() {
+				if (isDragging) { isDragging = false; savePos(); }
+			}
 
-    header.addEventListener('mousedown', onDragStart);
-    header.addEventListener('touchstart', onDragStart, { passive: false });
-    document.addEventListener('mousemove', onDragMove);
-    document.addEventListener('touchmove', onDragMove, { passive: false });
-    document.addEventListener('mouseup', onDragEnd);
-    document.addEventListener('touchend', onDragEnd);
+			header.addEventListener('mousedown', onDragStart);
+			header.addEventListener('touchstart', onDragStart, { passive: false });
+			document.addEventListener('mousemove', onDragMove);
+			document.addEventListener('touchmove', onDragMove, { passive: false });
+			document.addEventListener('mouseup', onDragEnd);
+			document.addEventListener('touchend', onDragEnd);
 
-    function onResizeStart(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        isResizing = true;
-        const client = getClient(e);
-        resizeStartX = client.clientX;
-        resizeStartY = client.clientY;
-        initialWidth = region.offsetWidth;
-        initialHeight = region.offsetHeight;
-        region.classList.add('active');
-    }
+			function onResizeStart(e) {
+				e.stopPropagation();
+				e.preventDefault();
+				isResizing = true;
+				const client = getClient(e);
+				resizeStartX = client.clientX;
+				resizeStartY = client.clientY;
+				initialWidth = region.offsetWidth;
+				initialHeight = region.offsetHeight;
+				region.classList.add('active');
+			}
 
-    function onResizeMove(e) {
-        if (!isResizing) return;
-        e.preventDefault();
-        const client = getClient(e);
-        const width = initialWidth + (client.clientX - resizeStartX);
-        const height = initialHeight + (client.clientY - resizeStartY);
-        if (width > 200) region.style.width = width + 'px';
-        if (height > 100) region.style.height = height + 'px';
-    }
+			function onResizeMove(e) {
+				if (!isResizing) return;
+				e.preventDefault();
+				const client = getClient(e);
+				const width = initialWidth + (client.clientX - resizeStartX);
+				const height = initialHeight + (client.clientY - resizeStartY);
+				if (width > 200) region.style.width = width + 'px';
+				if (height > 100) region.style.height = height + 'px';
+			}
 
-    function onResizeEnd() {
-        if (isResizing) { isResizing = false; savePos(); }
-    }
+			function onResizeEnd() {
+				if (isResizing) { isResizing = false; savePos(); }
+			}
 
-    resizeHandle.addEventListener('mousedown', onResizeStart);
-    resizeHandle.addEventListener('touchstart', onResizeStart, { passive: false });
-    document.addEventListener('mousemove', onResizeMove);
-    document.addEventListener('touchmove', onResizeMove, { passive: false });
-    document.addEventListener('mouseup', onResizeEnd);
-    document.addEventListener('touchend', onResizeEnd);
-
-});
-//end 260214
-
-    </script>
-
+			resizeHandle.addEventListener('mousedown', onResizeStart);
+			resizeHandle.addEventListener('touchstart', onResizeStart, { passive: false });
+			document.addEventListener('mousemove', onResizeMove);
+			document.addEventListener('touchmove', onResizeMove, { passive: false });
+			document.addEventListener('mouseup', onResizeEnd);
+			document.addEventListener('touchend', onResizeEnd);
+	});
+	</script>
+    <div class='regContainer' id='container'>
+		${inputHiddenElem(name:'savePos', type:'hidden', width:'1em', radius:'12px', background:'#2596be', title:'', submitOnChange:true, defaultValue:'')}
+		${regionsMerged}
+    </div>
 </div>
-'''
+"""
+    if(settings["savePos"])
+    	posStr = "<script>parseStr('${settings["savePos"]}');</script>"
+    else 
+    	posStr = "<script>loadRegionState(); </script>"
+    bodyHtml+=posStr
+	if(fullScreen)
+		return bodyHtml + fullScrn
+	else
+		return bodyHtml
+}
 
-
-
-
-
+String inputHiddenElem(HashMap opt) {
+    if(!opt.name || !opt.type) return "Error missing name or type"
+    if(settings[opt.name] != null){
+        if(opt.type != 'time') {
+        	opt.defaultValue = settings[opt.name]
+        } else {
+            SimpleDateFormat sdf = new SimpleDateFormat('HH:mm')
+            SimpleDateFormat sdfIn = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+            opt.defaultValue = sdf.format(sdfIn.parse(settings[opt.name]))
+        }
+    }
+    typeAlt = opt.type
+    if(opt.type == 'number') {
+    	step = ' step=\"1\" '
+    } else if (opt.type == 'decimal') {
+        step = ' step=\"any\" '
+        typeAlt = 'number'
+    } else {
+        step = ' '
+    }
+   
+	String computedStyle = ''
+    if(opt.type == 'hidden'){
+        opt.type='text'
+        typeAlt = 'hidden'
+        computedStyle += 'visibility:hidden;'
+    }        
+        
+    if (opt.float) computedStyle +="float:${opt.float};"
+    if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
+    if(opt.background) computedStyle += "background-color:${opt.background};"
+    if(opt.color) computedStyle += "color:${opt.color};"
+    if(opt.fontSize) computedStyle += "font-size:${opt.fontSize};"
+	if(opt.radius) computedStyle += "border-radius:${opt.radius};"
+    if(!opt.multiple) opt.multiple = false
+    
+    if(opt.hoverText && opt.hoverText != 'null'){  
+    	opt.title ="${opt.title}<div class='tTip'> ${btnIcon([name:'fa-circle-info'])}<span class='tTipText' style='width:${opt.hoverText.size()/2}em'>${opt.hoverText}</span></div>"
+    }
+    String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
+	retVal+="<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield has-placeholder is-dirty is-upgraded' style='' data-upgraded=',MaterialTextfield'>"
+    retVal+="<label for='settings[${opt.name}]' style='min-width:${opt.width}' class='control-label'>${opt.title}</label><div class='flex'><input type='${typeAlt}' ${step} name='settings[${opt.name}]' class='mdl-textfield__input submitOnChange' style='${computedStyle}' value='${opt.defaultValue}' placeholder='Click to set' id='settings[${opt.name}]'>"
+    retVal+="<div class='app-text-input-save-button-div' onclick=\"changeSubmit(document.getElementById('settings[$opt.name]'))\">"
+    if(typeAlt != 'hidden')
+    	retVal +="<div class='app-text-input-save-button-text'>Save</div><div class='app-text-input-save-button-icon'>⏎</div>"
+    retVal +="</div></div></div>"
+    return retVal
+}
 
 /*
 *
@@ -1155,6 +1302,7 @@ draggableRegions.forEach(regionId => {
 *	23May2025							Add device.<driverName> to capability
 *   07Oct2025							Added textarea uiType
 *	20Feb2026							Minor enhancements and added 'hidden' as a valid input field type
+*	06Mar2026							Fixed mis-matched <div></div> in capability element
 */
 
 import groovy.transform.Field
@@ -1167,7 +1315,7 @@ library (
     name: "uiInputElements",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/uiInputElements.groovy",
-    version: "0.0.8",
+    version: "0.0.9",
     documentationLink: ""
 )
 
@@ -1283,7 +1431,7 @@ String inputItem(HashMap opt) {
     if(opt.type == 'hidden'){
         opt.type='text'
         typeAlt = 'hidden'
-        computedStyle += 'visibility:hidden'
+        computedStyle += 'visibility:hidden;'
     }        
         
     if (opt.float) computedStyle +="float:${opt.float};"
@@ -1405,11 +1553,12 @@ String inputCap(HashMap opt) {
 
 	String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
     retVal += "<div class='capability ${capAlt} mdl-cell mdl-cell--4-col' style='margin: 8px 0; '>"//${computedStyle}
-	//retVal += "<button type='button' class='btn btn-default btn-lg btn-block device-btn-filled btn-device mdl-button--raised mdl-shadow--2dp' style='text-align:left; width:100%;' data-toggle='modal' data-target='#deviceListModal' "
+
     retVal += "<button type='button' class='btn btn-lg btn-block btn-device' style='border-radius:${opt.radius};border:0px;text-align:left; width:100%; min-width:${opt.width}' data-toggle='modal' data-target='#deviceListModal' "
     retVal += "data-capability='${opt.type}' data-elemname='${opt.name}' data-multiple='${opt.multiple}' data-ignore=''>"
     	retVal += "<span style='white-space:pre-wrap;'>${opt.title}</span><br><div style='${computedStyle}'>"
-	retVal += "<span id='${opt.name}devlist' class='device-text' style='text-align: left;'>${dList}</span></button>"
+	retVal += "<span id='${opt.name}devlist' class='device-text' style='text-align: left;'>${dList}</span></div></button>"
+    
 	retVal += "<input type='hidden' name='settings[${opt.name}]' class='form-control submitOnChange' value='${idList}' placeholder='Click to set' id='settings[${opt.name}]'>"
 	retVal += "<input type='hidden' name='deviceList' value='${opt.name}'><div class='device-list' style='display:none'>"
 	retVal += "<div id='deviceListModal' style='border:1px solid #ccc;padding:8px;max-height:300px;overflow:auto;min-width:${opt.width}'><div class='checkAllBoxes my-2'>"
@@ -1419,7 +1568,7 @@ String inputCap(HashMap opt) {
 	retVal += "<span class='mdl-checkbox__focus-helper'></span><span class='mdl-checkbox__box-outline'><span class='mdl-checkbox__tick-outline'></span></span>"
 	retVal += "<span class='mdl-checkbox__ripple-container mdl-js-ripple-effect mdl-ripple--center' data-upgraded=',MaterialRipple'><span class='mdl-ripple'></span></span></label></div>"
 	retVal += "<div id='${opt.name}-options' class='modal-body' style='overflow:unset'></div></div></div>"
-	retVal += "<div class='mdl-button mdl-js-button mdl-button--raised pull-right device-save' data-upgraded=',MaterialButton' style='${computedStyle};width:6em;min-width:6em;'>Update</div></div></div>"
+	retVal += "<div class='mdl-button mdl-js-button mdl-button--raised pull-right device-save' data-upgraded=',MaterialButton' style='${computedStyle};width:6em;min-width:6em;'>Update</div></div>"
     
     return retVal
 }
@@ -1445,7 +1594,7 @@ String inputCap(HashMap opt) {
 
 
 String inputEnum(HashMap opt){
-    String computedStyle = ''
+    String computedStyle = opt.style ? opt.style:''
     if (opt.float) computedStyle +="float:${opt.float};"
     if(opt.type == 'mode') opt.options = location.getModes()
     if(opt.width) computedStyle += "width:${opt.width};min-width:${opt.width};"
@@ -1465,7 +1614,7 @@ String inputEnum(HashMap opt){
     String retVal = "<div class='form-group'><input type='hidden' name='${opt.name}.type' value='${opt.type}'><input type='hidden' name='${opt.name}.multiple' value='${opt.multiple}'></div>"
     retVal += "<div class='mdl-cell mdl-cell--4-col mdl-textfield mdl-js-textfield' style='margin: 8px 0; padding-right: 8px;' data-upgraded=',MaterialTextfield'>"
     retVal += "<label for='settings[${opt.name}]' style='min-width:${opt.width}' class='control-label'>${opt.title}</label><div class='SumoSelect sumo_settings[${opt.name}]' tabindex='0' role='button' aria-expanded='false'>"
-    retVal += "<div style='${computedStyle}'><select id='settings[${opt.name}]' ${mult} name='settings[${opt.name}]' class='selectpicker form-control mdl-switch__input submitOnChange SumoUnder' placeholder='Click to set' data-default='' tabindex='-1' style='${computedStyle}'></div>"
+    retVal += "<div style='${computedStyle}'><select id='settings[${opt.name}]' ${mult} name='settings[${opt.name}]' class='selectpicker form-control mdl-switch__input submitOnChange SumoUnder' placeholder='Click to set' data-default='' tabindex='-1' style='${computedStyle}'>"
     ArrayList selOpt = []
 	if(settings["${opt.name}"]){
         if("${settings["${opt.name}"].class}" == 'class java.lang.String' || "${settings["${opt.name}"].class}" == 'class org.codehaus.groovy.runtime.GStringImpl'){
@@ -1510,7 +1659,7 @@ String inputEnum(HashMap opt){
         }
         retVal += "<option value='${optVal}' ${sel}>${optDis}</option>"
     }
-    retVal+= "</select></div></div>"
+    retVal+= "</select></div></div></div>"
     return retVal
 }
 

@@ -88,7 +88,8 @@
  *	  2025-12-07				 v3.1.22 - add javaDirect
  *	  2025-12-23				 v3.1.23 - move driver version update code
  *	  2026-01-13				 v3.1.24 - h2Data issue
- *	  2023-01-20				 v3.1.25 - make freeMem15 unit agree with freeMemory
+ *	  2026-01-20				 v3.1.25 - make freeMem15 unit agree with freeMemory
+ *	  2026-03-10				 v3.1.26 - warning message change
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -102,7 +103,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.24"}
+static String version() {return "3.1.25"}
 
 metadata {
     definition (
@@ -936,7 +937,7 @@ void parseZwave(String zString){
     if(device.currentValue('zwaveJS',true) != 'true' && zString.length() != 4){
     	if(start == -1 || end < 1 || zString.indexOf("starting up") > 0 ){ //empty or invalid string - possibly non-C7
         	//updateAttr("zwaveData",null)
-        	if(!warnSuppress) log.warn "Invalid ZWave Data returned ($zString) "
+        	if(!warnSuppress) log.warn "ZWave data returned ($zString) is not version string."
     	}else {
         	wrkStr = zString.substring(start,end)
         	wrkStr = wrkStr.replace("(","[")

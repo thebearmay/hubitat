@@ -129,11 +129,7 @@ def updated(){
     }
     if(pollRate == null)
         device.updateSetting("pollRate",[value:0,type:"number"])
-    if(pollRate > 0){
-        runIn(pollRate*60,"refresh")
-    } else
-        unschedule("refresh")
-    refresh()
+    runIn(1, "refresh")
 }
 
 @SuppressWarnings('unused')
@@ -154,6 +150,10 @@ void refresh() {
 }
 
 void dataRefresh(retData){
+    if(retData?.data == null) {
+        log.warn "${device.displayName} - no data in response, skipping update"
+        return
+    }
     if(debugEnabled) log.debug "$retData.data ${retData.data.size()}"
     retData.data.each{
         if(debugEnabled) log.debug "Each:${it.key}"

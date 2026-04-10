@@ -12,11 +12,12 @@
  *
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
+ *		10Apr2026		thebearmay				Add a display list of all IDs
 */
 import groovy.transform.Field
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-static String version()	{  return '0.0.2'  }
+static String version()	{  return '0.0.3'  }
 
 definition (
 	name: 			"App and Device ID Logger", 
@@ -62,6 +63,7 @@ def mainPage(){
 			input "nameOverride", "text", title: "<b>New Name for Application</b>", multiple: false, required: false, submitOnChange: true, defaultValue: app.getLabel()
 			if(nameOverride != app.getLabel()) app.updateLabel(nameOverride)
             input "snapFreq", "number", title:"<b>Minutes between snapshots</b>", defaultValue:60, submitOnChange:true
+            input "displayList", "bool", title:"<b>Automatically display list of IDs when App opens</b>", defaultValue: false, submitOnChange:true
 		}        
         section("") {
             if(minVerCheck("2.4.0.0")) {
@@ -99,9 +101,34 @@ def mainPage(){
                     if(!foundIt) paragraph "$aOrD$iKey - not found"
                 }
             }
+            if(displayList){
+                paragraph buildDisp()
+            }
             
         }
     }
+}
+
+String buildDisp(){
+    String retVal = ''
+    try {
+		buData = downloadHubFile('appDevID.json')
+		if(buData.size() > 0){
+			jSlurp = new JsonSlurper()
+			oldData = jSlurp.parseText(new String(buData, "UTF-8"))
+            retVal = '<style>td, th{border:1px dotted gray;padding:5px;}</style><table><tr><th>ID</th><th>Name</th><th>Last Seen</th></tr>'
+            oldData.sort{it.key}.each {
+        		if(debugEnabled) log.debug "$it"
+	           	retVal +=  "<tr><td>${it.key}</td><td>${it.value}</td><td>${it.lastSeen}</td></tr>"
+			}
+        	retVal+="</table>"
+    	}
+    } catch (ignore) {
+		buData = ''
+        return "App/Device Data File not Found"
+	}
+
+    return retVal
 }
 
 String getName(keyVal, appList){

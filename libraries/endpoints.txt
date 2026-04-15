@@ -10,6 +10,7 @@
 * Apps	 * /app/appTypeList
 * Apps   * /hub2/appsList
 * Apps   * /hub2/userAppTypes
+* Apps	 * /app/edit/deleteJson/<id> // delete apps code
 * Apps   * /hub/advanced/reloadAppAndDriverDefinitions //Resets 'Error 404' conditions
 * Apps   * /installedapp/statusJson/<appID> //>=HE 2.4.0.xx returns the application status page data
 * Apps	 *	// 2.4.3.121
@@ -58,6 +59,7 @@
 * Device    * /device/fullJson/<devID>  //2.4.0.x
 * Devive    * /device/listJson?capability=capability.* //any valid capability
 * Device    * /device/listJson?capability=device.<driverName> //i.e. HubInformationDriverv3
+* Device    * /driver/editor/deleteJson/<id> //delete driver code
 * Device    *
 * Device    * // Using POST
 * Device    * /device/update

@@ -202,6 +202,7 @@
 * Other  *  /hub/list/data   //returns the same data as the /hub/data
 * Other	 *  /api/hubitat.xml
 * Other  *  /ui2/images/hub.png
+* Other  *  /hub/advanced/blinkLED/
 * Other	 * 			
 * Radios	 * Radios On/Off			
 * Radios	 *			

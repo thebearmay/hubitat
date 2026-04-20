@@ -391,6 +391,16 @@
       "tags":[
         "Tools & Utilities"
        ]
+    },
+    {
+      "id":"327fec62-c2a2-48ee-a235-9c3a4935a2a8",
+      "name":"Unused Code Cleanup",
+      "category":"Utility",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/unusedCodeManifest.json",
+      "description":"Creates lists of App and Dev code that are not in use by instatiated instances, and allows them to be deleted in mass or individually.",
+      "tags":[
+        "Tools & Utilities"
+       ]
     }
   ]
 }

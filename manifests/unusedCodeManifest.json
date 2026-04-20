@@ -1,0 +1,19 @@
+{
+ "packageName":"Unused Code Cleanup",
+ "author":"Jean P. May, Jr.",
+ "version":"0.0.1",
+ "minimumHEVersion":"2.4.0.1",
+ "dateReleased":"2026-04-15",
+ "releaseNotes":"v0.0.1 - Production Release",
+ "apps": [
+  {
+     "id":"c14042b8-9e66-4a46-846a-a3f26a64e5e7",
+     "name":"Unused Code Cleanup",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/unusedCode.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

@@ -38,10 +38,11 @@
 * 	 2025-04-03	 thebearmay	   add time/date formats, lowered mininum message count to 1
 *    2025-04-20  amithalp	   add color options
 *	 2026-04-21	 thebearmay	   v2.0.14 add a reverse fill option
+*	 2026-04-22	 thebearmay	   v2.0.15 initialize state.lastLimit when configuring
 */
 import java.text.SimpleDateFormat
 import groovy.transform.Field
-static String version()	{  return '2.0.14'  }
+static String version()	{  return '2.0.15'  }
 
 @Field sdfList = ["ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "MM/dd h:mma", "HH:mm", "H:mm","h:mma", "HH:mm ddMMMyyyy","HH:mm:ss ddMMMyyyy","hh:mma ddMMMyyyy", "HH:mm:ss dd/MM/yyyy", "HH:mm:ss MM/dd/yyyy", "hh:mma dd/MM/yyyy ", "hh:mma MM/dd/yyyy", "HH:mm yyyy-MM-dd", "None"]
 
@@ -123,8 +124,8 @@ metadata {
 
         if(msgLimit == null) device.updateSetting("msgLimit",[value:5,type:"number"])
 	// V2.0.3 When new msgLimit less than prior(state) msgLimit adjust message and state values	
-		if (state?.lastLimit.toInteger()>settings.msgLimit.toInteger())
-			{
+        if(!state.lastLimit) state.lastLimit = 0
+		if (state?.lastLimit.toInteger()>settings.msgLimit.toInteger()){
 			wkTile=device.currentValue("last5")
 			msgFilled=state.msgCount.toInteger()
 			if (debugEnable) log.debug "Shinking tile count lastLimit ${state.lastLimit} newLimit ${settings.msgLimit} msgCount ${msgFilled}"
@@ -138,7 +139,7 @@ metadata {
 				}
 			state.msgCount=msgFilled
 			sendEvent(name:"last5", value:wkTile)
-			}
+		}
 		
 		if (!settings.create5H)
 			sendEvent(name:"last5H", value:'<span class="last5"></span>')
@@ -151,6 +152,7 @@ metadata {
 		sendEvent(name:"last5", value:'<span class="last5"></span>')
 		sendEvent(name:"last5H", value:'<span class="last5"></span>')
 		state.msgCount=0
+        state.lastLimit = 0
         if(location.hub.firmwareVersionString >= "2.2.8.0") {
             if(notify1){
                 device.deleteCurrentState("notify1")

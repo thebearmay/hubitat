@@ -68,7 +68,7 @@ def _mainPage(){
             	app.updateSetting('appFilter',[type:'enum',value:'All'])
                 state.holdFilter = 'All'
             }
-            if(!state.regionMax) state.regionMax = 3
+            //if(!state.regionMax) state.regionMax = 3
             if(state.regionsList) 
             	regionsList = state.regionsList  
             else
@@ -107,7 +107,7 @@ def _mainPage(){
             }
             
             if(state?.newAppLaunch > '0'){
-                addAppRegion(state.newAppLaunch)
+                regionsList = addAppRegion(state.newAppLaunch)               
                 state.remove('newAppLaunch')
             }
             if(closeReg != null) {
@@ -145,22 +145,30 @@ void removeRegion(regId){
 }
 
 def addAppRegion(appId){
-    regionsList = state.regionsList
-    state.regionMax = state.regionMax++
-    fContent = frameWrap("frame${state.regionMax}","/installedapp/configure/$appId")
-    newReg = getRegion("region-${state.regionMax}", "Application-$appId", "$fContent")
-    regionsList.put("region-${state.regionMax}", newReg)
-
+    if(!state.regionMax) state.regionMax = 3
+    regionMax = state.regionMax
+    regionsList = state.regionsList    
+   	regionMax++
+    state.regionMax = regionMax
+    fContent = frameWrap("frame${regionMax}","/installedapp/configure/$appId")
+    newReg = getRegion("region-${regionMax}", "Application-$appId", "$fContent")
+    regionsList.put("region-${regionMax}", newReg)
+    
     state.regionsList = regionsList
+    return regionsList
 }
 
 def addMenuRegion(refStr){
     regionsList = state.regionsList
-   	state.regionMax = state.regionMax++
+    if(!state.regionMax) state.regionMax = 3
+    regionMax = state.regionMax
+    regionsList = state.regionsList    
+   	regionMax++
+    state.regionMax = regionMax
     refStr=refStr.replace('|','/')
-    fContent = frameWrap("frame${state.regionMax}","http://${location.hub.localIP}:8080/$refStr")
-    newReg = getRegion("region-${state.regionMax}", "$refStr", "$fContent")
-    regionsList.put("region-${state.regionMax}", newReg)
+    fContent = frameWrap("frame${regionMax}","http://${location.hub.localIP}:8080/$refStr")
+    newReg = getRegion("region-${regionMax}", "$refStr", "$fContent")
+    regionsList.put("region-${regionMax}", newReg)
 
     state.regionsList = regionsList
 }

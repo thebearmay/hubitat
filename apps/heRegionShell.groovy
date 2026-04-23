@@ -16,7 +16,7 @@
  *    -------------   -------------------    ---------------------------------------------------------
  *    
  */
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.2'  }
 import groovy.transform.Field
 
 //#include thebearmay.uiRegions
@@ -61,21 +61,46 @@ void logsOff(){
 }
 
 def _mainPage(){
-    dynamicPage (name: "_mainPage", title: "<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>", install: true, uninstall: true) {
+    //<h2 style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></h2>
+    dynamicPage (name: "_mainPage", title: "", install: true, uninstall: true) {
         section (name:'cPageHndl', title:''){
+            if(!settings.appFilter){
+            	app.updateSetting('appFilter',[type:'enum',value:'All'])
+                state.holdFilter = 'All'
+            }
+            if(!state.regionMax) state.regionMax = 3
             if(state.regionsList) 
             	regionsList = state.regionsList  
             else
                 regionsList = [:]
-
-          	r1Content =_appsList()
-            r1 = getRegion('region-1', 'Applications', "$r1Content")
-            regionsList.put('region-1', r1)
             
-            r2Content = _buildMenu()
-            r2 = getRegion('region-2','Menu',"$r2Content")
-            regionsList.put('region-2', r2)
-                                  
+            if(!regionsList.containsKey('region-1')){
+            	r1Content = _buildMenu()
+            	r1 = getRegion('region-1','Menu',"$r1Content")
+            	regionsList.put('region-1', r1)
+            }
+            
+            if(state?.holdFilter != settings.appFilter) {
+                state.special = 'applications'
+            }
+            
+            if(state.special == 'applications'){
+                state.regionMax = state.regionMax++
+            	r2Content =_appsList()
+            	r2 = getRegion('region-2', 'Applications', "$r2Content")
+            	regionsList.put('region-2', r2)
+                state.remove('special')
+            } else if(state.special == 'about'){
+                state.regionMax = state.regionMax++
+                rContent = "<p style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></p>"
+                r=getRegion("region-${state.regionMax}",'About',"$rContent")
+				regionsList.put("region-${state.regionMax}", r)
+                state.remove('special')
+            } else if(state.special) {
+            	log.debug "Unknown Special Request - ${state.special}"
+                state.remove('special')
+            }
+                              
             if(state.closeApp){
                 state.remove('closeApp')
                 paragraph "<script>location.href = '/';</script>"
@@ -121,37 +146,33 @@ void removeRegion(regId){
 
 def addAppRegion(appId){
     regionsList = state.regionsList
-    if(!state.regionMax) state.regionMax = 2
-    regionMax = state.regionMax
-	regionMax++
-    fContent = frameWrap("frame$regionMax","/installedapp/configure/$appId")
-    newReg = getRegion("region-$regionMax", "Application-$appId", "$fContent")
-    regionsList.put("region-$regionMax", newReg)
+    state.regionMax = state.regionMax++
+    fContent = frameWrap("frame${state.regionMax}","/installedapp/configure/$appId")
+    newReg = getRegion("region-${state.regionMax}", "Application-$appId", "$fContent")
+    regionsList.put("region-${state.regionMax}", newReg)
 
     state.regionsList = regionsList
-    state.regionMax = regionMax 
 }
 
 def addMenuRegion(refStr){
     regionsList = state.regionsList
-    if(!state.regionMax) state.regionMax = 2
-    regionMax = state.regionMax
-	regionMax++
+   	state.regionMax = state.regionMax++
     refStr=refStr.replace('|','/')
-    fContent = frameWrap("frame$regionMax","http://${location.hub.localIP}:8080/$refStr")
-    newReg = getRegion("region-$regionMax", "$refStr", "$fContent")
-    regionsList.put("region-$regionMax", newReg)
+    fContent = frameWrap("frame${state.regionMax}","http://${location.hub.localIP}:8080/$refStr")
+    newReg = getRegion("region-${state.regionMax}", "$refStr", "$fContent")
+    regionsList.put("region-${state.regionMax}", newReg)
 
     state.regionsList = regionsList
-    state.regionMax = regionMax 
 }
 
 String _appsList(){
 	String dList = "<style>td{border:1px gray dotted;}</style><table>"
+    dList += "<tr><td>"+getInputElemStr(name:"appFilter", type:'enum', radius:'12px', style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:'Filter', width:'15em',options:['All','Apps','Automations','Integrations'],defaultValue:"${settings['appFilter']}" )+"</td></tr>"
     appList.each {
 		dList+= "<tr><td>"+getInputElemStr(name:"app-${it.key}", type:'button', style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"${it.value}", noBorder:true )+"</td></tr>"
     }
     dList+="</table>"
+    state.holdFilter = settings['appFilter']
     return dList
 }
 
@@ -160,7 +181,7 @@ ArrayList getAppList(){
         ArrayList appList = []
     	try{		
         params = [
-            uri: "http://127.0.0.1:8080/hub2/appsList",
+            uri: "http://127.0.0.1:8080/hub2/appsList",//?section=${settings.appFilter}
             headers: [
                 "Accept": "application/json"
             ]
@@ -170,10 +191,24 @@ ArrayList getAppList(){
         httpGet(params){ resp ->
             if(debugEnabled) 
             	log.debug "${resp.data.apps}"
-            resp.data.apps.each {
-                HashMap wMap = [key:"${it.id}",value:"${it.data.name}"]
-                //wMap.put(it.id,"${it.data.name}")
-				appList.add(wMap)
+            resp.data.apps.each { apps ->
+            	fType = ''
+                if(!apps.data.user) { 
+                	resp.data.systemAppTypes.each{
+                        if(it.id == apps.data.appTypeId)
+                        	fType = it.menu
+                	}
+                } else {                	 
+                    resp.data.userAppTypes.each{
+                    	if(it.id == apps.data.appTypeId)
+                        	fType = it.menu
+                    }
+                }
+               
+                if(appFilter == 'All' || appFilter == fType ){
+                	HashMap wMap = [key:"${apps.id}",value:"${apps.data.name}"]
+                    appList.add(wMap)
+                }
             }
 		}
     }catch (e){
@@ -187,10 +222,12 @@ ArrayList getAppList(){
 String _buildMenu(){
 	menuStr=getInputElemStr(name:"href-room|list", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-bed-front'></i> Rooms ")
     menuStr+=getInputElemStr(name:"href-dashboard|select", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-objects-column'></i> Dashboard ")
+    menuStr+=getInputElemStr(name:"spec-applications", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-toolbox'></i> Apps ")
     menuStr+=getInputElemStr(name:"href-device|list", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-lightbulb'></i> Devices ")
     menuStr+=getInputElemStr(name:"href-hub|edit", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-sliders-up'></i> Settings ")
     menuStr+=getInputElemStr(name:"href-logs", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-memo-circle-info'></i> Logs ")+"<br>"
-    menuStr+=getInputElemStr(name:"closeApp", type:'button', radius:'12px',background:'#ff0707', color:'#000000', title:" [X] Close Shell ")
+    menuStr+=getInputElemStr(name:"spec-about", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-circle-info'></i> About ")+"<br>"
+    menuStr+='<br>'+getInputElemStr(name:"closeApp", type:'button', radius:'12px',background:'#ff0707', color:'#000000', title:" [X] Close Shell ")
     return menuStr
 }
 
@@ -203,6 +240,10 @@ def appButtonHandler(btn) {
         	//addAppRegion(btn.substring(4,))
             state.newAppLaunch = btn.substring(4,)
         	break
+        case { it.startsWith('spec-') }:
+        	//addAppRegion(btn.substring(4,))
+            state.special = btn.substring(5,)
+        	break        
         case 'closeApp':
             state.closeApp = true
         	break
@@ -227,178 +268,10 @@ String frameWrap (_frameId, _frameSrc) {
   			iframe${_frameId}.contentDocument.getElementById('divLayoutControllerL2').setAttribute('style', 'height: ' + contentHeight + 'px !important;');
 		}
 		</script>"""
-    //log.debug "$frameMod<iframe src='$_frameSrc' id='${_frameId}'></iframe>".replace("<","&lt;")
     return "$frameMod<iframe src='$_frameSrc' id='${_frameId}'></iframe>"
 }
 
 
-@Field static String sideMenu = """
-<div id="HEdivSideMenu" class="overflow-y-auto fixed w-full left-0 z-5  pointer-events-none overflow-y-hidden" style="top: var(--hubitat-header-height); height: calc(100vh - var(--hubitat-header-height)); width: 0px; background-color: transparent;">
-<ul data-v-93aeed0e="" id="HEdivMainUIMenu" class="h-auto min-h-full px-2 side-menu-container bg-hubitat-deep-black -translate-x-100 opacity-0" style="width: var(--hubitat-side-menu-width);">
-<!---->
-<!---->
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden selected">
-<i data-v-6b58f9cb="" class="fa-regular fa-home">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Home</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/room/list" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-bed-front">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Rooms</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/dashboard/select" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-objects-column">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Dashboards</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/device/list" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-lightbulb">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Devices</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/installedapp/list" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-wand-sparkles">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Apps</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="#" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-circle-check">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Subscriptions</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/hub/edit" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-sliders-up">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Settings</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/logs" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-memo-circle-info">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Logs</span>
-</a>
-</li>
-<ul data-v-93aeed0e="" class="px-0 pt-4">
-<li data-v-93aeed0e="" class="pt-2 pb-1 px-2 ml-1">
-<span data-v-93aeed0e="" class="text-hubitat-primary-green uppercase">
-For Developers</span>
-<span data-v-93aeed0e="" class="material-icons text-base text-700 px-1 ml-2 cursor-pointer he-shrink2">
-</span>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/driver/list" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-lightbulb-gear">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Drivers code</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/app/list" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<!---->
-<img data-v-6b58f9cb="" src="/ui2/images/wand-gear.svg" style="height: 21px;">
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Apps code</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/library/list" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-gear-complex-code">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Libraries code</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="/bundle/list" target="_self" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-folder-gear">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Bundles</span>
-</a>
-</li>
-</ul>
-<ul data-v-93aeed0e="" class="px-0 pt-4">
-<li data-v-93aeed0e="" class="pt-2 pb-1 px-2 ml-1">
-<span data-v-93aeed0e="" class="text-hubitat-primary-green uppercase">
-Resources</span>
-<span data-v-93aeed0e="" class="material-icons text-base text-700 px-1 ml-2 cursor-pointer he-shrink2">
-</span>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="https://docs2.hubitat.com/" target="_blank" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-book">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Documentation</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="https://community.hubitat.com/" target="_blank" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-messages">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Community</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="https://www.youtube.com/channel/UC_U6xPALM_7_VH1Cw0Nl4CQ" target="_blank" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-video">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Videos</span>
-</a>
-</li>
-<li data-v-6b58f9cb="" data-v-93aeed0e="">
-<a data-v-6b58f9cb="" href="https://support.hubitat.com/ " target="_blank" class="side-menu-item transition-colors hubitat-transition-duration-200 h-3rem overflow-hidden hover:bg-white-alpha-20">
-<i data-v-6b58f9cb="" class="fa-regular fa-comment-question">
-</i>
-<!---->
-<span data-v-6b58f9cb="" class="white-space-nowrap">
-Support</span>
-</a>
-</li>
-</ul>
-</ul>
-</div>
-"""
 
 /*
  * UI Regions
@@ -463,8 +336,8 @@ String getRegionsPage( regionsList, fullScreen ){
 	String dragList = ''
 	String defaultPos = ''
 	int regionsInx = 0
-	int l = 50
-	int t = 0
+	int l = 10
+	int t = -20
 	int w = 300
 	int h = 250
 	regionsList.each {
@@ -475,14 +348,14 @@ String getRegionsPage( regionsList, fullScreen ){
 		}
 		dragList += "'${it.key}'"
 		defaultPos += "'${it.key}':{ left:'${l}px',top:'${t}px',width:'${w}px',height:'${h}px',zIndex: '${regionsInx+1}' }"
-		t+= 44
-		l+= 30
 		regionsInx++
             if(!savePos) savePos = ''
             if(savePos.indexOf("${it.key}") == -1){
                 saveStr = "${it.key}:{${l}px,${t}px,${w}px,${h}px,${regionsInx+1},0,0};"
                 app.updateSetting('savePos', [type:'text',value:"$savePos$saveStr"])
             }
+        t+= 44
+		l+= 30
 	}
     
 	String bodyHtml = """

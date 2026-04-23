@@ -14,7 +14,7 @@
  *
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
- *    
+ *    20260423			thebearmay				code cleanup, add app filter 
  */
 static String version()	{  return '0.0.2'  }
 import groovy.transform.Field
@@ -181,7 +181,7 @@ ArrayList getAppList(){
         ArrayList appList = []
     	try{		
         params = [
-            uri: "http://127.0.0.1:8080/hub2/appsList",//?section=${settings.appFilter}
+            uri: "http://127.0.0.1:8080/hub2/appsList",
             headers: [
                 "Accept": "application/json"
             ]
@@ -225,10 +225,37 @@ String _buildMenu(){
     menuStr+=getInputElemStr(name:"spec-applications", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-toolbox'></i> Apps ")
     menuStr+=getInputElemStr(name:"href-device|list", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-lightbulb'></i> Devices ")
     menuStr+=getInputElemStr(name:"href-hub|edit", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-sliders-up'></i> Settings ")
-    menuStr+=getInputElemStr(name:"href-logs", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-memo-circle-info'></i> Logs ")+"<br>"
-    menuStr+=getInputElemStr(name:"spec-about", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-circle-info'></i> About ")+"<br>"
-    menuStr+='<br>'+getInputElemStr(name:"closeApp", type:'button', radius:'12px',background:'#ff0707', color:'#000000', title:" [X] Close Shell ")
+    menuStr+=getInputElemStr(name:"href-logs", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-memo-circle-info'></i> Logs ")+"<hr>"
+    if(displayDevMenu()){
+        menuStr+=getInputElemStr(name:"href-driver|list", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-lightbulb-gear'></i> Driver Code ")
+    	menuStr+=getInputElemStr(name:"href-app|list", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-gear-complex-code'></i> App Code ")
+        menuStr+=getInputElemStr(name:"href-library|list", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-books'></i> Library Code ")
+        menuStr+=getInputElemStr(name:"href-bundle|list", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-folder-gear'></i> Bundles ")
+    }
+    menuStr+='<hr>'+getInputElemStr(name:"spec-about", type:'button', noBorder:true,style:'background-image:linear-gradient(to right, #a0d8ef, #b2f2e4, #ffffff);', color:'#000000', title:"<i class='fa-regular fa-circle-info'></i> About ")+"<hr><br>"
+    menuStr+='<br>'+getInputElemStr(name:"closeApp", type:'button',width:'12em', radius:'12px',background:'#ff0707', color:'#000000', title:" [X] Close Shell ")
     return menuStr
+}
+
+boolean displayDevMenu() {
+    boolean retVal = false 
+	try{		
+        params = [
+            uri: "http://127.0.0.1:8080/hub2/hubData",
+            headers: [
+                "Accept": "application/json"
+            ]
+		]
+        if(debugEnabled) 
+        	log.debug "$params"
+        httpGet(params){ resp -> 
+            if(resp.data.showDeveloperMenu)
+            	retVal = true
+        }
+    } catch (e) {
+    }
+    
+    return retVal
 }
 
 def appButtonHandler(btn) {

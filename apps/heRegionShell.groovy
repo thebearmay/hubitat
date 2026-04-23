@@ -1,7 +1,8 @@
 /*
- * Regions Demo
+ * HE Regions Shell - UI
  * 
- *      Demo application to for the uiRegions library
+ *      A lightweight UI shell for the HE environment featuring draggable, resizeable regions running the 
+ *        hub's apps/devices/utilities. 
  *
  *  Licensed Virtual the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -26,7 +27,7 @@ definition (
 	name: 			"HE Regions Shell - UI", 
 	namespace: 		"thebearmay", 
 	author: 		"Jean P. May, Jr.",
-	description: 	"HE Regions Shell - UI",
+	description: 	"A lightweight UI shell for the HE environment featuring draggable, resizeable regions running the hub's apps/devices/utilities.",
 	category: 		"Utility",
 	importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/apps/heRegionShell.groovy",
     installOnOpen:  true,

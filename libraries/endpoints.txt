@@ -186,7 +186,10 @@
 * Mesh	 *		
 * Mesh	 * Token
 * Mesh   * /device/showHubMeshToken
-* Mesh	 *			
+* Mesh	 *	
+* mNDS  *
+* mNDS  * /hub/mdnsDevices //mNDS discovery
+* mNDS  *
 * Net	 * Network Tests			
 * Net	 *    /hub/networkTest 			
 * Net	 *    /hub/networkTest/ping/gateway 			

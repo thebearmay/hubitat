@@ -15,13 +15,15 @@
  *
  *    Date            Who                    Description
  *    -------------   -------------------    ---------------------------------------------------------
- *    20260423			thebearmay				code cleanup, add app filter 
- */
-static String version()	{  return '0.0.2'  }
+ *    2026-04-23		thebearmay				code cleanup, add app filter 
+ *	  2026-04-24								About box enhancements using definitionData property
+ */ 
+
 import groovy.transform.Field
 
 //#include thebearmay.uiRegions
-
+String version() {return this.definitionData.version}
+String appDesc() {return this.definitionData.description}
 
 definition (
 	name: 			"HE Regions Shell - UI", 
@@ -34,7 +36,8 @@ definition (
 	oauth: 			false,
     iconUrl:        "",
     iconX2Url:      "",
-    menu: 			"Apps"
+    menu: 			"Apps",
+    version: 		'0.0.3'
 ) 
 
 preferences {
@@ -86,16 +89,21 @@ def _mainPage(){
             }
             
             if(state.special == 'applications'){
-                state.regionMax = state.regionMax++
             	r2Content =_appsList()
             	r2 = getRegion('region-2', 'Applications', "$r2Content")
             	regionsList.put('region-2', r2)
                 state.remove('special')
             } else if(state.special == 'about'){
-                state.regionMax = state.regionMax++
+    			if(!state.regionMax) state.regionMax = 3
+    			regionMax = state.regionMax
+    			//regionsList = state.regionsList    
+   				regionMax++
+    			state.regionMax = regionMax
                 rContent = "<p style='background-color:#e6ffff;border-radius:15px'>${app.getLabel()}<span style='font-size:xx-small'>&nbsp;v${version()}</span></p>"
-                r=getRegion("region-${state.regionMax}",'About',"$rContent")
-				regionsList.put("region-${state.regionMax}", r)
+                rContent += "<p>${appDesc()}</p>"
+                r=getRegion("region-${regionMax}",'About',"$rContent")
+				regionsList.put("region-${regionMax}", r)
+                state.regionMax = regionMax
                 state.remove('special')
             } else if(state.special) {
             	log.debug "Unknown Special Request - ${state.special}"

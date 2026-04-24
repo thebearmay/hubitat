@@ -8,3 +8,6 @@ String findNameSpace(String driverName) {
   }
   return nSpace
 }
+
+this.definitionData -> the fields in the app defintion
+this.hubFiles -> list of files with size, date, etc. (both apps and drivers)

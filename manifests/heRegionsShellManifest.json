@@ -1,0 +1,19 @@
+{
+ "packageName":"HE Regions Shell - UI ",
+ "author":"Jean P. May, Jr.",
+ "version":"0.0.2",
+ "minimumHEVersion":"2.4.0.1",
+ "dateReleased":"2026-04-23",
+ "releaseNotes":"v0.0.2 - Code clean up, add Apps/Integrations/Automations filter\nv0.0.1 - Production Release",
+ "apps": [
+  {
+     "id":"3120c5a2-dc41-4258-82ac-865bfd20890c",
+     "name":"HE Regions Shell - UI ",
+     "namespace":"thebearmay",
+     "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/apps/heRegionShell.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ]
+}

@@ -401,6 +401,16 @@
       "tags":[
         "Tools & Utilities"
        ]
+    },
+    {
+      "id":"69830b8a-efb7-43a7-8424-a98cc541564d",
+      "name":"HE Regions Shell - UI ",
+      "category":"Control",
+      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/refs/heads/main/manifests/heRegionsShellManifest.json",
+      "description":"A lightweight UI shell for the HE environment featuring multiple draggable, resizeable regions running the  hub's apps/devices/utilities",
+      "tags":[
+        "Tools & Utilities"
+       ]
     }
   ]
 }

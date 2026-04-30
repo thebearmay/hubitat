@@ -21,6 +21,7 @@
  *    21Nov2024                  v2.0.9 add capability to use a list of hubs for updates
  *	  19Aug2025					 v2.0.10 add delayed update option
  *								 v2.0.11 add a preference for update time that could be used instead of the command
+ *	  30Apr2026					 v2.0.12 add staggered update option
  *
  */
 import groovy.transform.Field
@@ -28,7 +29,7 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import java.time.*
 
-static String version()	{  return '2.0.10'}
+static String version()	{  return '2.0.12'}
 
 metadata {
     definition (
@@ -60,6 +61,7 @@ preferences {
     input("termsAccepted","bool",title: "By using this driver you are agreeing to the <a href='https://hubitat.com/terms-of-service'>Hubitat Terms of Service</a>",required:true)
     input("updMesh","bool", title: "Push Update Request to All HubMeshed Hubs")
     input("useHubList","bool",title: "Push Update Request using Hub List Attribute")
+    input("staggerStart","bool",title: "Stagger Hubs by 2 minutes each")
     input("updateTime","string",title: "Delay updates until this time (will override Delayed Update command)")
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }
@@ -232,9 +234,15 @@ void getHubMesh(resp, data){
             Map h2Data = (Map)jSlurp.parseText((String)resp.data)
             if (debugEnable)
                 log.debug "${h2Data.hubList}"
+            ssVal = 120
             h2Data.hubList.each{
                 log.info "Requesting update of ${it.ipAddress}"
-                sendMsg(it.ipAddress,"Update Requested")
+                if(!staggerStart)
+                	sendMsg(it.ipAddress,"Update Requested")
+                else {
+                    sendMsg(it.ipAddress,"Delay Update Requested:$ssVal")
+                    ssVal += 120
+                }
             } 
         } else {
             if (!warnSuppress) log.warn "Status ${resp.getStatus()} on Hubmesh request"
@@ -247,9 +255,15 @@ void getHubMesh(resp, data){
 void updateFromList(){
     hubList = device.currentValue("hubList")
     hList = hubList.split(',')
+    ssVal = 120
     hList.each{
         log.info "Requesting update of ${it}"
-        sendMsg(it,"Update Requested")
+        if(!staggerStart)
+        	sendMsg(it,"Update Requested")
+		else {
+        	sendMsg(it.ipAddress,"Delay Update Requested:$ssVal")
+            ssVal += 120
+		}
     } 
 }
     
@@ -360,7 +374,12 @@ void parse(String msgIn) {
         Map data = parseLanMessage(msgIn);
         if(data.json.msg =="Update Requested" )
             push()
-        else
+        else if(data.json.msg.startsWith('Delay Update Requested:')){
+            inx = data.json.msg.indexOf(':')
+            rVal = data.json.msg.substring(inx+1,).toInteger()
+            log.info "Delayed update requested in $rVal seconds"
+            runIn(rVal, push)
+        } else
             updateAttr("msg", data.json.msg)
     } catch (e) {
         log.error "$e"

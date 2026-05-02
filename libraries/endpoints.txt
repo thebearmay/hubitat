@@ -59,6 +59,8 @@
 * Device    * /device/fullJson/<devID>  //2.4.0.x
 * Devive    * /device/listJson?capability=capability.* //any valid capability
 * Device    * /device/listJson?capability=device.<driverName> //i.e. HubInformationDriverv3
+* Device    * /device/getTags/<devId>
+* Device    * /device/setTags/<devid>?tags=tag1,tag2, ...
 * Device    * /driver/editor/deleteJson/<id> //delete driver code
 * Device    *
 * Device    * // Using POST

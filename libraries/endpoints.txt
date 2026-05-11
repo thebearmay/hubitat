@@ -192,6 +192,9 @@
 * mNDS  *
 * mNDS  * /hub/mdnsDevices //mNDS discovery
 * mNDS  *
+* Net	 * 
+* Net	 * /hub/advanced/disconnectEthernet
+* Net	 * 
 * Net	 * Network Tests			
 * Net	 *    /hub/networkTest 			
 * Net	 *    /hub/networkTest/ping/gateway 			

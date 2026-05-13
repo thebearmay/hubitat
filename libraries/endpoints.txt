@@ -300,6 +300,7 @@
 * WiFi	 * 			
 * Zigbee	 * Zigbee			
 * Zigbee	 *    /hub/zigbee/getChildAndRouteInfo
+* Zigbee	 *    /hub/zigbee/getChildAndRouteInfoJson
 * Zigbee   *    /hub/resetzigbee
 * Zigbee   *    /hub/searchZigbeeDevices
 * Zigbee   *    /hub/zigbeeChannelScan

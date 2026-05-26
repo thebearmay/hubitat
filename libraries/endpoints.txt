@@ -211,6 +211,7 @@
 * Other	 *  /api/hubitat.xml
 * Other  *  /ui2/images/hub.png
 * Other  *  /hub/advanced/blinkLED/
+* Other  *  /hub/advanced/dumpThreadsToLog - log top 10 threads in the engineering log for troubleshooting 2.5.0.147
 * Other	 * 			
 * Radios	 * Radios On/Off			
 * Radios	 *			

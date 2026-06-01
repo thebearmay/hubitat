@@ -90,6 +90,7 @@
  *	  2026-01-13				 v3.1.24 - h2Data issue
  *	  2026-01-20				 v3.1.25 - make freeMem15 unit agree with freeMemory
  *	  2026-03-10				 v3.1.26 - warning message change
+ *	  2026-06-01				 v3.1.27 - reboot purge and rebuild changes
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -103,7 +104,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.25"}
+static String version() {return "3.1.27"}
 
 metadata {
     definition (
@@ -1834,16 +1835,13 @@ void rebootW_Rebuild() {
     }
     log.info "Hub Reboot with Rebuild requested"
     
-    if(!minVerCheck("2.3.7.14")){
-    	httpPost(
-	    	[
+    if(!minVerCheck("2.3.7.140")){
+		params = [
 		    	uri: "http://127.0.0.1:8080",
 			    path: "/hub/rebuildDatabaseAndReboot"
     		]
-	    ) {		resp ->	} 
-    } else {
-        httpPost(
-		[
+    } else if(!minVerCheck("2.5.0.0")) {
+		params = [
 			uri: "http://127.0.0.1:8080",
 			path: "/hub/reboot",
 			headers:[
@@ -1851,8 +1849,17 @@ void rebootW_Rebuild() {
 			],
             body:[rebuildDatabase:"true"] 
 	    ]
-    	) {		resp ->	} 
+    }else {
+		params = [
+			uri: "http://127.0.0.1:8080",
+			path: "/hub/reboot",
+			headers:[
+                "Content-Type": "application/json"
+			],
+            body:'{"rebuildDatabase":true,"purgeLogs":false}' 
+	    ]       
     }
+    httpPost(params) {resp ->  }
 }
 
 void rebootPurgeLogs() {
@@ -1866,16 +1873,27 @@ void rebootPurgeLogs() {
     }
     log.info "Hub Reboot & Log Purge requested"
     
-	httpPost(
-		[
+	if(!minVerCheck("2.5.0.0")) {
+		params = [
 			uri: "http://127.0.0.1:8080",
 			path: "/hub/reboot",
 			headers:[
                 "Content-Type": "application/x-www-form-urlencoded"
 			],
             body:[purgeLogs:"true"] 
-		]
-	) {		resp ->	} 
+	    ]
+    }else {
+		params = [
+			uri: "http://127.0.0.1:8080",
+			path: "/hub/reboot",
+			headers:[
+                "Content-Type": "application/json"
+			],
+            body:'{"rebuildDatabase":false,"purgeLogs":true}'
+	    ]
+    }
+    //log.debug params
+    httpPost(params) {resp ->     }
 }
 
 @SuppressWarnings('unused')

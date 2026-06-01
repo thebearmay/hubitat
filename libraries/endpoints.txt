@@ -231,13 +231,18 @@
 * Radios	 *	body:[zwaveStatus:"<enabled/disabled>"], 		
 * Radios	 *	followRedirects: false		
 * Radios	 */			
-* Reboot	 * Hub Reboot			
+* Reboot	 * Hub Reboot	[httpPOST]		
 * Reboot	 * /hub/reboot			
 * Reboot	 * /hub/rebuildDatabaseAndReboot //>=2.3.7.14			
-* Reboot	 *  //Purge Logs			
-* Reboot	 * /hub/reboot			
+* Reboot	 *
+* Reboot	 *  //Purge Logs	/ Rebuid		
+* Reboot	 * /hub/reboot	//2.3.7.140 - 2.5.0.0		
 * Reboot	 *	headers:[		Content-Type: "application/x-www-form-urlencoded" ],		
-* Reboot	 *  body:[purgeLogs:"true"]			
+* Reboot	 *  body:[rebuildDataBase:"false",purgeLogs:"true"]		
+* Reboot	 *
+* Reboot	 * /hub/reboot	//>= 2.5.0.0		
+* Reboot	 *	headers:[		Content-Type: "application/json" ],		
+* Reboot	 *  body:{"rebuildDataBase":false,"purgeLogs":true}
 * Reboot	 *			
 * Reboot	 * Hub Shutdown			
 * Reboot	 * /hub/shutdown			
@@ -248,7 +253,6 @@
 * Retry    * //2.4.1.103
 * Retry    * /hub/commandRetryController/enable/true
 * Retry    * /hub/commandRetryController/enable/false
-* Retry    *
 * Retry    *
 * Rooms    *
 * Rooms    * /hub2/roomsList

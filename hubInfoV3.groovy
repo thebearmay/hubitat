@@ -91,6 +91,8 @@
  *	  2026-01-20				 v3.1.25 - make freeMem15 unit agree with freeMemory
  *	  2026-03-10				 v3.1.26 - warning message change
  *	  2026-06-01				 v3.1.27 - reboot purge and rebuild changes
+ *	  2026-07-20				 v3.1.28 - add zwLRChannel and zwJsVersion for 2.5.1.x
+ *	  2026-07-24				 v3.1.29 - cloud.hubitat to cloud.aws.hubitat
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -104,7 +106,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.27"}
+static String version() {return "3.1.29"}
 
 metadata {
     definition (
@@ -216,6 +218,10 @@ metadata {
         //HE v2.4.3.121
         attribute "appStateCompression", "string"
 		attribute "javaDirect","number"
+        //HE v2.5.1.100
+        attribute 'zwLRChannel', 'string'
+        attribute 'zwJsVersion', 'string'
+        
         command "hiaUpdate", ["string"]
         command "reboot"
         command "rebootW_Rebuild"
@@ -347,7 +353,7 @@ void updated(){
     if(htmlOutput == null) 
         device.updateSetting("htmlOutput",[value:"hubInfoOutput.html",type:"string"])
     device.updateSetting("htmlOutput",[value:toCamelCase(htmlOutput),type:"string"])
-    if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/"))
+    if(makerInfo == null || !(makerInfo.contains("https://cloud.hubitat.com/")||makerInfo.contains("https://cloud.aws.hubitat.com/")))
         cloudFontStyle = 'font-weight:bold;color:red'
     elseversion
         cloudFontStyle = ''
@@ -1346,7 +1352,7 @@ void getZwHealth(resp, data) {
 }
 
 void checkCloud(){
-    if(makerInfo == null || !makerInfo.contains("https://cloud.hubitat.com/")) {
+    if(makerInfo == null || !(makerInfo.contains("https://cloud.hubitat.com/")||makerInfo.contains("https://cloud.aws.hubitat.com/"))) {
         updateAttr("cloud", "invalid endpoint")
         cloudFontStyle = 'font-weight:bold;color:red'
         return
@@ -1436,7 +1442,12 @@ void getExtendedZwave(resp, data){
         Map zwData = (Map)jSlurp.parseText((String)resp.data)
         updateAttr("zwaveUpdateAvail","${zwData.isRadioUpdateNeeded}")
         updateAttr("zwaveRegion","${zwData.region}")
-//        updateAttr("zwaveStatus",zwData.enabled) //already caught in hub2 data
+        if(minVerCheck("2.5.1.100")) {
+            updateAttr('zwLRChannel',"${zwData.longRangeChannel}")
+            updateAttr('zwJsVersion',"${zwData.zwaveJSVersion}")
+            if(zwData.firmwareVersion) //only present if on JS, will fall back to the /hub/zwaveVersion call
+            	updateAttr('zwaveVersion',"${zwData.firmwareVersion}")
+        }
     } catch (EX) {
         //log.error "$EX"
     }

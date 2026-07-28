@@ -19,6 +19,7 @@
  *    18Sep2023    thebearmay    Add Debug Logging option
  *    23Oct2023    thebearmay    Add serverIp as an atttribute
  *    18Nov2024    thebearmay    HE 2.4.0.x changes
+ *	  28Jul2026					 Fix integer overflow on next refresh calculation
  */
 
 import java.text.SimpleDateFormat
@@ -32,7 +33,7 @@ import groovy.transform.Field
 
 
 @SuppressWarnings('unused')
-static String version() {return "0.0.6"} 
+static String version() {return "0.0.7"} 
 
 metadata {
     definition (
@@ -116,6 +117,7 @@ def updated(){
         runIn(1800,"logsOff")
 }
 void processPage(){
+    log.debug "processPage()"
     app = findPage()
     if(app==-1) {
         log.error "Echo Speaks not Installed"
@@ -130,8 +132,9 @@ void processPage(){
         dWork.replace('<','')
         dWork=dWork.split(' ')
         dWork.each{
-            if(debugEnable) "Refresh Split Each: $it"
-            if(it.isNumber()) updateAttr("cookieRefreshDays",it.toInteger())
+            if(debugEnable) 
+            	log.debug "Refresh Split Each: $it"
+            if(it.isNumber()) updateAttr("cookieRefreshDays",it.toLong())
         }
         dWork = pData.substring(pData.indexOf('serverDataMap'),pData.indexOf('serverDataMap')+800)
         dWork = dWork.substring(dWork.indexOf('{'),dWork.indexOf('}')+1)
@@ -162,9 +165,11 @@ void processJsonData(app){
     jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/$app") 
     cookieRefreshDays = 0
     jData.appSettings.each {
-        if(it.name == "cookieRefreshDays"){
-            cookieRefreshDays = it.value.toInteger()
+        //log.debug "${it.name}:${it.value}"
+        if(it.name.trim() == "refreshCookieDays"){
+            cookieRefreshDays = it.value.toLong()
             updateAttr("cookieRefreshDays",cookieRefreshDays)
+            log.debug "cookieRefreshDays: $cookieRefreshDays"
         }
     }
     def cookieData = ''
@@ -258,8 +263,10 @@ void refreshHTML(){
     wkStr2 = wkStr
     wkStr+="<tr><td>Last Refresh: ${serverData.lastCookieRrshDt}</td></tr>"
     startDate = Date.parse("E MMM dd HH:mm:ss z yyyy", serverData.lastCookieRrshDt).getTime()
-    nextDate = startDate + (86400000 * device.currentValue("cookieRefreshDays").toInteger())
-    //log.debug "$tNow $nextDate"
+    nextDate = startDate + (86400000 * device.currentValue("cookieRefreshDays",true).toLong())
+    
+    //log.debug "Now:$tNow Start:$startDate $nextDate ${device.currentValue("cookieRefreshDays",true)}"
+    
     SimpleDateFormat sdf = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy")
     if(nextDate > tNow){
         wkStr+="<tr><td>Next Refresh: ${sdf.format(nextDate)}</td></tr>"
@@ -315,12 +322,12 @@ String nextCookieRefreshDur() {
     Long tNow = new Date().getTime()
     def jSlurp = new JsonSlurper()
     serverData = jSlurp.parseText(device.currentValue("serverData",true))
-    Integer days = device.currentValue("cookieRefreshDays").toInteger()
+    Integer days = device.currentValue("cookieRefreshDays").toLong()
     String lastCookieRfsh = serverData.lastCookieRrshDt
     if(!lastCookieRfsh) { return "Not Sure"}
     Date lastDt = Date.parse("E MMM dd HH:mm:ss z yyyy", formatDt(Date.parse("E MMM dd HH:mm:ss z yyyy", lastCookieRfsh)))   
                                                                              
-    String dMinus = seconds2Duration(((tNow-lastDt.getTime())/1000).toInteger(),false,3)
+    String dMinus = seconds2Duration(((tNow-lastDt.getTime())/1000).toLong(),false,3)
     updateAttr("tmFromAtRrsh", dMinus)                                                                        
                                                                              
     Date nextDt = Date.parse("E MMM dd HH:mm:ss z yyyy", formatDt(lastDt + days))

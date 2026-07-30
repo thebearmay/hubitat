@@ -297,7 +297,10 @@
 * UI	 * Hub UI 			
 * UI	 * /hub2/hubData
 * UI   * /hub/messages
-* UI	 *			
+* UI	 *
+* Video  *
+* Video  * /hub2/videoStream/<device ID>.mjpg
+* Video  *
 * WiFi	 * WiFi			
 * WiFi	 * /hub/advanced/installDriver/all			
 * WiFi	 * /hub/advanced/deleteWiFiNetworkInfo			

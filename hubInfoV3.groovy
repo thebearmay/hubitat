@@ -93,6 +93,7 @@
  *	  2026-06-01				 v3.1.27 - reboot purge and rebuild changes
  *	  2026-07-20				 v3.1.28 - add zwLRChannel and zwJsVersion for 2.5.1.x
  *	  2026-07-24				 v3.1.29 - cloud.hubitat to cloud.aws.hubitat
+ *	  2026-07-31				 v3.1.30 - zigbeeStatus consistancy
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -106,7 +107,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.29"}
+static String version() {return "3.1.30"}
 
 metadata {
     definition (
@@ -1154,7 +1155,7 @@ void hub2DataReq() {
     	}  
     }
 
-    checkSecurity()
+    //checkSecurity()
     zHealthReq()
 
 }
@@ -1410,6 +1411,8 @@ void getExtendedZigbee(resp, data){
     try{
         def jSlurp = new JsonSlurper()
         Map zbData = (Map)jSlurp.parseText((String)resp.data)
+        if("${zbData.networkState}".toLowerCase() == 'online')
+        	zbData.networkState = 'enabled'
         updateAttr("zigbeeStatus","${zbData.networkState}".toLowerCase())
         updateAttr("zigbeePower",zbData.powerLevel)
 		updateAttr("zigbeeUpdateAvail", zbData.firmwareUpdateAvailable)

@@ -34,6 +34,9 @@
 * Backup    * /hub2/cloudBackups?force=false
 * Backup    * // List of local backups
 * Backup    * /hub2/localBackups
+* Bluetooth  * 
+* Bluetooth  * /hub/debug/captureBluetoothLogs
+* Bluetooth  * 
 * Bundles    *
 * Bundles    * /hub2/userBundles
 * Bundles    *

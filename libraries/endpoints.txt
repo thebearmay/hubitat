@@ -348,9 +348,13 @@
 * ZWave  * /hub/zwave2/disableDebugLogging
 * ZWave  * /hub/zwave2/getControllerState
 * ZWave  * 
-* ZWave  * to resolve a firmware bug 
+* ZWave  * // to resolve a firmware bug 
 * ZWave  * /hub/zwave2/watchdog/disable
 * ZWave  * /hub/zwave2/watchdog/enable
+* ZWave  * 
+* ZWave  * // extra engineering logging 
+* ZWave  * /hub/zwave2/ccdebug/true
+* ZWave  * /hub/zwave2/ccdebug/false
 * ZWave  * 
 * ZWave  * 2.4.3.145 - complete reset of the JS install
 * ZWave  * /hub/zwave2/cleanInstallZWaveJS

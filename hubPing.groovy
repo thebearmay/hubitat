@@ -35,9 +35,10 @@
  *    2021-10-11  thebearmay	 Restrict to one instance running at a time
  *    2021-11-05  thebearmay     Add Text Logging option
  *    2022-06-07  thebearmay     Add preference to reduce number of attributes returned.
+ *	  2026-08-21				 Remove security checks
  */
 
-static String version()	{  return '2.1.11'  }
+static String version()	{  return '2.1.12'  }
 
 metadata {
     definition (
@@ -76,11 +77,6 @@ preferences {
     input("useOldMethod", "bool", title: "Use HTTP endpoint to issue request", width:4)
     input("textLoggingEnabled", "bool", title: "Enable Text Logging", defaultValue:false, width:4)
     input("presenceOnly", "bool", title: "Only report presence attribute", , width:4)
-    input("security", "bool", title: "Hub Security Enabled", defaultValue: false, submitOnChange: true, width:4)
-    if (security) { 
-        input("username", "string", title: "Hub Security Username", required: false)
-        input("password", "password", title: "Hub Security Password", required: false)
-    }
 }
 
 def installed() {
@@ -120,8 +116,7 @@ def refresh() {
 	unschedule(refresh)
 }
 
-def sendPing(ipAddress){
-    if(ipAddress == null) ipAddress = data.ipAddress
+def sendPing(ipAddress = data.ipAddress ? data.ipAddress : device.currentValue("lastIpAddress")){
     if(numPings == null) numPings = 3
     configure()
     updateAttr("lastIpAddress", ipAddress)
@@ -138,6 +133,7 @@ def sendPing(ipAddress){
             if(!presenceOnly)
                 updateAttr("pingReturn","Pinging $ipAddress") 
             hubitat.helper.NetworkUtils.PingData pingData = hubitat.helper.NetworkUtils.ping(ipAddress, numPings.toInteger())
+            if(textLoggingEnabled) log.debug "$pingData"
             int pTran = pingData.packetsTransmitted.toInteger()
             if (pTran == 0){ // 2.2.7.121 bug returns all zeroes on not found
                 pingData.packetsTransmitted = numPings
@@ -169,24 +165,9 @@ def sendPing(ipAddress){
             if(textLoggingEnabled && pingPeriod > 0) log.debug "Next ping for $ipAddress scheduled in $pingPeriod seconds"
         } else {
             if(textLoggingEnabled) log.debug "Hub Endpoint ping method selected"
-            if(security) {
-                httpPost(
-                    [
-                        uri: "http://127.0.0.1:8080",
-                        path: "/login",
-                        query: [ loginRedirect: "/" ],
-                        body: [
-                            username: username,
-                            password: password,
-                            submit: "Login"
-                        ]
-                    ]
-                ) { resp -> cookie = resp?.headers?.'Set-Cookie'?.split(';')?.getAt(0) }
-            }    
             params = [
                 uri: "http://${location.hub.localIP}:8080",
                 path:"/hub/networkTest/ping/"+ipAddress,
-                headers: [ "Cookie": cookie ]
             ]
             if(debugEnable)log.debug params
             updateAttr("responseReady",false)

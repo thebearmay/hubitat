@@ -38,7 +38,7 @@
  *	  2026-08-21				 Remove security checks
  */
 
-static String version()	{  return '2.1.12'  }
+static String version()	{  return '2.1.13'  }
 
 metadata {
     definition (

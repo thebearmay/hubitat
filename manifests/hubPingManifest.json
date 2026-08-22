@@ -4,7 +4,7 @@
   "version": "2.1.13",
   "minimumHEVersion": "2.2.5.131",
   "dateReleased": "2022-06-07",
-  "releaseNotes": "v2.1.13 - remove security logic as it\'s no longer needed",
+  "releaseNotes": "v2.1.13 - remove security logic as it is no longer needed",
   "drivers": [
     {
       "id": "33dc6ffb-8d25-4cf0-821d-45ecbac5bfb2",

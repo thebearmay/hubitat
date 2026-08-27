@@ -170,6 +170,7 @@
 * Matter	 * /hub/matterDetails/json		
 * Matter	 * Get Button to Reset all Matter settings
 * Matter	 * /hub/matterDetails?fullui=true		
+* Matter	 * /hub/threadDetails/json
 * Matter   *
 * Mem	 * Free Memory			
 * Mem	 * /hub/advanced/freeOSMemory			

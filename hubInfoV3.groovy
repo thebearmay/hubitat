@@ -94,6 +94,7 @@
  *	  2026-07-20				 v3.1.28 - add zwLRChannel and zwJsVersion for 2.5.1.x
  *	  2026-07-24				 v3.1.29 - cloud.hubitat to cloud.aws.hubitat
  *	  2026-07-31				 v3.1.30 - zigbeeStatus consistancy
+ *	  2026-08-27				 v3.1.31 - C8 Pro Thread 
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -107,7 +108,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.30"}
+static String version() {return "3.1.31"}
 
 metadata {
     definition (
@@ -203,6 +204,7 @@ metadata {
         attribute "accessList","string"
         attribute "sunriseTomorrow","string"
         attribute "sunsetTomorrow","string"
+        attribute "threadRadio","string"
 		//HE v2.7.3.1
 		attribute "zwaveJS", "string"
         attribute "zwaveRegion","string"
@@ -1150,6 +1152,10 @@ void hub2DataReq() {
             } else {
                 updateAttr("pCloud", "not connected")
             }
+            if(h2Data.threadReady)
+            	updateAttr("threadRadio", true)
+            else
+                updateAttr("threadRadio", false)
 	    } catch (Exception ex){
     	    if (!warnSuppress) log.warn ex
     	}  

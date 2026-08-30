@@ -1,0 +1,49 @@
+# WeMo Local Control for Hubitat v2
+
+This package expands the first version toward the local protocol used by pyWeMo/Home Assistant.
+
+## Added
+
+- SSDP discovery using multiple search targets
+- setup.xml service enumeration
+- model/type-aware child driver selection
+- local SOAP service calls
+- automatic port recovery/probing
+- Insight power/energy fields
+- dimmer level control
+- sensor driver baseline
+- subscription hook architecture
+- polling fallback
+- no cloud or Internet dependency
+
+## Important Hubitat limitation
+
+The WeMo protocol supports push events through UPnP `SUBSCRIBE`, and pyWeMo uses them for immediate state updates and long-press events. However, Hubitat custom apps/drivers do not provide the same arbitrary socket-listener model as a standalone Python process. Therefore this package keeps event-subscription support structured in the driver but uses polling as the portable fallback.
+
+That means this is local-only and robust, but **not yet 1:1 with Home Assistant's event subsystem**.
+
+## Install
+
+1. Hubitat -> Drivers Code -> create and save each:
+   - WeMo Local Switch
+   - WeMo Local Dimmer
+   - WeMo Local Insight
+   - WeMo Local Sensor
+2. Hubitat -> Apps Code -> create and save `WeMo Local Control v2`.
+3. Add the app.
+4. Run discovery.
+5. If SSDP is blocked by VLAN/firewall rules, enter WeMo IPs manually.
+
+## Supported local protocol
+
+WeMo exposes UPnP services and a `basicevent` service with methods including `SetBinaryState` and `GetBinaryState`. Devices can also expose Insight and other services. pyWeMo documents SSDP discovery, service enumeration, polling, push subscriptions and long-press events.
+
+## Next step for true event parity
+
+For true instant events and long-press support on Hubitat, the cleanest architecture is a tiny local bridge (Node.js/Python) that:
+- listens for WeMo UPnP event callbacks,
+- maintains subscriptions,
+- translates events into Hubitat Maker API/local HTTP calls,
+- never contacts the Internet.
+
+The bridge can be packaged as a Docker container or Raspberry Pi service.

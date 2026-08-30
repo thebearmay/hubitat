@@ -39,7 +39,7 @@ That means this is local-only and robust, but **not yet 1:1 with Home Assistant'
 
 WeMo exposes UPnP services and a `basicevent` service with methods including `SetBinaryState` and `GetBinaryState`. Devices can also expose Insight and other services. pyWeMo documents SSDP discovery, service enumeration, polling, push subscriptions and long-press events.
 
-## Next step for true event parity
+## Next step for true event parity (not implemented curently)
 
 For true instant events and long-press support on Hubitat, the cleanest architecture is a tiny local bridge (Node.js/Python) that:
 - listens for WeMo UPnP event callbacks,

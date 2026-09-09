@@ -22,6 +22,8 @@
 * Backup    * Backup Download
 * Backup    * /hub/backupDB?fileName=latest
 * Backup    * 
+* Backup    * /hub2/createFullLocalBackup  //2.5.2.xx
+* Backup    * 
 * Backup    * Backup Restore
 * Backup    * /hub/uploadBackup
 * Backup    * // this must be sent using a POST and needs to contain the backup to be restored embedded in the message

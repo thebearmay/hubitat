@@ -14,8 +14,9 @@
  *    -------------   -------------------    ---------------------------------------------------------
 */
 
-static String version()	{  return '0.0.1'  }
+static String version()	{  return '0.0.3'  }
 import java.security.MessageDigest
+import groovy.json.JsonSlurper
 
 definition (
 	name: 			"webCoRE Variable List", 
@@ -60,7 +61,7 @@ def mainPage(){
             input("runList", "button", title:"Generate List")
             if(state.getVar){
                 state.getVar = false
-                paragraph "<h3>Variable List</h3><p>${getVars()}</p>"
+                paragraph "<h3><b><u>Piston to Variable List</u></b></h3><p>${getVars()}</p>"
                 if(varList.size() < 1) paragraph "No Variables Found"
             }
 
@@ -82,8 +83,23 @@ String getVars(){
             vNamePrev = varE.pName
             varDispList += "<h4><u>${varE.pName}</u></h4>"
         }
-        varDispList += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${varE.value.key} = ${varE.value.value}<br />"   
+        //log.debug "$varE"
+        if(varE.value != null)
+        	varDispList += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${varE.value.key} = ${varE.value.value}<br />"   
     }
+    
+    rVarList = varList.sort { it.value.key }
+    //log.debug "$rVarList"
+    varDispList += "<br><h3><b><u>Variable to Piston List</u></b></h3><p>"
+    vPrev = ''
+    rVarList.each{ varR ->
+        if(varR.value != null && vPrev != varR.value.key) {
+            vPrev = varR.value.key
+            varDispList += "<h4><u>${varR.value.key}</u> = ${varR.value.value}</h4>"
+        }
+        varDispList += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${varR.pName}<br />"   
+    }  
+    varDispList += "</p>"
     
     return varDispList
 
@@ -91,21 +107,65 @@ String getVars(){
 
 def getVarsJ(wcData, childApps){
 	varList = []
+    varList2 = []
 	childApps.each{ ca ->
         //log.debug "$ca"
 		jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
+        //log.debug "${jData}"
         jData.appState.each { aS ->
             //log.debug "${aS.name}"
             if(aS.name == 'vars'){
                 //log.debug "${aS.value}"
                 aS.value.each {
                     //key:value
+                    //log.debug "${ca.key} ${state.wcID} ${"${ca.key}" == "${state.wcID}"}"
                     if(aS.value != null){
-                    	tMap = [key:ca.key, value:it, pName:ca.value]
-                    	varList.add(tMap)
+                        if("${ca.key}" != "${state.wcID}") {
+                    		tMap = [key:ca.key, value:it, pName:ca.value]
+                    		varList.add(tMap)
+                        } else {
+                            vMap = [key:it.key, value:it.value.v]
+                            tMap = [key:ca.key, value:vMap, pName:ca.value]
+                    		varList.add(tMap)
+                            varList2.add(tMap)
+                        }
                     }
                 }
             }
+        }
+        String sChunk = ''
+        jData.appSettings.each {s ->
+            if(s.name.contains('chunk')){
+                sChunk+= new String(s.value.decodeBase64(), 'UTF-8')
+            }
+        }
+
+        if(aChunk) {
+          
+        	def jSlurp = new JsonSlurper()
+        	jChunk = jSlurp.parseText(sChunk)
+        	jChunk.each { chunk ->
+            	chunk.each {
+                	if(it.value.toString().contains("@")) {
+                		sPos = it.value.toString().indexOf("@")
+                		ePos = it.value.toString().indexOf("]",sPos)
+            			vName = it.value.toString().substring(sPos,ePos)
+                        tVal = 'TBD'
+                        if(vName.contains("@@")){
+                            gVar = getGlobalVar(vName.substring(2,))
+                            tVal =  gVar.value                          
+                        } else {
+                            varList2.each{vl2 ->
+                                if(vName == vl2.value.key)
+                                	tVal = vl2.value.value
+                            }
+                        }
+                        vMap = [key:vName, value:tVal]
+                    	tMap = [key:ca.key, value:vMap, pName:ca.value]
+                    	varList.add(tMap)
+                	}
+            	}
+        	}
         }
 
 	}
@@ -125,12 +185,12 @@ ArrayList getPistonList() {
         resp.data.apps.each{
             if(it.data.type == "webCoRE"){
                 state.wcID = it.data.id
+				wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
+                wrkList.add(wrkMap)              
                 it.children.each{
                     if(it.data.type == 'webCoRE Piston'){
-                        if(!state.pExclude || !state.pExclude.contains(it.data.id)) {
-                            wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
-                            wrkList.add(wrkMap)
-                        }
+                        wrkMap =[key:"${it.data.id}",value:"${it.data.name}"]
+                        wrkList.add(wrkMap)
                     }
                 }
             }

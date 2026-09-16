@@ -14,7 +14,7 @@
  *    -------------   -------------------    ---------------------------------------------------------
 */
 
-static String version()	{  return '0.0.3'  }
+static String version()	{  return '0.0.4'  }
 import java.security.MessageDigest
 import groovy.json.JsonSlurper
 
@@ -59,11 +59,18 @@ def mainPage(){
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
         section("") {
             input("runList", "button", title:"Generate List")
+            //input("createCSV", "button", title:"Generate CSV")
+
             if(state.getVar){
+                varList = getVars()
                 state.getVar = false
-                paragraph "<h3><b><u>Piston to Variable List</u></b></h3><p>${getVars()}</p>"
-                if(varList.size() < 1) paragraph "No Variables Found"
+	  			csvData = varList[1]
+      			oData = """<script type='text/javascript'>function download() { var csvContent = document.getElementById('cData').innerHTML;var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });var a = document.createElement('a');var url = URL.createObjectURL(blob);a.href = url;a.download = 'wcVariables.csv';
+  document.body.appendChild(a);a.click();}</script><button onclick='download()'>Download CSV</button><div id='cData' style='display:none'>$csvData</div>"""
+      			paragraph oData
+                paragraph "<h3><b><u>Piston to Variable List</u></b></h3><p>${varList[0]}</p>"
             }
+         
 
 
         }
@@ -71,13 +78,12 @@ def mainPage(){
 }
 
 
-String getVars(){
+ArrayList getVars(disp){
     varDispList = ""
     childApps = getPistonList()
     jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${state.wcID}")
     varList = getVarsJ(jData, childApps)
     vNamePrev = ''
-    //log.debug "$varList"
     varList.each { varE ->
         if(vNamePrev != varE.pName) {
             vNamePrev = varE.pName
@@ -101,7 +107,13 @@ String getVars(){
     }  
     varDispList += "</p>"
     
-    return varDispList
+    String csv = '"App Number","App Name","Var Name","Var Value"\n'
+    varList.each{
+        //log.debug "${it.properties}"
+        csv+= "\"${it.key}\",\"${it.pName}\",\"${it.value.key}\",\"${it.value.value}\"\n"
+    }
+    
+	return [varDispList, csv]
 
 }
 
@@ -112,40 +124,64 @@ def getVarsJ(wcData, childApps){
         //log.debug "$ca"
 		jData=readJsonPage("http://127.0.0.1:8080/installedapp/statusJson/${ca.key}")
         //log.debug "${jData}"
-        jData.appState.each { aS ->
+        if("${ca.key}" == "${state.wcID}") {
+	        jData.appState.each { aS ->
             //log.debug "${aS.name}"
-            if(aS.name == 'vars'){
-                //log.debug "${aS.value}"
-                aS.value.each {
-                    //key:value
-                    //log.debug "${ca.key} ${state.wcID} ${"${ca.key}" == "${state.wcID}"}"
-                    if(aS.value != null){
-                        if("${ca.key}" != "${state.wcID}") {
-                    		tMap = [key:ca.key, value:it, pName:ca.value]
-                    		varList.add(tMap)
-                        } else {
-                            vMap = [key:it.key, value:it.value.v]
-                            tMap = [key:ca.key, value:vMap, pName:ca.value]
-                    		varList.add(tMap)
-                            varList2.add(tMap)
-                        }
-                    }
-                }
-            }
-        }
-        String sChunk = ''
-        jData.appSettings.each {s ->
-            if(s.name.contains('chunk')){
-                sChunk+= new String(s.value.decodeBase64(), 'UTF-8')
+	            if(aS.name == 'vars'){
+    	            //log.debug "${aS.value}"
+        	        aS.value.each {
+            	        //key:value
+                	    //log.debug "${ca.key} ${state.wcID} ${"${ca.key}" == "${state.wcID}"}"
+                    	if(aS.value != null){
+                            	if(it.value.v == null || it.value.v == 'null')
+                            		it.value.v = '[Dynamic Value]'
+        	                    vMap = [key:it.key, value:it.value.v]
+            	                tMap = [key:ca.key, value:vMap, pName:ca.value]
+                	    		varList.add(tMap)
+                    	        varList2.add(tMap)
+    	                }
+        	        }
+            	}
             }
         }
 
-        if(aChunk) {
-          
+        String sChunk = ''
+        jData.appSettings.sort{ it.name }.each {s ->
+        	if(s.name.contains('chunk')){
+               // log.debug "${s.name}"
+            	sChunk += new String(s.value.decodeBase64(), 'UTF-8')
+	        }
+    	}
+
+        if(sChunk) {
+
         	def jSlurp = new JsonSlurper()
         	jChunk = jSlurp.parseText(sChunk)
         	jChunk.each { chunk ->
             	chunk.each {
+                    //log.debug "$it.properties"
+                    if(it.key == 'v') {
+                        it.value.each { vars ->
+                            //log.debug "$it"
+                            if("${ca.key}" != "${state.wcID}") {
+                                if(vars?.v?.c == null || vars?.v?.c == 'null')
+                            		tVal =  '[Dynamic Value]'
+                                else 
+                                    tVal = vars.v.c
+                                kMap = [key:vars.n, value:tVal]
+                    			tMap = [key:ca.key, value:kMap, pName:ca.value]
+                                varList.add(tMap)  
+                            }
+                        }
+                    }
+                
+                    if(it.key.toString().contains("@")){
+                        if(it.value?.v == null || it.value?.v == 'null')
+                        	it.value.v = '[Dynamic Value]'
+                        kMap = [key:it.key, value:it.value?.v]
+                        tMap = [key:ca.key, value:kMap, pName:ca.value]
+                    	varList.add(tMap)
+                    }
                 	if(it.value.toString().contains("@")) {
                 		sPos = it.value.toString().indexOf("@")
                 		ePos = it.value.toString().indexOf("]",sPos)
@@ -159,6 +195,8 @@ def getVarsJ(wcData, childApps){
                                 if(vName == vl2.value.key)
                                 	tVal = vl2.value.value
                             }
+                            if(tVal == null || tVal == 'null')
+                            	tVal = '[Dynamic Value]'
                         }
                         vMap = [key:vName, value:tVal]
                     	tMap = [key:ca.key, value:vMap, pName:ca.value]

@@ -94,7 +94,8 @@
  *	  2026-07-20				 v3.1.28 - add zwLRChannel and zwJsVersion for 2.5.1.x
  *	  2026-07-24				 v3.1.29 - cloud.hubitat to cloud.aws.hubitat
  *	  2026-07-31				 v3.1.30 - zigbeeStatus consistancy
- *	  2026-08-27				 v3.1.31 - C8 Pro Thread 
+ *	  2026-08-27				 v3.1.31 - C8 Pro Thread
+ *	  2026-10-02				 v3.1.32 - handle cloud check when URL no longer valid (suspend checking)
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput

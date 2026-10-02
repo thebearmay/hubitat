@@ -247,8 +247,11 @@ preferences {
             input ("${it.key}", "enum", title: "<div class='tTip'>${pMap.desc}<span class='tTipText'>${pMap.attributeList}</span></div>", options:pollList, submitOnChange:true, width:4, defaultValue:"0")
         }
 	}
-    if(parm16 != null && parm16 != 0 && parm16 != "0")
+    if(parm16 != null && parm16 != 0 && parm16 != "0") {
+        if((state?.cloudRejectCount ?: 0) >= cloudRejectLimit)
+            input("cloudErrMsg", "hidden", title:"<b>Cloud Endpoint Error</b>",description:"<span style='background-color:red;font-weight:bold;color:black;'>MakerApi or Dashboard URL rejected $cloudRejectLimit times in a row. Cloud check paused until it is fixed and preferences are saved.</span>")
         input("makerInfo", "string", title: "<span style='$cloudFontStyle'>MakerApi or Dashboard URL string</span>", submitOnChange: true)
+    }
     input("remUnused", "bool", title: "Remove unused attributes", defaultValue: false, submitOnChange: true, width:4)
     input("attribEnable", "bool", title: "Enable HTML Attribute Creation?", defaultValue: false, required: false, submitOnChange: true, width:4)
     input("alternateHtml", "string", title: "Template file for HTML attribute", submitOnChange: true, defaultValue: "hubInfoTemplate.res", width:4)
@@ -311,6 +314,7 @@ void updated(){
 	state.poll2 = []
 	state.poll3 = []
     state.poll4 = []
+    state.cloudRejectCount = 0
 	prefList.each{ l1 ->
         l1.each{
             if(settings["${it.key}"] != null && settings["${it.key}"] != "0") {
@@ -1364,6 +1368,10 @@ void checkCloud(){
         cloudFontStyle = 'font-weight:bold;color:red'
         return
     }
+    if((state.cloudRejectCount ?: 0) >= cloudRejectLimit) {
+        if (!warnSuppress) log.warn "checkCloud skipped, ${makerInfo.tokenize('?')[0]} was rejected $cloudRejectLimit times; fix the MakerApi or Dashboard URL and save preferences"
+        return
+    }
     if(makerInfo.contains("Device ID"))
       makerInfo=makerInfo.replace("[Device ID]","${device.deviceId}")
    
@@ -1387,11 +1395,22 @@ void getCloudReturn(resp, data){
     try{
         if(resp.status == 200 && makerInfo.substring(makerInfo.lastIndexOf('/')+1,makerInfo.indexOf('?')) == "${data["dId"]}") {
             updateAttr("cloud", "connected")
+            state.cloudRejectCount = 0
+        } else if(resp.status == 401 || resp.status == 404) {
+            // the hub answered through the cloud, so the URL's app or token is stale
+            state.cloudRejectCount = (state.cloudRejectCount ?: 0) + 1
+            String cloudUrl = makerInfo.tokenize('?')[0]
+            if(state.cloudRejectCount >= cloudRejectLimit) {
+                updateAttr("cloud", "invalid endpoint")
+                log.error "checkCloud httpResp = ${resp.status} from $cloudUrl, rejected $cloudRejectLimit times in a row; cloud check paused until the MakerApi or Dashboard URL is fixed and preferences are saved"
+            } else if (!warnSuppress) log.warn "checkCloud httpResp = ${resp.status} from $cloudUrl, will retry next cycle"
         } else {
             updateAttr("cloud", "not connected")
+            state.cloudRejectCount = 0
         } 
     } catch (EX) {
         updateAttr("cloud", "not connected")
+        state.cloudRejectCount = 0
     }
         
 }
@@ -2198,6 +2217,7 @@ void logsOff(){
 
 @Field static String cloudFontStyle = ''
 @Field static String minFwVersion = "2.2.8.141"
+@Field static Integer cloudRejectLimit = 3
 @Field static List <String> pollList = ["0", "1", "2", "3", "4"]
 @Field static prefList = [
 [parm01:[desc:"CPU Temperature Polling", attributeList:"temperatureF, temperatureC, temperature", method:"cpuTemperatureReq"]],

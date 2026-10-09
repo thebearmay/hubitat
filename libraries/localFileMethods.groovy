@@ -6,7 +6,7 @@ library (
     name: "localFileMethods",
     namespace: "thebearmay",
     importUrl: "https://raw.githubusercontent.com/thebearmay/hubitat/main/libraries/localFileMethods.groovy",
-    version: "0.0.11",
+    version: "0.0.12",
     documentationLink: ""
 )
 
@@ -77,38 +77,11 @@ Boolean fileExists(fName){
 }
 
 String readFile(fName){
-    if(security) cookie = securityLogin().cookie
-    uri = "http://${location.hub.localIP}:8080/local/${fName}"
-
-
-    def params = [
-        uri: uri,
-        contentType: "text/html",
-        textParser: true,
-        headers: [
-				"Cookie": cookie,
-                "Accept": "application/octet-stream"
-            ]
-    ]
-
+    // downloadHubFile (HE 2.3.4.134+) reads the file directly, without a blocking
+    // HTTP round trip through the hub's own web server and a byte-at-a-time read
     try {
-        httpGet(params) { resp ->
-            if(resp!= null) {       
-              // return resp.data
-               int i = 0
-               String delim = ""
-               i = resp.data.read() 
-               while (i != -1){
-                   char c = (char) i
-                   delim+=c
-                   i = resp.data.read() 
-               } 
-               return delim
-            }
-            else {
-                log.error "Null Response"
-            }
-        }
+        byte[] rData = downloadHubFile("$fName")
+        return new String(rData, "UTF-8")
     } catch (exception) {
         log.error "Read Error: ${exception.message}"
         return null;

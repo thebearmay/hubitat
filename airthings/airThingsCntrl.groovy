@@ -16,7 +16,7 @@
  *    ----         ---           ----
  *    16Oct2022    thebearmay    Code cleanup
  *    16Nov2023    thebearmay    Allow removal of a child device outside of app uninstall
- *    09Oct2026                  version bump so the bundle carries the Feb 2026 safety fixes
+ *    09Oct2026    brossow       version bump so the bundle carries the Feb 2026 safety fixes
 */
 
 static String version()	{  return '0.1.6'  }

@@ -28,7 +28,7 @@
  *    28Mar2024	   gfa 			 add option for BaroPres conversion from mBar -> inHg
  *    31Aug2025	   thebearmay	 make sure format is selected before use
  *    04Sep2025					 put the template processing back in
- *    09Oct2026                  template read via downloadHubFile (localFileMethods 0.0.12), bundle rebuilt
+ *    09Oct2026    brossow       template read via downloadHubFile (localFileMethods 0.0.12), bundle rebuilt
  */
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper

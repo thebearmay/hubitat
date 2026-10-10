@@ -464,11 +464,12 @@ void baseData(dummy=null){
                     log.debug "5) $tzWork"
                 //tzMap= (Map) evaluate(tzWork)
                 //updateAttr("timeZone",JsonOutput.toJson(tzMap))
-            	tzWork = tzWork.replace("[","{\"").replace(']','}').replace(',',',\"').replace(':','\":')
+            	tzWork = tzWork.replace("[","{\"").replace(']','}').replace(',',',\"').replace(':','\":').replace('\"id\"','\"_id\"')
             	def jsonSlurper = new JsonSlurper()  
             	if(debugEnable)
             		log.debug "6) $tzWork"
-				updateAttr("timeZone",jsonSlurper.parseText(tzWork))
+                tzWork2 = jsonSlurper.parseText(tzWork)
+				updateAttr("timeZone",tzWork2)
             } catch (e) {
                 log.error "Time zone format error: ${location["timeZone"]}<br>$e" 
             }

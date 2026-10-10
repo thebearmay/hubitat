@@ -1521,8 +1521,8 @@ void getCloudCounts(resp, data){
         	tCount += it.total
             hCount += it.currentHour
         }
-        updateAttr("cloudCountCurrentHr", hCount)
-        updateAttr("cloudCountTotal",tCount)
+        updateAttr("cloudCallCurrentHr", hCount)
+        updateAttr("cloudCallTotal",tCount)
     } catch (EX) {
         //log.error "$EX"
     }

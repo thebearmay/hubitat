@@ -97,6 +97,7 @@
  *	  2026-08-27				 v3.1.31 - C8 Pro Thread
  *	  2026-10-02				 v3.1.32 - Cloud format change
  *	  2026-10-10				 v3.1.33 - replace evaluate statement in TimeZone reformat due to security exception
+ *	  2026-10-10				 v3.1.34 - add cloudCallTotal and cloudCallCurrentHr attributes
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -226,6 +227,9 @@ metadata {
         //HE v2.5.1.100
         attribute 'zwLRChannel', 'string'
         attribute 'zwJsVersion', 'string'
+        //HE v.2.5.2.x
+        attribute "cloudCallTotal", "number" 
+        attribute "cloudCallCurrentHr", "number"
         
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -1493,6 +1497,38 @@ void getZwaveJsStat(resp, data){
         
 }
 
+void cloudCounts(){
+	params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/logs/cloudCalls/json",
+        headers: [
+            "Connection-Timeout":600,
+            Accept: "application/json"
+        ]
+    ]
+	if (debugEnabled) log.debug params
+    asynchttpGet("getCloudCounts", params) 
+}
+
+void getCloudCounts(resp, data){
+    try{
+        //log.debug "${resp.data}"
+        def jSlurp = new JsonSlurper()
+        Map cloudData = (Map)jSlurp.parseText((String)resp.data)
+        int tCount = 0
+        int hCount = 0
+        cloudData.apps.each{
+        	tCount += it.total
+            hCount += it.currentHour
+        }
+        updateAttr("cloudCountCurrentHr", hCount)
+        updateAttr("cloudCountTotal",tCount)
+    } catch (EX) {
+        //log.error "$EX"
+    }
+        
+}
+
 
 void checkMatter(){
     hubModel = getHubVersion()
@@ -2227,7 +2263,8 @@ void logsOff(){
 [parm17:[desc:"Matter Status (C-5 and > only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]],
 [parm18:[desc:"Restricted Access List",attributeList:"accessList", method:"checkAccess"]],
 [parm19:[desc:"Hub Security Active",attributeList:"securityInUse", method:"checkSecurity"]],
-[parm20:[desc:"Extended ZWave",attributeList:"zwaveUpdateAvail, zwaveJS, zwaveRegion", method:"extendedZwave"]]     
+[parm20:[desc:"Extended ZWave",attributeList:"zwaveUpdateAvail, zwaveJS, zwaveRegion", method:"extendedZwave"]], 
+[parm21:[desc:"Cloud Call Counts",attributeList:"cloudCountCurrentHr, cloudCountTotal", method:"cloudCounts"]]
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

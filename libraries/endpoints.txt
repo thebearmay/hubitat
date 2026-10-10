@@ -158,6 +158,7 @@
 * Logs	 * /logs/json	
 * Logs	 * /logs/eventsJson
 * Logs	 * /logs/past/json
+* Logs   * /logs/cloudCalls/json
 * Logs	 *			
 * Manage	 * Management Endpoints			
 * Manage	 * /hub/advanced/getManagementToken 			

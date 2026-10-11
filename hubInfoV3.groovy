@@ -98,6 +98,7 @@
  *	  2026-10-02				 v3.1.32 - Cloud format change
  *	  2026-10-10				 v3.1.33 - replace evaluate statement in TimeZone reformat due to security exception
  *	  2026-10-10				 v3.1.34 - add cloudCallTotal and cloudCallCurrentHr attributes
+ *	  2026-10-11				 v3.1.35 - add cloudCallAvg
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -143,7 +144,7 @@ metadata {
         attribute "lastPoll", "string"
         attribute "lastHubRestart", "string"
         attribute "firmwareVersionString", "string"
-        attribute "timeZone", "string"
+        attribute "timeZone", "JSON_OBJECT"
         attribute "temperatureScale", "string"
         attribute "zipCode", "string"
         attribute "locationName", "string"
@@ -177,7 +178,7 @@ metadata {
         //attribute "zigbeeStack", "string"
         attribute "zwaveStatus", "string"
         attribute "hubAlerts", "string"
-        attribute "hubMeshData", "string"
+        attribute "hubMeshData", "JSON_OBJECT"
         attribute "hubMeshCount", "number"
         attribute "securityInUse", "string"
 		attribute "sunrise", "string"
@@ -230,6 +231,7 @@ metadata {
         //HE v.2.5.2.x
         attribute "cloudCallTotal", "number" 
         attribute "cloudCallCurrentHr", "number"
+        attribute "cloudCallAvg", "number"
         
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -1521,6 +1523,9 @@ void getCloudCounts(resp, data){
         	tCount += it.total
             hCount += it.currentHour
         }
+        ccAvg =  (Float) tCount/(location.hub.uptime/3600)
+        //log.debug "${ccAvg.round(2)}"
+        updateAttr("cloudCallAvg",ccAvg.round(2))
         updateAttr("cloudCallCurrentHr", hCount)
         updateAttr("cloudCallTotal",tCount)
     } catch (EX) {
@@ -2264,7 +2269,7 @@ void logsOff(){
 [parm18:[desc:"Restricted Access List",attributeList:"accessList", method:"checkAccess"]],
 [parm19:[desc:"Hub Security Active",attributeList:"securityInUse", method:"checkSecurity"]],
 [parm20:[desc:"Extended ZWave",attributeList:"zwaveUpdateAvail, zwaveJS, zwaveRegion", method:"extendedZwave"]], 
-[parm21:[desc:"Cloud Call Counts",attributeList:"cloudCountCurrentHr, cloudCountTotal", method:"cloudCounts"]]
+[parm21:[desc:"Cloud Call Counts",attributeList:"cloudCountCurrentHr, cloudCountTotal, cloudCallAvg", method:"cloudCounts"]]
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

@@ -112,7 +112,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.34"}
+static String version() {return "3.1.35"}
 
 metadata {
     definition (

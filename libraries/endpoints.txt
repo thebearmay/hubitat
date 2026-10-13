@@ -210,7 +210,12 @@
 * Net	 *    /hub/networkTest/traceroute/<ipAddr> 			
 * Net	 *    			
 * Net	 * Network Information			
-* Net	 * /hub2/networkConfiguration			
+* Net	 * /hub2/networkConfiguration	
+* Net	 * 
+* Net	 * //2.5.2.138 .local redirect to IP
+* Net	 * /hub/advanced/disableLocalHostnameRedirect
+* Net	 * /hub/advanced/enableLocalHostnameRedirect 
+* Net	 * /hub/advanced/localHostnameRedirectEnabled
 * Net	 *			
 * Other	 * Other	
 * Other  *  /hub/data

@@ -27,3 +27,15 @@ this.installedDrivers
 this.rooms 
 this.TTSVoices -> name,gender,language
 this.wiFiNetworks
+
+
+//auto-approve devices from gordonthelander
+List ids = []
+String err = null
+try {
+	httpGet([uri: 'http://127.0.0.1:8080/hub2/devicesList', timeout: 30]) { resp -> ids = haiDeviceListIds(resp.data) }
+} catch (Exception e) { 
+	err = (e.message ?: 'no answer') as String 
+}
+
+if (ids) app.updateSetting('runtimeAllowDevices', [type: 'capability', value: ids])

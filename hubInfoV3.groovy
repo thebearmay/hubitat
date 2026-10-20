@@ -1647,7 +1647,7 @@ void getThreadInfo(resp, data) {
             if(it[0..5] == 'PAN ID') {
                 panID = it[8..-1]
             } else if(it[0..(it.indexOf(':')-1)] == 'Network Name') {
-                netName = it[13..-1]
+                netName = it[14..-1]
             }
         }
         updateAttr('threadBrRunning',tData.otbrRunning)

@@ -99,6 +99,7 @@
  *	  2026-10-10				 v3.1.33 - replace evaluate statement in TimeZone reformat due to security exception
  *	  2026-10-10				 v3.1.34 - add cloudCallTotal and cloudCallCurrentHr attributes
  *	  2026-10-11				 v3.1.35 - add cloudCallAvg
+ *	  2026-10-20				 v3.1.36 - add Thread attributes
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -112,7 +113,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.35"}
+static String version() {return "3.1.36"}
 
 metadata {
     definition (
@@ -232,6 +233,14 @@ metadata {
         attribute "cloudCallTotal", "number" 
         attribute "cloudCallCurrentHr", "number"
         attribute "cloudCallAvg", "number"
+        //Thread
+        attribute "threadChannel","number"
+        attribute "threadNetName","string"
+        attribute "threadBrRunning","string"
+        attribute "threadEnabled","string"
+        attribute "threadState","string"
+        attribute "threadPanId","string"
+        attribute "threadRcpDetected","string"
         
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -1612,6 +1621,46 @@ void getCompressStatus(resp, data) {
     }
 }
 
+void threadInfo(){
+    params = [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub/threadDetails/json",
+        headers: [
+            "Connection-Timeout":600,
+            Accept: "application/json"
+        ]
+    ]
+    if (debugEnabled) log.debug params
+    asynchttpGet("getThreadInfo", params)     
+}
+
+void getThreadInfo(resp, data) {
+    //threadBrRunning, threadEnabled, threadNetName, threadPanId, threadRcpDetected, threadState
+    try{
+        def jSlurp = new JsonSlurper()
+        Map tData = (Map)jSlurp.parseText((String)resp.data)
+        brd = tData.borderRouterDataset.split("\n")
+        String panID = ''
+        String netName = ''
+        brd.each {
+            //log.debug "$it"
+            if(it[0..5] == 'PAN ID') {
+                panID = it[8..-1]
+            } else if(it[0..(it.indexOf(':')-1)] == 'Network Name') {
+                netName = it[13..-1]
+            }
+        }
+        updateAttr('threadBrRunning',tData.otbrRunning)
+        updateAttr('threadEnabled',tData.enabled)
+        updateAttr('threadNetName', netName)
+        updateAttr('threadPanId', panID)
+        updateAttr('threadRcpDetected',tData.threadRcpDetected)
+        updateAttr('threadState',tData.threadState)
+    } catch (e) {    
+    }
+}
+
+
 @SuppressWarnings('unused')
 boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement
     String model = getHubVersion()
@@ -2269,7 +2318,8 @@ void logsOff(){
 [parm18:[desc:"Restricted Access List",attributeList:"accessList", method:"checkAccess"]],
 [parm19:[desc:"Hub Security Active",attributeList:"securityInUse", method:"checkSecurity"]],
 [parm20:[desc:"Extended ZWave",attributeList:"zwaveUpdateAvail, zwaveJS, zwaveRegion", method:"extendedZwave"]], 
-[parm21:[desc:"Cloud Call Counts",attributeList:"cloudCountCurrentHr, cloudCountTotal, cloudCallAvg", method:"cloudCounts"]]
+[parm21:[desc:"Cloud Call Counts",attributeList:"cloudCountCurrentHr, cloudCountTotal, cloudCallAvg", method:"cloudCounts"]],
+[parm22:[desc:"Thread Attributes",attributeList:"threadBrRunning, threadEnabled, threadNetName, threadPanId, threadRcpDetected, threadState", method:"threadInfo"]]
 ]    
 @Field static String ttStyleStr = "<style>.tTip {display:inline-block;border-bottom: 1px dotted black;}.tTip .tTipText {display:none;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;}.tTip:hover .tTipText {display:inline-block;background-color:yellow;color:black;}</style>"
 @Field sdfList = ["yyyy-MM-dd","yyyy-MM-dd HH:mm","yyyy-MM-dd h:mma","yyyy-MM-dd HH:mm:ss","ddMMMyyyy HH:mm","ddMMMyyyy HH:mm:ss","ddMMMyyyy hh:mma", "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "dd/MM/yyyy hh:mma", "MM/dd/yyyy hh:mma", "MM/dd HH:mm", "HH:mm", "H:mm","h:mma", "HH:mm:ss", "Milliseconds"]

@@ -100,6 +100,7 @@
  *	  2026-10-10				 v3.1.34 - add cloudCallTotal and cloudCallCurrentHr attributes
  *	  2026-10-11				 v3.1.35 - add cloudCallAvg
  *	  2026-10-20				 v3.1.36 - add Thread attributes
+ *	  2026-10-26				 v3.1.37 - 404 on Zwave Version (C8 Pro only?)
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -113,7 +114,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.36"}
+static String version() {return "3.1.37"}
 
 metadata {
     definition (
@@ -955,7 +956,11 @@ void getZwaveVersion(resp, data) {
                 //updateAttr("zwaveData",zwaveData)
                 parseZwave(zwaveData)
             }
-            else if (!warnSuppress) log.warn "Invalid data returned for Zwave, length = ${zwaveData.length()} will retry"
+            else if (!warnSuppress) {
+                log.warn "Invalid data returned for Zwave, length = ${zwaveData.length()} will retry" 
+            }
+		} else if (resp.getStatus() == 404) {
+            updateAttr("zwaveVersion", "Not Available")
         }
     } catch(ignored) {
         if (!warnSuppress) log.warn "getZwave Parsing Error"    
@@ -1647,7 +1652,7 @@ void getThreadInfo(resp, data) {
             if(it[0..5] == 'PAN ID') {
                 panID = it[8..-1]
             } else if(it[0..(it.indexOf(':')-1)] == 'Network Name') {
-                netName = it[14..-1]
+                netName = it[13..-1]
             }
         }
         updateAttr('threadBrRunning',tData.otbrRunning)

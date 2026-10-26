@@ -1,10 +1,10 @@
 {
  "packageName":"Hub Information Driver v3",
  "author":"Jean P. May, Jr.",
- "version":"3.1.36",
+ "version":"3.1.37",
  "minimumHEVersion":"2.2.8.141",
- "dateReleased":"2026-10-20",
- "releaseNotes":"v3.1.36 - add attributes threadBrRunning, threadEnabled, threadNetName, threadPanId, threadRcpDetected, threadState\nv3.1.35 - add cloudCallAvg\nv3.1.34 - add cloudCallTotal and cloudCallCurrentHr attributes\nv3.1.33 - replace TZ reformat due to security error\nv3.1.32 - handle invalid cloud check URL\nv3.1.31 -Added threadRadio attribute to detect the C8 Pro T",
+ "dateReleased":"2026-10-26",
+ "releaseNotes":"v3.1.37 - handle 404 on Zwave Version check (C8 Pro only?)\nv3.1.36 - add attributes threadBrRunning, threadEnabled, threadNetName, threadPanId, threadRcpDetected, threadState\nv3.1.35 - add cloudCallAvg\nv3.1.34 - add cloudCallTotal and cloudCallCurrentHr attributes\nv3.1.33 - replace TZ reformat due to security error\nv3.1.32 - handle invalid cloud check URL\nv3.1.31 -Added threadRadio attribute to detect the C8 Pro T",
  "documentationLink":"https://htmlpreview.github.io/?https://github.com/thebearmay/hubitat/blob/main/hubInfoQuickRef3.html",
  "communityLink":"https://community.hubitat.com/t/coming-soon-hub-information-driver-v3/109902",
  "drivers": [

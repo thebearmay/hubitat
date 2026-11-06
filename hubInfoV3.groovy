@@ -101,6 +101,7 @@
  *	  2026-10-11				 v3.1.35 - add cloudCallAvg
  *	  2026-10-20				 v3.1.36 - add Thread attributes
  *	  2026-10-26				 v3.1.37 - 404 on Zwave Version (C8 Pro only?)
+ *	  2026-11-03				 v3.1.38 - add javaVersion and groovyVersion (inferred based on functionality) to baseData, fix a small TZ bug
 */
 import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
@@ -114,7 +115,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
 @SuppressWarnings('unused')
-static String version() {return "3.1.37"}
+static String version() {return "3.1.38"}
 
 metadata {
     definition (
@@ -242,6 +243,9 @@ metadata {
         attribute "threadState","string"
         attribute "threadPanId","string"
         attribute "threadRcpDetected","string"
+        
+        attribute "javaVersion","string" //2.5.3.118
+        attribute "groovyVersion","string"
         
         command "hiaUpdate", ["string"]
         command "reboot"
@@ -485,7 +489,7 @@ void baseData(dummy=null){
             	if(debugEnable)
             		log.debug "6) $tzWork"
                 tzWork2 = jsonSlurper.parseText(tzWork)
-				updateAttr("timeZone",tzWork2)
+				updateAttr("timeZone",tzWork)
             } catch (e) {
                 log.error "Time zone format error: ${location["timeZone"]}<br>$e" 
             }
@@ -523,6 +527,9 @@ void baseData(dummy=null){
     	zwaveJsStat()
     if(minVerCheck("2.4.3.121"))
     	checkAppComp()
+    updateAttr("groovyVersion",getGroovy())
+    if(minVerCheck("2.5.3.118"))
+    	updateAttr("javaVersion",getJavaVersion())
     everyPoll("baseData")
 }
 
@@ -1665,6 +1672,61 @@ void getThreadInfo(resp, data) {
     }
 }
 
+def getGroovy() {
+    String versionGuess = "2.4"
+    
+    // 1. Test for Groovy 3.0+ (The Elvis Assignment Operator `?=`)
+    try {
+        def result = evaluate("def x = null; x ?= 'Groovy3+'; return x")
+        if (result == "Groovy3+") {
+            return "3.0+"
+        }
+    } catch (Throwable t) { }
+
+    // 2. Test for Groovy 2.5+ (The .tap() Method Test)
+    try {
+        // .tap() was added in Groovy 2.5.0. 
+        def tapCheck = "2.5+".tap { }
+        if (tapCheck == "2.5+") {
+            versionGuess = "2.5+"
+        }
+    } catch (Throwable t) {
+        // Expected fallback to 2.4 on older runtimes
+        versionGuess = "2.4"
+    }
+
+    // 3. Test for 2.4.19 / 2.4.21
+    if (versionGuess == "2.4") {
+        try {
+            def map = [a: [b: 1]]
+            if (map?.a?.b == 1) {
+                versionGuess = "v2.4.19 / v2.4.21"
+            }
+        } catch (Throwable t) { }
+    }
+    
+    if (versionGuess == "v2.4.19 / v2.4.21") {
+        try {
+            // In 2.4.19, certain inline uses of ~pattern assignment throw an inner class processing error.
+            def result = evaluate('''
+                def p = ~/abc/
+                if (p instanceof java.util.regex.Pattern) {
+                    def matched = ("abc" ==~ p)
+                    return matched ? "2.4.21" : "Malformed"
+                }
+                return "Prior"
+            ''')     
+            if (result == "2.4.21") {
+                versionGuess = "2.4.21"
+            }
+        } catch (Throwable t) {
+            versionGuess = "2.4.19"
+        }
+    }
+
+    return versionGuess
+}
+
 
 @SuppressWarnings('unused')
 boolean isCompatible(Integer minLevel) { //check to see if the hub version meets the minimum requirement
@@ -2316,7 +2378,7 @@ void logsOff(){
 [parm11:[desc:"Expanded Network Data", attributeList:"connectType (Ethernet, WiFi, Dual, Not Connected), connectCapable (Ethernet, WiFi, Dual), dnsServers, staticIPJson, lanIPAddr, wirelessIP, wifiNetwork, dnsStatus, lanSpeed", method:"extNetworkReq"]],
 [parm12:[desc:"Check for Firmware Update",attributeList:"hubUpdateStatus, hubUpdateVersion",method:"updateCheckReq"]],
 [parm13:[desc:"Z Status, Hub Alerts, Passive Cloud Check",attributeList:"hubAlerts,zwaveStatus, zigbeeStatus2, pCloud, zbHealthy, zwHealthy", method:"hub2DataReq"]],
-[parm14:[desc:"Base Data",attributeList:"appStateCompression, firmwareVersionString, hardwareID, id, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zigbeePower, zigbeeUpdateAvail, zipCode",method:"baseData"]],
+[parm14:[desc:"Base Data",attributeList:"appStateCompression, firmwareVersionString, hardwareID, id, javaVersion, latitude, localIP, localSrvPortTCP, locationId, locationName, longitude, name, temperatureScale, timeZone, type, uptime, zigbeeChannel, zigbeeEui, zigbeeId, zigbeeStatus, zigbeePower, zigbeeUpdateAvail, zipCode",method:"baseData"]],
 [parm15:[desc:"15 Minute Averages",attributeList:"cpu15Min, cpu15Pct, freeMem15", method:"fifteenMinute"]],
 [parm16:[desc:"Active Cloud Connection Check",attributeList:"cloud", method:"checkCloud"]],
 [parm17:[desc:"Matter Status (C-5 and > only)",attributeList:"matterEnabled, matterStatus", method:"checkMatter"]],

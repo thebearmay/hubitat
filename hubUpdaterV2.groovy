@@ -68,7 +68,7 @@ preferences {
     input("useHubList","bool",title: "Push Update Request using Hub List Attribute")
     input("staggerStart","bool",title: "Stagger Hubs by 2 minutes each")
     input("updateTime","string",title: "Delay updates until this time (will override Delayed Update command)")
-    input("reportOption","string",title: "Allow this hub to report back to the publishing hub via a callback device")    
+    input("reportOption","bool",title: "Allow this hub to report back to the publishing hub via a callback device")    
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }
 

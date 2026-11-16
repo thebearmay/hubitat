@@ -22,6 +22,7 @@
  *	  19Aug2025					 v2.0.10 add delayed update option
  *								 v2.0.11 add a preference for update time that could be used instead of the command
  *	  30Apr2026					 v2.0.12 add staggered update option
+ *	  16Nov2026					 v2.0.13 add a report back option
  *
  */
 import groovy.transform.Field
@@ -29,7 +30,7 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import java.time.*
 
-static String version()	{  return '2.0.12'}
+static String version()	{  return '2.0.13'}
 
 metadata {
     definition (
@@ -45,6 +46,7 @@ metadata {
 		capability "Switch"
        
         attribute "msg", "string"
+        attribute "cbMsg", "string"
         attribute "notesUrl", "string"
         attribute "hubList", "string"
         
@@ -54,6 +56,9 @@ metadata {
         command "updateHubList",[[type:"string",description:"Comma separated list of hubs to update"]]
         command "delayedUpdate",[[type:"string",description:"Delay update until this time", defaultValue:"02:00"]]
         command "clearScheduledUpdate"
+        command "createCallBackDevices"
+        command "deleteCallBackDevices"
+        command "reportBack"
     }   
 }
 
@@ -63,6 +68,7 @@ preferences {
     input("useHubList","bool",title: "Push Update Request using Hub List Attribute")
     input("staggerStart","bool",title: "Stagger Hubs by 2 minutes each")
     input("updateTime","string",title: "Delay updates until this time (will override Delayed Update command)")
+    input("reportOption","string",title: "Allow this hub to report back to the publishing hub via a callback device")    
     input("debugEnabled", "bool", title: "Enable debug logging?", width:4)
 }
 
@@ -91,6 +97,7 @@ def updateAttr(aKey, aValue, aUnit){
 
 void verCheck() {
     updateAttr('msg',"Hub is on v${location.hub.firmwareVersionString}")
+    reportBack()
 }
 
 void test(){
@@ -288,12 +295,11 @@ def unsubscribe(){
     device.setDeviceNetworkId(newDNI)
 }
 
-
 def getHostAddress(ip=''){
     if(!ip)
         ipTokens = location.hub.localIP.split('\\.')
     else
-        ipTokens = ip.split('\\.')     
+        ipTokens = ip.split('\\.')  
     hexStr=''
     ipTokens.each{
         wStr=Integer.toString(it.toInteger(),16).toUpperCase()
@@ -304,6 +310,67 @@ def getHostAddress(ip=''){
     }
     
     return hexStr
+}
+
+def reportBack() {
+    if(!reportOption)
+    	return
+    subscription = getDataValue("subscriptionDNI")
+    if(!subscription)
+    	return
+    subIP = "${Integer.parseInt(subscription.substring(0,2),16)}.${Integer.parseInt(subscription.substring(2,4),16)}.${Integer.parseInt(subscription.substring(4,6),16)}.${Integer.parseInt(subscription.substring(6,8),16)}"
+    sendMsg(subIP,"${location.hub.localIP} is on v${location.hub.firmwareVersionString}","${device.getLabel()}")
+}
+
+def deleteCallBackDevices(){
+    getChildDevices().each{
+        //log.debug "${it.properties}"
+        deleteChildDevice("${it.deviceNetworkId}")
+    }
+}
+
+def createCallBackDevices(){
+    if(updMesh) {
+        log.debug "Mesh List"
+        hubs = getMeshList()
+    } else if(useHubList) {
+        hubs = device.currentValue("hubList")
+    } else {
+        log.debug "No hubs available for Call Back"
+    }
+    log.debug "$hubs"
+    hubs.each {
+        hexIP = getHostAddress("$it")
+        addChildDevice("Callback Device", hexIP, [name:"cbDevice$hexIP",isComponent:true])
+    }
+    
+}
+
+ArrayList getMeshList(){
+    params =  [
+        uri    : "http://127.0.0.1:8080",
+        path   : "/hub2/hubMeshJson",
+        headers: [
+            "Accept":"application/json",
+            "Connection-Timeout":600
+        ]           
+    ]
+	ArrayList hList = []    
+    if(debugEnable)log.debug params
+    httpGet(params) { resp ->
+	    try{
+        	if (resp.getStatus() == 200){
+            	if (debugEnable)
+                	log.debug resp.json.hubList
+	            resp.json.hubList.each{
+    	            //log.debug "${it.ipAddress}"
+        	        hList.add("${it.ipAddress}")
+            	}
+    	    } else log.debug "${resp.getStatus()}"
+    	} catch (e) {
+    	}
+    }
+	return hList
 }
 
 def sendTestMsg(){
@@ -350,8 +417,10 @@ void getHubMeshData(resp, data){
     }
 }
 
-def sendMsg(ip, msg){
-    def bodyText = JsonOutput.toJson(['msg':"$msg"])
+def sendMsg(ip, msg, dest=''){
+    if(!dest)
+    	dest = 'Unspecified'
+    def bodyText = JsonOutput.toJson(['msg':"$msg", 'dest':"$dest"])
 	Map requestParams =
 	[
         uri:  "http://$ip:39501",
@@ -373,7 +442,7 @@ void parse(String msgIn) {
     try {
         Map data = parseLanMessage(msgIn);
         if(data.json.msg =="Update Requested" )
-            push()
+            push()      
         else if(data.json.msg.startsWith('Delay Update Requested:')){
             inx = data.json.msg.indexOf(':')
             rVal = data.json.msg.substring(inx+1,).toInteger()

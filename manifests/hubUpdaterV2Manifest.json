@@ -12,7 +12,7 @@
      "namespace":"thebearmay",
      "location":"https://raw.githubusercontent.com/thebearmay/hubitat/main/hubUpdaterV2.groovy",
      "required":true
-  }
+  },
   {
      "id":"9c645db3-0b82-45e7-bf7f-1420b1deb6db",
      "name":"Callback Device",
